@@ -53,9 +53,8 @@
 
         .games-grid {
             display: grid;
-            /* Cria colunas flexíveis, que se ajustam ao tamanho da tela */
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 30px; /* Espaço entre os cards */
+            gap: 30px;
         }
 
         .game-card {
@@ -74,12 +73,11 @@
         }
 
         .game-card:hover {
-            transform: translateY(-10px) scale(1.05); /* Efeito de saltar ao passar o mouse */
-            box-shadow: 0 15px 30px var(--cor-sombra);
+            transform: translateY(-10px) scale(1.05);
         }
 
         .game-card i {
-            font-size: 4rem; /* Tamanho do ícone */
+            font-size: 4rem;
             margin-bottom: 20px;
         }
 
@@ -105,26 +103,23 @@
 
         <main>
             <div class="games-grid">
-                <!-- Card para o Jogo da Forca -->
-                <a href="../Games/Jogo da Forca/forca.html" class="game-card">
+                <!-- Links CORRIGIDOS (sem ../) -->
+                <a href="Games/Jogo da Forca/forca.html" class="game-card">
                     <i class="fa-solid fa-ghost"></i>
                     <span>Jogo da Forca</span>
                 </a>
 
-                <!-- Card para o Jogo da Memória -->
-                <a href="../Games/Jogo da memória/index.html" class="game-card">
+                <a href="Games/Jogo da memória/index.html" class="game-card">
                     <i class="fa-solid fa-brain"></i>
                     <span>Jogo da Memória</span>
                 </a>
 
-                <!-- Card para o Jogo de Somar -->
-                <a href="../Games/Jogo de Somar/soma_placar.html" class="game-card">
+                <a href="Games/Jogo de Somar/soma_placar.html" class="game-card">
                     <i class="fa-solid fa-calculator"></i>
                     <span>Jogo de Somar</span>
                 </a>
                 
-                <!-- Card para o Jogo de Digitar -->
-                <a href="../Games/Jogo M N-digitar/Jogo M N-digitar.html" class="game-card">
+                <a href="Games/Jogo M N-digitar/Jogo M N-digitar.html" class="game-card">
                     <i class="fa-solid fa-keyboard"></i>
                     <span>Jogo de Digitar</span>
                 </a>
