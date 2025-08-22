@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Bem-vinda aos Jogos da Elis! ✨</title>
+    <!-- Importando a biblioteca de ícones Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Importando uma fonte divertida do Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Pacifico&display=swap');
+
+        :root {
+            --cor-principal: #ff69b4; /* Rosa choque */
+            --cor-secundaria: #ffb6c1; /* Rosa claro */
+            --cor-destaque: #f8f8ff; /* Branco fantasma */
+            --cor-sombra: rgba(0, 0, 0, 0.15);
+            --fonte-titulo: 'Pacifico', cursive;
+            --fonte-corpo: 'Fredoka One', cursive;
+        }
+
+        body {
+            font-family: var(--fonte-corpo);
+            background: linear-gradient(135deg, #fce3ec, #ffc4e1); /* Fundo com gradiente suave */
+            color: #5e3a50;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-family: var(--fonte-titulo);
+            font-size: 3.5rem;
+            color: var(--cor-principal);
+            text-shadow: 3px 3px 0px var(--cor-destaque);
+            margin: 0;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        .games-grid {
+            display: grid;
+            /* Cria colunas flexíveis, que se ajustam ao tamanho da tela */
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px; /* Espaço entre os cards */
+        }
+
+        .game-card {
+            background-color: var(--cor-destaque);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px var(--cor-sombra);
+            padding: 30px 20px;
+            text-decoration: none;
+            color: var(--cor-principal);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--cor-secundaria);
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.05); /* Efeito de saltar ao passar o mouse */
+            box-shadow: 0 15px 30px var(--cor-sombra);
+        }
+
+        .game-card i {
+            font-size: 4rem; /* Tamanho do ícone */
+            margin-bottom: 20px;
+        }
+
+        .game-card span {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: 50px;
+            color: #a08a96;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Jogos da Elis</h1>
+            <p>Um mundo de diversão e aprendizado espera por você!</p>
+        </header>
+
+        <main>
+            <div class="games-grid">
+                <!-- Card para o Jogo da Forca -->
+                <a href="../Games/Jogo da Forca/forca.html" class="game-card">
+                    <i class="fa-solid fa-ghost"></i>
+                    <span>Jogo da Forca</span>
+                </a>
+
+                <!-- Card para o Jogo da Memória -->
+                <a href="../Games/Jogo da memória/index.html" class="game-card">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Jogo da Memória</span>
+                </a>
+
+                <!-- Card para o Jogo de Somar -->
+                <a href="../Games/Jogo de Somar/soma_placar.html" class="game-card">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Jogo de Somar</span>
+                </a>
+                
+                <!-- Card para o Jogo de Digitar -->
+                <a href="../Games/Jogo M N-digitar/Jogo M N-digitar.html" class="game-card">
+                    <i class="fa-solid fa-keyboard"></i>
+                    <span>Jogo de Digitar</span>
+                </a>
+            </div>
+        </main>
+
+        <footer>
+            <p>Feito com ❤️ para a Elis se divertir!</p>
+        </footer>
+    </div>
+
+</body>
+</html>

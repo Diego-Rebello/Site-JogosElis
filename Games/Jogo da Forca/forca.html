@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Forca</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+    }
+    h1 {
+      color: #ff4081;
+    }
+    #forca {
+      font-size: 100px;
+      line-height: 120px;
+    }
+    #palavra {
+      font-size: 40px;
+      letter-spacing: 10px;
+      margin: 20px;
+    }
+    .letras button {
+      margin: 5px;
+      padding: 10px;
+      font-size: 20px;
+      border-radius: 10px;
+      background-color: #ffeb3b;
+      border: 2px solid #fbc02d;
+      cursor: pointer;
+    }
+    .letras button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #mensagem {
+      font-size: 30px;
+      margin-top: 20px;
+      color: #4caf50;
+      font-weight: bold;
+    }
+    #placar {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    #novaPalavraBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 20px;
+      border-radius: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎉 Jogo da Forca 🎉</h1>
+  <div id="placar"></div>
+  <div id="forca">😀</div>
+  <div id="palavra"></div>
+  <div class="letras" id="botoes"></div>
+  <div id="mensagem"></div>
+  <button id="novaPalavraBtn" style="display: none;">Nova Palavra</button>
+
+  <script>
+    const palavras = ["ABACAXI", "BANANA", "ELEFANTE", "ESCOLA", "CACHORRO", "GATO", "FUTEBOL", "BRINQUEDO", "AMARELO", "COMPUTADOR", "PROGRAMACAO", "DESENVOLVEDOR", "ALGORITMO", "BIBLIOTECA", "FRAMEWORK", "INTERNET", "NAVEGADOR", "TECLADO", "MONITOR", "PROCESSADOR", "MEMORIA", "SOFTWARE", "HARDWARE", "DATABASE", "SERVIDOR", "CLIENTE", "PROTOCOLO", "LINGUAGEM", "VARIAVEL", "CONSTANTE", "FUNCAO", "OBJETO", "CLASSE", "HERANCA", "POLIMORFISMO", "ENCAPSULAMENTO", "ABSTRACAO", "INTERFACE", "RECURSIVIDADE", "ITERACAO", "CONDICIONAL", "OPERADOR", "EXPRESSAO", "COMPILADOR", "INTERPRETADOR", "DEBUGGER", "VERSIONAMENTO", "REPOSITORIO", "COMANDO", "TERMINAL", "ARQUIVO", "DIRETORIO", "SISTEMA", "OPERACIONAL", "APLICATIVO", "JANELA", "ICONE", "MENU", "CURSOR", "MOUSE", "IMPRESSORA", "ESCANER", "REDE", "ROTEADOR", "MODEM", "CONEXAO", "BANDA", "LARGA", "DOWNLOAD", "UPLOAD", "EMAIL", "MENSAGEM", "ANEXO", "USUARIO", "SENHA", "SEGURANCA", "CRIPTOGRAFIA", "FIREWALL", "ANTIVIRUS", "MALWARE", "SPAM", "COOKIE", "CACHE", "HISTORICO", "FAVORITOS", "ABA", "LINK", "URL", "DOMINIO", "HOSPEDAGEM", "NUVEM", "VIRTUALIZACAO", "CONTAINER", "MICROSERVICOS", "API", "JSON", "XML", "HTML", "CSS", "JAVASCRIPT", "PYTHON", "JAVA", "RUBY", "PHP", "SWIFT", "KOTLIN"];
+    let palavra = palavras[Math.floor(Math.random() * palavras.length)];
+
+    let erros = 0;
+    let acertos = [];
+
+    const estagios = ["😀", "😮", "😕", "😟", "😣", "😭", "💀"];
+
+    function atualizarPlacar() {
+      document.getElementById("placar").innerText = `Erros: ${erros} | Acertos: ${acertos.length}`;
+    }
+
+    function mostrarPalavra() {
+      let exibicao = "";
+      for (let letra of palavra) {
+        exibicao += acertos.includes(letra) ? letra + " " : "_ ";
+      }
+      document.getElementById("palavra").innerText = exibicao;
+    }
+
+    function criarBotoes() {
+      const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const container = document.getElementById("botoes");
+      for (let letra of alfabeto) {
+        const botao = document.createElement("button");
+        botao.innerText = letra;
+        botao.onclick = () => jogar(letra, botao);
+        container.appendChild(botao);
+      }
+    }
+
+    function jogar(letra, botao) {
+      botao.disabled = true;
+      if (palavra.includes(letra)) {
+        acertos.push(letra);
+        mostrarPalavra();
+        if (!document.getElementById("palavra").innerText.includes("_")) {
+          document.getElementById("mensagem").innerText = "🎉 Você ganhou! 🎉";
+          fimDeJogo();
+        }
+      } else {
+        erros++;
+        document.getElementById("forca").innerText = estagios[erros];
+        if (erros === estagios.length - 1) {
+          document.getElementById("mensagem").innerText = "💀 Você perdeu! A palavra era: " + palavra;
+          fimDeJogo();
+        }
+      }
+      atualizarPlacar();
+    }
+
+    function fimDeJogo() {
+      document.getElementById("novaPalavraBtn").style.display = "inline-block";
+      document.querySelectorAll(".letras button").forEach(b => b.disabled = true);
+    }
+
+    function reiniciarJogo() {
+      palavra = palavras[Math.floor(Math.random() * palavras.length)];
+      erros = 0;
+      acertos = [];
+      document.getElementById("forca").innerText = estagios[0];
+      mostrarPalavra();
+      atualizarPlacar();
+
+      const botoes = document.querySelectorAll(".letras button");
+      botoes.forEach(botao => {
+        botao.disabled = false;
+      });
+
+      document.getElementById("novaPalavraBtn").style.display = "none";
+      document.getElementById("mensagem").innerText = "";
+    }
+
+    mostrarPalavra();
+    criarBotoes();
+    atualizarPlacar();
+    document.getElementById("novaPalavraBtn").onclick = reiniciarJogo;
+  </script>
+</body>
+</html>

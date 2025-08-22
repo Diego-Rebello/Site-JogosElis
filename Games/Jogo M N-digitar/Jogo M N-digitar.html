@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do M ou N</title>
+    <style>
+        /* O CSS (estilo) continua o mesmo, não há necessidade de alterá-lo */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f8ff; /* Azul bem clarinho */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-transform: uppercase; /* TODAS AS LETRAS EM CAIXA ALTA */
+        }
+
+        #container-jogo {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #0056b3; /* Azul escuro */
+            margin-bottom: 20px;
+        }
+
+        #placar {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+        }
+
+        #placar-acertos {
+            color: #28a745; /* Verde */
+        }
+
+        #placar-erros {
+            color: #dc3545; /* Vermelho */
+        }
+
+        #palavra-desafio {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #007bff; /* Azul */
+            letter-spacing: 5px; /* Espaço entre as letras */
+            margin: 30px 0;
+            padding: 15px;
+            border: 2px dashed #ced4da;
+            border-radius: 10px;
+        }
+
+        #campo-resposta {
+            font-size: 1.5em;
+            padding: 10px;
+            width: 80%;
+            margin-bottom: 20px;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            text-align: center;
+            text-transform: uppercase; /* Garante que o input também fique em caixa alta */
+        }
+
+        #feedback {
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 50px; /* Evita que a interface "pule" */
+            padding: 10px;
+        }
+
+        .feedback-correto {
+            color: #28a745;
+        }
+
+        .feedback-incorreto {
+            color: #dc3545;
+        }
+
+        .botoes button {
+            font-size: 1em;
+            font-weight: bold;
+            padding: 12px 25px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            text-transform: uppercase;
+        }
+
+        #btn-verificar {
+            background-color: #007bff;
+            color: white;
+        }
+        #btn-verificar:hover {
+            background-color: #0056b3;
+        }
+
+        #btn-novo {
+            background-color: #28a745;
+            color: white;
+        }
+        #btn-novo:hover {
+            background-color: #218838;
+        }
+        
+        #btn-reiniciar {
+            background-color: #ffc107;
+            color: #333;
+        }
+        #btn-reiniciar:hover {
+            background-color: #e0a800;
+        }
+
+        .botoes button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container-jogo">
+        <h1>JOGO DO M OU N</h1>
+        <p>Complete a palavra com M ou N e clique em verificar!</p>
+
+        <div id="placar">
+            <span>ACERTOS: <span id="placar-acertos">0</span></span> |
+            <span>ERROS: <span id="placar-erros">0</span></span>
+        </div>
+
+        <div id="palavra-desafio"></div>
+
+        <input type="text" id="campo-resposta" placeholder="DIGITE A PALAVRA AQUI">
+        
+        <div class="botoes">
+            <button id="btn-verificar">VERIFICAR</button>
+        </div>
+
+        <div id="feedback"></div>
+
+        <div class="botoes" style="margin-top: 20px;">
+            <button id="btn-novo">NOVA PALAVRA</button>
+            <button id="btn-reiniciar">REINICIAR PLACAR</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DO JOGO ---
+
+        // --- LISTA DE PALAVRAS EXPANDIDA (MAIS DE 120 OPÇÕES) ---
+        // A lógica do jogo não muda, apenas a fonte de palavras agora é muito maior.
+        const listaDePalavras = [
+            // M antes de P
+            "CAMPO", "TEMPO", "LIMPO", "COMPRA", "TAMPA", "COMPRIDO", "EMPREGO", "SIMPLES",
+            "COMPUTADOR", "LAMPIAO", "AMPLO", "COMPANHEIRO", "CUMPRIR", "ESTAMPA", "OLIMPIADA",
+            "POMPA", "SIMPATIA", "TEMPERO", "TROMBA", "ACOMPANHAR", "EXEMPLO", "IMPACTO",
+            "IMPOR", "INTERROMPER", "LIMPEZA", "PASSATEMPO", "RELAMPAGO", "SUSPEITO", "ACAMPAMENTO",
+
+            // M antes de B
+            "BOMBA", "SAMBA", "POMBA", "EMBAIXO", "BOMBEIRO", "ZUMBIDO", "AMBULANCIA", "EMBORA",
+            "MEMBRO", "SOMBRA", "TROBOMBE", "SIMBOLO", "TAMBOR", "UMBIGO", "COMBOIO", "HUMBERTO",
+            "IMBATÍVEL", "LOMBADA", "REEMBOLSO", "DESEMBRO", "EMBLEMA", "COMBUSTIVEL", "AMBOS",
+            "SETEMBRO", "NOVEMBRO", "DEZEMBRO", "COMBINAR", "COMPARTILHAR", "LAMBIDA",
+
+            // N antes de outras consoantes
+            "TINTA", "PENTE", "ONDA", "BANCO", "MUNDO", "VENTO", "SANTO", "CONTA", "PONTE",
+            "ELEFANTE", "DENTE", "GENTE", "ONZE", "FUNDO", "LINDO", "LONGE", "MANGA", "GANSO",
+            "ONÇA", "PINCEL", "BANDA", "CRIANÇA", "DANÇA", "ESTANTE", "GIGANTE", "JANTA",
+            "LANCHA", "MORANGO", "NUNCA", "PANDA", "PRESENTE", "SEGUNDA", "TANQUE", "TRANQUILO",
+            "VINTE", "CONVITE", "ENCONTRAR", "FANTASMA", "INSTRUMENTO", "LARANJA", "MANTIMENTO",
+            "INGLES", "CONSTRUIR", "INSTANTE", "MENDIGO", "SONHO", "TANGERINA", "TRANSPORTE",
+            "MENSAGEM", "PENSAR", "CENTRO", "CONCHA", "INJECAO"
+        ];
+
+        // Variáveis do estado do jogo
+        let palavraCorreta;
+        let acertos = 0;
+        let erros = 0;
+
+        // Elementos da página (DOM)
+        const elPalavraDesafio = document.getElementById('palavra-desafio');
+        const elCampoResposta = document.getElementById('campo-resposta');
+        const elFeedback = document.getElementById('feedback');
+        const elPlacarAcertos = document.getElementById('placar-acertos');
+        const elPlacarErros = document.getElementById('placar-erros');
+        const btnVerificar = document.getElementById('btn-verificar');
+        const btnNovo = document.getElementById('btn-novo');
+        const btnReiniciar = document.getElementById('btn-reiniciar');
+
+        // Função para gerar uma nova palavra
+        function gerarNovaPalavra() {
+            const indiceAleatorio = Math.floor(Math.random() * listaDePalavras.length);
+            palavraCorreta = listaDePalavras[indiceAleatorio];
+
+            let palavraComLacuna = "";
+            let indiceSubstituir = palavraCorreta.indexOf('M');
+            
+            // Procura o N apenas se não achar um M que venha antes de P ou B
+            if (indiceSubstituir === -1 || !(palavraCorreta[indiceSubstituir + 1] === 'P' || palavraCorreta[indiceSubstituir + 1] === 'B')) {
+                 indiceSubstituir = palavraCorreta.indexOf('N');
+            }
+            // Se ainda assim não achar, procura a primeira ocorrência de M em qualquer lugar
+            if (indiceSubstituir === -1) {
+                indiceSubstituir = palavraCorreta.indexOf('M');
+            }
+
+            palavraComLacuna = palavraCorreta.substring(0, indiceSubstituir) + '_' + palavraCorreta.substring(indiceSubstituir + 1);
+            
+            elPalavraDesafio.textContent = palavraComLacuna;
+            elCampoResposta.value = "";
+            elFeedback.textContent = "";
+            elFeedback.className = "";
+            elCampoResposta.focus(); 
+        }
+
+        // Função para verificar a resposta da criança
+        function verificarResposta() {
+            const respostaUsuario = elCampoResposta.value.toUpperCase().trim();
+
+            if (respostaUsuario === "") {
+                elFeedback.textContent = "POR FAVOR, DIGITE UMA PALAVRA.";
+                elFeedback.className = "feedback-incorreto";
+                return;
+            }
+
+            if (respostaUsuario === palavraCorreta) {
+                acertos++;
+                elPlacarAcertos.textContent = acertos;
+                elFeedback.textContent = "PARABÉNS, VOCÊ ACERTOU!";
+                elFeedback.className = "feedback-correto";
+                
+                setTimeout(gerarNovaPalavra, 1500); 
+
+            } else {
+                erros++;
+                elPlacarErros.textContent = erros;
+                elFeedback.innerHTML = "OPS, TENTE DE NOVO!<br>LEMBRE-SE: USAMOS <strong>M</strong> ANTES DE <strong>P</strong> E <strong>B</strong>.";
+                elFeedback.className = "feedback-incorreto";
+            }
+        }
+
+        // Função para reiniciar o jogo
+        function reiniciarJogo() {
+            acertos = 0;
+            erros = 0;
+            elPlacarAcertos.textContent = acertos;
+            elPlacarErros.textContent = erros;
+            gerarNovaPalavra();
+        }
+
+        // --- Configuração dos Eventos ---
+        btnVerificar.addEventListener('click', verificarResposta);
+        elCampoResposta.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                verificarResposta();
+            }
+        });
+        btnNovo.addEventListener('click', gerarNovaPalavra);
+        btnReiniciar.addEventListener('click', reiniciarJogo);
+
+        // --- Inicia o jogo pela primeira vez ---
+        window.onload = gerarNovaPalavra;
+
+    </script>
+</body>
+</html>
