@@ -1,0 +1,5 @@
+{
+  "name": "Jogo da Velha Divertido",
+  "description": "Um jogo da velha colorido e amigável para crianças de 4 a 8 anos, com opções para jogar contra um amigo ou contra o computador.",
+  "requestFramePermissions": []
+}
