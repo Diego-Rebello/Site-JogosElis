@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { GameMode, Player, SquareValue } from './types';
 import GameBoard from './components/GameBoard';
 import GameStatus from './components/GameStatus';
@@ -17,6 +17,58 @@ const WINNING_COMBINATIONS = [
   [2, 4, 6],
 ];
 
+const checkWinner = (currentBoard: SquareValue[]): { player: Player; line: number[] } | null => {
+  for (let i = 0; i < WINNING_COMBINATIONS.length; i++) {
+    const [a, b, c] = WINNING_COMBINATIONS[i];
+    if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
+      return { player: currentBoard[a] as Player, line: WINNING_COMBINATIONS[i] };
+    }
+  }
+  return null;
+};
+
+const findBestMove = (currentBoard: SquareValue[]): number => {
+  // 1. Prioridade Máxima: Vencer o jogo
+  // A IA verifica se pode vencer na próxima jogada.
+  for (let i = 0; i < 9; i++) {
+    if (currentBoard[i] === null) {
+      const tempBoard = [...currentBoard];
+      tempBoard[i] = PLAYER_O;
+      if (checkWinner(tempBoard)) {
+        return i;
+      }
+    }
+  }
+
+  // 2. Chance de Bloquear: Não ser um oponente impossível
+  // A IA tem uma chance de ~65% de bloquear o jogador, para que a criança possa ganhar às vezes.
+  const shouldBlock = Math.random() > 0.35;
+  if (shouldBlock) {
+    for (let i = 0; i < 9; i++) {
+      if (currentBoard[i] === null) {
+        const tempBoard = [...currentBoard];
+        tempBoard[i] = PLAYER_X;
+        if (checkWinner(tempBoard)) {
+          return i;
+        }
+      }
+    }
+  }
+
+  // 3. Movimento Aleatório: Tornar o jogo imprevisível
+  // Se não houver chance de vencer ou bloquear, a IA faz uma jogada aleatória.
+  // Isso remove estratégias avançadas como sempre pegar o centro ou os cantos.
+  const availableSquares = currentBoard
+    .map((val, idx) => (val === null ? idx : -1))
+    .filter((idx) => idx !== -1);
+    
+  if (availableSquares.length > 0) {
+    return availableSquares[Math.floor(Math.random() * availableSquares.length)];
+  }
+
+  return -1; // Fallback, não deve ser alcançado em um jogo normal.
+};
+
 const App: React.FC = () => {
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
   const [board, setBoard] = useState<SquareValue[]>(Array(9).fill(null));
@@ -24,17 +76,7 @@ const App: React.FC = () => {
   const [winner, setWinner] = useState<{ player: Player; line: number[] } | null>(null);
   const [isDraw, setIsDraw] = useState<boolean>(false);
 
-  const checkWinner = (currentBoard: SquareValue[]): { player: Player; line: number[] } | null => {
-    for (let i = 0; i < WINNING_COMBINATIONS.length; i++) {
-      const [a, b, c] = WINNING_COMBINATIONS[i];
-      if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
-        return { player: currentBoard[a] as Player, line: WINNING_COMBINATIONS[i] };
-      }
-    }
-    return null;
-  };
-
-  const handleSquareClick = (index: number) => {
+  const handleSquareClick = useCallback((index: number) => {
     if (board[index] || winner || isDraw) {
       return;
     }
@@ -56,51 +98,8 @@ const App: React.FC = () => {
     } else {
       setCurrentPlayer(currentPlayer === PLAYER_X ? PLAYER_O : PLAYER_X);
     }
-  };
+  }, [board, winner, isDraw, gameMode, currentPlayer]);
   
-  const findBestMove = (currentBoard: SquareValue[]): number => {
-    // 1. Prioridade Máxima: Vencer o jogo
-    // A IA verifica se pode vencer na próxima jogada.
-    for (let i = 0; i < 9; i++) {
-      if (currentBoard[i] === null) {
-        const tempBoard = [...currentBoard];
-        tempBoard[i] = PLAYER_O;
-        if (checkWinner(tempBoard)) {
-          return i;
-        }
-      }
-    }
-
-    // 2. Chance de Bloquear: Não ser um oponente impossível
-    // A IA tem uma chance de ~65% de bloquear o jogador, para que a criança possa ganhar às vezes.
-    const shouldBlock = Math.random() > 0.35;
-    if (shouldBlock) {
-      for (let i = 0; i < 9; i++) {
-        if (currentBoard[i] === null) {
-          const tempBoard = [...currentBoard];
-          tempBoard[i] = PLAYER_X;
-          if (checkWinner(tempBoard)) {
-            return i;
-          }
-        }
-      }
-    }
-
-    // 3. Movimento Aleatório: Tornar o jogo imprevisível
-    // Se não houver chance de vencer ou bloquear, a IA faz uma jogada aleatória.
-    // Isso remove estratégias avançadas como sempre pegar o centro ou os cantos.
-    const availableSquares = currentBoard
-      .map((val, idx) => (val === null ? idx : -1))
-      .filter((idx) => idx !== -1);
-      
-    if (availableSquares.length > 0) {
-      return availableSquares[Math.floor(Math.random() * availableSquares.length)];
-    }
-
-    return -1; // Fallback, não deve ser alcançado em um jogo normal.
-  };
-
-
   useEffect(() => {
     if (gameMode === GameMode.PVC && currentPlayer === PLAYER_O && !winner && !isDraw) {
       const timer = setTimeout(() => {
@@ -122,7 +121,6 @@ const App: React.FC = () => {
       }, 700); // Add a small delay for a more natural feel
       return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPlayer, gameMode, winner, isDraw, board]);
 
 
