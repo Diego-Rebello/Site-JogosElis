@@ -36,7 +36,7 @@ const Cabecalho: React.FC<CabecalhoProps> = ({ titulo }) => {
       <a
         className="cabecalho__inicio"
         href={caminhoDoInicio()}
-        aria-label="Voltar para a página inicial"
+        aria-label="Início: voltar para a página inicial"
       >
         🏠 <span className="cabecalho__inicio-texto">Início</span>
       </a>

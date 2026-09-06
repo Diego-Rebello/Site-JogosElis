@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Jogo da forca em português com temas de animais, comidas, escola e natureza. Descubra a palavra letra por letra antes de completar o boneco.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Jogo da Forca — Jogos da Elis">
+  <meta property="og:description" content="Jogo da forca em português com temas de animais, comidas, escola e natureza. Descubra a palavra letra por letra antes de completar o boneco.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%8E%89%3C%2Ftext%3E%3C%2Fsvg%3E">
   <title>Jogo da Forca</title>
   <link rel="stylesheet" href="../../shared/base.css">
@@ -15,7 +20,7 @@
     }
     #tema {
       font-size: clamp(1rem, 4.5vw, 1.3rem);
-      color: var(--cor-principal-escura);
+      color: var(--cor-texto-destaque);
       margin: 14px 0 4px;
     }
     #forca {
@@ -58,7 +63,7 @@
 <body class="pagina">
   <script src="../../shared/cabecalho.js" data-titulo="Jogo da Forca"></script>
 
-  <div class="pagina__conteudo">
+  <main class="pagina__conteudo">
     <div id="telaTemas" class="forca tela"><div class="cartao"><h1>👻 Jogo da Forca</h1><p>Escolha um tema:</p><div id="temas" class="temas"></div></div></div>
     <div id="telaJogo" class="forca tela" hidden>
       <div id="placar" class="placar"></div>
@@ -71,7 +76,7 @@
       <div id="mensagem" class="feedback" aria-live="polite"></div>
       <button id="novaPalavraBtn" class="botao botao--sucesso" style="display: none;">Nova Palavra</button>
     </div>
-  </div>
+  </main>
 
   <script type="module">
     import { normalizar, sortear } from '../../shared/texto.js';

@@ -109,7 +109,7 @@ const App: React.FC = () => {
           ) : (
             <>
               <section className="mb-2 rounded-2xl bg-white p-3 shadow" aria-label="Placar da sessão">
-                <div className="grid grid-cols-3 gap-2 text-sm sm:text-base">
+                <div className="grid grid-cols-3 gap-2 text-base sm:text-lg">
                   <span><strong className="text-sky-700">X</strong>: {placar.X}</span>
                   <span><strong className="text-rose-600">O</strong>: {placar.O}</span>
                   <span><strong>Empates</strong>: {placar.empates}</span>
@@ -119,7 +119,7 @@ const App: React.FC = () => {
               <GameStatus winner={winner} currentPlayer={currentPlayer} isDraw={isDraw} nomes={configuracao.nomes} />
               <GameBoard board={board} onSquareClick={handleSquareClick} winningLine={winner?.line} isGameOver={!!winner || isDraw} />
               <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-                <button onClick={novaPartida} className="min-h-12 w-full rounded-full bg-emerald-600 px-5 py-3 text-lg font-bold text-white shadow-lg hover:bg-emerald-700 sm:w-auto">Nova partida</button>
+                <button onClick={novaPartida} className="min-h-12 w-full rounded-full bg-emerald-700 px-5 py-3 text-lg font-bold text-white shadow-lg hover:bg-emerald-800 sm:w-auto">Nova partida</button>
                 <button onClick={mudarModo} className="min-h-12 w-full rounded-full bg-pink-600 px-5 py-3 text-lg font-bold text-white shadow-lg hover:bg-pink-700 sm:w-auto">Mudar modo</button>
               </div>
             </>
