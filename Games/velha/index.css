@@ -1,6 +1,6 @@
 /* Tailwind 4 compilado no build, no lugar do antigo cdn.tailwindcss.com.
    source(none) desliga a varredura automática de arquivos: sem isso o Tailwind
-   leria também o dist/ commitado (bundle minificado) e realimentaria classes
+   leria também o dist/ gerado (bundle minificado) e realimentaria classes
    velhas a cada build. */
 @import "tailwindcss" source(none);
 @import "../../shared/base.css";

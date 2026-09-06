@@ -97,53 +97,12 @@
 
     <script type="module">
         import { normalizar, sortearVarios } from '../../shared/texto.js';
+        import { gerarLacuna, listaDePalavras } from './jogo.js';
         import { tocar } from '../../shared/sons.js';
         import { lancarConfete, animar } from '../../shared/confete.js';
         import { calcularEstrelas, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 
         // --- LÓGICA DO JOGO ---
-
-        // Lista de palavras com grafia e acentuação corretas.
-        // Toda palavra precisa ter um M antes de P/B ou um N antes de outra consoante.
-        const listaDePalavras = [
-            // M antes de P
-            "CAMPO", "TEMPO", "LIMPO", "COMPRA", "TAMPA", "COMPRIDO", "EMPREGO", "SIMPLES",
-            "COMPUTADOR", "LAMPIÃO", "AMPLO", "COMPANHEIRO", "CUMPRIR", "ESTAMPA", "OLIMPÍADA",
-            "SIMPATIA", "TEMPERO", "ACOMPANHAR", "EXEMPLO", "IMPACTO", "INTERROMPER", "LIMPEZA",
-            "PASSATEMPO", "RELÂMPAGO", "ACAMPAMENTO", "CAMPEÃO", "CAMPAINHA", "LÂMPADA",
-            "TROMPETE", "IMPRIMIR", "EMPADA", "EMPURRAR", "SEMPRE", "TEMPESTADE", "COMPLETO",
-            "IMPORTANTE", "SIMPÁTICO", "CAMPEONATO", "EMPRESTAR", "LIMPAR", "RAMPA",
-            "TEMPERATURA", "AMPARO", "CHIMPANZÉ", "COMPARTILHAR", "EMPINAR", "COMPASSO",
-            "IMPÉRIO",
-
-            // M antes de B
-            "BOMBA", "SAMBA", "POMBA", "EMBAIXO", "BOMBEIRO", "ZUMBIDO", "AMBULÂNCIA", "EMBORA",
-            "MEMBRO", "SOMBRA", "TROMBONE", "SÍMBOLO", "TAMBOR", "UMBIGO", "COMBOIO", "IMBATÍVEL",
-            "LOMBADA", "REEMBOLSO", "EMBLEMA", "COMBUSTÍVEL", "AMBOS", "SETEMBRO", "NOVEMBRO",
-            "DEZEMBRO", "COMBINAR", "LAMBER", "TAMBÉM", "CAMBALHOTA", "GAMBÁ", "TOMBO",
-            "EMBRULHO", "TIMBRE", "BAMBU", "SOMBRINHA", "COMBATE", "LOMBO", "ZUMBI", "TROMBADA",
-
-            // N antes de outras consoantes
-            "TINTA", "PENTE", "ONDA", "BANCO", "MUNDO", "VENTO", "SANTO", "CONTA", "PONTE",
-            "ELEFANTE", "DENTE", "GENTE", "ONZE", "FUNDO", "LINDO", "LONGE", "MANGA", "GANSO",
-            "ONÇA", "PINCEL", "BANDA", "CRIANÇA", "DANÇA", "ESTANTE", "GIGANTE", "JANTAR",
-            "LANCHA", "MORANGO", "NUNCA", "PANDA", "PRESENTE", "SEGUNDA", "TANQUE", "TRANQUILO",
-            "VINTE", "CONVITE", "ENCONTRAR", "FANTASMA", "INSTRUMENTO", "LARANJA", "MANTIMENTO",
-            "INGLÊS", "CONSTRUIR", "INSTANTE", "MENDIGO", "TANGERINA", "TRANSPORTE", "MENSAGEM",
-            "PENSAR", "CENTRO", "CONCHA", "INJEÇÃO", "CANTAR", "ANTES", "CINCO", "ONTEM",
-            "DOMINGO", "CANGURU", "PINGUIM", "MENTIRA", "CONTENTE", "ANTENA", "BRINCAR",
-            "CANSADO", "DENTISTA", "FONTE", "GARGANTA", "INVENTOR", "LANTERNA", "MANTEIGA",
-            "QUINTAL", "SANDÁLIA", "TONTO", "VONTADE", "PINTAR", "MONTANHA", "CANTIGA", "ENCANTO"
-        ];
-
-        // Recebe a palavra completa e devolve onde fica a lacuna.
-        // Primeiro procura um M antes de P ou B; se não houver, procura um N antes de consoante.
-        function gerarLacuna(palavra) {
-            let i = palavra.search(/M(?=[PB])/);
-            if (i === -1) i = palavra.search(/N(?=[^AEIOUÁÉÍÓÚÂÊÔÃÕ])/);
-            if (i === -1) throw new Error('Palavra sem M/N antes de consoante: ' + palavra);
-            return { texto: palavra.slice(0, i) + '_' + palavra.slice(i + 1), resposta: palavra[i], indice: i };
-        }
 
         // Confere a lista inteira ao carregar a página: uma palavra inválida quebra na hora.
         listaDePalavras.forEach(gerarLacuna);

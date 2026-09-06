@@ -39,13 +39,14 @@ export function aplicarJogada(
   return { tabuleiro: novoTabuleiro, vencedor, empate };
 }
 
-export const findBestMove = (currentBoard: SquareValue[]): number => {
+export const findBestMove = (currentBoard: SquareValue[], jogador: Player = PLAYER_O): number => {
+  const adversario = jogador === PLAYER_X ? PLAYER_O : PLAYER_X;
   // 1. Prioridade Máxima: Vencer o jogo
   // A IA verifica se pode vencer na próxima jogada.
   for (let i = 0; i < 9; i++) {
     if (currentBoard[i] === null) {
       const tempBoard = [...currentBoard];
-      tempBoard[i] = PLAYER_O;
+      tempBoard[i] = jogador;
       if (checkWinner(tempBoard)) {
         return i;
       }
@@ -59,7 +60,7 @@ export const findBestMove = (currentBoard: SquareValue[]): number => {
     for (let i = 0; i < 9; i++) {
       if (currentBoard[i] === null) {
         const tempBoard = [...currentBoard];
-        tempBoard[i] = PLAYER_X;
+        tempBoard[i] = adversario;
         if (checkWinner(tempBoard)) {
           return i;
         }
@@ -80,3 +81,48 @@ export const findBestMove = (currentBoard: SquareValue[]): number => {
 
   return -1; // Fallback, não deve ser alcançado em um jogo normal.
 };
+
+/**
+ * Escolhe uma jogada perfeita para `jogador`. A função é pura: não altera o
+ * tabuleiro e não depende de DOM, temporizadores ou números aleatórios.
+ */
+export function melhorJogadaMinimax(tabuleiro: SquareValue[], jogador: Player): number {
+  const adversario = jogador === PLAYER_X ? PLAYER_O : PLAYER_X;
+  const memoria = new Map<string, number>();
+
+  function avaliar(estado: SquareValue[], vez: Player, profundidade: number): number {
+    const vencedor = checkWinner(estado)?.player;
+    if (vencedor === jogador) return 10 - profundidade;
+    if (vencedor === adversario) return profundidade - 10;
+    if (estado.every(casa => casa !== null)) return 0;
+
+    const chave = `${estado.map(casa => casa ?? '-').join('')}:${vez}`;
+    const lembrada = memoria.get(chave);
+    if (lembrada !== undefined) return lembrada;
+
+    const pontuacoes: number[] = [];
+    for (let indice = 0; indice < estado.length; indice++) {
+      if (estado[indice] !== null) continue;
+      const proximo = [...estado];
+      proximo[indice] = vez;
+      pontuacoes.push(avaliar(proximo, vez === PLAYER_X ? PLAYER_O : PLAYER_X, profundidade + 1));
+    }
+    const pontuacao = vez === jogador ? Math.max(...pontuacoes) : Math.min(...pontuacoes);
+    memoria.set(chave, pontuacao);
+    return pontuacao;
+  }
+
+  let melhorIndice = -1;
+  let melhorPontuacao = -Infinity;
+  for (let indice = 0; indice < tabuleiro.length; indice++) {
+    if (tabuleiro[indice] !== null) continue;
+    const proximo = [...tabuleiro];
+    proximo[indice] = jogador;
+    const pontuacao = avaliar(proximo, adversario, 0);
+    if (pontuacao > melhorPontuacao) {
+      melhorPontuacao = pontuacao;
+      melhorIndice = indice;
+    }
+  }
+  return melhorIndice;
+}

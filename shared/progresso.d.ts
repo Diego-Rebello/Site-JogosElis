@@ -6,14 +6,20 @@ export interface RegistroDeJogo {
   melhorEstrelas: number;
   ultimaEm: string | null;
 }
+export interface Armazenamento {
+  getItem(chave: string): string | null;
+  setItem(chave: string, valor: string): void;
+  removeItem(chave: string): void;
+}
 export declare function calcularEstrelas(acertos: number, erros: number): number;
-export declare function obterProgresso(): Record<string, RegistroDeJogo>;
+export declare function obterProgresso(armazenamento?: Armazenamento): Record<string, RegistroDeJogo>;
 export declare function registrarPartida(
   jogoId: string,
   dados?: { acertos?: number; erros?: number; estrelas?: number },
+  armazenamento?: Armazenamento,
 ): RegistroDeJogo;
-export declare function estrelasDe(jogoId: string): number;
-export declare function zerarProgresso(): boolean;
+export declare function estrelasDe(jogoId: string, armazenamento?: Armazenamento): number;
+export declare function zerarProgresso(armazenamento?: Armazenamento): boolean;
 export interface Configuracoes {
   nomeCrianca: string;
   niveis: {

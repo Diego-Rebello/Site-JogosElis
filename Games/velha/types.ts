@@ -14,3 +14,19 @@ export enum GameMode {
   PVP = 'PVP',
   PVC = 'PVC',
 }
+
+export type NivelComputador = 'facil' | 'dificil';
+
+export interface ConfiguracaoPartida {
+  modo: GameMode;
+  simboloHumano: Player;
+  primeiroJogador: Player;
+  nivel: NivelComputador;
+  nomes: Record<Player, string>;
+}
+
+export interface PlacarDaSessao {
+  X: number;
+  O: number;
+  empates: number;
+}

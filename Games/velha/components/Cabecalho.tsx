@@ -11,7 +11,7 @@ interface CabecalhoProps {
 }
 
 /**
- * Descobre o caminho da página inicial. Funciona em Games/<jogo>/dist/ e o /i
+ * Descobre o caminho da página inicial. Funciona em Games/<jogo>/ e o /i
  * cobre o Netlify, que publica a pasta como /games/ em minúsculas.
  */
 function caminhoDoInicio(): string {

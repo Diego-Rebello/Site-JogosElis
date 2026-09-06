@@ -75,6 +75,7 @@
 
   <script type="module">
     import { normalizar, sortear } from '../../shared/texto.js';
+    import { letrasDaPalavra as obterLetrasDaPalavra, palavraFoiDescoberta, revelarPalavra } from './jogo.js';
     import { tocar } from '../../shared/sons.js';
     import { lancarConfete, animar } from '../../shared/confete.js';
     import { nomeDaCrianca, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
@@ -242,18 +243,7 @@
     }
 
     function mostrarPalavra(revelarTudo) {
-      let exibicao = "";
-      for (const letra of atual.palavra) {
-        const chave = normalizar(letra);
-        if (!/[A-Z]/.test(chave)) {
-          exibicao += letra + " ";           // espaços e hífens aparecem sempre
-        } else if (revelarTudo || letrasCertas.has(chave)) {
-          exibicao += letra + " ";           // mostra a letra com o acento original
-        } else {
-          exibicao += "_ ";
-        }
-      }
-      elPalavra.textContent = exibicao.trim();
+      elPalavra.textContent = revelarPalavra(atual.palavra, letrasCertas, revelarTudo).join(' ');
     }
 
     function criarBotoes() {
@@ -274,10 +264,7 @@
     }
 
     function venceu() {
-      for (const letra of letrasDaPalavra) {
-        if (!letrasCertas.has(letra)) return false;
-      }
-      return true;
+      return palavraFoiDescoberta(atual.palavra, letrasCertas);
     }
 
     function jogar(letraDigitada) {
@@ -339,9 +326,7 @@
       const listaDoTema = temaEscolhido === 'Todos' ? palavras : palavras.filter(item => item.categoria === temaEscolhido);
       atual = sortear(listaDoTema, atual);   // não repete a palavra anterior
 
-      letrasDaPalavra = new Set(
-        [...normalizar(atual.palavra)].filter(c => /[A-Z]/.test(c))
-      );
+      letrasDaPalavra = obterLetrasDaPalavra(atual.palavra);
       letrasCertas = new Set();
       erros = 0;
       jogoEncerrado = false;

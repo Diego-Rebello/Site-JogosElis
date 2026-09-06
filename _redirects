@@ -4,6 +4,8 @@
 /games/jogo%20da%20forca/*          /Games/forca/         301
 /games/jogo%20de%20somar/*          /Games/matematica/    301
 /games/jogo%20m%20n-digitar/*       /Games/m-ou-n/        301
-# Os dois jogos React são publicados a partir do dist/, que é o que vai ao ar.
-/games/emoji-memory-game/*          /Games/memoria/dist/  301
-/games/jogo-da-velha-divertido/*    /Games/velha/dist/    301
+# Os jogos React agora são publicados já compilados na raiz de cada jogo.
+/games/emoji-memory-game/*          /Games/memoria/       301
+/games/jogo-da-velha-divertido/*    /Games/velha/         301
+/games/memoria/dist/*               /Games/memoria/:splat 301
+/games/velha/dist/*                 /Games/velha/:splat   301

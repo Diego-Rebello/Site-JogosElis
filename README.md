@@ -13,10 +13,10 @@ computador, e não precisa de cadastro nem de internet rápida.
 | Jogo | Arquivo de entrada | Tecnologia |
 |---|---|---|
 | Jogo da Forca | `Games/forca/index.html` | HTML/CSS/JS puro |
-| Jogo da Memória | `Games/memoria/dist/index.html` | React 19 + Vite 6 |
+| Jogo da Memória | `Games/memoria/` | React 19 + Vite 6 |
 | Matemática | `Games/matematica/index.html` | HTML/CSS/JS puro |
 | Jogo do M ou N (toque ou digitar) | `Games/m-ou-n/index.html` | HTML/CSS/JS puro |
-| Jogo da Velha | `Games/velha/dist/index.html` | React 19 + Vite 6 |
+| Jogo da Velha | `Games/velha/` | React 19 + Vite 6 |
 
 A página inicial (`index.html`) é o índice: ela lista os jogos em cartões e aponta para os
 caminhos acima. Todos os links são relativos, então o site funciona em qualquer subpasta.
@@ -30,6 +30,11 @@ caminhos acima. Todos os links são relativos, então o site funciona em qualque
 ├── index.html                       Página inicial com os cartões dos jogos
 ├── README.md                        Este arquivo
 ├── MELHORIAS.md                     Backlog de melhorias e de jogos novos
+├── package.json                     Testes automatizados da lógica dos jogos
+├── vitest.config.ts                 Configuração do Vitest
+├── build-all.sh                     Gera o site completo em _site/
+├── netlify.toml                     Testa, compila e publica _site/ no Netlify
+├── _headers                         Regras de cache da hospedagem
 ├── .gitignore
 ├── .vscode/launch.json              Abre index.html no Chrome pelo VS Code
 ├── _redirects                       Redireciona os endereços antigos dos jogos (Netlify)
@@ -48,15 +53,14 @@ caminhos acima. Todos os links são relativos, então o site funciona em qualque
     ├── matematica/                  Matemática (interface e lógica testável)
     ├── memoria/                     Jogo da Memória (React + Vite)
     │   ├── App.tsx, index.tsx, index.html, vite.config.ts, tsconfig.json
-    │   └── dist/                    Build publicado (versionado no git de propósito)
+    │   └── dist/                    Build local ignorado pelo git
     └── velha/                       Jogo da Velha (React + Vite)
         ├── App.tsx, index.tsx, components/, lib/logica.ts, constants.tsx
-        └── dist/                    Build publicado (versionado no git de propósito)
+        └── dist/                    Build local ignorado pelo git
 ```
 
-Os jogos em HTML puro ficam cada um em um único arquivo, sem dependências locais.
-Os dois jogos em React têm o `dist/` versionado porque o Netlify publica a raiz do
-repositório sem rodar build (ver "Como publicar").
+Os jogos em HTML puro usam apenas HTML/CSS e módulos JavaScript locais, sem pacotes externos. Os dois jogos em React são compilados pelo
+`build-all.sh`; suas pastas `dist/` são artefatos locais e não ficam no git.
 
 ---
 
@@ -90,7 +94,7 @@ Script clássico (sem `type="module"`, porque ele lê o próprio `data-titulo`):
 
 Injeta no topo do `<body>` a barra com "🏠 Início", o título e o botão 🔊/🔇. O caminho da
 página inicial sai de `location.pathname`, então funciona tanto em `Games/forca/` quanto em
-`Games/memoria/dist/`. Os jogos React não usam este arquivo: têm o componente `Cabecalho`,
+`Games/memoria/`. Os jogos React não usam este arquivo: têm o componente `Cabecalho`,
 com o mesmo HTML e as mesmas classes.
 
 ### `texto.js`
@@ -177,13 +181,37 @@ npm run preview # serve o dist/ para conferir o resultado do build
 npm run typecheck # confere os tipos sem gerar arquivos
 ```
 
-**Importante:** depois de mudar qualquer código de um jogo React, rode `npm run build` e
-commite também a pasta `dist/`. É ela que vai ao ar.
+As pastas `dist/` servem para conferência local e são ignoradas pelo git. No deploy, o Netlify
+instala as dependências e refaz os dois builds a partir do código-fonte.
 
 O CSS dos dois jogos é **Tailwind 4 compilado no build** (plugin `@tailwindcss/vite`), não mais
 o "Play CDN". O ponto de entrada é o `index.css` de cada jogo, que importa o Tailwind e o
 `shared/base.css`. Ele usa `source(none)` e `@source` explícitos de propósito: sem isso o
-Tailwind varreria também o `dist/` commitado e realimentaria classes velhas a cada build.
+Tailwind varreria também o `dist/` gerado e realimentaria classes velhas a cada build.
+
+---
+
+## Testes e build completo
+
+Na raiz, instale as dependências uma vez e rode a suíte de lógica pura:
+
+```bash
+npm install
+npm test
+```
+
+Os testes cobrem texto e embaralhamento, M ou N, Matemática, Forca, Memória, progresso e as
+duas inteligências do Jogo da Velha. Eles não precisam de navegador nem de rede.
+
+Para reproduzir exatamente o site que o Netlify publica:
+
+```bash
+bash build-all.sh
+npx serve _site
+```
+
+O script instala as dependências dos jogos React, compila seus arquivos e reúne somente o que
+é público em `_site/`. Código-fonte TypeScript, configurações e dependências não são copiados.
 
 ---
 
@@ -193,15 +221,18 @@ A publicação é automática:
 
 - Hospedagem: **Netlify**, projeto `jogosdaelis`.
 - Deploy contínuo a partir do GitHub, branch `main`, com *auto publishing* ligado.
-- Sem comando de build e sem pasta de publicação definida: o Netlify publica a raiz do
-  repositório como está.
+- O `netlify.toml` roda `npm ci`, `npm test` e `bash build-all.sh`.
+- Somente a pasta `_site/` é publicada; um teste quebrado impede o deploy.
 
 Ou seja, **todo push (ou merge de PR) na `main` publica o site**. O fluxo de trabalho:
 
 1. Crie uma branch a partir da `main`.
-2. Faça as alterações. Se mexeu em jogo React, rode `npm run build` e commite o `dist/`.
-3. Teste localmente com um dos servidores acima.
-4. Abra o PR e mescle na `main`. O Netlify publica em seguida.
+2. Faça as alterações e rode `npm test` e `bash build-all.sh`.
+3. Abra um PR e confira todos os jogos na URL de preview criada pelo Netlify.
+4. Mescle na `main` somente depois da validação. O Netlify testa e publica em seguida.
+
+No painel do Netlify, o comando e a pasta de publicação vêm do `netlify.toml`. Recomenda-se
+manter a otimização “Pretty URLs” desligada para o preview corresponder ao build local.
 
 ---
 

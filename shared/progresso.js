@@ -9,6 +9,14 @@
 const CHAVE = 'jogos-elis:progresso';
 const CHAVE_CONFIGURACOES = 'jogos-elis:configuracoes';
 
+function armazenamentoPadrao() {
+  try {
+    return globalThis.localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
 const CONFIGURACOES_PADRAO = Object.freeze({
   nomeCrianca: 'Elis',
   niveis: Object.freeze({
@@ -34,9 +42,9 @@ export function calcularEstrelas(acertos, erros) {
 }
 
 /** Devolve o objeto inteiro; {} se ainda não houver nada ou se der erro. */
-export function obterProgresso() {
+export function obterProgresso(armazenamento = armazenamentoPadrao()) {
   try {
-    const bruto = localStorage.getItem(CHAVE);
+    const bruto = armazenamento?.getItem(CHAVE);
     if (!bruto) return {};
     const dados = JSON.parse(bruto);
     return dados && typeof dados === 'object' ? dados : {};
@@ -45,9 +53,10 @@ export function obterProgresso() {
   }
 }
 
-function gravar(dados) {
+function gravar(dados, armazenamento = armazenamentoPadrao()) {
   try {
-    localStorage.setItem(CHAVE, JSON.stringify(dados));
+    armazenamento?.setItem(CHAVE, JSON.stringify(dados));
+    if (!armazenamento) return false;
     return true;
   } catch {
     return false;
@@ -58,8 +67,8 @@ function gravar(dados) {
  * Soma uma partida ao histórico do jogo e devolve o registro atualizado.
  * `estrelas` é opcional: sem ele, sai de calcularEstrelas().
  */
-export function registrarPartida(jogoId, { acertos = 0, erros = 0, estrelas } = {}) {
-  const dados = obterProgresso();
+export function registrarPartida(jogoId, { acertos = 0, erros = 0, estrelas } = {}, armazenamento = armazenamentoPadrao()) {
+  const dados = obterProgresso(armazenamento);
   const anterior = dados[jogoId] || {
     partidas: 0,
     acertos: 0,
@@ -78,20 +87,21 @@ export function registrarPartida(jogoId, { acertos = 0, erros = 0, estrelas } = 
   };
 
   dados[jogoId] = atualizado;
-  gravar(dados);
+  gravar(dados, armazenamento);
   return atualizado;
 }
 
 /** Melhor quantidade de estrelas já conquistada no jogo (0 se nunca jogou). */
-export function estrelasDe(jogoId) {
-  const registro = obterProgresso()[jogoId];
+export function estrelasDe(jogoId, armazenamento = armazenamentoPadrao()) {
+  const registro = obterProgresso(armazenamento)[jogoId];
   return registro ? registro.melhorEstrelas || 0 : 0;
 }
 
 /** Apaga todo o progresso salvo. */
-export function zerarProgresso() {
+export function zerarProgresso(armazenamento = armazenamentoPadrao()) {
   try {
-    localStorage.removeItem(CHAVE);
+    armazenamento?.removeItem(CHAVE);
+    if (!armazenamento) return false;
     return true;
   } catch {
     return false;
