@@ -25,14 +25,6 @@ const Square: React.FC<SquareProps> = ({ value, onClick, isWinning }) => {
           {value}
         </span>
       )}
-       <style>{`
-        @keyframes jump-in {
-          0% { transform: scale(0.5); opacity: 0; }
-          60% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); }
-        }
-        .animate-jump-in { animation: jump-in 0.3s ease-out forwards; }
-      `}</style>
     </button>
   );
 };

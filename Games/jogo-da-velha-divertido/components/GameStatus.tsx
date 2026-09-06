@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Player } from '../types';
+import { Player, Vitoria } from '../types';
 import { PLAYER_X } from '../constants';
 
 interface GameStatusProps {
-  winner: { player: Player; line: number[] } | null;
+  winner: Vitoria | null;
   currentPlayer: Player;
   isDraw: boolean;
 }
