@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%8E%89%3C%2Ftext%3E%3C%2Fsvg%3E">
+  <title>Jogo da Forca</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+      margin: 0;
+      padding: 16px 12px 32px;
+      overflow-x: hidden;
+    }
+    h1 {
+      color: #ff4081;
+      font-size: clamp(1.5rem, 6vw, 2.2rem);
+      margin: 8px 0 16px;
+    }
+    #placar {
+      font-size: clamp(1rem, 4vw, 1.4rem);
+      margin-bottom: 12px;
+      font-weight: bold;
+      color: #37474f;
+    }
+    #tema {
+      font-size: clamp(1rem, 4.5vw, 1.4rem);
+      color: #00796b;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    #forca {
+      font-size: clamp(3.5rem, 18vw, 6.25rem);
+      line-height: 1.2;
+    }
+    #palavra {
+      font-size: clamp(1.5rem, 8vw, 2.5rem);
+      letter-spacing: 0.15em;
+      margin: 16px auto;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      font-weight: bold;
+      color: #263238;
+    }
+    .letras {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .letras button {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 4px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 10px;
+      background-color: #ffeb3b;
+      border: 2px solid #fbc02d;
+      cursor: pointer;
+    }
+    .letras button:disabled {
+      background-color: #ccc;
+      border-color: #aaa;
+      cursor: not-allowed;
+    }
+    #mensagem {
+      font-size: clamp(1.2rem, 5vw, 1.8rem);
+      margin-top: 20px;
+      min-height: 2.2em;
+      color: #4caf50;
+      font-weight: bold;
+    }
+    #novaPalavraBtn {
+      margin-top: 12px;
+      padding: 12px 24px;
+      min-height: 44px;
+      font-size: 20px;
+      border-radius: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎉 Jogo da Forca 🎉</h1>
+  <div id="placar"></div>
+  <div id="tema"></div>
+  <div id="forca">😀</div>
+  <div id="palavra"></div>
+  <div class="letras" id="botoes"></div>
+  <div id="mensagem" aria-live="polite"></div>
+  <button id="novaPalavraBtn" style="display: none;">Nova Palavra</button>
+
+  <script>
+    // Cada palavra vem com o tema, escrita com a acentuação correta.
+    const palavras = [
+      // Animais
+      { palavra: "LEÃO", categoria: "Animais" },
+      { palavra: "PÁSSARO", categoria: "Animais" },
+      { palavra: "ELEFANTE", categoria: "Animais" },
+      { palavra: "CACHORRO", categoria: "Animais" },
+      { palavra: "GATO", categoria: "Animais" },
+      { palavra: "MACACO", categoria: "Animais" },
+      { palavra: "PATO", categoria: "Animais" },
+      { palavra: "GIRAFA", categoria: "Animais" },
+      { palavra: "URSO", categoria: "Animais" },
+      { palavra: "PEIXE", categoria: "Animais" },
+      { palavra: "SAPO", categoria: "Animais" },
+      { palavra: "COELHO", categoria: "Animais" },
+      { palavra: "TIGRE", categoria: "Animais" },
+      { palavra: "CAVALO", categoria: "Animais" },
+      { palavra: "TARTARUGA", categoria: "Animais" },
+      { palavra: "BORBOLETA", categoria: "Animais" },
+      { palavra: "PINGUIM", categoria: "Animais" },
+      { palavra: "GOLFINHO", categoria: "Animais" },
+      { palavra: "JACARÉ", categoria: "Animais" },
+      { palavra: "ABELHA", categoria: "Animais" },
+      { palavra: "CORUJA", categoria: "Animais" },
+
+      // Comidas
+      { palavra: "ABACAXI", categoria: "Comidas" },
+      { palavra: "BANANA", categoria: "Comidas" },
+      { palavra: "SORVETE", categoria: "Comidas" },
+      { palavra: "BISCOITO", categoria: "Comidas" },
+      { palavra: "SUCO", categoria: "Comidas" },
+      { palavra: "PIRULITO", categoria: "Comidas" },
+      { palavra: "MELANCIA", categoria: "Comidas" },
+      { palavra: "MORANGO", categoria: "Comidas" },
+      { palavra: "CHOCOLATE", categoria: "Comidas" },
+      { palavra: "PIPOCA", categoria: "Comidas" },
+      { palavra: "FEIJÃO", categoria: "Comidas" },
+      { palavra: "MAÇÃ", categoria: "Comidas" },
+      { palavra: "QUEIJO", categoria: "Comidas" },
+      { palavra: "BOLO", categoria: "Comidas" },
+      { palavra: "LIMÃO", categoria: "Comidas" },
+      { palavra: "MAMÃO", categoria: "Comidas" },
+
+      // Casa
+      { palavra: "CAMA", categoria: "Casa" },
+      { palavra: "MESA", categoria: "Casa" },
+      { palavra: "CADEIRA", categoria: "Casa" },
+      { palavra: "JANELA", categoria: "Casa" },
+      { palavra: "PORTA", categoria: "Casa" },
+      { palavra: "SOFÁ", categoria: "Casa" },
+      { palavra: "ARMÁRIO", categoria: "Casa" },
+      { palavra: "TRAVESSEIRO", categoria: "Casa" },
+      { palavra: "COBERTOR", categoria: "Casa" },
+      { palavra: "ESCADA", categoria: "Casa" },
+      { palavra: "ESPELHO", categoria: "Casa" },
+      { palavra: "CHUVEIRO", categoria: "Casa" },
+      { palavra: "GELADEIRA", categoria: "Casa" },
+      { palavra: "TELEVISÃO", categoria: "Casa" },
+
+      // Escola
+      { palavra: "ESCOLA", categoria: "Escola" },
+      { palavra: "LIVRO", categoria: "Escola" },
+      { palavra: "CADERNO", categoria: "Escola" },
+      { palavra: "LÁPIS", categoria: "Escola" },
+      { palavra: "BORRACHA", categoria: "Escola" },
+      { palavra: "MOCHILA", categoria: "Escola" },
+      { palavra: "PROFESSORA", categoria: "Escola" },
+      { palavra: "TESOURA", categoria: "Escola" },
+      { palavra: "RÉGUA", categoria: "Escola" },
+      { palavra: "APONTADOR", categoria: "Escola" },
+      { palavra: "RECREIO", categoria: "Escola" },
+
+      // Natureza
+      { palavra: "FLORESTA", categoria: "Natureza" },
+      { palavra: "ESTRELA", categoria: "Natureza" },
+      { palavra: "NUVEM", categoria: "Natureza" },
+      { palavra: "CHUVA", categoria: "Natureza" },
+      { palavra: "ÁRVORE", categoria: "Natureza" },
+      { palavra: "MONTANHA", categoria: "Natureza" },
+      { palavra: "CACHOEIRA", categoria: "Natureza" },
+      { palavra: "PRAIA", categoria: "Natureza" },
+      { palavra: "VENTO", categoria: "Natureza" },
+      { palavra: "JARDIM", categoria: "Natureza" },
+      { palavra: "SEMENTE", categoria: "Natureza" },
+      { palavra: "GIRASSOL", categoria: "Natureza" },
+
+      // Brinquedos
+      { palavra: "BOLA", categoria: "Brinquedos" },
+      { palavra: "CARRINHO", categoria: "Brinquedos" },
+      { palavra: "BONECA", categoria: "Brinquedos" },
+      { palavra: "PIPA", categoria: "Brinquedos" },
+      { palavra: "BRINQUEDO", categoria: "Brinquedos" },
+      { palavra: "BICICLETA", categoria: "Brinquedos" },
+      { palavra: "PATINETE", categoria: "Brinquedos" },
+      { palavra: "PIÃO", categoria: "Brinquedos" },
+      { palavra: "BALANÇO", categoria: "Brinquedos" },
+      { palavra: "PETECA", categoria: "Brinquedos" },
+      { palavra: "URSINHO", categoria: "Brinquedos" },
+
+      // Contos de fada
+      { palavra: "PRINCESA", categoria: "Contos de fada" },
+      { palavra: "RAINHA", categoria: "Contos de fada" },
+      { palavra: "CASTELO", categoria: "Contos de fada" },
+      { palavra: "FADA", categoria: "Contos de fada" },
+      { palavra: "DRAGÃO", categoria: "Contos de fada" },
+      { palavra: "BRUXA", categoria: "Contos de fada" },
+      { palavra: "GIGANTE", categoria: "Contos de fada" },
+      { palavra: "SEREIA", categoria: "Contos de fada" },
+      { palavra: "DUENDE", categoria: "Contos de fada" },
+      { palavra: "VARINHA", categoria: "Contos de fada" },
+      { palavra: "FEITIÇO", categoria: "Contos de fada" },
+
+      // Corpo
+      { palavra: "CORAÇÃO", categoria: "Corpo" },
+      { palavra: "CABEÇA", categoria: "Corpo" },
+      { palavra: "BRAÇO", categoria: "Corpo" },
+      { palavra: "PERNA", categoria: "Corpo" },
+      { palavra: "CABELO", categoria: "Corpo" },
+      { palavra: "ORELHA", categoria: "Corpo" },
+      { palavra: "BARRIGA", categoria: "Corpo" },
+      { palavra: "JOELHO", categoria: "Corpo" }
+    ];
+
+    const estagios = ["😀", "😮", "😕", "😟", "😣", "😭", "💀"];
+    const MAX_ERROS = estagios.length - 1; // 6 erros
+
+    // Tira acentos e cedilha: "Ã" vira "A", "Ç" vira "C".
+    function normalizar(texto) {
+      return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    }
+
+    // Estado da rodada
+    let atual = null;          // { palavra, categoria }
+    let letrasDaPalavra = new Set(); // letras normalizadas que a palavra tem
+    let letrasCertas = new Set();    // letras normalizadas já reveladas
+    let erros = 0;
+    let jogoEncerrado = false;
+
+    // Placar da sessão (mantido entre palavras)
+    let vitorias = 0;
+    let derrotas = 0;
+
+    const elPlacar = document.getElementById("placar");
+    const elTema = document.getElementById("tema");
+    const elForca = document.getElementById("forca");
+    const elPalavra = document.getElementById("palavra");
+    const elBotoes = document.getElementById("botoes");
+    const elMensagem = document.getElementById("mensagem");
+    const btnNovaPalavra = document.getElementById("novaPalavraBtn");
+
+    function atualizarPlacar() {
+      elPlacar.textContent = `Vitórias: ${vitorias} | Derrotas: ${derrotas} | Erros nesta palavra: ${erros} de ${MAX_ERROS}`;
+    }
+
+    function mostrarPalavra(revelarTudo) {
+      let exibicao = "";
+      for (const letra of atual.palavra) {
+        const chave = normalizar(letra);
+        if (!/[A-Z]/.test(chave)) {
+          exibicao += letra + " ";           // espaços e hífens aparecem sempre
+        } else if (revelarTudo || letrasCertas.has(chave)) {
+          exibicao += letra + " ";           // mostra a letra com o acento original
+        } else {
+          exibicao += "_ ";
+        }
+      }
+      elPalavra.textContent = exibicao.trim();
+    }
+
+    function criarBotoes() {
+      const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      for (const letra of alfabeto) {
+        const botao = document.createElement("button");
+        botao.textContent = letra;
+        botao.dataset.letra = letra;
+        botao.setAttribute("aria-label", `Letra ${letra}`);
+        botao.addEventListener("click", () => jogar(letra));
+        elBotoes.appendChild(botao);
+      }
+    }
+
+    function botaoDaLetra(letra) {
+      return elBotoes.querySelector(`button[data-letra="${letra}"]`);
+    }
+
+    function venceu() {
+      for (const letra of letrasDaPalavra) {
+        if (!letrasCertas.has(letra)) return false;
+      }
+      return true;
+    }
+
+    function jogar(letraDigitada) {
+      if (jogoEncerrado) return;
+      const letra = normalizar(letraDigitada);
+      if (!/^[A-Z]$/.test(letra)) return;
+
+      const botao = botaoDaLetra(letra);
+      if (!botao || botao.disabled) return;
+      botao.disabled = true;
+
+      if (letrasDaPalavra.has(letra)) {
+        letrasCertas.add(letra);
+        mostrarPalavra(false);
+        if (venceu()) {
+          vitorias++;
+          elMensagem.textContent = `🎉 Você ganhou! A palavra era: ${atual.palavra}`;
+          fimDeJogo();
+        }
+      } else {
+        erros++;
+        elForca.textContent = estagios[erros];
+        if (erros >= MAX_ERROS) {
+          derrotas++;
+          mostrarPalavra(true);
+          elMensagem.textContent = `💀 Você perdeu! A palavra era: ${atual.palavra}`;
+          fimDeJogo();
+        }
+      }
+      atualizarPlacar();
+    }
+
+    function fimDeJogo() {
+      jogoEncerrado = true;
+      btnNovaPalavra.style.display = "inline-block";
+      elBotoes.querySelectorAll("button").forEach(b => { b.disabled = true; });
+      btnNovaPalavra.focus();
+    }
+
+    function novaPalavra() {
+      const anterior = atual ? atual.palavra : null;
+      do {
+        atual = palavras[Math.floor(Math.random() * palavras.length)];
+      } while (palavras.length > 1 && atual.palavra === anterior);
+
+      letrasDaPalavra = new Set(
+        [...normalizar(atual.palavra)].filter(c => /[A-Z]/.test(c))
+      );
+      letrasCertas = new Set();
+      erros = 0;
+      jogoEncerrado = false;
+
+      elTema.textContent = `Tema: ${atual.categoria}`;
+      elForca.textContent = estagios[0];
+      elMensagem.textContent = "";
+      btnNovaPalavra.style.display = "none";
+      elBotoes.querySelectorAll("button").forEach(b => { b.disabled = false; });
+      mostrarPalavra(false);
+      atualizarPlacar();
+    }
+
+    // Teclado físico: aceita A–Z e também Ç, que conta como C.
+    document.addEventListener("keydown", (evento) => {
+      if (evento.ctrlKey || evento.metaKey || evento.altKey) return;
+      if (evento.key.length !== 1) return;
+      const letra = normalizar(evento.key);
+      if (/^[A-Z]$/.test(letra)) jogar(letra);
+    });
+
+    btnNovaPalavra.addEventListener("click", novaPalavra);
+
+    criarBotoes();
+    novaPalavra();
+  </script>
+</body>
+</html>

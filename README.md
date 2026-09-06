@@ -12,11 +12,11 @@ computador, e não precisa de cadastro nem de internet rápida.
 
 | Jogo | Arquivo de entrada | Tecnologia |
 |---|---|---|
-| Jogo da Forca | `Games/Jogo da Forca/forca.html` | HTML/CSS/JS puro |
-| Jogo da Memória | `Games/emoji-memory-game/dist/index.html` | React 19 + Vite 6 |
-| Jogo de Somar | `Games/Jogo de Somar/soma_placar.html` | HTML/CSS/JS puro |
-| Jogo do M ou N (digitar) | `Games/Jogo M N-digitar/Jogo M N-digitar.html` | HTML/CSS/JS puro |
-| Jogo da Velha | `Games/jogo-da-velha-divertido/dist/index.html` | React 19 + Vite 6 |
+| Jogo da Forca | `Games/forca/index.html` | HTML/CSS/JS puro |
+| Jogo da Memória | `Games/memoria/dist/index.html` | React 19 + Vite 6 |
+| Jogo de Somar | `Games/matematica/index.html` | HTML/CSS/JS puro |
+| Jogo do M ou N (digitar) | `Games/m-ou-n/index.html` | HTML/CSS/JS puro |
+| Jogo da Velha | `Games/velha/dist/index.html` | React 19 + Vite 6 |
 
 A página inicial (`index.html`) é o índice: ela lista os jogos em cartões e aponta para os
 caminhos acima. Todos os links são relativos, então o site funciona em qualquer subpasta.
@@ -32,15 +32,16 @@ caminhos acima. Todos os links são relativos, então o site funciona em qualque
 ├── MELHORIAS.md                     Backlog de melhorias e de jogos novos
 ├── .gitignore
 ├── .vscode/launch.json              Abre index.html no Chrome pelo VS Code
+├── _redirects                       Redireciona os endereços antigos dos jogos (Netlify)
 └── Games/
-    ├── Jogo da Forca/forca.html
-    ├── Jogo de Somar/soma_placar.html
-    ├── Jogo M N-digitar/Jogo M N-digitar.html
-    ├── emoji-memory-game/           Jogo da Memória (React + Vite)
+    ├── forca/index.html             Jogo da Forca
+    ├── m-ou-n/index.html            Jogo do M ou N
+    ├── matematica/index.html        Jogo de Somar
+    ├── memoria/                     Jogo da Memória (React + Vite)
     │   ├── App.tsx, index.tsx, index.html, vite.config.ts, tsconfig.json
     │   └── dist/                    Build publicado (versionado no git de propósito)
-    └── jogo-da-velha-divertido/     Jogo da Velha (React + Vite)
-        ├── App.tsx, index.tsx, components/, constants.tsx
+    └── velha/                       Jogo da Velha (React + Vite)
+        ├── App.tsx, index.tsx, components/, lib/logica.ts, constants.tsx
         └── dist/                    Build publicado (versionado no git de propósito)
 ```
 
@@ -73,16 +74,16 @@ No VS Code, a configuração "Open index" (`.vscode/launch.json`) abre o `index.
 
 ## Como rodar e buildar os jogos React
 
-Vale para `Games/emoji-memory-game` e `Games/jogo-da-velha-divertido`. Requer Node.js 18 ou
-mais novo.
+Vale para `Games/memoria` e `Games/velha`. Requer Node.js 18 ou mais novo.
 
 ```bash
-cd "Games/emoji-memory-game"   # ou "Games/jogo-da-velha-divertido"
+cd Games/memoria   # ou Games/velha
 
 npm install     # instala as dependências (cria node_modules/, fora do git)
 npm run dev     # servidor de desenvolvimento com recarga automática
 npm run build   # gera a pasta dist/
 npm run preview # serve o dist/ para conferir o resultado do build
+npm run typecheck # confere os tipos sem gerar arquivos
 ```
 
 **Importante:** depois de mudar qualquer código de um jogo React, rode `npm run build` e
