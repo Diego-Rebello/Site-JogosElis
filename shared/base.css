@@ -92,6 +92,13 @@
   justify-content: center;
 }
 
+/* Só o fundo, sem mexer em fonte nem em layout: é o que os dois jogos React
+   usam, já que o resto do visual deles vem do Tailwind. */
+.fundo-jogos {
+  background: var(--cor-fundo);
+  background-attachment: fixed;
+}
+
 /* --- Cabeçalho com o botão de voltar ao início --------------------------- */
 
 .cabecalho {

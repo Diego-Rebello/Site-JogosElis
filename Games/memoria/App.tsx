@@ -1,26 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CardData, Player, GameState } from './types';
+import { embaralhar } from '../../shared/texto.js';
+import Cabecalho from './components/Cabecalho';
 
 // --- Game Configuration & Logic ---
 
 const EMOJI_POOL = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🚗', '✈️', '🚀', '⛵️', '🍕', '🍔', '🍓', '🍉', '⚽️', '🏀', '🏈', '⚾️', '🎾', '🏐', '🏉', '🎱'];
 const PLAYER_COLORS = [
-  'bg-indigo-500', // Player 1
+  'bg-pink-500',   // Player 1
   'bg-red-500',    // Player 2
   'bg-emerald-500',// Player 3
   'bg-amber-500',  // Player 4
 ];
-
-// Fisher-Yates: cada ordem tem a mesma chance de sair.
-// O antigo sort(() => Math.random() - 0.5) era enviesado.
-const embaralhar = <T,>(lista: T[]): T[] => {
-  const copia = [...lista];
-  for (let i = copia.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copia[i], copia[j]] = [copia[j], copia[i]];
-  }
-  return copia;
-};
 
 const generateCards = (cardCount: number): CardData[] => {
   const pairCount = cardCount / 2;
@@ -49,8 +40,8 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
     const canStart = selectedPlayers !== null && selectedCards !== null;
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-        <h1 className="text-5xl sm:text-6xl font-fredoka text-indigo-700 tracking-wider mb-8">
+      <div className="flex flex-1 flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-5xl sm:text-6xl font-fredoka text-pink-700 tracking-wider mb-8">
           Jogo da Memória Emoji
         </h1>
         
@@ -62,7 +53,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
                 <button
                   key={count}
                   onClick={() => setSelectedPlayers(count)}
-                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedPlayers === count ? 'bg-indigo-500 text-white scale-110' : 'bg-white hover:bg-teal-100 text-indigo-600'}`}
+                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedPlayers === count ? 'bg-pink-500 text-white scale-110' : 'bg-white hover:bg-pink-100 text-pink-600'}`}
                 >
                   {count}
                 </button>
@@ -77,7 +68,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
                 <button
                   key={count}
                   onClick={() => setSelectedCards(count)}
-                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedCards === count ? 'bg-indigo-500 text-white scale-110' : 'bg-white hover:bg-teal-100 text-indigo-600'}`}
+                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedCards === count ? 'bg-pink-500 text-white scale-110' : 'bg-white hover:bg-pink-100 text-pink-600'}`}
                 >
                   {count}
                 </button>
@@ -118,8 +109,8 @@ const CardComponent: React.FC<CardComponentProps> = ({ card, onClick, isDisabled
   return (
     <div className="w-full aspect-[3/4] [perspective:1000px] cursor-pointer" onClick={handleClick}>
       <div className={cardInnerClasses}>
-        <div className="absolute w-full h-full rounded-lg shadow-md bg-indigo-500 hover:bg-indigo-600 transition-colors flex items-center justify-center [backface-visibility:hidden]">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-1/2 w-1/2 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="absolute w-full h-full rounded-lg shadow-md bg-pink-500 hover:bg-pink-600 transition-colors flex items-center justify-center [backface-visibility:hidden]">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-1/2 w-1/2 text-pink-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
@@ -190,7 +181,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ players, currentPlayerId, onNam
             ))}
         </div>
         <div className="flex items-center gap-3">
-             <button onClick={onGoToSetup} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105">
+             <button onClick={onGoToSetup} className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105">
                 Voltar
             </button>
             <button onClick={onNewGame} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105">
@@ -354,10 +345,6 @@ const App: React.FC = () => {
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, name: newName } : p));
   }, []);
 
-  if (gameState === 'setup') {
-    return <SetupScreen onStartGame={handleStartGame} />;
-  }
-
   // Larguras pensadas para a carta ficar por volta de 110 px nas telas grandes:
   // com w-full, quem define o tamanho da carta é a largura do tabuleiro.
   const containerWidthClass =
@@ -365,13 +352,15 @@ const App: React.FC = () => {
     cardCount === 24 ? 'max-w-3xl' :
     'max-w-lg';
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+  const conteudo = gameState === 'setup' ? (
+    <SetupScreen onStartGame={handleStartGame} />
+  ) : (
+    <div className="flex flex-1 flex-col items-center justify-center p-4">
       {gameState === 'finished' && <VictoryModal players={players} onPlayAgain={handleNewGame} />}
       
       <div className={`w-full ${containerWidthClass} mx-auto transition-all duration-500`}>
         <header className="text-center mb-6">
-          <h1 className="text-4xl sm:text-5xl font-fredoka text-indigo-700 tracking-wider">
+          <h1 className="text-4xl sm:text-5xl font-fredoka text-pink-700 tracking-wider">
             Jogo da Memória Emoji
           </h1>
           <p className="text-gray-500 mt-1">Encontre os pares!</p>
@@ -393,10 +382,17 @@ const App: React.FC = () => {
             isChecking={isChecking}
         />
         
-        <footer className="text-center text-gray-400 text-sm mt-8">
+        <footer className="text-center text-gray-500 text-sm mt-8">
             Criado para crianças de 4 a 8 anos.
         </footer>
       </div>
+    </div>
+  );
+
+  return (
+    <div className="fundo-jogos flex min-h-dvh flex-col">
+      <Cabecalho titulo="Jogo da Memória" />
+      {conteudo}
     </div>
   );
 };

@@ -152,8 +152,9 @@ python3 -m http.server 8000
 
 Depois abra http://localhost:3000 (npx serve) ou http://localhost:8000 (Python).
 
-Abrir o `index.html` com dois cliques (protocolo `file://`) funciona para os jogos em HTML
-puro, mas pode falhar nos jogos React. Prefira um dos servidores acima.
+**Não abra com dois cliques.** Desde a T10 os três jogos em HTML puro também usam
+`<script type="module">` para importar `shared/texto.js`, e módulos ES não carregam pelo
+protocolo `file://`. Use sempre um dos servidores acima.
 
 No VS Code, a configuração "Open index" (`.vscode/launch.json`) abre o `index.html` no Chrome.
 

@@ -6,6 +6,7 @@ import GameStatus from './components/GameStatus';
 import ModeSelector from './components/ModeSelector';
 import { PLAYER_X, PLAYER_O } from './constants';
 import { aplicarJogada, findBestMove } from './lib/logica';
+import Cabecalho from './components/Cabecalho';
 
 const App: React.FC = () => {
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
@@ -71,16 +72,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sky-200 flex flex-col items-center justify-center p-4 text-center text-slate-800">
-      <header className="mb-6">
-        <h1 className="text-5xl md:text-7xl font-bold text-white" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
-          Jogo da Velha
-        </h1>
-        <h2 className="text-2xl md:text-3xl text-amber-300 font-bold" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2)' }}>
-          Divertido
-        </h2>
-      </header>
+    <div className="fundo-jogos flex min-h-dvh flex-col text-center text-slate-800">
+      <Cabecalho titulo="Jogo da Velha Divertido" />
 
+      <div className="flex flex-1 flex-col items-center justify-center p-4">
       <main className="bg-white/70 backdrop-blur-sm p-6 rounded-3xl shadow-2xl w-full max-w-md">
         {gameMode === null ? (
           <ModeSelector onSelectMode={setGameMode} />
@@ -96,13 +91,13 @@ const App: React.FC = () => {
             <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
               <button 
                 onClick={resetGame}
-                className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-200"
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-200"
               >
                 Jogar de Novo
               </button>
               <button 
                 onClick={changeMode}
-                className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-200"
+                className="w-full sm:w-auto bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-full text-xl shadow-lg transform hover:scale-105 transition-transform duration-200"
               >
                 Mudar Modo
               </button>
@@ -110,9 +105,10 @@ const App: React.FC = () => {
           </>
         )}
       </main>
-       <footer className="mt-8 text-white/80">
+      <footer className="mt-8 text-slate-600">
         Criado com diversão para os pequenos!
       </footer>
+      </div>
     </div>
   );
 };
