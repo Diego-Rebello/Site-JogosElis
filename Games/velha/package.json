@@ -1,5 +1,5 @@
 {
-  "name": "emoji-memory-game",
+  "name": "velha",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
-    "@types/react": "^19.2.18",
+    "@types/react": "^19.1.12",
     "@types/react-dom": "^19.2.7",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"

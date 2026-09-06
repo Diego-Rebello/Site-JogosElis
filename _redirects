@@ -1,0 +1,9 @@
+# Endereços antigos dos jogos, de antes da padronização dos nomes das pastas (T08).
+# O Netlify serve os caminhos em minúsculas, então as origens vão em minúsculas
+# e com %20 no lugar dos espaços.
+/games/jogo%20da%20forca/*          /Games/forca/         301
+/games/jogo%20de%20somar/*          /Games/matematica/    301
+/games/jogo%20m%20n-digitar/*       /Games/m-ou-n/        301
+# Os dois jogos React são publicados a partir do dist/, que é o que vai ao ar.
+/games/emoji-memory-game/*          /Games/memoria/dist/  301
+/games/jogo-da-velha-divertido/*    /Games/velha/dist/    301
