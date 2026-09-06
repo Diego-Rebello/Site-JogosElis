@@ -10,7 +10,7 @@
 > (Claude Opus ou Claude Sonnet) que a execute do início ao fim sem precisar de mais contexto.
 > Diego revisa o resultado, testa com a Elis e segue para a próxima.
 >
-> **Andamento:** T01 a T13 concluídas em 2026-09-06. A próxima tarefa da fila é a **T14**.
+> **Andamento:** T01 a T17 concluídas em 2026-09-06. A próxima tarefa da fila é a **T18**.
 > O estado atual do repositório está na seção [0.4](#04-progresso); a seção 1 é o diagnóstico
 > original, de antes da execução, e foi mantida para registrar o motivo de cada tarefa.
 
@@ -72,8 +72,8 @@ Regras:
 
 ### 0.4 Progresso
 
-Fases 0 e 1 concluídas, mais as T08 a T13. Tudo testado no navegador (Chrome headless) antes de
-cada commit.
+Fases 0, 1 e 2 concluídas, mais as T14 a T17 da fase 3. Tudo testado no navegador
+(Chrome headless) antes de cada commit.
 
 | Tarefa | Status | Commit |
 |---|---|---|
@@ -90,7 +90,11 @@ cada commit.
 | T11 — Fim do Tailwind CDN, do Font Awesome e das fontes remotas | ✅ Concluída em 2026-09-06 | `094f9ed` |
 | T12 — Sons e celebração em todos os jogos | ✅ Concluída em 2026-09-06 | `784d82e` |
 | T13 — Progresso salvo e Mural de Conquistas | ✅ Concluída em 2026-09-06 | `157e101` |
-| T14 em diante | ⬜ A fazer | — |
+| T14 — Matemática: níveis, operações e rodadas | ✅ Concluída em 2026-09-06 | `23a226a` |
+| T15 — M ou N: toque, regra e rodadas | ✅ Concluída em 2026-09-06 | `23a226a` |
+| T16 — Forca: temas, dicas e placar | ✅ Concluída em 2026-09-06 | `23a226a` |
+| T17 — Memória: modo solo, recordes e temas | ✅ Concluída em 2026-09-06 | `23a226a` |
+| T18 em diante | ⬜ A fazer | — |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
 
@@ -99,7 +103,7 @@ cada commit.
 | Página inicial | `index.html` | HTML/CSS puro + `shared/base.css`, ícones em emoji |
 | Biblioteca comum | `shared/` | CSS + módulos ES próprios, sem dependência externa |
 | Jogo da Forca | `Games/forca/index.html` | HTML puro + `shared/`, script `type="module"` |
-| Jogo de Somar | `Games/matematica/index.html` | HTML puro + `shared/`, script `type="module"` |
+| Matemática | `Games/matematica/` | HTML puro + módulo de lógica testável, `shared/` |
 | Jogo do M ou N | `Games/m-ou-n/index.html` | HTML puro + `shared/`, script `type="module"` |
 | Jogo da Memória | `Games/memoria/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
 | Jogo da Velha | `Games/velha/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
@@ -137,9 +141,10 @@ cada commit.
 - O componente `Cabecalho` está duplicado nos dois projetos React, de propósito: pôr um `.tsx` em
   `shared/` obrigaria a pasta a depender do React, o que a T09 proíbe. A T23 resolve isso se e
   quando os projetos forem unificados.
-- A T13 criou rodadas provisórias de **10 questões** em Somar e **10 palavras concluídas** em
-  M ou N para permitir o registro de progresso. A T14 e a T15 vão ampliar essas rodadas com as
-  telas, modos e regras pedagógicas planejadas.
+- As rodadas de **10 questões** da Matemática e de **10 palavras** do M ou N agora têm telas,
+  modos e regras pedagógicas definitivas (T14 e T15).
+- O recorde da Memória é separado por quantidade de cartas e usa a chave
+  `jogos-elis:memoria:recorde:<n>`; primeiro compara jogadas e, em empate, o menor tempo.
 - No Jogo da Velha, vitória do computador toca o som de erro e **não** lança confete: festa só
   quando quem ganha é a criança.
 
@@ -698,6 +703,8 @@ quando o localStorage está vazio ou bloqueado (try/catch em toda leitura).
 
 ### T14 — Jogo de Somar vira "Matemática": níveis, subtração e rodadas de 10
 
+> ✅ **Concluída em 2026-09-06** — commit `23a226a`.
+
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** T10
 **Arquivos:** `Games/matematica/index.html` (ex `soma_placar.html`)
 
@@ -723,9 +730,9 @@ quando o localStorage está vazio ou bloqueado (try/catch em toda leitura).
 5. Atualize o cartão da página inicial para "Matemática" com ícone 🧮.
 
 **Critérios de aceite**
-- [ ] 1000 chamadas de `gerarQuestao` por nível respeitam as faixas e nunca produzem negativo.
-- [ ] Rodada de 10 questões termina com tela final e registra estrelas.
-- [ ] `Enter` confere e avança sem usar o mouse.
+- [x] 1000 chamadas de `gerarQuestao` por nível respeitam as faixas e nunca produzem negativo.
+- [x] Rodada de 10 questões termina com tela final e registra estrelas.
+- [x] `Enter` confere e avança sem usar o mouse.
 
 **Prompt para o modelo**
 ```
@@ -736,6 +743,8 @@ um módulo `jogo.js` separado do DOM para facilitar os testes.
 ---
 
 ### T15 — Jogo do M ou N: modo toque, explicação da regra e rodadas
+
+> ✅ **Concluída em 2026-09-06** — commit `23a226a`.
 
 **Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T04, T10
 **Arquivos:** `Games/m-ou-n/index.html`
@@ -748,8 +757,8 @@ um módulo `jogo.js` separado do DOM para facilitar os testes.
 5. Ao acertar: mostra a palavra correta acentuada por 1 s e avança.
 
 **Critérios de aceite**
-- [ ] Modo toque jogável só com o dedo; modo digitar continua funcionando com `Enter`.
-- [ ] Nenhuma palavra se repete na mesma rodada.
+- [x] Modo toque jogável só com o dedo; modo digitar continua funcionando com `Enter`.
+- [x] Nenhuma palavra se repete na mesma rodada.
 
 **Prompt para o modelo**
 ```
@@ -759,6 +768,8 @@ Abra MELHORIAS.md e execute a tarefa T15 sobre o resultado da T04.
 ---
 
 ### T16 — Jogo da Forca: escolha de tema, dica e placar
+
+> ✅ **Concluída em 2026-09-06** — commit `23a226a`.
 
 **Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T05, T10
 **Arquivos:** `Games/forca/index.html`
@@ -770,8 +781,8 @@ Abra MELHORIAS.md e execute a tarefa T15 sobre o resultado da T04.
 4. Animação do emoji ao errar (`.tremer`) e confete ao vencer (T12).
 
 **Critérios de aceite**
-- [ ] Todas as palavras têm `dica` preenchida e revisada.
-- [ ] Tema escolhido é respeitado na sequência de palavras.
+- [x] Todas as palavras têm `dica` preenchida e revisada.
+- [x] Tema escolhido é respeitado na sequência de palavras.
 
 **Prompt para o modelo**
 ```
@@ -783,6 +794,8 @@ de 9 anos e não podem conter a própria palavra.
 
 ### T17 — Jogo da Memória: modo 1 jogador com jogadas, cronômetro, recorde e temas
 
+> ✅ **Concluída em 2026-09-06** — commit `23a226a`.
+
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** T06, T10
 **Arquivos:** `Games/memoria/App.tsx`, novos `lib/logica.ts`, `lib/temas.ts`
 
@@ -793,8 +806,8 @@ de 9 anos e não podem conter a própria palavra.
 4. Mover `embaralhar`, `gerarCartas` e o cálculo de estrelas para `lib/logica.ts` (testes na T19).
 
 **Critérios de aceite**
-- [ ] Recorde persiste após recarregar.
-- [ ] `gerarCartas(16, 'Animais')` produz 8 pares de emojis distintos do tema.
+- [x] Recorde persiste após recarregar.
+- [x] `gerarCartas(16, 'Animais')` produz 8 pares de emojis distintos do tema.
 
 **Prompt para o modelo**
 ```
