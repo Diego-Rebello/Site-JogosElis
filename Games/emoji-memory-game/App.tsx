@@ -79,7 +79,11 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
           </div>
 
           <button
-            onClick={() => { if (canStart) onStartGame(selectedPlayers!, selectedCards!); }}
+            onClick={() => {
+              if (selectedPlayers !== null && selectedCards !== null) {
+                onStartGame(selectedPlayers, selectedCards);
+              }
+            }}
             disabled={!canStart}
             className="bg-emerald-500 text-white font-fredoka text-3xl rounded-2xl shadow-lg w-full py-4 flex items-center justify-center transition-all transform hover:scale-105 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:scale-100"
             aria-disabled={!canStart}

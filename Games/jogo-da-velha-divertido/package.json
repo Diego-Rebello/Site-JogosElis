@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "preview": "node ./node_modules/vite/bin/vite.js preview",
+    "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -15,6 +16,7 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.2.7",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
