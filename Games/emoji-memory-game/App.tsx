@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CardData, Player, GameState } from './types';
 
 // --- Game Configuration & Logic ---
@@ -11,15 +11,22 @@ const PLAYER_COLORS = [
   'bg-amber-500',  // Player 4
 ];
 
-const shuffleArray = <T,>(array: T[]): T[] => {
-  return [...array].sort(() => Math.random() - 0.5);
+// Fisher-Yates: cada ordem tem a mesma chance de sair.
+// O antigo sort(() => Math.random() - 0.5) era enviesado.
+const embaralhar = <T,>(lista: T[]): T[] => {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
 };
 
 const generateCards = (cardCount: number): CardData[] => {
   const pairCount = cardCount / 2;
-  const shuffledPool = shuffleArray(EMOJI_POOL);
+  const shuffledPool = embaralhar(EMOJI_POOL);
   const gameEmojis = shuffledPool.slice(0, pairCount);
-  const duplicatedEmojis = shuffleArray([...gameEmojis, ...gameEmojis]);
+  const duplicatedEmojis = embaralhar([...gameEmojis, ...gameEmojis]);
   return duplicatedEmojis.map((emoji, index) => ({
     id: index,
     emoji: emoji,
@@ -109,15 +116,15 @@ const CardComponent: React.FC<CardComponentProps> = ({ card, onClick, isDisabled
   const cardInnerClasses = `relative w-full h-full text-center transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped || isMatched ? '[transform:rotateY(180deg)]' : ''}`;
 
   return (
-    <div className="w-20 h-24 sm:w-24 sm:h-32 [perspective:1000px] cursor-pointer" onClick={handleClick}>
+    <div className="w-full aspect-[3/4] [perspective:1000px] cursor-pointer" onClick={handleClick}>
       <div className={cardInnerClasses}>
         <div className="absolute w-full h-full rounded-lg shadow-md bg-indigo-500 hover:bg-indigo-600 transition-colors flex items-center justify-center [backface-visibility:hidden]">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-1/2 w-1/2 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
         <div className={`absolute w-full h-full rounded-lg shadow-md flex items-center justify-center [transform:rotateY(180deg)] [backface-visibility:hidden] ${isMatched ? 'bg-emerald-200' : 'bg-white'}`}>
-          <span className="text-4xl sm:text-5xl">{card.emoji}</span>
+          <span className="text-3xl sm:text-4xl">{card.emoji}</span>
         </div>
       </div>
     </div>
@@ -130,19 +137,26 @@ interface VictoryModalProps {
   onPlayAgain: () => void;
 }
 const VictoryModal: React.FC<VictoryModalProps> = ({ players, onPlayAgain }) => {
-  const highScore = Math.max(...players.map(p => p.score));
+  const soloMode = players.length === 1;
+  const highScore = players.reduce((maior, p) => Math.max(maior, p.score), 0);
   const winners = players.filter(p => p.score === highScore);
-  const winnerMessage = winners.length > 1 ? 'É um empate!' : `${winners[0].name} Venceu!`;
+  const winnerMessage = soloMode
+    ? 'Você encontrou todos os pares!'
+    : winners.length > 1
+      ? 'É um empate!'
+      : `${winners.map(w => w.name).join(' e ')} Venceu!`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-10">
       <div className="bg-white rounded-2xl p-8 text-center shadow-2xl transform transition-all scale-100 opacity-100">
         <h2 className="text-4xl font-fredoka text-yellow-500 mb-4">{winnerMessage}</h2>
-        <div className="space-y-2 text-gray-700 text-lg">
-          {players.map(player => (
-             <p key={player.id}>{player.name}: <span className={`font-bold ${winners.some(w => w.id === player.id) ? 'text-yellow-500' : 'text-gray-600'}`}>{player.score}</span> pontos</p>
-          ))}
-        </div>
+        {!soloMode && (
+          <div className="space-y-2 text-gray-700 text-lg">
+            {players.map(player => (
+               <p key={player.id}>{player.name}: <span className={`font-bold ${winners.some(w => w.id === player.id) ? 'text-yellow-500' : 'text-gray-600'}`}>{player.score}</span> pontos</p>
+            ))}
+          </div>
+        )}
         <button onClick={onPlayAgain} className="mt-6 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105">
           Jogar Novamente
         </button>
@@ -195,9 +209,10 @@ interface GameBoardProps {
     isChecking: boolean;
 }
 const GameBoard: React.FC<GameBoardProps> = ({ cards, flippedIds, matchedIds, onCardClick, isChecking }) => {
-    const gridColsClass = 
-        cards.length === 32 ? 'grid-cols-8' :
-        cards.length === 24 ? 'grid-cols-6' :
+    // Sempre 4 colunas no celular; abre mais colunas conforme a tela cresce.
+    const gridColsClass =
+        cards.length === 32 ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8' :
+        cards.length === 24 ? 'grid-cols-4 sm:grid-cols-6' :
         'grid-cols-4';
     
     const gapClass = cards.length === 32 ? 'gap-2 sm:gap-3' : 'gap-3 sm:gap-4';
@@ -226,6 +241,32 @@ const App: React.FC = () => {
   const [currentPlayerId, setCurrentPlayerId] = useState<number>(1);
   const [players, setPlayers] = useState<Player[]>([]);
 
+  // Guarda os setTimeout pendentes para nenhum deles disparar depois de
+  // "Novo Jogo" ou "Voltar" e bagunçar a partida seguinte.
+  const timeoutsRef = useRef<number[]>([]);
+
+  const agendar = useCallback((acao: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timeoutsRef.current = timeoutsRef.current.filter(t => t !== id);
+      acao();
+    }, ms);
+    timeoutsRef.current.push(id);
+    return id;
+  }, []);
+
+  const cancelar = useCallback((id: number) => {
+    clearTimeout(id);
+    timeoutsRef.current = timeoutsRef.current.filter(t => t !== id);
+  }, []);
+
+  const limparTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(id => clearTimeout(id));
+    timeoutsRef.current = [];
+  }, []);
+
+  // Ao desmontar, nada pode continuar agendado.
+  useEffect(() => limparTimeouts, [limparTimeouts]);
+
   // Effect to check for matches when two cards are flipped
   useEffect(() => {
     if (flippedIds.length !== 2) return;
@@ -241,26 +282,29 @@ const App: React.FC = () => {
       setPlayers(prev => prev.map(p => p.id === currentPlayerId ? { ...p, score: p.score + 1 } : p));
       setFlippedIds([]);
       setIsChecking(false);
-    } else {
-      // No match, switch turns
-      setTimeout(() => {
-        setFlippedIds([]);
-        if (players.length > 1) {
-            setCurrentPlayerId(prev => (prev % players.length) + 1);
-        }
-        setIsChecking(false);
-      }, 1000);
+      return;
     }
-  }, [flippedIds, cards, currentPlayerId, players.length]);
+
+    // No match, switch turns
+    const id = agendar(() => {
+      setFlippedIds([]);
+      if (players.length > 1) {
+          setCurrentPlayerId(prev => (prev % players.length) + 1);
+      }
+      setIsChecking(false);
+    }, 1000);
+    return () => cancelar(id);
+  }, [flippedIds, cards, currentPlayerId, players.length, agendar, cancelar]);
 
   // Effect to check for game completion
   useEffect(() => {
-    if (cards.length > 0 && matchedIds.length === cards.length) {
-      setTimeout(() => setGameState('finished'), 500);
-    }
-  }, [matchedIds, cards.length]);
+    if (cards.length === 0 || matchedIds.length !== cards.length) return;
+    const id = agendar(() => setGameState('finished'), 500);
+    return () => cancelar(id);
+  }, [matchedIds, cards.length, agendar, cancelar]);
 
   const handleStartGame = (playerCount: number, selectedcardCount: number) => {
+    limparTimeouts();
     setCardCount(selectedcardCount);
     const newPlayers = Array.from({ length: playerCount }, (_, i) => ({
       id: i + 1,
@@ -277,6 +321,7 @@ const App: React.FC = () => {
   };
 
   const handleGoToSetup = useCallback(() => {
+    limparTimeouts();
     setGameState('setup');
     setPlayers([]);
     setCards([]);
@@ -284,10 +329,11 @@ const App: React.FC = () => {
     setMatchedIds([]);
     setCurrentPlayerId(1);
     setIsChecking(false);
-  }, []);
+  }, [limparTimeouts]);
 
   const handleNewGame = useCallback(() => {
     // Resets the game but keeps players and names
+    limparTimeouts();
     setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
     setCards(generateCards(cardCount));
     setFlippedIds([]);
@@ -295,7 +341,7 @@ const App: React.FC = () => {
     setCurrentPlayerId(1);
     setIsChecking(false);
     setGameState('playing');
-  }, [cardCount]);
+  }, [cardCount, limparTimeouts]);
 
   const handleCardClick = useCallback((id: number) => {
     if (isChecking || flippedIds.length >= 2 || flippedIds.includes(id) || matchedIds.includes(id)) {
@@ -312,10 +358,12 @@ const App: React.FC = () => {
     return <SetupScreen onStartGame={handleStartGame} />;
   }
 
+  // Larguras pensadas para a carta ficar por volta de 110 px nas telas grandes:
+  // com w-full, quem define o tamanho da carta é a largura do tabuleiro.
   const containerWidthClass =
     cardCount === 32 ? 'max-w-5xl' :
     cardCount === 24 ? 'max-w-3xl' :
-    'max-w-2xl';
+    'max-w-lg';
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
