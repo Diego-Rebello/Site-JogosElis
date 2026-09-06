@@ -10,7 +10,7 @@
 > (Claude Opus ou Claude Sonnet) que a execute do início ao fim sem precisar de mais contexto.
 > Diego revisa o resultado, testa com a Elis e segue para a próxima.
 >
-> **Andamento:** T01 a T17 concluídas em 2026-09-06. A próxima tarefa da fila é a **T18**.
+> **Andamento:** T01 a T20 concluídas em 2026-09-06. A próxima tarefa da fila é a **T21**.
 > O estado atual do repositório está na seção [0.4](#04-progresso); a seção 1 é o diagnóstico
 > original, de antes da execução, e foi mantida para registrar o motivo de cada tarefa.
 
@@ -40,11 +40,10 @@ Regras:
    (React + Vite somente onde já existe: Jogo da Memória e Jogo da Velha).
 3. Tudo precisa funcionar em celular e tablet: largura mínima de 360 px, toque como entrada
    principal, alvos de toque com pelo menos 44 px, sem rolagem horizontal.
-4. O site é publicado pelo Netlify (projeto `jogosdaelis`) direto do GitHub, sem comando de build:
-   o que está na branch `main` vai ao ar como está. Após alterar um jogo React, rode `npm run build`
-   na pasta do jogo (`Games/memoria` ou `Games/velha`) e faça commit da pasta `dist/` atualizada
-   (deixa de ser necessário depois da T20).
-5. Nunca faça commit de node_modules, .env.local, .DS_Store ou arquivos de build fora de dist/.
+4. O site é publicado pelo Netlify (projeto `jogosdaelis`) a partir da branch `main`. O arquivo
+   `netlify.toml` roda os testes e o `build-all.sh`, publicando somente `_site/`. As pastas `dist/`
+   dos jogos React são geradas durante o build e não devem ser commitadas.
+5. Nunca faça commit de node_modules, dist/, _site/, .env.local ou .DS_Store.
 6. Trabalhe em uma branch nova criada a partir de `main`. Commits pequenos, mensagens em português.
    Todo push em `main` é publicado automaticamente pelo Netlify em cerca de um minuto, então só
    mescle em `main` o que já foi testado (o Netlify gera uma URL de preview para cada pull request).
@@ -72,7 +71,7 @@ Regras:
 
 ### 0.4 Progresso
 
-Fases 0, 1 e 2 concluídas, mais as T14 a T17 da fase 3. Tudo testado no navegador
+Fases 0, 1, 2 e 3 concluídas, mais T19 e T20 da fase 4. Tudo testado no navegador
 (Chrome headless) antes de cada commit.
 
 | Tarefa | Status | Commit |
@@ -94,7 +93,10 @@ Fases 0, 1 e 2 concluídas, mais as T14 a T17 da fase 3. Tudo testado no navegad
 | T15 — M ou N: toque, regra e rodadas | ✅ Concluída em 2026-09-06 | `23a226a` |
 | T16 — Forca: temas, dicas e placar | ✅ Concluída em 2026-09-06 | `23a226a` |
 | T17 — Memória: modo solo, recordes e temas | ✅ Concluída em 2026-09-06 | `23a226a` |
-| T18 em diante | ⬜ A fazer | — |
+| T18 — Velha: placar, símbolos, início e níveis | ✅ Concluída em 2026-09-06 | `528b21d` |
+| T19 — Testes automatizados da lógica | ✅ Concluída em 2026-09-06 | `528b21d` |
+| T20 — Build e publicação automática no Netlify | ✅ Implementação concluída em 2026-09-06; validar o primeiro deploy após o merge | `528b21d` |
+| T21 em diante | ⬜ A fazer | — |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
 
@@ -105,8 +107,8 @@ Fases 0, 1 e 2 concluídas, mais as T14 a T17 da fase 3. Tudo testado no navegad
 | Jogo da Forca | `Games/forca/index.html` | HTML puro + `shared/`, script `type="module"` |
 | Matemática | `Games/matematica/` | HTML puro + módulo de lógica testável, `shared/` |
 | Jogo do M ou N | `Games/m-ou-n/index.html` | HTML puro + `shared/`, script `type="module"` |
-| Jogo da Memória | `Games/memoria/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
-| Jogo da Velha | `Games/velha/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
+| Jogo da Memória | `Games/memoria/` (compilado para `_site/Games/memoria/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
+| Jogo da Velha | `Games/velha/` (compilado para `_site/Games/velha/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
 
 **O site não faz mais nenhuma requisição externa.** Fontes, ícones e CSS são todos locais.
 
@@ -115,9 +117,9 @@ Fases 0, 1 e 2 concluídas, mais as T14 a T17 da fase 3. Tudo testado no navegad
 - Os scripts npm dos dois jogos React chamam o binário local pelo caminho
   (`node ./node_modules/vite/bin/vite.js build`) por causa do ":" no caminho do projeto — ver a
   regra 10 da seção 0.2. Existe também o script `npm run typecheck`.
-- O `_redirects` da T08 aponta os dois jogos React para `.../dist/`, e não para a raiz da pasta como
-  dizia a tabela original da tarefa: a raiz serve o `index.html` de desenvolvimento, que carrega
-  `index.tsx` e não roda no navegador. Isso deixa de ser necessário na T20.
+- Desde a T20, `build-all.sh` compila os jogos React diretamente para seus caminhos públicos em
+  `_site/Games/`; `dist/` e `_site/` ficam fora do git. O `_redirects` preserva também os endereços
+  antigos que continham `/dist/`.
 - O Jogo da Forca ganhou um oitavo tema além dos sete sugeridos na T05: **Corpo**
   (`CORAÇÃO`, `CABEÇA`, `BRAÇO`…), que dá bons casos de Ç e til.
 - As cinco páginas e a página inicial ganharam favicon SVG embutido em `data:` URI. Antes todas
@@ -136,7 +138,7 @@ Fases 0, 1 e 2 concluídas, mais as T14 a T17 da fase 3. Tudo testado no navegad
 - Os três jogos em HTML puro passaram a usar `<script type="module">` para importar
   `shared/texto.js`. **Isso impede abrir por `file://`**: é preciso servir por HTTP.
 - Os dois `index.css` dos jogos React usam `@import "tailwindcss" source(none)` com `@source`
-  explícitos. Sem isso o Tailwind 4 varreria também o `dist/` commitado e realimentaria classes
+  explícitos. Sem isso o Tailwind 4 varreria também o `dist/` gerado e realimentaria classes
   velhas a cada build.
 - O componente `Cabecalho` está duplicado nos dois projetos React, de propósito: pôr um `.tsx` em
   `shared/` obrigaria a pasta a depender do React, o que a T09 proíbe. A T23 resolve isso se e
@@ -147,6 +149,10 @@ Fases 0, 1 e 2 concluídas, mais as T14 a T17 da fase 3. Tudo testado no navegad
   `jogos-elis:memoria:recorde:<n>`; primeiro compara jogadas e, em empate, o menor tempo.
 - No Jogo da Velha, vitória do computador toca o som de erro e **não** lança confete: festa só
   quando quem ganha é a criança.
+- O Jogo da Velha mantém a IA original no nível Fácil e usa minimax no Difícil. Símbolo, primeiro
+  jogador e nomes são escolhidos antes da partida; o início alterna nas partidas seguintes.
+- A suíte Vitest da raiz chama o binário por caminho explícito, assim como os scripts dos jogos,
+  por causa do `:` no caminho local. São 28 testes puros em 7 arquivos e nenhum usa rede ou DOM.
 
 ---
 
@@ -819,6 +825,8 @@ o que a tarefa pede.
 
 ### T18 — Jogo da Velha: placar acumulado, escolha de símbolo, quem começa e níveis
 
+> ✅ **Concluída em 2026-09-06** — commit `528b21d`.
+
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** T07, T10
 **Arquivos:** `Games/velha/App.tsx`, `lib/logica.ts`, componentes
 
@@ -829,8 +837,8 @@ o que a tarefa pede.
 4. Modo com amigo: nomes editáveis (padrão "Jogador 1" / "Jogador 2") usados nas mensagens.
 
 **Critérios de aceite**
-- [ ] No nível Difícil, 200 partidas contra um oponente aleatório terminam sem derrota da IA (teste na T19).
-- [ ] Placar acumula corretamente entre partidas e zera sob comando.
+- [x] No nível Difícil, 200 partidas contra um oponente aleatório terminam sem derrota da IA (teste na T19).
+- [x] Placar acumula corretamente entre partidas e zera sob comando.
 
 **Prompt para o modelo**
 ```
@@ -840,6 +848,8 @@ Abra MELHORIAS.md e execute a tarefa T18. O nível Fácil deve continuar exatame
 ---
 
 ### T19 — Testes automatizados da lógica dos jogos
+
+> ✅ **Concluída em 2026-09-06** — commit `528b21d`. São 28 testes em 7 arquivos.
 
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Opus · **Depende de:** T04, T07, T09, T14, T17, T18 (roda sobre o que existir)
 **Arquivos:** `package.json` (raiz, novo), `vitest.config.ts` (novo), `tests/**`, módulos `lib/` e `jogo.js` dos jogos
@@ -858,8 +868,8 @@ Abra MELHORIAS.md e execute a tarefa T18. O nível Fácil deve continuar exatame
 4. Adicione `npm test` ao README.
 
 **Critérios de aceite**
-- [ ] `npm test` verde na raiz em menos de 30 s.
-- [ ] Nenhum teste depende de navegador ou de rede.
+- [x] `npm test` verde na raiz em menos de 30 s.
+- [x] Nenhum teste depende de navegador ou de rede.
 
 **Prompt para o modelo**
 ```
@@ -870,6 +880,9 @@ extraia-a para um módulo puro antes de testar, sem mudar o comportamento.
 ---
 
 ### T20 — Publicação automática no Netlify com build (`dist/` fora do git)
+
+> ✅ **Implementação concluída em 2026-09-06** — commit `528b21d`. O build local foi validado;
+> o primeiro deploy e as opções do painel devem ser conferidos depois do merge em `main`.
 
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Opus · **Depende de:** T08, T10
 **Arquivos:** `build-all.sh` (novo), `netlify.toml` (novo), `_headers` (novo), `_redirects` (da T08), `.gitignore`, `index.html`, `README.md`
@@ -930,9 +943,9 @@ extraia-a para um módulo puro antes de testar, sem mudar o comportamento.
 7. README: documentar o fluxo (branch → PR → preview do Netlify → merge em `main` → publicação automática) e o comando de build local.
 
 **Critérios de aceite**
-- [ ] `bash build-all.sh` local gera `_site/` e todos os jogos abrem via `npx serve _site`.
+- [x] `bash build-all.sh` local gera `_site/` e todos os jogos abrem via servidor local.
 - [ ] Push em `main` publica em https://jogosdaelis.netlify.app/ sem intervenção manual; o log de build no Netlify mostra os testes rodando.
-- [ ] `git ls-files | grep dist/` vazio.
+- [x] `git ls-files | grep dist/` vazio.
 - [ ] `https://jogosdaelis.netlify.app/Games/memoria/App.tsx` e `/Games/memoria/package.json` respondem 404.
 - [ ] Caminhos antigos, como `/games/jogo%20da%20forca/forca`, redirecionam para os novos.
 
@@ -1334,5 +1347,5 @@ export const pacotes = {
 - [ ] Console sem erros; aba Network sem 404.
 - [ ] Textos em pt-BR com acentuação correta.
 - [ ] Nada de `node_modules`, `.env.local`, `.DS_Store` no commit.
-- [ ] Jogos React: `npm run typecheck`, `npm run build` (e `dist/` commitado até a T20).
+- [ ] Jogos React: `npm run typecheck` e `npm run build`; `dist/` permanece fora do git.
 - [ ] Resumo final com: o que mudou, como foi testado, pendências.
