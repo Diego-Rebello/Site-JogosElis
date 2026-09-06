@@ -1,0 +1,27 @@
+/* Tailwind 4 compilado no build, no lugar do antigo cdn.tailwindcss.com.
+   source(none) desliga a varredura automática de arquivos: sem isso o Tailwind
+   leria também o dist/ commitado (bundle minificado) e realimentaria classes
+   velhas a cada build. */
+@import "tailwindcss" source(none);
+@import "../../shared/base.css";
+
+@source "./index.html";
+@source "./App.tsx";
+@source "./components";
+
+/* Fontes locais declaradas em shared/base.css; aqui só o uso. */
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+}
+
+h1,
+.font-fredoka {
+  font-family: 'Fredoka One', 'Trebuchet MS', cursive;
+}
+
+/* O preflight do Tailwind 4 põe cursor: default nos botões; para criança,
+   a mãozinha ajuda a entender que dá para clicar. */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}

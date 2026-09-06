@@ -177,6 +177,11 @@ npm run typecheck # confere os tipos sem gerar arquivos
 **Importante:** depois de mudar qualquer código de um jogo React, rode `npm run build` e
 commite também a pasta `dist/`. É ela que vai ao ar.
 
+O CSS dos dois jogos é **Tailwind 4 compilado no build** (plugin `@tailwindcss/vite`), não mais
+o "Play CDN". O ponto de entrada é o `index.css` de cada jogo, que importa o Tailwind e o
+`shared/base.css`. Ele usa `source(none)` e `@source` explícitos de propósito: sem isso o
+Tailwind varreria também o `dist/` commitado e realimentaria classes velhas a cada build.
+
 ---
 
 ## Como publicar

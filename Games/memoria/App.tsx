@@ -138,7 +138,7 @@ const VictoryModal: React.FC<VictoryModalProps> = ({ players, onPlayAgain }) => 
       : `${winners.map(w => w.name).join(' e ')} Venceu!`;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-10">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-10">
       <div className="bg-white rounded-2xl p-8 text-center shadow-2xl transform transition-all scale-100 opacity-100">
         <h2 className="text-4xl font-fredoka text-yellow-500 mb-4">{winnerMessage}</h2>
         {!soloMode && (
