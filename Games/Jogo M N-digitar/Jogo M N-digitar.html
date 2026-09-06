@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%E2%9C%8F%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E">
     <title>Jogo do M ou N</title>
     <style>
-        /* O CSS (estilo) continua o mesmo, não há necessidade de alterá-lo */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #f0f8ff; /* Azul bem clarinho */
@@ -13,24 +13,28 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px 10px;
+            box-sizing: border-box;
             text-transform: uppercase; /* TODAS AS LETRAS EM CAIXA ALTA */
         }
 
         #container-jogo {
             background-color: #ffffff;
-            padding: 30px 40px;
+            padding: 30px 20px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
-            width: 90%;
+            width: 100%;
             max-width: 500px;
+            box-sizing: border-box;
         }
 
         h1 {
             color: #0056b3; /* Azul escuro */
             margin-bottom: 20px;
+            font-size: 1.8em;
         }
 
         #placar {
@@ -51,31 +55,35 @@
         }
 
         #palavra-desafio {
-            font-size: 2.5em;
+            font-size: 2.2em;
             font-weight: bold;
             color: #007bff; /* Azul */
-            letter-spacing: 5px; /* Espaço entre as letras */
+            letter-spacing: 4px; /* Espaço entre as letras */
             margin: 30px 0;
-            padding: 15px;
+            padding: 15px 10px;
             border: 2px dashed #ced4da;
             border-radius: 10px;
+            overflow-wrap: break-word;
         }
 
         #campo-resposta {
             font-size: 1.5em;
             padding: 10px;
-            width: 80%;
+            width: 100%;
+            max-width: 340px;
+            min-height: 44px;
             margin-bottom: 20px;
             border: 2px solid #ced4da;
             border-radius: 8px;
             text-align: center;
             text-transform: uppercase; /* Garante que o input também fique em caixa alta */
+            box-sizing: border-box;
         }
 
         #feedback {
             font-size: 1.1em;
             font-weight: bold;
-            min-height: 50px; /* Evita que a interface "pule" */
+            min-height: 60px; /* Evita que a interface "pule" */
             padding: 10px;
         }
 
@@ -87,10 +95,18 @@
             color: #dc3545;
         }
 
+        .palavra-certa {
+            color: #0056b3;
+            font-size: 1.2em;
+            letter-spacing: 2px;
+        }
+
         .botoes button {
             font-size: 1em;
             font-weight: bold;
             padding: 12px 25px;
+            min-height: 44px;
+            min-width: 44px;
             margin: 5px;
             border: none;
             border-radius: 8px;
@@ -114,7 +130,7 @@
         #btn-novo:hover {
             background-color: #218838;
         }
-        
+
         #btn-reiniciar {
             background-color: #ffc107;
             color: #333;
@@ -141,13 +157,13 @@
 
         <div id="palavra-desafio"></div>
 
-        <input type="text" id="campo-resposta" placeholder="DIGITE A PALAVRA AQUI">
-        
+        <input type="text" id="campo-resposta" placeholder="DIGITE A PALAVRA AQUI" autocomplete="off" autocapitalize="characters" spellcheck="false">
+
         <div class="botoes">
             <button id="btn-verificar">VERIFICAR</button>
         </div>
 
-        <div id="feedback"></div>
+        <div id="feedback" aria-live="polite"></div>
 
         <div class="botoes" style="margin-top: 20px;">
             <button id="btn-novo">NOVA PALAVRA</button>
@@ -158,30 +174,55 @@
     <script>
         // --- LÓGICA DO JOGO ---
 
-        // --- LISTA DE PALAVRAS EXPANDIDA (MAIS DE 120 OPÇÕES) ---
-        // A lógica do jogo não muda, apenas a fonte de palavras agora é muito maior.
+        // Lista de palavras com grafia e acentuação corretas.
+        // Toda palavra precisa ter um M antes de P/B ou um N antes de outra consoante.
         const listaDePalavras = [
             // M antes de P
             "CAMPO", "TEMPO", "LIMPO", "COMPRA", "TAMPA", "COMPRIDO", "EMPREGO", "SIMPLES",
-            "COMPUTADOR", "LAMPIAO", "AMPLO", "COMPANHEIRO", "CUMPRIR", "ESTAMPA", "OLIMPIADA",
-            "POMPA", "SIMPATIA", "TEMPERO", "TROMBA", "ACOMPANHAR", "EXEMPLO", "IMPACTO",
-            "IMPOR", "INTERROMPER", "LIMPEZA", "PASSATEMPO", "RELAMPAGO", "SUSPEITO", "ACAMPAMENTO",
+            "COMPUTADOR", "LAMPIÃO", "AMPLO", "COMPANHEIRO", "CUMPRIR", "ESTAMPA", "OLIMPÍADA",
+            "SIMPATIA", "TEMPERO", "ACOMPANHAR", "EXEMPLO", "IMPACTO", "INTERROMPER", "LIMPEZA",
+            "PASSATEMPO", "RELÂMPAGO", "ACAMPAMENTO", "CAMPEÃO", "CAMPAINHA", "LÂMPADA",
+            "TROMPETE", "IMPRIMIR", "EMPADA", "EMPURRAR", "SEMPRE", "TEMPESTADE", "COMPLETO",
+            "IMPORTANTE", "SIMPÁTICO", "CAMPEONATO", "EMPRESTAR", "LIMPAR", "RAMPA",
+            "TEMPERATURA", "AMPARO", "CHIMPANZÉ", "COMPARTILHAR", "EMPINAR", "COMPASSO",
+            "IMPÉRIO",
 
             // M antes de B
-            "BOMBA", "SAMBA", "POMBA", "EMBAIXO", "BOMBEIRO", "ZUMBIDO", "AMBULANCIA", "EMBORA",
-            "MEMBRO", "SOMBRA", "TROBOMBE", "SIMBOLO", "TAMBOR", "UMBIGO", "COMBOIO", "HUMBERTO",
-            "IMBATÍVEL", "LOMBADA", "REEMBOLSO", "DESEMBRO", "EMBLEMA", "COMBUSTIVEL", "AMBOS",
-            "SETEMBRO", "NOVEMBRO", "DEZEMBRO", "COMBINAR", "COMPARTILHAR", "LAMBIDA",
+            "BOMBA", "SAMBA", "POMBA", "EMBAIXO", "BOMBEIRO", "ZUMBIDO", "AMBULÂNCIA", "EMBORA",
+            "MEMBRO", "SOMBRA", "TROMBONE", "SÍMBOLO", "TAMBOR", "UMBIGO", "COMBOIO", "IMBATÍVEL",
+            "LOMBADA", "REEMBOLSO", "EMBLEMA", "COMBUSTÍVEL", "AMBOS", "SETEMBRO", "NOVEMBRO",
+            "DEZEMBRO", "COMBINAR", "LAMBER", "TAMBÉM", "CAMBALHOTA", "GAMBÁ", "TOMBO",
+            "EMBRULHO", "TIMBRE", "BAMBU", "SOMBRINHA", "COMBATE", "LOMBO", "ZUMBI", "TROMBADA",
 
             // N antes de outras consoantes
             "TINTA", "PENTE", "ONDA", "BANCO", "MUNDO", "VENTO", "SANTO", "CONTA", "PONTE",
             "ELEFANTE", "DENTE", "GENTE", "ONZE", "FUNDO", "LINDO", "LONGE", "MANGA", "GANSO",
-            "ONÇA", "PINCEL", "BANDA", "CRIANÇA", "DANÇA", "ESTANTE", "GIGANTE", "JANTA",
+            "ONÇA", "PINCEL", "BANDA", "CRIANÇA", "DANÇA", "ESTANTE", "GIGANTE", "JANTAR",
             "LANCHA", "MORANGO", "NUNCA", "PANDA", "PRESENTE", "SEGUNDA", "TANQUE", "TRANQUILO",
             "VINTE", "CONVITE", "ENCONTRAR", "FANTASMA", "INSTRUMENTO", "LARANJA", "MANTIMENTO",
-            "INGLES", "CONSTRUIR", "INSTANTE", "MENDIGO", "SONHO", "TANGERINA", "TRANSPORTE",
-            "MENSAGEM", "PENSAR", "CENTRO", "CONCHA", "INJECAO"
+            "INGLÊS", "CONSTRUIR", "INSTANTE", "MENDIGO", "TANGERINA", "TRANSPORTE", "MENSAGEM",
+            "PENSAR", "CENTRO", "CONCHA", "INJEÇÃO", "CANTAR", "ANTES", "CINCO", "ONTEM",
+            "DOMINGO", "CANGURU", "PINGUIM", "MENTIRA", "CONTENTE", "ANTENA", "BRINCAR",
+            "CANSADO", "DENTISTA", "FONTE", "GARGANTA", "INVENTOR", "LANTERNA", "MANTEIGA",
+            "QUINTAL", "SANDÁLIA", "TONTO", "VONTADE", "PINTAR", "MONTANHA", "CANTIGA", "ENCANTO"
         ];
+
+        // Recebe a palavra completa e devolve onde fica a lacuna.
+        // Primeiro procura um M antes de P ou B; se não houver, procura um N antes de consoante.
+        function gerarLacuna(palavra) {
+            let i = palavra.search(/M(?=[PB])/);
+            if (i === -1) i = palavra.search(/N(?=[^AEIOUÁÉÍÓÚÂÊÔÃÕ])/);
+            if (i === -1) throw new Error('Palavra sem M/N antes de consoante: ' + palavra);
+            return { texto: palavra.slice(0, i) + '_' + palavra.slice(i + 1), resposta: palavra[i], indice: i };
+        }
+
+        // Tira os acentos e a cedilha para comparar o que a criança digitou.
+        function normalizar(texto) {
+            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+        }
+
+        // Confere a lista inteira ao carregar a página: uma palavra inválida quebra na hora.
+        listaDePalavras.forEach(gerarLacuna);
 
         // Variáveis do estado do jogo
         let palavraCorreta;
@@ -203,30 +244,16 @@
             const indiceAleatorio = Math.floor(Math.random() * listaDePalavras.length);
             palavraCorreta = listaDePalavras[indiceAleatorio];
 
-            let palavraComLacuna = "";
-            let indiceSubstituir = palavraCorreta.indexOf('M');
-            
-            // Procura o N apenas se não achar um M que venha antes de P ou B
-            if (indiceSubstituir === -1 || !(palavraCorreta[indiceSubstituir + 1] === 'P' || palavraCorreta[indiceSubstituir + 1] === 'B')) {
-                 indiceSubstituir = palavraCorreta.indexOf('N');
-            }
-            // Se ainda assim não achar, procura a primeira ocorrência de M em qualquer lugar
-            if (indiceSubstituir === -1) {
-                indiceSubstituir = palavraCorreta.indexOf('M');
-            }
-
-            palavraComLacuna = palavraCorreta.substring(0, indiceSubstituir) + '_' + palavraCorreta.substring(indiceSubstituir + 1);
-            
-            elPalavraDesafio.textContent = palavraComLacuna;
+            elPalavraDesafio.textContent = gerarLacuna(palavraCorreta).texto;
             elCampoResposta.value = "";
             elFeedback.textContent = "";
             elFeedback.className = "";
-            elCampoResposta.focus(); 
+            elCampoResposta.focus();
         }
 
         // Função para verificar a resposta da criança
         function verificarResposta() {
-            const respostaUsuario = elCampoResposta.value.toUpperCase().trim();
+            const respostaUsuario = elCampoResposta.value.trim();
 
             if (respostaUsuario === "") {
                 elFeedback.textContent = "POR FAVOR, DIGITE UMA PALAVRA.";
@@ -234,13 +261,14 @@
                 return;
             }
 
-            if (respostaUsuario === palavraCorreta) {
+            if (normalizar(respostaUsuario) === normalizar(palavraCorreta)) {
                 acertos++;
                 elPlacarAcertos.textContent = acertos;
-                elFeedback.textContent = "PARABÉNS, VOCÊ ACERTOU!";
+                elFeedback.innerHTML = 'PARABÉNS, VOCÊ ACERTOU!<br>A PALAVRA É <strong class="palavra-certa">'
+                    + palavraCorreta + '</strong>';
                 elFeedback.className = "feedback-correto";
-                
-                setTimeout(gerarNovaPalavra, 1500); 
+
+                setTimeout(gerarNovaPalavra, 1800);
 
             } else {
                 erros++;
@@ -270,7 +298,7 @@
         btnReiniciar.addEventListener('click', reiniciarJogo);
 
         // --- Inicia o jogo pela primeira vez ---
-        window.onload = gerarNovaPalavra;
+        gerarNovaPalavra();
 
     </script>
 </body>
