@@ -14,8 +14,8 @@ computador, e não precisa de cadastro nem de internet rápida.
 |---|---|---|
 | Jogo da Forca | `Games/forca/index.html` | HTML/CSS/JS puro |
 | Jogo da Memória | `Games/memoria/dist/index.html` | React 19 + Vite 6 |
-| Jogo de Somar | `Games/matematica/index.html` | HTML/CSS/JS puro |
-| Jogo do M ou N (digitar) | `Games/m-ou-n/index.html` | HTML/CSS/JS puro |
+| Matemática | `Games/matematica/index.html` | HTML/CSS/JS puro |
+| Jogo do M ou N (toque ou digitar) | `Games/m-ou-n/index.html` | HTML/CSS/JS puro |
 | Jogo da Velha | `Games/velha/dist/index.html` | React 19 + Vite 6 |
 
 A página inicial (`index.html`) é o índice: ela lista os jogos em cartões e aponta para os
@@ -45,7 +45,7 @@ caminhos acima. Todos os links são relativos, então o site funciona em qualque
 └── Games/
     ├── forca/index.html             Jogo da Forca
     ├── m-ou-n/index.html            Jogo do M ou N
-    ├── matematica/index.html        Jogo de Somar
+    ├── matematica/                  Matemática (interface e lógica testável)
     ├── memoria/                     Jogo da Memória (React + Vite)
     │   ├── App.tsx, index.tsx, index.html, vite.config.ts, tsconfig.json
     │   └── dist/                    Build publicado (versionado no git de propósito)

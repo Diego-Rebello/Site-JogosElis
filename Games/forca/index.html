@@ -48,17 +48,25 @@
     #mensagem {
       margin-top: 16px;
     }
+    .tela[hidden] { display: none; }
+    .temas { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 12px; margin: 22px auto; max-width: 560px; }
+    .tema-btn { min-height: 58px; }
+    .acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 14px; }
+    #dicaTexto { min-height: 1.5em; font-family: var(--fonte-leitura); color: var(--cor-suave); }
   </style>
 </head>
 <body class="pagina">
   <script src="../../shared/cabecalho.js" data-titulo="Jogo da Forca"></script>
 
   <div class="pagina__conteudo">
-    <div class="forca">
+    <div id="telaTemas" class="forca tela"><div class="cartao"><h1>👻 Jogo da Forca</h1><p>Escolha um tema:</p><div id="temas" class="temas"></div></div></div>
+    <div id="telaJogo" class="forca tela" hidden>
       <div id="placar" class="placar"></div>
       <div id="tema"></div>
       <div id="forca">😀</div>
       <div id="palavra"></div>
+      <div class="acoes"><button id="dicaBtn" class="botao botao--secundario" disabled>Dica 💡</button><button id="trocarTemaBtn" class="botao botao--neutro">Trocar tema</button></div>
+      <p id="dicaTexto" aria-live="polite"></p>
       <div class="letras" id="botoes"></div>
       <div id="mensagem" class="feedback" aria-live="polite"></div>
       <button id="novaPalavraBtn" class="botao botao--sucesso" style="display: none;">Nova Palavra</button>
@@ -72,7 +80,7 @@
     import { nomeDaCrianca, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 
     // Cada palavra vem com o tema, escrita com a acentuação correta.
-    const palavras = [
+    const palavrasBase = [
       // Animais
       { palavra: "LEÃO", categoria: "Animais" },
       { palavra: "PÁSSARO", categoria: "Animais" },
@@ -194,6 +202,11 @@
       { palavra: "JOELHO", categoria: "Corpo" }
     ];
 
+    const nomesDeCategoria = { Animais: 'um animal', Comidas: 'uma comida', Casa: 'algo que encontramos em casa', Escola: 'algo usado para aprender', Natureza: 'algo da natureza', Brinquedos: 'algo usado para brincar', 'Contos de fada': 'algo de uma história encantada', Corpo: 'uma parte do corpo' };
+    // Cada entrada recebe uma dica curta, sem revelar a própria palavra.
+    const palavras = palavrasBase.map(item => ({ ...item, dica: `Pense em ${nomesDeCategoria[item.categoria]}. Tem ${[...item.palavra].length} letras e começa com ${item.palavra[0]}.` }));
+    if (palavras.some(item => !item.dica || normalizar(item.dica).includes(normalizar(item.palavra)))) throw new Error('Revise as dicas da forca.');
+
     const estagios = ["😀", "🙂", "😮", "😕", "😟", "😣", "😢", "😭", "💀"];
     const limitesPorNivel = { facil: 8, normal: 6, desafio: 4 };
     const nivelPadrao = obterConfiguracoes().niveis.forca;
@@ -206,6 +219,7 @@
     let letrasCertas = new Set();    // letras normalizadas já reveladas
     let erros = 0;
     let jogoEncerrado = false;
+    let temaEscolhido = 'Todos';
 
     // Placar da sessão (mantido entre palavras)
     let vitorias = 0;
@@ -218,6 +232,10 @@
     const elBotoes = document.getElementById("botoes");
     const elMensagem = document.getElementById("mensagem");
     const btnNovaPalavra = document.getElementById("novaPalavraBtn");
+    const btnDica = document.getElementById('dicaBtn');
+    const elDica = document.getElementById('dicaTexto');
+    const elTelaTemas = document.getElementById('telaTemas');
+    const elTelaJogo = document.getElementById('telaJogo');
 
     function atualizarPlacar() {
       elPlacar.textContent = `Vitórias: ${vitorias} | Derrotas: ${derrotas} | Erros nesta palavra: ${erros} de ${MAX_ERROS}`;
@@ -287,6 +305,7 @@
         }
       } else {
         erros++;
+        btnDica.disabled = erros < 3;
         const indiceEstagio = Math.ceil((erros / MAX_ERROS) * (estagios.length - 1));
         elForca.textContent = estagios[indiceEstagio];
         tocar('erro');
@@ -304,7 +323,8 @@
 
     function fimDeJogo(ganhou) {
       jogoEncerrado = true;
-      const estrelas = ganhou ? (erros <= 1 ? 3 : erros <= 3 ? 2 : 1) : 1;
+      const estrelas = erros === 0 ? 3 : erros <= 2 ? 2 : erros <= 5 ? 1 : 0;
+      elMensagem.textContent += estrelas ? ` · ${'⭐'.repeat(estrelas)}` : ' · Continue tentando!';
       registrarPartida('forca', {
         acertos: ganhou ? 1 : 0,
         erros: ganhou ? erros : Math.max(1, erros),
@@ -316,7 +336,8 @@
     }
 
     function novaPalavra() {
-      atual = sortear(palavras, atual);   // não repete a palavra anterior
+      const listaDoTema = temaEscolhido === 'Todos' ? palavras : palavras.filter(item => item.categoria === temaEscolhido);
+      atual = sortear(listaDoTema, atual);   // não repete a palavra anterior
 
       letrasDaPalavra = new Set(
         [...normalizar(atual.palavra)].filter(c => /[A-Z]/.test(c))
@@ -324,6 +345,8 @@
       letrasCertas = new Set();
       erros = 0;
       jogoEncerrado = false;
+      btnDica.disabled = true;
+      elDica.textContent = '';
 
       elTema.textContent = `Tema: ${atual.categoria}`;
       elForca.textContent = estagios[0];
@@ -348,8 +371,16 @@
       novaPalavra();
     });
 
+    btnDica.addEventListener('click', () => { tocar('clique'); elDica.textContent = atual.dica; btnDica.disabled = true; });
+    document.getElementById('trocarTemaBtn').addEventListener('click', () => { tocar('clique'); elTelaJogo.hidden = true; elTelaTemas.hidden = false; });
+    const categorias = ['Todos', ...new Set(palavras.map(item => item.categoria))];
+    const elTemas = document.getElementById('temas');
+    categorias.forEach(categoria => {
+      const botao = document.createElement('button'); botao.className = 'botao botao--neutro tema-btn'; botao.textContent = categoria;
+      botao.addEventListener('click', () => { temaEscolhido = categoria; tocar('clique'); elTelaTemas.hidden = true; elTelaJogo.hidden = false; novaPalavra(); });
+      elTemas.appendChild(botao);
+    });
     criarBotoes();
-    novaPalavra();
   </script>
 </body>
 </html>

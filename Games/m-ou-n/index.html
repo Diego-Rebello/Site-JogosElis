@@ -45,6 +45,15 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+        .tela[hidden] { display: none; }
+        .modos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
+        .modo { min-height: 86px; font-size: 1.15rem; }
+        .regra { text-transform: none; font-family: var(--fonte-leitura); font-size: 1.2rem; line-height: 1.6; background: #fff7cf; border: 3px solid #f2ca52; border-radius: 16px; padding: 18px; }
+        .progresso { width: 100%; height: 16px; accent-color: var(--cor-principal); margin: 12px 0; }
+        .letras-toque { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 16px auto; max-width: 330px; }
+        .letra-toque { min-height: 92px; font-size: 2.5rem; }
+        .letra-destaque { color: var(--cor-principal-escura); text-decoration: underline; }
+        @media (max-width: 420px) { .modos { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body class="pagina">
@@ -53,35 +62,41 @@
 
     <div class="pagina__conteudo pagina__conteudo--centro">
         <div class="cartao mn">
-            <p class="mn__instrucao">Complete a palavra com M ou N e clique em verificar!</p>
-
+          <section id="tela-modos" class="tela">
+            <h1>JOGO DO M OU N</h1><p class="mn__instrucao">COMO VOCÊ QUER JOGAR?</p>
+            <div class="modos"><button class="botao botao--neutro modo" data-modo="toque">👆 TOQUE<br>M OU N</button><button class="botao botao--neutro modo" data-modo="digitar">⌨️ DIGITE<br>A PALAVRA</button></div>
+          </section>
+          <section id="tela-regra" class="tela" hidden>
+            <h2>UMA REGRA IMPORTANTE</h2><div class="regra">Antes de <strong>P</strong> e <strong>B</strong> usamos <strong>M</strong>.<br>Antes das outras letras usamos <strong>N</strong>.</div><button id="entendi" class="botao botao--sucesso" style="margin-top:20px">ENTENDI!</button>
+          </section>
+          <section id="tela-jogo" class="tela" hidden>
+            <p class="mn__instrucao">COMPLETE A PALAVRA COM M OU N!</p>
             <div class="placar">
                 <span class="placar__certo">ACERTOS: <span id="placar-acertos">0</span></span>
                 <span class="placar__errado">ERROS: <span id="placar-erros">0</span></span>
                 <span>PALAVRA: <span id="palavra-atual">1</span>/10</span>
             </div>
-
+            <progress id="progresso" class="progresso" max="10" value="0">0 DE 10</progress>
             <div id="palavra-desafio"></div>
-
             <label class="so-leitor" for="campo-resposta">Escreva a palavra completa</label>
             <input type="text" id="campo-resposta" class="campo" placeholder="DIGITE AQUI"
                    autocomplete="off" autocapitalize="characters" spellcheck="false">
-
-            <div class="botoes">
+            <div id="letras-toque" class="letras-toque" hidden><button class="botao letra-toque" data-letra="M">M</button><button class="botao letra-toque" data-letra="N">N</button></div>
+            <div id="acao-verificar" class="botoes">
                 <button id="btn-verificar" class="botao">VERIFICAR</button>
             </div>
-
             <div id="feedback" class="feedback" aria-live="polite"></div>
-
             <div class="botoes">
-                <button id="btn-novo" class="botao botao--sucesso">NOVA PALAVRA</button>
-                <button id="btn-reiniciar" class="botao botao--neutro">REINICIAR PLACAR</button>
+                <button id="btn-novo" class="botao botao--sucesso" hidden>PRÓXIMA PALAVRA</button>
+                <button id="btn-reiniciar" class="botao botao--neutro">TROCAR MODO</button>
             </div>
+          </section>
+          <section id="tela-final" class="tela" hidden><h2>🏆 RODADA CONCLUÍDA!</h2><p id="resumo-final"></p><p id="estrelas-final" style="font-size:2rem"></p><div class="botoes"><button id="jogar-novamente" class="botao botao--sucesso">JOGAR DE NOVO</button><button id="trocar-modo" class="botao botao--neutro">TROCAR MODO</button></div></section>
         </div>
     </div>
 
     <script type="module">
-        import { normalizar, sortear } from '../../shared/texto.js';
+        import { normalizar, sortearVarios } from '../../shared/texto.js';
         import { tocar } from '../../shared/sons.js';
         import { lancarConfete, animar } from '../../shared/confete.js';
         import { calcularEstrelas, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
@@ -134,156 +149,53 @@
         listaDePalavras.forEach(gerarLacuna);
 
         const configuracoes = obterConfiguracoes();
+        const nomeCrianca = configuracoes.nomeCrianca.toUpperCase();
         const nivelPadrao = configuracoes.niveis['m-ou-n'];
-        const nomeCrianca = configuracoes.nomeCrianca;
-        const listaAtiva = listaDePalavras.filter(palavra => {
-            if (nivelPadrao === 'facil') return palavra.length <= 6;
-            if (nivelPadrao === 'normal') return palavra.length <= 9;
-            return true;
-        });
+        const listaAtiva = listaDePalavras.filter(p => nivelPadrao === 'facil' ? p.length <= 6 : nivelPadrao === 'normal' ? p.length <= 9 : true);
+        const $ = id => document.getElementById(id);
+        const telas = ['tela-modos', 'tela-regra', 'tela-jogo', 'tela-final'];
+        let modo = 'toque', rodada = [], indice = 0, acertos = 0, erros = 0, respondida = false, timeout = null;
 
-        // Variáveis do estado do jogo
-        let palavraCorreta;
-        let acertos = 0;
-        let erros = 0;
-        let palavrasConcluidas = 0;
-        let palavraRespondida = false;
-        let rodadaEncerrada = false;
-        let proximaPalavraTimeout = null;
-        const TOTAL_PALAVRAS = 10;
+        function exibirTela(id) { telas.forEach(tela => $(tela).hidden = tela !== id); }
+        function escapar(texto) { const div = document.createElement('div'); div.textContent = texto; return div.innerHTML; }
+        function destacar(palavra) { const { indice: pos } = gerarLacuna(palavra); return `${escapar(palavra.slice(0,pos))}<strong class="letra-destaque">${palavra[pos]}</strong>${escapar(palavra.slice(pos+1))}`; }
+        function feedback(html, estado) { $('feedback').innerHTML = html; $('feedback').className = `feedback${estado ? ` feedback--${estado}` : ''}`; }
+        function escolherModo(novoModo) { modo = novoModo; tocar('clique'); exibirTela('tela-regra'); }
 
-        // A cada 5 acertos vem uma comemoração. Rodadas de verdade chegam na T15.
-        const ACERTOS_PARA_COMEMORAR = 5;
-
-        // Elementos da página (DOM)
-        const elPalavraDesafio = document.getElementById('palavra-desafio');
-        const elCampoResposta = document.getElementById('campo-resposta');
-        const elFeedback = document.getElementById('feedback');
-        const elPlacarAcertos = document.getElementById('placar-acertos');
-        const elPlacarErros = document.getElementById('placar-erros');
-        const elPalavraAtual = document.getElementById('palavra-atual');
-        const btnVerificar = document.getElementById('btn-verificar');
-        const btnNovo = document.getElementById('btn-novo');
-        const btnReiniciar = document.getElementById('btn-reiniciar');
-
-        // Troca a classe de estado do feedback sem perder a classe base.
-        function mostrarFeedback(html, estado) {
-            elFeedback.innerHTML = html;
-            elFeedback.className = 'feedback' + (estado ? ' feedback--' + estado : '');
+        function iniciarRodada() {
+          if (timeout) clearTimeout(timeout);
+          rodada = sortearVarios(listaAtiva, 10); indice = 0; acertos = 0; erros = 0;
+          $('placar-acertos').textContent = '0'; $('placar-erros').textContent = '0'; exibirTela('tela-jogo'); mostrarPalavra();
         }
-
-        function escaparHtml(texto) {
-            const substituicoes = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return texto.replace(/[&<>"']/g, caractere => substituicoes[caractere]);
+        function mostrarPalavra() {
+          respondida = false; const palavra = rodada[indice];
+          $('palavra-atual').textContent = indice + 1; $('progresso').value = indice;
+          $('palavra-desafio').textContent = gerarLacuna(palavra).texto; $('campo-resposta').value = ''; $('campo-resposta').disabled = false;
+          $('campo-resposta').hidden = modo !== 'digitar'; $('acao-verificar').hidden = modo !== 'digitar'; $('letras-toque').hidden = modo !== 'toque';
+          $('btn-verificar').disabled = false; $('letras-toque').querySelectorAll('button').forEach(b => b.disabled = false); $('btn-novo').hidden = true; feedback('', null);
+          if (modo === 'digitar') $('campo-resposta').focus();
         }
-
-        // Função para gerar uma nova palavra
-        function gerarNovaPalavra() {
-            if (proximaPalavraTimeout !== null) {
-                clearTimeout(proximaPalavraTimeout);
-                proximaPalavraTimeout = null;
-            }
-            palavraCorreta = sortear(listaAtiva, palavraCorreta);
-
-            elPalavraDesafio.textContent = gerarLacuna(palavraCorreta).texto;
-            elCampoResposta.value = "";
-            elCampoResposta.disabled = false;
-            btnVerificar.disabled = false;
-            palavraRespondida = false;
-            btnNovo.textContent = 'NOVA PALAVRA';
-            elPalavraAtual.textContent = Math.min(palavrasConcluidas + 1, TOTAL_PALAVRAS);
-            mostrarFeedback('', null);
-            elCampoResposta.focus();
+        function responder(valor) {
+          if (respondida) return; const palavra = rodada[indice]; const lacuna = gerarLacuna(palavra);
+          if (!String(valor).trim()) { feedback('DIGITE UMA PALAVRA.', 'errado'); tocar('erro'); return; }
+          respondida = true; const acertou = modo === 'toque' ? normalizar(valor) === lacuna.resposta : normalizar(valor) === normalizar(palavra);
+          $('campo-resposta').disabled = true; $('btn-verificar').disabled = true; $('letras-toque').querySelectorAll('button').forEach(b => b.disabled = true);
+          if (acertou) {
+            acertos++; $('placar-acertos').textContent = acertos; feedback(`MUITO BEM, ${escapar(nomeCrianca)}!<br>${destacar(palavra)}`, 'certo'); tocar('acerto'); animar($('feedback'), 'pular');
+            timeout = setTimeout(avancar, 1000);
+          } else {
+            erros++; $('placar-erros').textContent = erros; feedback(`A PALAVRA CORRETA É ${destacar(palavra)}.<br>ANTES DE <strong>P</strong> E <strong>B</strong>, USE <strong>M</strong>. ANTES DAS OUTRAS LETRAS, USE <strong>N</strong>.`, 'errado'); tocar('erro'); animar($('feedback'), 'tremer'); $('btn-novo').hidden = false; $('btn-novo').focus();
+          }
         }
+        function avancar() { if (timeout) clearTimeout(timeout); timeout = null; indice++; $('progresso').value = indice; indice >= 10 ? finalizar() : mostrarPalavra(); }
+        function finalizar() { const estrelas = calcularEstrelas(acertos, erros); registrarPartida('m-ou-n', { acertos, erros, estrelas }); $('resumo-final').textContent = `PARABÉNS, ${nomeCrianca}! VOCÊ ACERTOU ${acertos} DE 10.`; $('estrelas-final').textContent = '⭐'.repeat(estrelas); exibirTela('tela-final'); tocar('vitoria'); lancarConfete(); }
 
-        function finalizarRodada() {
-            rodadaEncerrada = true;
-            const estrelas = calcularEstrelas(acertos, erros);
-            registrarPartida('m-ou-n', { acertos, erros, estrelas });
-            mostrarFeedback(
-                `🏆 PARABÉNS, ${escaparHtml(nomeCrianca.toUpperCase())}! RODADA CONCLUÍDA COM ${acertos} ACERTOS. ${'⭐'.repeat(estrelas)}`,
-                'certo'
-            );
-            elCampoResposta.disabled = true;
-            btnVerificar.disabled = true;
-            btnNovo.textContent = 'NOVA RODADA';
-            tocar('vitoria');
-            lancarConfete();
-        }
-
-        // Função para verificar a resposta da criança
-        function verificarResposta() {
-            if (palavraRespondida || rodadaEncerrada) return;
-            const respostaUsuario = elCampoResposta.value.trim();
-
-            if (respostaUsuario === "") {
-                mostrarFeedback('POR FAVOR, DIGITE UMA PALAVRA.', 'errado');
-                tocar('erro');
-                animar(elFeedback, 'tremer');
-                return;
-            }
-
-            if (normalizar(respostaUsuario) === normalizar(palavraCorreta)) {
-                palavraRespondida = true;
-                acertos++;
-                palavrasConcluidas++;
-                elPlacarAcertos.textContent = acertos;
-                mostrarFeedback(`PARABÉNS, ${escaparHtml(nomeCrianca.toUpperCase())}! VOCÊ ACERTOU!<br>A PALAVRA É <strong class="palavra-certa">`
-                    + palavraCorreta + '</strong>', 'certo');
-                elCampoResposta.disabled = true;
-                btnVerificar.disabled = true;
-                if (palavrasConcluidas >= TOTAL_PALAVRAS) {
-                    finalizarRodada();
-                } else if (acertos % ACERTOS_PARA_COMEMORAR === 0) {
-                    tocar('vitoria');
-                    lancarConfete();
-                } else {
-                    tocar('acerto');
-                }
-                animar(elFeedback, 'pular');
-
-                if (!rodadaEncerrada) {
-                    proximaPalavraTimeout = setTimeout(gerarNovaPalavra, 1800);
-                }
-
-            } else {
-                erros++;
-                elPlacarErros.textContent = erros;
-                mostrarFeedback('OPS, TENTE DE NOVO!<br>LEMBRE-SE: USAMOS <strong>M</strong> ANTES DE <strong>P</strong> E <strong>B</strong>.', 'errado');
-                tocar('erro');
-                animar(elFeedback, 'tremer');
-            }
-        }
-
-        // Função para reiniciar o jogo
-        function reiniciarJogo() {
-            if (proximaPalavraTimeout !== null) clearTimeout(proximaPalavraTimeout);
-            proximaPalavraTimeout = null;
-            acertos = 0;
-            erros = 0;
-            palavrasConcluidas = 0;
-            rodadaEncerrada = false;
-            elPlacarAcertos.textContent = acertos;
-            elPlacarErros.textContent = erros;
-            gerarNovaPalavra();
-        }
-
-        // --- Configuração dos Eventos ---
-        btnVerificar.addEventListener('click', verificarResposta);
-        elCampoResposta.addEventListener('keyup', function(event) {
-            if (event.key === 'Enter') {
-                verificarResposta();
-            }
-        });
-        btnNovo.addEventListener('click', () => {
-            tocar('clique');
-            if (rodadaEncerrada) reiniciarJogo();
-            else gerarNovaPalavra();
-        });
-        btnReiniciar.addEventListener('click', () => { tocar('clique'); reiniciarJogo(); });
-
-        // --- Inicia o jogo pela primeira vez ---
-        reiniciarJogo();
+        document.querySelectorAll('[data-modo]').forEach(b => b.addEventListener('click', () => escolherModo(b.dataset.modo)));
+        document.querySelectorAll('[data-letra]').forEach(b => b.addEventListener('click', () => responder(b.dataset.letra)));
+        $('entendi').addEventListener('click', iniciarRodada); $('btn-verificar').addEventListener('click', () => responder($('campo-resposta').value));
+        $('campo-resposta').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); responder($('campo-resposta').value); } });
+        $('btn-novo').addEventListener('click', avancar); $('jogar-novamente').addEventListener('click', iniciarRodada);
+        [$('btn-reiniciar'), $('trocar-modo')].forEach(b => b.addEventListener('click', () => { if (timeout) clearTimeout(timeout); tocar('clique'); exibirTela('tela-modos'); }));
 
     </script>
 </body>

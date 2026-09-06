@@ -1,447 +1,89 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import type { CardData, Player, GameState } from './types';
-import { embaralhar } from '../../shared/texto.js';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { CardData, GameState, Player } from './types';
 import Cabecalho from './components/Cabecalho';
 import { tocar } from '../../shared/sons.js';
 import { lancarConfete } from '../../shared/confete.js';
-import { calcularEstrelas, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
+import { calcularEstrelas as calcularEstrelasGeral, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
+import { calcularEstrelas, gerarCartas } from './lib/logica';
+import { nomesDosTemas, type NomeDoTema } from './lib/temas';
 
-// --- Game Configuration & Logic ---
-
-const EMOJI_POOL = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🚗', '✈️', '🚀', '⛵️', '🍕', '🍔', '🍓', '🍉', '⚽️', '🏀', '🏈', '⚾️', '🎾', '🏐', '🏉', '🎱'];
-const PLAYER_COLORS = [
-  'bg-pink-500',   // Player 1
-  'bg-red-500',    // Player 2
-  'bg-emerald-500',// Player 3
-  'bg-amber-500',  // Player 4
-];
+const CORES = ['bg-pink-500', 'bg-red-500', 'bg-emerald-500', 'bg-amber-500'];
 const configuracoes = obterConfiguracoes();
 const nomeCrianca = configuracoes.nomeCrianca;
-const cartasConfiguradas = Number(configuracoes.niveis.memoria);
-const quantidadePadraoDeCartas = [16, 24, 32].includes(cartasConfiguradas) ? cartasConfiguradas : 16;
+const cartasSalvas = Number(configuracoes.niveis.memoria);
+const cartasPadrao = [16, 24, 32].includes(cartasSalvas) ? cartasSalvas : 16;
 
-const generateCards = (cardCount: number): CardData[] => {
-  const pairCount = cardCount / 2;
-  const shuffledPool = embaralhar(EMOJI_POOL);
-  const gameEmojis = shuffledPool.slice(0, pairCount);
-  const duplicatedEmojis = embaralhar([...gameEmojis, ...gameEmojis]);
-  return duplicatedEmojis.map((emoji, index) => ({
-    id: index,
-    emoji: emoji,
-    isFlipped: false,
-    isMatched: false,
-  }));
+interface Recorde { jogadas: number; segundos: number }
+const chaveRecorde = (cartas: number) => `jogos-elis:memoria:recorde:${cartas}`;
+function lerRecorde(cartas: number): Recorde | null {
+  try { const valor = JSON.parse(localStorage.getItem(chaveRecorde(cartas)) || 'null'); return valor && Number.isFinite(valor.jogadas) && Number.isFinite(valor.segundos) ? valor : null; } catch { return null; }
+}
+function melhorQue(atual: Recorde, anterior: Recorde | null) { return !anterior || atual.jogadas < anterior.jogadas || (atual.jogadas === anterior.jogadas && atual.segundos < anterior.segundos); }
+function salvarRecorde(cartas: number, recorde: Recorde) { try { localStorage.setItem(chaveRecorde(cartas), JSON.stringify(recorde)); } catch { /* O jogo continua sem persistência. */ } }
+const tempo = (segundos: number) => `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
+
+interface SetupProps { onStart: (jogadores: number, cartas: number, tema: NomeDoTema) => void }
+const SetupScreen: React.FC<SetupProps> = ({ onStart }) => {
+  const [jogadores, setJogadores] = useState(1); const [cartas, setCartas] = useState(cartasPadrao); const [tema, setTema] = useState<NomeDoTema>('Animais');
+  const seletor = (ativo: boolean) => `min-h-12 rounded-xl border-2 px-3 py-2 font-bold transition ${ativo ? 'border-pink-600 bg-pink-500 text-white shadow-md' : 'border-pink-200 bg-white text-pink-700 hover:bg-pink-50'}`;
+  return <main className="flex flex-1 items-center justify-center p-3 sm:p-5"><section className="w-full max-w-2xl rounded-2xl bg-white/75 p-5 text-center shadow-lg sm:p-8">
+    <h1 className="mb-5 font-fredoka text-4xl text-pink-700 sm:text-5xl">🧠 Jogo da Memória</h1>
+    <fieldset className="mb-5"><legend className="mb-3 text-xl font-bold text-gray-700">Escolha um tema</legend><div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{nomesDosTemas.map(nome => <button key={nome} className={seletor(tema === nome)} aria-pressed={tema === nome} onClick={() => setTema(nome)}>{nome}</button>)}</div></fieldset>
+    <fieldset className="mb-5"><legend className="mb-3 text-xl font-bold text-gray-700">Quantos jogadores?</legend><div className="flex justify-center gap-2">{[1,2,3,4].map(n => <button key={n} className={`${seletor(jogadores === n)} min-w-14 text-xl`} aria-pressed={jogadores === n} onClick={() => setJogadores(n)}>{n}</button>)}</div></fieldset>
+    <fieldset className="mb-6"><legend className="mb-3 text-xl font-bold text-gray-700">Quantas cartas?</legend><div className="flex justify-center gap-2">{[16,24,32].map(n => <button key={n} className={`${seletor(cartas === n)} min-w-16 text-lg`} aria-pressed={cartas === n} onClick={() => setCartas(n)}>{n}</button>)}</div></fieldset>
+    <button className="min-h-14 w-full rounded-2xl bg-emerald-500 px-5 text-2xl font-bold text-white shadow-lg hover:bg-emerald-600" onClick={() => onStart(jogadores, cartas, tema)}>Começar!</button>
+  </section></main>;
 };
 
+interface CardProps { card: CardData; onClick: (id: number) => void; disabled: boolean }
+const Card: React.FC<CardProps> = ({ card, onClick, disabled }) => <button type="button" aria-label={card.isMatched ? `Par encontrado: ${card.emoji}` : card.isFlipped ? `Carta ${card.emoji}` : 'Carta virada'} disabled={disabled || card.isFlipped || card.isMatched} onClick={() => onClick(card.id)} className="aspect-[3/4] min-h-11 w-full [perspective:1000px] disabled:cursor-default">
+  <span className={`relative block h-full w-full transition-transform duration-500 [transform-style:preserve-3d] ${card.isFlipped || card.isMatched ? '[transform:rotateY(180deg)]' : ''}`}>
+    <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-pink-500 text-3xl text-pink-100 shadow-md [backface-visibility:hidden]">?</span>
+    <span className={`absolute inset-0 flex items-center justify-center rounded-lg text-3xl shadow-md [backface-visibility:hidden] [transform:rotateY(180deg)] sm:text-4xl ${card.isMatched ? 'bg-emerald-200' : 'bg-white'}`}>{card.emoji}</span>
+  </span>
+</button>;
 
-// --- UI Components ---
+interface PlacarProps { players: Player[]; atual: number; jogadas: number; segundos: number; solo: boolean; onName: (id: number, nome: string) => void; onNew: () => void; onBack: () => void }
+const Placar: React.FC<PlacarProps> = ({ players, atual, jogadas, segundos, solo, onName, onNew, onBack }) => <div className="mb-4 rounded-xl bg-white/75 p-3 shadow-md">
+  {solo ? <div className="flex justify-center gap-6 text-lg font-bold text-gray-700"><span>🃏 {jogadas} jogadas</span><span>⏱️ {tempo(segundos)}</span></div> : <div className="mb-3 flex flex-wrap justify-center gap-2">{players.map((p,i) => <div key={p.id} className={`rounded-lg p-2 text-center transition ${p.id === atual ? `${CORES[i]} scale-105 text-white shadow-lg` : 'bg-gray-200'}`}><input aria-label={`Nome do jogador ${p.id}`} className="w-24 bg-transparent text-center text-sm font-bold focus:outline-none" value={p.name} maxLength={18} onChange={e => onName(p.id,e.target.value)}/><div className="text-xl font-bold">{p.score}</div></div>)}</div>}
+  <div className="mt-2 flex justify-center gap-2"><button className="min-h-11 rounded-lg bg-pink-500 px-4 font-bold text-white" onClick={onBack}>Voltar</button><button className="min-h-11 rounded-lg bg-emerald-500 px-4 font-bold text-white" onClick={onNew}>Novo jogo</button></div>
+</div>;
 
-// Setup Screen Component
-interface SetupScreenProps {
-  onStartGame: (playerCount: number, cardCount: number) => void;
-  defaultCardCount: number;
-}
-const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame, defaultCardCount }) => {
-    const [selectedPlayers, setSelectedPlayers] = useState<number | null>(1);
-    const [selectedCards, setSelectedCards] = useState<number | null>(defaultCardCount);
-
-    const canStart = selectedPlayers !== null && selectedCards !== null;
-
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center p-4 text-center">
-        <h1 className="text-5xl sm:text-6xl font-fredoka text-pink-700 tracking-wider mb-8">
-          Jogo da Memória Emoji
-        </h1>
-        
-        <div className="w-full max-w-md bg-white/60 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
-          <div className="mb-8">
-            <p className="text-gray-600 text-2xl mb-4 font-fredoka">Quantos jogadores?</p>
-            <div className="flex flex-row justify-center gap-4">
-              {[1, 2, 3, 4].map(count => (
-                <button
-                  key={count}
-                  onClick={() => setSelectedPlayers(count)}
-                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedPlayers === count ? 'bg-pink-500 text-white scale-110' : 'bg-white hover:bg-pink-100 text-pink-600'}`}
-                >
-                  {count}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-10">
-            <p className="text-gray-600 text-2xl mb-4 font-fredoka">Quantas cartas?</p>
-            <div className="flex flex-row justify-center gap-4">
-              {[16, 24, 32].map(count => (
-                <button
-                  key={count}
-                  onClick={() => setSelectedCards(count)}
-                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedCards === count ? 'bg-pink-500 text-white scale-110' : 'bg-white hover:bg-pink-100 text-pink-600'}`}
-                >
-                  {count}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              if (selectedPlayers !== null && selectedCards !== null) {
-                onStartGame(selectedPlayers, selectedCards);
-              }
-            }}
-            disabled={!canStart}
-            className="bg-emerald-500 text-white font-fredoka text-3xl rounded-2xl shadow-lg w-full py-4 flex items-center justify-center transition-all transform hover:scale-105 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:scale-100"
-            aria-disabled={!canStart}
-          >
-            Iniciar Jogo
-          </button>
-        </div>
-      </div>
-    );
+interface FinalProps { players: Player[]; solo: boolean; jogadas: number; segundos: number; estrelas: number; recorde: Recorde | null; novoRecorde: boolean; onAgain: () => void; onBack: () => void }
+const Final: React.FC<FinalProps> = ({ players, solo, jogadas, segundos, estrelas, recorde, novoRecorde, onAgain, onBack }) => {
+  const maior = Math.max(...players.map(p => p.score)); const vencedores = players.filter(p => p.score === maior); const mensagem = solo ? `Parabéns, ${nomeCrianca}!` : vencedores.length > 1 ? 'Empate!' : `${vencedores[0]?.name} venceu!`;
+  return <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4"><section className="w-full max-w-md rounded-2xl bg-white p-7 text-center shadow-2xl"><h2 className="mb-3 font-fredoka text-4xl text-yellow-600">🏆 {mensagem}</h2>{solo ? <><p className="text-xl">Você terminou em <strong>{jogadas} jogadas</strong> e <strong>{tempo(segundos)}</strong>.</p>{novoRecorde && <p className="mt-2 text-xl font-bold text-emerald-600">✨ Novo recorde!</p>}{recorde && <p className="mt-2 text-gray-600">Recorde: {recorde.jogadas} jogadas em {tempo(recorde.segundos)}</p>}</> : <div>{players.map(p => <p key={p.id}>{p.name}: <strong>{p.score} pares</strong></p>)}</div>}<p className="my-4 text-3xl" aria-label={`${estrelas} estrelas`}>{'⭐'.repeat(estrelas)}</p><div className="flex flex-wrap justify-center gap-3"><button className="min-h-12 rounded-xl bg-emerald-500 px-5 font-bold text-white" onClick={onAgain}>Jogar de novo</button><button className="min-h-12 rounded-xl bg-pink-500 px-5 font-bold text-white" onClick={onBack}>Configurar</button></div></section></div>;
 };
-
-// Card Component
-interface CardComponentProps {
-  card: CardData;
-  onClick: (id: number) => void;
-  isDisabled: boolean;
-}
-const CardComponent: React.FC<CardComponentProps> = ({ card, onClick, isDisabled }) => {
-  const { isFlipped, isMatched, id } = card;
-  const handleClick = () => {
-    if (!isFlipped && !isMatched && !isDisabled) onClick(id);
-  };
-  const cardInnerClasses = `relative w-full h-full text-center transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped || isMatched ? '[transform:rotateY(180deg)]' : ''}`;
-
-  return (
-    <div className="w-full aspect-[3/4] [perspective:1000px] cursor-pointer" onClick={handleClick}>
-      <div className={cardInnerClasses}>
-        <div className="absolute w-full h-full rounded-lg shadow-md bg-pink-500 hover:bg-pink-600 transition-colors flex items-center justify-center [backface-visibility:hidden]">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-1/2 w-1/2 text-pink-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <div className={`absolute w-full h-full rounded-lg shadow-md flex items-center justify-center [transform:rotateY(180deg)] [backface-visibility:hidden] ${isMatched ? 'bg-emerald-200' : 'bg-white'}`}>
-          <span className="text-3xl sm:text-4xl">{card.emoji}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Victory Modal Component
-interface VictoryModalProps {
-  players: Player[];
-  onPlayAgain: () => void;
-  erros: number;
-}
-const VictoryModal: React.FC<VictoryModalProps> = ({ players, onPlayAgain, erros }) => {
-  const soloMode = players.length === 1;
-  const highScore = players.reduce((maior, p) => Math.max(maior, p.score), 0);
-  const totalDePares = players.reduce((total, p) => total + p.score, 0);
-  const winners = players.filter(p => p.score === highScore);
-  const winnerMessage = soloMode
-    ? `Parabéns, ${nomeCrianca}! Você encontrou todos os pares!`
-    : winners.length > 1
-      ? 'É um empate!'
-      : `${winners.map(w => w.name).join(' e ')} Venceu!`;
-
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-10">
-      <div className="bg-white rounded-2xl p-8 text-center shadow-2xl transform transition-all scale-100 opacity-100">
-        <h2 className="text-4xl font-fredoka text-yellow-500 mb-4">{winnerMessage}</h2>
-        {!soloMode && (
-          <div className="space-y-2 text-gray-700 text-lg">
-            {players.map(player => (
-               <p key={player.id}>{player.name}: <span className={`font-bold ${winners.some(w => w.id === player.id) ? 'text-yellow-500' : 'text-gray-600'}`}>{player.score}</span> pontos</p>
-            ))}
-          </div>
-        )}
-        <p className="mt-4 text-2xl" aria-label={`${calcularEstrelas(totalDePares, erros)} estrelas`}>
-          {'⭐'.repeat(calcularEstrelas(totalDePares, erros))}
-        </p>
-        <button onClick={onPlayAgain} className="mt-6 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105">
-          Jogar Novamente
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Scoreboard Component
-interface ScoreboardProps {
-    players: Player[];
-    currentPlayerId: number;
-    onNameChange: (id: number, newName: string) => void;
-    onNewGame: () => void;
-    onGoToSetup: () => void;
-}
-const Scoreboard: React.FC<ScoreboardProps> = ({ players, currentPlayerId, onNameChange, onNewGame, onGoToSetup }) => (
-    <div className="flex flex-wrap items-center justify-between gap-4 bg-white/70 backdrop-blur-sm p-4 rounded-lg shadow-md mb-6">
-        <div className="flex flex-wrap gap-3 sm:gap-4 text-center">
-            {players.map((player, index) => (
-                <div key={player.id} className={`p-3 rounded-lg transition-all duration-300 ${currentPlayerId === player.id ? `${PLAYER_COLORS[index % PLAYER_COLORS.length]} text-white scale-110 shadow-lg` : 'bg-gray-200'}`}>
-                    <input 
-                        type="text"
-                        value={player.name}
-                        onChange={(e) => onNameChange(player.id, e.target.value)}
-                        className={`text-sm font-bold uppercase tracking-wider text-center w-24 bg-transparent focus:outline-none ${currentPlayerId === player.id ? 'placeholder-white/70' : 'placeholder-gray-500'}`}
-                        aria-label={`Nome do Jogador ${player.id}`}
-                    />
-                    <div className="text-2xl font-fredoka">{player.score}</div>
-                </div>
-            ))}
-        </div>
-        <div className="flex items-center gap-3">
-             <button onClick={onGoToSetup} className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105">
-                Voltar
-            </button>
-            <button onClick={onNewGame} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105">
-                Novo Jogo
-            </button>
-        </div>
-    </div>
-);
-
-// Game Board Component
-interface GameBoardProps {
-    cards: CardData[];
-    flippedIds: number[];
-    matchedIds: number[];
-    onCardClick: (id: number) => void;
-    isChecking: boolean;
-    tremendo: boolean;
-}
-const GameBoard: React.FC<GameBoardProps> = ({ cards, flippedIds, matchedIds, onCardClick, isChecking, tremendo }) => {
-    // Sempre 4 colunas no celular; abre mais colunas conforme a tela cresce.
-    const gridColsClass =
-        cards.length === 32 ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8' :
-        cards.length === 24 ? 'grid-cols-4 sm:grid-cols-6' :
-        'grid-cols-4';
-    
-    const gapClass = cards.length === 32 ? 'gap-2 sm:gap-3' : 'gap-3 sm:gap-4';
-
-    return (
-      <main className={`grid ${gridColsClass} ${gapClass} p-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg ${tremendo ? 'tremer' : ''}`}>
-        {cards.map(card => {
-            const isFlipped = flippedIds.includes(card.id);
-            const isMatched = matchedIds.includes(card.id);
-            return <CardComponent key={card.id} card={{ ...card, isFlipped, isMatched }} onClick={onCardClick} isDisabled={isChecking} />;
-        })}
-      </main>
-    );
-};
-
-
-// --- Main App Component ---
 
 const App: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>('setup');
-  const [cards, setCards] = useState<CardData[]>([]);
-  const [cardCount, setCardCount] = useState<number>(16);
-  const [flippedIds, setFlippedIds] = useState<number[]>([]);
-  const [matchedIds, setMatchedIds] = useState<number[]>([]);
-  const [isChecking, setIsChecking] = useState(false);
-  const [currentPlayerId, setCurrentPlayerId] = useState<number>(1);
-  const [players, setPlayers] = useState<Player[]>([]);
-  // Liga a classe .tremer do base.css no tabuleiro quando o par não bate.
-  const [tremendo, setTremendo] = useState(false);
+  const [estado,setEstado] = useState<GameState>('setup'), [cards,setCards] = useState<CardData[]>([]), [viradas,setViradas] = useState<number[]>([]), [combinadas,setCombinadas] = useState<number[]>([]), [conferindo,setConferindo] = useState(false), [tremendo,setTremendo] = useState(false);
+  const [players,setPlayers] = useState<Player[]>([]), [playerAtual,setPlayerAtual] = useState(1), [cardCount,setCardCount] = useState(cartasPadrao), [tema,setTema] = useState<NomeDoTema>('Animais'), [jogadas,setJogadas] = useState(0), [segundos,setSegundos] = useState(0), [recorde,setRecorde] = useState<Recorde|null>(null), [novoRecorde,setNovoRecorde] = useState(false);
+  const timers = useRef<number[]>([]), jogadasRef = useRef(0), segundosRef = useRef(0), registrada = useRef(false);
+  const limparTimers = useCallback(() => { timers.current.forEach(clearTimeout); timers.current=[]; }, []);
+  const agendar = useCallback((fn:()=>void, ms:number) => { const id=window.setTimeout(()=>{timers.current=timers.current.filter(x=>x!==id);fn()},ms);timers.current.push(id);return id; },[]);
+  useEffect(() => limparTimers, [limparTimers]);
+  useEffect(() => { if (estado !== 'playing' || players.length !== 1) return; const id=window.setInterval(()=>{segundosRef.current++;setSegundos(segundosRef.current)},1000); return()=>clearInterval(id); },[estado,players.length]);
 
-  // Guarda os setTimeout pendentes para nenhum deles disparar depois de
-  // "Novo Jogo" ou "Voltar" e bagunçar a partida seguinte.
-  const timeoutsRef = useRef<number[]>([]);
-  const errosRef = useRef(0);
-  const partidaRegistradaRef = useRef(false);
-
-  const agendar = useCallback((acao: () => void, ms: number) => {
-    const id = window.setTimeout(() => {
-      timeoutsRef.current = timeoutsRef.current.filter(t => t !== id);
-      acao();
-    }, ms);
-    timeoutsRef.current.push(id);
-    return id;
-  }, []);
-
-  const cancelar = useCallback((id: number) => {
-    clearTimeout(id);
-    timeoutsRef.current = timeoutsRef.current.filter(t => t !== id);
-  }, []);
-
-  const limparTimeouts = useCallback(() => {
-    timeoutsRef.current.forEach(id => clearTimeout(id));
-    timeoutsRef.current = [];
-  }, []);
-
-  // Ao desmontar, nada pode continuar agendado.
-  useEffect(() => limparTimeouts, [limparTimeouts]);
-
-  // Effect to check for matches when two cards are flipped
   useEffect(() => {
-    if (flippedIds.length !== 2) return;
+    if (viradas.length !== 2) return; setConferindo(true); const [a,b]=viradas, primeira=cards.find(c=>c.id===a), segunda=cards.find(c=>c.id===b);
+    if (primeira && segunda && primeira.emoji===segunda.emoji) { tocar('acerto'); setCombinadas(v=>[...v,a,b]); setPlayers(ps=>ps.map(p=>p.id===playerAtual?{...p,score:p.score+1}:p)); setViradas([]); setConferindo(false); return; }
+    tocar('erro'); setTremendo(true); agendar(()=>{setTremendo(false);setViradas([]);if(players.length>1)setPlayerAtual(p=>(p%players.length)+1);setConferindo(false)},900);
+  },[viradas,cards,playerAtual,players.length,agendar]);
 
-    setIsChecking(true);
-    const [firstId, secondId] = flippedIds;
-    const firstCard = cards.find(c => c.id === firstId);
-    const secondCard = cards.find(c => c.id === secondId);
-
-    if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
-      // Match found
-      tocar('acerto');
-      setMatchedIds(prev => [...prev, firstId, secondId]);
-      setPlayers(prev => prev.map(p => p.id === currentPlayerId ? { ...p, score: p.score + 1 } : p));
-      setFlippedIds([]);
-      setIsChecking(false);
-      return;
-    }
-
-    // No match, switch turns
-    errosRef.current += 1;
-    tocar('erro');
-    setTremendo(true);
-    const id = agendar(() => {
-      setTremendo(false);
-      setFlippedIds([]);
-      if (players.length > 1) {
-          setCurrentPlayerId(prev => (prev % players.length) + 1);
-      }
-      setIsChecking(false);
-    }, 1000);
-    return () => cancelar(id);
-  }, [flippedIds, cards, currentPlayerId, players.length, agendar, cancelar]);
-
-  // Effect to check for game completion
   useEffect(() => {
-    if (cards.length === 0 || matchedIds.length !== cards.length) return;
-    const id = agendar(() => {
-      if (!partidaRegistradaRef.current) {
-        const totalDePares = cards.length / 2;
-        registrarPartida('memoria', {
-          acertos: totalDePares,
-          erros: errosRef.current,
-          estrelas: calcularEstrelas(totalDePares, errosRef.current),
-        });
-        partidaRegistradaRef.current = true;
-      }
-      setGameState('finished');
-      tocar('vitoria');
-      lancarConfete();
-    }, 500);
-    return () => cancelar(id);
-  }, [matchedIds, cards.length, agendar, cancelar]);
+    if (!cards.length || combinadas.length!==cards.length || registrada.current) return; registrada.current=true; const pares=cards.length/2, solo=players.length===1, estrelas=solo?calcularEstrelas(jogadasRef.current,pares):calcularEstrelasGeral(pares,Math.max(0,jogadasRef.current-pares));
+    registrarPartida('memoria',{acertos:pares,erros:Math.max(0,jogadasRef.current-pares),estrelas});
+    if(solo){const atual={jogadas:jogadasRef.current,segundos:segundosRef.current},anterior=lerRecorde(cardCount),novo=melhorQue(atual,anterior);if(novo)salvarRecorde(cardCount,atual);setNovoRecorde(novo);setRecorde(novo?atual:anterior)}
+    setEstado('finished'); tocar('vitoria'); lancarConfete();
+  },[combinadas,cards,players.length,cardCount,agendar]);
 
-  const handleStartGame = (playerCount: number, selectedcardCount: number) => {
-    tocar('clique');
-    limparTimeouts();
-    setCardCount(selectedcardCount);
-    const newPlayers = Array.from({ length: playerCount }, (_, i) => ({
-      id: i + 1,
-      name: i === 0 ? nomeCrianca : `Jogador ${i + 1}`,
-      score: 0,
-    }));
-    setPlayers(newPlayers);
-    setCards(generateCards(selectedcardCount));
-    setFlippedIds([]);
-    setMatchedIds([]);
-    setCurrentPlayerId(1);
-    setIsChecking(false);
-    errosRef.current = 0;
-    partidaRegistradaRef.current = false;
-    setGameState('playing');
-  };
-
-  const handleGoToSetup = useCallback(() => {
-    tocar('clique');
-    limparTimeouts();
-    setGameState('setup');
-    setPlayers([]);
-    setCards([]);
-    setFlippedIds([]);
-    setMatchedIds([]);
-    setCurrentPlayerId(1);
-    setIsChecking(false);
-    errosRef.current = 0;
-    partidaRegistradaRef.current = false;
-  }, [limparTimeouts]);
-
-  const handleNewGame = useCallback(() => {
-    // Resets the game but keeps players and names
-    tocar('clique');
-    limparTimeouts();
-    setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
-    setCards(generateCards(cardCount));
-    setFlippedIds([]);
-    setMatchedIds([]);
-    setCurrentPlayerId(1);
-    setIsChecking(false);
-    errosRef.current = 0;
-    partidaRegistradaRef.current = false;
-    setGameState('playing');
-  }, [cardCount, limparTimeouts]);
-
-  const handleCardClick = useCallback((id: number) => {
-    if (isChecking || flippedIds.length >= 2 || flippedIds.includes(id) || matchedIds.includes(id)) {
-      return;
-    }
-    tocar('clique');
-    setFlippedIds(prev => [...prev, id]);
-  }, [isChecking, flippedIds, matchedIds]);
-  
-  const handleNameChange = useCallback((playerId: number, newName: string) => {
-    setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, name: newName } : p));
-  }, []);
-
-  // Larguras pensadas para a carta ficar por volta de 110 px nas telas grandes:
-  // com w-full, quem define o tamanho da carta é a largura do tabuleiro.
-  const containerWidthClass =
-    cardCount === 32 ? 'max-w-5xl' :
-    cardCount === 24 ? 'max-w-3xl' :
-    'max-w-lg';
-
-  const conteudo = gameState === 'setup' ? (
-    <SetupScreen onStartGame={handleStartGame} defaultCardCount={quantidadePadraoDeCartas} />
-  ) : (
-    <div className="flex flex-1 flex-col items-center justify-center p-4">
-      {gameState === 'finished' && <VictoryModal players={players} onPlayAgain={handleNewGame} erros={errosRef.current} />}
-      
-      <div className={`w-full ${containerWidthClass} mx-auto transition-all duration-500`}>
-        <header className="text-center mb-6">
-          <h1 className="text-4xl sm:text-5xl font-fredoka text-pink-700 tracking-wider">
-            Jogo da Memória Emoji
-          </h1>
-          <p className="text-gray-500 mt-1">Encontre os pares!</p>
-        </header>
-
-        <Scoreboard 
-            players={players} 
-            currentPlayerId={currentPlayerId}
-            onNameChange={handleNameChange}
-            onNewGame={handleNewGame}
-            onGoToSetup={handleGoToSetup}
-        />
-        
-        <GameBoard
-            cards={cards}
-            flippedIds={flippedIds}
-            matchedIds={matchedIds}
-            onCardClick={handleCardClick}
-            isChecking={isChecking}
-            tremendo={tremendo}
-        />
-        
-        <footer className="text-center text-gray-500 text-sm mt-8">
-            Criado para crianças de 4 a 8 anos.
-        </footer>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="fundo-jogos flex min-h-dvh flex-col">
-      <Cabecalho titulo="Jogo da Memória" />
-      {conteudo}
-    </div>
-  );
+  const iniciar = useCallback((quantidadeJogadores:number, quantidadeCartas:number, nomeTema:NomeDoTema) => { limparTimers();setCardCount(quantidadeCartas);setTema(nomeTema);setPlayers(Array.from({length:quantidadeJogadores},(_,i)=>({id:i+1,name:i===0?nomeCrianca:`Jogador ${i+1}`,score:0})));setCards(gerarCartas(quantidadeCartas,nomeTema));setViradas([]);setCombinadas([]);setPlayerAtual(1);setConferindo(false);setTremendo(false);jogadasRef.current=0;segundosRef.current=0;setJogadas(0);setSegundos(0);setRecorde(quantidadeJogadores===1?lerRecorde(quantidadeCartas):null);setNovoRecorde(false);registrada.current=false;setEstado('playing');tocar('clique') },[limparTimers]);
+  const repetir = useCallback(() => iniciar(players.length,cardCount,tema),[iniciar,players.length,cardCount,tema]);
+  const voltar = useCallback(() => { limparTimers();setEstado('setup');setCards([]);setViradas([]);setCombinadas([]) },[limparTimers]);
+  const virar = useCallback((id:number) => { if(conferindo||viradas.length>=2||viradas.includes(id)||combinadas.includes(id))return;if(viradas.length===1){jogadasRef.current++;setJogadas(jogadasRef.current)}setViradas(v=>[...v,id]);tocar('clique') },[conferindo,viradas,combinadas]);
+  const mudarNome = useCallback((id:number,nome:string)=>setPlayers(ps=>ps.map(p=>p.id===id?{...p,name:nome}:p)),[]);
+  const colunas=cardCount===32?'grid-cols-4 sm:grid-cols-6 md:grid-cols-8':cardCount===24?'grid-cols-4 sm:grid-cols-6':'grid-cols-4'; const largura=cardCount===32?'max-w-5xl':cardCount===24?'max-w-3xl':'max-w-lg'; const estrelasFinal=players.length===1?calcularEstrelas(jogadas,cardCount/2):calcularEstrelasGeral(cardCount/2,Math.max(0,jogadas-cardCount/2));
+  return <div className="fundo-jogos flex min-h-dvh flex-col"><Cabecalho titulo="Jogo da Memória"/>{estado==='setup'?<SetupScreen onStart={iniciar}/>:<main className="flex flex-1 justify-center p-3 sm:p-5"><div className={`w-full ${largura}`}><header className="mb-4 text-center"><h1 className="font-fredoka text-4xl text-pink-700">{tema}</h1><p className="text-gray-600">Encontre os pares!</p></header><Placar players={players} atual={playerAtual} jogadas={jogadas} segundos={segundos} solo={players.length===1} onName={mudarNome} onNew={repetir} onBack={voltar}/><section className={`grid ${colunas} gap-2 rounded-xl bg-white/70 p-3 shadow-lg sm:gap-3 ${tremendo?'tremer':''}`}>{cards.map(c=><Card key={c.id} card={{...c,isFlipped:viradas.includes(c.id),isMatched:combinadas.includes(c.id)}} onClick={virar} disabled={conferindo}/>)}</section>{estado==='finished'&&<Final players={players} solo={players.length===1} jogadas={jogadas} segundos={segundos} estrelas={estrelasFinal} recorde={recorde} novoRecorde={novoRecorde} onAgain={repetir} onBack={voltar}/>}</div></main>}</div>;
 };
 
 export default App;
