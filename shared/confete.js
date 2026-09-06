@@ -97,3 +97,15 @@ export function lancarConfete(duracaoMs = 1500) {
 
   quadro = requestAnimationFrame(desenhar);
 }
+
+/**
+ * Reinicia uma animação de feedback do base.css ('pular' ou 'tremer').
+ * Tirar e repor a classe no mesmo quadro não reinicia nada: por isso o
+ * offsetWidth no meio, que força o navegador a recalcular o layout.
+ */
+export function animar(elemento, classe) {
+  if (!elemento) return;
+  elemento.classList.remove('pular', 'tremer');
+  void elemento.offsetWidth;
+  elemento.classList.add(classe);
+}

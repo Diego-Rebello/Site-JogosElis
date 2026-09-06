@@ -7,6 +7,8 @@ import ModeSelector from './components/ModeSelector';
 import { PLAYER_X, PLAYER_O } from './constants';
 import { aplicarJogada, findBestMove } from './lib/logica';
 import Cabecalho from './components/Cabecalho';
+import { tocar } from '../../shared/sons.js';
+import { lancarConfete } from '../../shared/confete.js';
 
 const App: React.FC = () => {
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
@@ -25,6 +27,7 @@ const App: React.FC = () => {
       return;
     }
 
+    tocar('clique');
     const resultado = aplicarJogada(board, index, currentPlayer);
     setBoard(resultado.tabuleiro);
 
@@ -36,6 +39,23 @@ const App: React.FC = () => {
       setCurrentPlayer(currentPlayer === PLAYER_X ? PLAYER_O : PLAYER_X);
     }
   }, [board, winner, isDraw, gameMode, currentPlayer]);
+
+  // Som e confete do fim de partida, em um lugar só: tanto a jogada da criança
+  // quanto a do computador podem encerrar o jogo.
+  useEffect(() => {
+    if (winner) {
+      // Contra o computador, quem ganha com O é a máquina: aí não tem festa.
+      const criancaPerdeu = gameMode === GameMode.PVC && winner.player === PLAYER_O;
+      if (criancaPerdeu) {
+        tocar('erro');
+      } else {
+        tocar('vitoria');
+        lancarConfete();
+      }
+    } else if (isDraw) {
+      tocar('acerto');
+    }
+  }, [winner, isDraw, gameMode]);
   
   useEffect(() => {
     if (gameMode === GameMode.PVC && currentPlayer === PLAYER_O && !winner && !isDraw) {
@@ -60,6 +80,7 @@ const App: React.FC = () => {
 
 
   const resetGame = () => {
+    tocar('clique');
     setBoard(Array(9).fill(null));
     setCurrentPlayer(PLAYER_X);
     setWinner(null);
@@ -71,6 +92,11 @@ const App: React.FC = () => {
     setGameMode(null);
   };
 
+  const escolherModo = (modo: GameMode) => {
+    tocar('clique');
+    setGameMode(modo);
+  };
+
   return (
     <div className="fundo-jogos flex min-h-dvh flex-col text-center text-slate-800">
       <Cabecalho titulo="Jogo da Velha Divertido" />
@@ -78,7 +104,7 @@ const App: React.FC = () => {
       <div className="flex flex-1 flex-col items-center justify-center p-4">
       <main className="bg-white/70 backdrop-blur-sm p-6 rounded-3xl shadow-2xl w-full max-w-md">
         {gameMode === null ? (
-          <ModeSelector onSelectMode={setGameMode} />
+          <ModeSelector onSelectMode={escolherModo} />
         ) : (
           <>
             <GameStatus winner={winner} currentPlayer={currentPlayer} isDraw={isDraw} />

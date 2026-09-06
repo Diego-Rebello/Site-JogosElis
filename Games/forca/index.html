@@ -67,6 +67,8 @@
 
   <script type="module">
     import { normalizar, sortear } from '../../shared/texto.js';
+    import { tocar } from '../../shared/sons.js';
+    import { lancarConfete, animar } from '../../shared/confete.js';
 
     // Cada palavra vem com o tema, escrita com a acentuação correta.
     const palavras = [
@@ -271,15 +273,24 @@
         if (venceu()) {
           vitorias++;
           elMensagem.textContent = `🎉 Você ganhou! A palavra era: ${atual.palavra}`;
+          elMensagem.classList.add('feedback--certo');
+          tocar('vitoria');
+          lancarConfete();
           fimDeJogo();
+        } else {
+          tocar('acerto');
+          animar(elPalavra, 'pular');
         }
       } else {
         erros++;
         elForca.textContent = estagios[erros];
+        tocar('erro');
+        animar(elForca, 'tremer');
         if (erros >= MAX_ERROS) {
           derrotas++;
           mostrarPalavra(true);
           elMensagem.textContent = `💀 Você perdeu! A palavra era: ${atual.palavra}`;
+          elMensagem.classList.add('feedback--errado');
           fimDeJogo();
         }
       }
@@ -306,6 +317,7 @@
       elTema.textContent = `Tema: ${atual.categoria}`;
       elForca.textContent = estagios[0];
       elMensagem.textContent = "";
+      elMensagem.className = "feedback";
       btnNovaPalavra.style.display = "none";
       elBotoes.querySelectorAll("button").forEach(b => { b.disabled = false; });
       mostrarPalavra(false);
@@ -320,7 +332,10 @@
       if (/^[A-Z]$/.test(letra)) jogar(letra);
     });
 
-    btnNovaPalavra.addEventListener("click", novaPalavra);
+    btnNovaPalavra.addEventListener("click", () => {
+      tocar('clique');
+      novaPalavra();
+    });
 
     criarBotoes();
     novaPalavra();

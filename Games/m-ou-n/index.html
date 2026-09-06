@@ -81,6 +81,8 @@
 
     <script type="module">
         import { normalizar, sortear } from '../../shared/texto.js';
+        import { tocar } from '../../shared/sons.js';
+        import { lancarConfete, animar } from '../../shared/confete.js';
 
         // --- LÓGICA DO JOGO ---
 
@@ -134,6 +136,9 @@
         let acertos = 0;
         let erros = 0;
 
+        // A cada 5 acertos vem uma comemoração. Rodadas de verdade chegam na T15.
+        const ACERTOS_PARA_COMEMORAR = 5;
+
         // Elementos da página (DOM)
         const elPalavraDesafio = document.getElementById('palavra-desafio');
         const elCampoResposta = document.getElementById('campo-resposta');
@@ -166,6 +171,8 @@
 
             if (respostaUsuario === "") {
                 mostrarFeedback('POR FAVOR, DIGITE UMA PALAVRA.', 'errado');
+                tocar('erro');
+                animar(elFeedback, 'tremer');
                 return;
             }
 
@@ -174,6 +181,13 @@
                 elPlacarAcertos.textContent = acertos;
                 mostrarFeedback('PARABÉNS, VOCÊ ACERTOU!<br>A PALAVRA É <strong class="palavra-certa">'
                     + palavraCorreta + '</strong>', 'certo');
+                if (acertos % ACERTOS_PARA_COMEMORAR === 0) {
+                    tocar('vitoria');
+                    lancarConfete();
+                } else {
+                    tocar('acerto');
+                }
+                animar(elFeedback, 'pular');
 
                 setTimeout(gerarNovaPalavra, 1800);
 
@@ -181,6 +195,8 @@
                 erros++;
                 elPlacarErros.textContent = erros;
                 mostrarFeedback('OPS, TENTE DE NOVO!<br>LEMBRE-SE: USAMOS <strong>M</strong> ANTES DE <strong>P</strong> E <strong>B</strong>.', 'errado');
+                tocar('erro');
+                animar(elFeedback, 'tremer');
             }
         }
 
@@ -200,8 +216,8 @@
                 verificarResposta();
             }
         });
-        btnNovo.addEventListener('click', gerarNovaPalavra);
-        btnReiniciar.addEventListener('click', reiniciarJogo);
+        btnNovo.addEventListener('click', () => { tocar('clique'); gerarNovaPalavra(); });
+        btnReiniciar.addEventListener('click', () => { tocar('clique'); reiniciarJogo(); });
 
         // --- Inicia o jogo pela primeira vez ---
         gerarNovaPalavra();

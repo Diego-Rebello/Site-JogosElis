@@ -120,6 +120,9 @@ o iOS exige. O mudo fica em `localStorage['jogos-elis:mudo']`.
 `lancarConfete(duracaoMs = 1500)` — canvas em tela cheia, ~80 partículas nas cores dos tokens,
 `pointer-events: none`, some sozinho no fim. Não faz nada com `prefers-reduced-motion: reduce`.
 
+`animar(elemento, classe)` — dispara `.pular` (acerto) ou `.tremer` (erro) do `base.css`,
+reiniciando a animação se ela já estiver rodando.
+
 ### `progresso.js`
 
 | Função | O que faz |

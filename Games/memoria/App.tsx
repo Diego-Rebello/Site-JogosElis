@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CardData, Player, GameState } from './types';
 import { embaralhar } from '../../shared/texto.js';
 import Cabecalho from './components/Cabecalho';
+import { tocar } from '../../shared/sons.js';
+import { lancarConfete } from '../../shared/confete.js';
 
 // --- Game Configuration & Logic ---
 
@@ -198,8 +200,9 @@ interface GameBoardProps {
     matchedIds: number[];
     onCardClick: (id: number) => void;
     isChecking: boolean;
+    tremendo: boolean;
 }
-const GameBoard: React.FC<GameBoardProps> = ({ cards, flippedIds, matchedIds, onCardClick, isChecking }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ cards, flippedIds, matchedIds, onCardClick, isChecking, tremendo }) => {
     // Sempre 4 colunas no celular; abre mais colunas conforme a tela cresce.
     const gridColsClass =
         cards.length === 32 ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8' :
@@ -209,7 +212,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ cards, flippedIds, matchedIds, on
     const gapClass = cards.length === 32 ? 'gap-2 sm:gap-3' : 'gap-3 sm:gap-4';
 
     return (
-      <main className={`grid ${gridColsClass} ${gapClass} p-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg`}>
+      <main className={`grid ${gridColsClass} ${gapClass} p-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg ${tremendo ? 'tremer' : ''}`}>
         {cards.map(card => {
             const isFlipped = flippedIds.includes(card.id);
             const isMatched = matchedIds.includes(card.id);
@@ -231,6 +234,8 @@ const App: React.FC = () => {
   const [isChecking, setIsChecking] = useState(false);
   const [currentPlayerId, setCurrentPlayerId] = useState<number>(1);
   const [players, setPlayers] = useState<Player[]>([]);
+  // Liga a classe .tremer do base.css no tabuleiro quando o par não bate.
+  const [tremendo, setTremendo] = useState(false);
 
   // Guarda os setTimeout pendentes para nenhum deles disparar depois de
   // "Novo Jogo" ou "Voltar" e bagunçar a partida seguinte.
@@ -269,6 +274,7 @@ const App: React.FC = () => {
 
     if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
       // Match found
+      tocar('acerto');
       setMatchedIds(prev => [...prev, firstId, secondId]);
       setPlayers(prev => prev.map(p => p.id === currentPlayerId ? { ...p, score: p.score + 1 } : p));
       setFlippedIds([]);
@@ -277,7 +283,10 @@ const App: React.FC = () => {
     }
 
     // No match, switch turns
+    tocar('erro');
+    setTremendo(true);
     const id = agendar(() => {
+      setTremendo(false);
       setFlippedIds([]);
       if (players.length > 1) {
           setCurrentPlayerId(prev => (prev % players.length) + 1);
@@ -290,11 +299,16 @@ const App: React.FC = () => {
   // Effect to check for game completion
   useEffect(() => {
     if (cards.length === 0 || matchedIds.length !== cards.length) return;
-    const id = agendar(() => setGameState('finished'), 500);
+    const id = agendar(() => {
+      setGameState('finished');
+      tocar('vitoria');
+      lancarConfete();
+    }, 500);
     return () => cancelar(id);
   }, [matchedIds, cards.length, agendar, cancelar]);
 
   const handleStartGame = (playerCount: number, selectedcardCount: number) => {
+    tocar('clique');
     limparTimeouts();
     setCardCount(selectedcardCount);
     const newPlayers = Array.from({ length: playerCount }, (_, i) => ({
@@ -312,6 +326,7 @@ const App: React.FC = () => {
   };
 
   const handleGoToSetup = useCallback(() => {
+    tocar('clique');
     limparTimeouts();
     setGameState('setup');
     setPlayers([]);
@@ -324,6 +339,7 @@ const App: React.FC = () => {
 
   const handleNewGame = useCallback(() => {
     // Resets the game but keeps players and names
+    tocar('clique');
     limparTimeouts();
     setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
     setCards(generateCards(cardCount));
@@ -338,6 +354,7 @@ const App: React.FC = () => {
     if (isChecking || flippedIds.length >= 2 || flippedIds.includes(id) || matchedIds.includes(id)) {
       return;
     }
+    tocar('clique');
     setFlippedIds(prev => [...prev, id]);
   }, [isChecking, flippedIds, matchedIds]);
   
@@ -380,6 +397,7 @@ const App: React.FC = () => {
             matchedIds={matchedIds}
             onCardClick={handleCardClick}
             isChecking={isChecking}
+            tremendo={tremendo}
         />
         
         <footer className="text-center text-gray-500 text-sm mt-8">
