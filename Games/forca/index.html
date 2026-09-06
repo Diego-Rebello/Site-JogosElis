@@ -5,101 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%8E%89%3C%2Ftext%3E%3C%2Fsvg%3E">
   <title>Jogo da Forca</title>
+  <link rel="stylesheet" href="../../shared/base.css">
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: Arial, sans-serif;
+    /* Só o que é específico da forca: o resto vem do base.css. */
+    .forca {
+      max-width: 620px;
+      margin: 0 auto;
       text-align: center;
-      background-color: #f0f8ff;
-      margin: 0;
-      padding: 16px 12px 32px;
-      overflow-x: hidden;
-    }
-    h1 {
-      color: #ff4081;
-      font-size: clamp(1.5rem, 6vw, 2.2rem);
-      margin: 8px 0 16px;
-    }
-    #placar {
-      font-size: clamp(1rem, 4vw, 1.4rem);
-      margin-bottom: 12px;
-      font-weight: bold;
-      color: #37474f;
     }
     #tema {
-      font-size: clamp(1rem, 4.5vw, 1.4rem);
-      color: #00796b;
-      font-weight: bold;
-      margin-bottom: 8px;
+      font-size: clamp(1rem, 4.5vw, 1.3rem);
+      color: var(--cor-principal-escura);
+      margin: 14px 0 4px;
     }
     #forca {
-      font-size: clamp(3.5rem, 18vw, 6.25rem);
+      font-size: clamp(3.5rem, 18vw, 6rem);
       line-height: 1.2;
     }
     #palavra {
       font-size: clamp(1.5rem, 8vw, 2.5rem);
       letter-spacing: 0.15em;
-      margin: 16px auto;
+      margin: 12px auto;
       max-width: 100%;
       overflow-wrap: break-word;
-      font-weight: bold;
-      color: #263238;
+      color: var(--cor-texto);
     }
     .letras {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 6px;
-      max-width: 560px;
+      max-width: 520px;
       margin: 0 auto;
     }
-    .letras button {
-      min-width: 44px;
-      min-height: 44px;
-      padding: 4px;
-      font-size: 20px;
-      font-weight: bold;
-      border-radius: 10px;
-      background-color: #ffeb3b;
-      border: 2px solid #fbc02d;
-      cursor: pointer;
-    }
-    .letras button:disabled {
-      background-color: #ccc;
-      border-color: #aaa;
-      cursor: not-allowed;
+    /* Letra é botão quadrado: aproveita .botao--neutro mas sem o padding largo. */
+    .letra {
+      width: var(--toque);
+      padding: 0;
+      font-size: 1.2rem;
+      border-radius: 12px;
     }
     #mensagem {
-      font-size: clamp(1.2rem, 5vw, 1.8rem);
-      margin-top: 20px;
-      min-height: 2.2em;
-      color: #4caf50;
-      font-weight: bold;
-    }
-    #novaPalavraBtn {
-      margin-top: 12px;
-      padding: 12px 24px;
-      min-height: 44px;
-      font-size: 20px;
-      border-radius: 10px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      cursor: pointer;
+      margin-top: 16px;
     }
   </style>
 </head>
-<body>
-  <h1>🎉 Jogo da Forca 🎉</h1>
-  <div id="placar"></div>
-  <div id="tema"></div>
-  <div id="forca">😀</div>
-  <div id="palavra"></div>
-  <div class="letras" id="botoes"></div>
-  <div id="mensagem" aria-live="polite"></div>
-  <button id="novaPalavraBtn" style="display: none;">Nova Palavra</button>
+<body class="pagina">
+  <script src="../../shared/cabecalho.js" data-titulo="Jogo da Forca"></script>
 
-  <script>
+  <div class="pagina__conteudo">
+    <div class="forca">
+      <div id="placar" class="placar"></div>
+      <div id="tema"></div>
+      <div id="forca">😀</div>
+      <div id="palavra"></div>
+      <div class="letras" id="botoes"></div>
+      <div id="mensagem" class="feedback" aria-live="polite"></div>
+      <button id="novaPalavraBtn" class="botao botao--sucesso" style="display: none;">Nova Palavra</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { normalizar, sortear } from '../../shared/texto.js';
+    import { tocar } from '../../shared/sons.js';
+    import { lancarConfete, animar } from '../../shared/confete.js';
+
     // Cada palavra vem com o tema, escrita com a acentuação correta.
     const palavras = [
       // Animais
@@ -226,11 +196,6 @@
     const estagios = ["😀", "😮", "😕", "😟", "😣", "😭", "💀"];
     const MAX_ERROS = estagios.length - 1; // 6 erros
 
-    // Tira acentos e cedilha: "Ã" vira "A", "Ç" vira "C".
-    function normalizar(texto) {
-      return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
-    }
-
     // Estado da rodada
     let atual = null;          // { palavra, categoria }
     let letrasDaPalavra = new Set(); // letras normalizadas que a palavra tem
@@ -273,6 +238,7 @@
       const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       for (const letra of alfabeto) {
         const botao = document.createElement("button");
+        botao.className = "botao botao--neutro letra";
         botao.textContent = letra;
         botao.dataset.letra = letra;
         botao.setAttribute("aria-label", `Letra ${letra}`);
@@ -307,15 +273,24 @@
         if (venceu()) {
           vitorias++;
           elMensagem.textContent = `🎉 Você ganhou! A palavra era: ${atual.palavra}`;
+          elMensagem.classList.add('feedback--certo');
+          tocar('vitoria');
+          lancarConfete();
           fimDeJogo();
+        } else {
+          tocar('acerto');
+          animar(elPalavra, 'pular');
         }
       } else {
         erros++;
         elForca.textContent = estagios[erros];
+        tocar('erro');
+        animar(elForca, 'tremer');
         if (erros >= MAX_ERROS) {
           derrotas++;
           mostrarPalavra(true);
           elMensagem.textContent = `💀 Você perdeu! A palavra era: ${atual.palavra}`;
+          elMensagem.classList.add('feedback--errado');
           fimDeJogo();
         }
       }
@@ -330,10 +305,7 @@
     }
 
     function novaPalavra() {
-      const anterior = atual ? atual.palavra : null;
-      do {
-        atual = palavras[Math.floor(Math.random() * palavras.length)];
-      } while (palavras.length > 1 && atual.palavra === anterior);
+      atual = sortear(palavras, atual);   // não repete a palavra anterior
 
       letrasDaPalavra = new Set(
         [...normalizar(atual.palavra)].filter(c => /[A-Z]/.test(c))
@@ -345,6 +317,7 @@
       elTema.textContent = `Tema: ${atual.categoria}`;
       elForca.textContent = estagios[0];
       elMensagem.textContent = "";
+      elMensagem.className = "feedback";
       btnNovaPalavra.style.display = "none";
       elBotoes.querySelectorAll("button").forEach(b => { b.disabled = false; });
       mostrarPalavra(false);
@@ -359,7 +332,10 @@
       if (/^[A-Z]$/.test(letra)) jogar(letra);
     });
 
-    btnNovaPalavra.addEventListener("click", novaPalavra);
+    btnNovaPalavra.addEventListener("click", () => {
+      tocar('clique');
+      novaPalavra();
+    });
 
     criarBotoes();
     novaPalavra();

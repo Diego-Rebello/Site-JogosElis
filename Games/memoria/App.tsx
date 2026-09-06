@@ -1,26 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CardData, Player, GameState } from './types';
+import { embaralhar } from '../../shared/texto.js';
+import Cabecalho from './components/Cabecalho';
+import { tocar } from '../../shared/sons.js';
+import { lancarConfete } from '../../shared/confete.js';
 
 // --- Game Configuration & Logic ---
 
 const EMOJI_POOL = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🚗', '✈️', '🚀', '⛵️', '🍕', '🍔', '🍓', '🍉', '⚽️', '🏀', '🏈', '⚾️', '🎾', '🏐', '🏉', '🎱'];
 const PLAYER_COLORS = [
-  'bg-indigo-500', // Player 1
+  'bg-pink-500',   // Player 1
   'bg-red-500',    // Player 2
   'bg-emerald-500',// Player 3
   'bg-amber-500',  // Player 4
 ];
-
-// Fisher-Yates: cada ordem tem a mesma chance de sair.
-// O antigo sort(() => Math.random() - 0.5) era enviesado.
-const embaralhar = <T,>(lista: T[]): T[] => {
-  const copia = [...lista];
-  for (let i = copia.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copia[i], copia[j]] = [copia[j], copia[i]];
-  }
-  return copia;
-};
 
 const generateCards = (cardCount: number): CardData[] => {
   const pairCount = cardCount / 2;
@@ -49,8 +42,8 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
     const canStart = selectedPlayers !== null && selectedCards !== null;
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-        <h1 className="text-5xl sm:text-6xl font-fredoka text-indigo-700 tracking-wider mb-8">
+      <div className="flex flex-1 flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-5xl sm:text-6xl font-fredoka text-pink-700 tracking-wider mb-8">
           Jogo da Memória Emoji
         </h1>
         
@@ -62,7 +55,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
                 <button
                   key={count}
                   onClick={() => setSelectedPlayers(count)}
-                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedPlayers === count ? 'bg-indigo-500 text-white scale-110' : 'bg-white hover:bg-teal-100 text-indigo-600'}`}
+                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedPlayers === count ? 'bg-pink-500 text-white scale-110' : 'bg-white hover:bg-pink-100 text-pink-600'}`}
                 >
                   {count}
                 </button>
@@ -77,7 +70,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
                 <button
                   key={count}
                   onClick={() => setSelectedCards(count)}
-                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedCards === count ? 'bg-indigo-500 text-white scale-110' : 'bg-white hover:bg-teal-100 text-indigo-600'}`}
+                  className={`font-fredoka text-3xl rounded-2xl shadow-md w-20 h-20 flex items-center justify-center transition-all transform hover:scale-110 ${selectedCards === count ? 'bg-pink-500 text-white scale-110' : 'bg-white hover:bg-pink-100 text-pink-600'}`}
                 >
                   {count}
                 </button>
@@ -118,8 +111,8 @@ const CardComponent: React.FC<CardComponentProps> = ({ card, onClick, isDisabled
   return (
     <div className="w-full aspect-[3/4] [perspective:1000px] cursor-pointer" onClick={handleClick}>
       <div className={cardInnerClasses}>
-        <div className="absolute w-full h-full rounded-lg shadow-md bg-indigo-500 hover:bg-indigo-600 transition-colors flex items-center justify-center [backface-visibility:hidden]">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-1/2 w-1/2 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="absolute w-full h-full rounded-lg shadow-md bg-pink-500 hover:bg-pink-600 transition-colors flex items-center justify-center [backface-visibility:hidden]">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-1/2 w-1/2 text-pink-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
@@ -147,7 +140,7 @@ const VictoryModal: React.FC<VictoryModalProps> = ({ players, onPlayAgain }) => 
       : `${winners.map(w => w.name).join(' e ')} Venceu!`;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-10">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-10">
       <div className="bg-white rounded-2xl p-8 text-center shadow-2xl transform transition-all scale-100 opacity-100">
         <h2 className="text-4xl font-fredoka text-yellow-500 mb-4">{winnerMessage}</h2>
         {!soloMode && (
@@ -190,7 +183,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ players, currentPlayerId, onNam
             ))}
         </div>
         <div className="flex items-center gap-3">
-             <button onClick={onGoToSetup} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105">
+             <button onClick={onGoToSetup} className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105">
                 Voltar
             </button>
             <button onClick={onNewGame} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105">
@@ -207,8 +200,9 @@ interface GameBoardProps {
     matchedIds: number[];
     onCardClick: (id: number) => void;
     isChecking: boolean;
+    tremendo: boolean;
 }
-const GameBoard: React.FC<GameBoardProps> = ({ cards, flippedIds, matchedIds, onCardClick, isChecking }) => {
+const GameBoard: React.FC<GameBoardProps> = ({ cards, flippedIds, matchedIds, onCardClick, isChecking, tremendo }) => {
     // Sempre 4 colunas no celular; abre mais colunas conforme a tela cresce.
     const gridColsClass =
         cards.length === 32 ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8' :
@@ -218,7 +212,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ cards, flippedIds, matchedIds, on
     const gapClass = cards.length === 32 ? 'gap-2 sm:gap-3' : 'gap-3 sm:gap-4';
 
     return (
-      <main className={`grid ${gridColsClass} ${gapClass} p-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg`}>
+      <main className={`grid ${gridColsClass} ${gapClass} p-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-lg ${tremendo ? 'tremer' : ''}`}>
         {cards.map(card => {
             const isFlipped = flippedIds.includes(card.id);
             const isMatched = matchedIds.includes(card.id);
@@ -240,6 +234,8 @@ const App: React.FC = () => {
   const [isChecking, setIsChecking] = useState(false);
   const [currentPlayerId, setCurrentPlayerId] = useState<number>(1);
   const [players, setPlayers] = useState<Player[]>([]);
+  // Liga a classe .tremer do base.css no tabuleiro quando o par não bate.
+  const [tremendo, setTremendo] = useState(false);
 
   // Guarda os setTimeout pendentes para nenhum deles disparar depois de
   // "Novo Jogo" ou "Voltar" e bagunçar a partida seguinte.
@@ -278,6 +274,7 @@ const App: React.FC = () => {
 
     if (firstCard && secondCard && firstCard.emoji === secondCard.emoji) {
       // Match found
+      tocar('acerto');
       setMatchedIds(prev => [...prev, firstId, secondId]);
       setPlayers(prev => prev.map(p => p.id === currentPlayerId ? { ...p, score: p.score + 1 } : p));
       setFlippedIds([]);
@@ -286,7 +283,10 @@ const App: React.FC = () => {
     }
 
     // No match, switch turns
+    tocar('erro');
+    setTremendo(true);
     const id = agendar(() => {
+      setTremendo(false);
       setFlippedIds([]);
       if (players.length > 1) {
           setCurrentPlayerId(prev => (prev % players.length) + 1);
@@ -299,11 +299,16 @@ const App: React.FC = () => {
   // Effect to check for game completion
   useEffect(() => {
     if (cards.length === 0 || matchedIds.length !== cards.length) return;
-    const id = agendar(() => setGameState('finished'), 500);
+    const id = agendar(() => {
+      setGameState('finished');
+      tocar('vitoria');
+      lancarConfete();
+    }, 500);
     return () => cancelar(id);
   }, [matchedIds, cards.length, agendar, cancelar]);
 
   const handleStartGame = (playerCount: number, selectedcardCount: number) => {
+    tocar('clique');
     limparTimeouts();
     setCardCount(selectedcardCount);
     const newPlayers = Array.from({ length: playerCount }, (_, i) => ({
@@ -321,6 +326,7 @@ const App: React.FC = () => {
   };
 
   const handleGoToSetup = useCallback(() => {
+    tocar('clique');
     limparTimeouts();
     setGameState('setup');
     setPlayers([]);
@@ -333,6 +339,7 @@ const App: React.FC = () => {
 
   const handleNewGame = useCallback(() => {
     // Resets the game but keeps players and names
+    tocar('clique');
     limparTimeouts();
     setPlayers(prev => prev.map(p => ({ ...p, score: 0 })));
     setCards(generateCards(cardCount));
@@ -347,16 +354,13 @@ const App: React.FC = () => {
     if (isChecking || flippedIds.length >= 2 || flippedIds.includes(id) || matchedIds.includes(id)) {
       return;
     }
+    tocar('clique');
     setFlippedIds(prev => [...prev, id]);
   }, [isChecking, flippedIds, matchedIds]);
   
   const handleNameChange = useCallback((playerId: number, newName: string) => {
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, name: newName } : p));
   }, []);
-
-  if (gameState === 'setup') {
-    return <SetupScreen onStartGame={handleStartGame} />;
-  }
 
   // Larguras pensadas para a carta ficar por volta de 110 px nas telas grandes:
   // com w-full, quem define o tamanho da carta é a largura do tabuleiro.
@@ -365,13 +369,15 @@ const App: React.FC = () => {
     cardCount === 24 ? 'max-w-3xl' :
     'max-w-lg';
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+  const conteudo = gameState === 'setup' ? (
+    <SetupScreen onStartGame={handleStartGame} />
+  ) : (
+    <div className="flex flex-1 flex-col items-center justify-center p-4">
       {gameState === 'finished' && <VictoryModal players={players} onPlayAgain={handleNewGame} />}
       
       <div className={`w-full ${containerWidthClass} mx-auto transition-all duration-500`}>
         <header className="text-center mb-6">
-          <h1 className="text-4xl sm:text-5xl font-fredoka text-indigo-700 tracking-wider">
+          <h1 className="text-4xl sm:text-5xl font-fredoka text-pink-700 tracking-wider">
             Jogo da Memória Emoji
           </h1>
           <p className="text-gray-500 mt-1">Encontre os pares!</p>
@@ -391,12 +397,20 @@ const App: React.FC = () => {
             matchedIds={matchedIds}
             onCardClick={handleCardClick}
             isChecking={isChecking}
+            tremendo={tremendo}
         />
         
-        <footer className="text-center text-gray-400 text-sm mt-8">
+        <footer className="text-center text-gray-500 text-sm mt-8">
             Criado para crianças de 4 a 8 anos.
         </footer>
       </div>
+    </div>
+  );
+
+  return (
+    <div className="fundo-jogos flex min-h-dvh flex-col">
+      <Cabecalho titulo="Jogo da Memória" />
+      {conteudo}
     </div>
   );
 };

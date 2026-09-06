@@ -3,155 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exercícios de Soma!</title>
+    <title>Jogo de Somar</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%94%A2%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <link rel="stylesheet" href="../../shared/base.css">
     <style>
-        /* Estilos para deixar a página mais amigável para crianças */
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f0f8ff; /* Azul bem clarinho (Alice Blue) */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            color: #333;
-        }
-
-        .game-container {
-            background-color: #ffffff;
-            padding: 30px 40px;
-            border-radius: 20px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 90%;
+        /* Só o que é específico deste jogo: o resto vem do base.css. */
+        .soma {
             max-width: 480px;
+            text-align: center;
         }
-
-        h1 {
-            color: #0056b3;
-            font-size: 2.2em;
+        .conta {
+            font-size: clamp(2.4rem, 12vw, 3.4rem);
+            margin: 24px 0;
+            color: var(--cor-principal-escura);
+        }
+        #respostaInput {
+            max-width: 160px;
+            font-size: 2rem;
             margin-bottom: 20px;
         }
-        
-        /* NOVO: Estilo para o placar */
-        .placar {
-            display: flex;
-            justify-content: space-around;
-            background-color: #e9ecef;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            font-size: 1.3em;
-            font-weight: bold;
-        }
-
-        .placar-acertos {
-            color: #28a745;
-        }
-
-        .placar-erros {
-            color: #dc3545;
-        }
-
-        /* Área onde o problema de matemática aparece */
-        .problem {
-            font-size: 3.5em; /* Números bem grandes */
-            font-weight: bold;
-            margin-bottom: 25px;
-            color: #1c1c1e;
-        }
-
-        /* Campo para a criança digitar a resposta */
-        #respostaInput {
-            width: 120px;
-            padding: 15px;
-            font-size: 2em;
-            text-align: center;
-            border: 2px solid #ccc;
-            border-radius: 10px;
-            margin-bottom: 25px;
-        }
-
-        /* Estilo dos botões */
         .botoes {
             display: flex;
             justify-content: center;
-            gap: 15px; /* Espaço entre os botões */
-            flex-wrap: wrap; /* Permite que os botões quebrem a linha em telas menores */
-        }
-
-        button {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.2em;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-        }
-
-        button:active {
-            transform: scale(0.95); /* Efeito de clique */
-        }
-
-        #btnConferir {
-            background-color: #28a745; /* Verde */
-        }
-
-        #btnNovo {
-            background-color: #007bff; /* Azul */
-        }
-        
-        /* NOVO: Estilo para o botão de reiniciar */
-        #btnReiniciar {
-            background-color: #6c757d; /* Cinza */
-        }
-
-        /* Área de feedback (certo ou errado) */
-        #feedback {
-            margin-top: 25px;
-            font-size: 1.5em;
-            font-weight: bold;
-            height: 40px; /* Altura fixa para não "pular" a tela */
-        }
-
-        .correto {
-            color: #28a745; /* Verde */
-        }
-
-        .errado {
-            color: #dc3545; /* Vermelho */
+            gap: 12px;
+            flex-wrap: wrap;
         }
     </style>
 </head>
-<body>
+<body class="pagina">
 
-    <div class="game-container">
-        <h1>Vamos Somar!</h1>
+    <script src="../../shared/cabecalho.js" data-titulo="Jogo de Somar"></script>
 
-        <div class="placar">
-            <div class="placar-acertos">✔️ Acertos: <span id="acertos">0</span></div>
-            <div class="placar-erros">❌ Erros: <span id="erros">0</span></div>
+    <div class="pagina__conteudo pagina__conteudo--centro">
+        <div class="cartao soma">
+
+            <div class="placar">
+                <span class="placar__certo">✔️ Acertos: <span id="acertos">0</span></span>
+                <span class="placar__errado">❌ Erros: <span id="erros">0</span></span>
+            </div>
+
+            <div class="conta">
+                <span id="num1"></span> + <span id="num2"></span> =
+            </div>
+
+            <label class="so-leitor" for="respostaInput">Sua resposta</label>
+            <input type="number" inputmode="numeric" id="respostaInput" class="campo" placeholder="?">
+
+            <div class="botoes">
+                <button id="btnConferir" class="botao botao--sucesso">Conferir</button>
+                <button id="btnNovo" class="botao">Gerar Novo</button>
+                <button id="btnReiniciar" class="botao botao--neutro">Reiniciar</button>
+            </div>
+
+            <div id="feedback" class="feedback" aria-live="polite"></div>
+
         </div>
-        
-        <div class="problem">
-            <span id="num1"></span> + <span id="num2"></span> =
-        </div>
-        
-        <input type="number" id="respostaInput" placeholder="?">
-        
-        <div class="botoes">
-            <button id="btnConferir">Conferir</button>
-            <button id="btnNovo">Gerar Novo</button>
-            <button id="btnReiniciar">Reiniciar</button>
-        </div>
-        
-        <div id="feedback"></div>
     </div>
 
-    <script>
+    <script type="module">
+        import { tocar } from '../../shared/sons.js';
+        import { lancarConfete, animar } from '../../shared/confete.js';
+
         // --- 1. SELECIONANDO OS ELEMENTOS DA PÁGINA ---
         const num1Span = document.getElementById('num1');
         const num2Span = document.getElementById('num2');
@@ -159,22 +71,29 @@
         const btnConferir = document.getElementById('btnConferir');
         const btnNovo = document.getElementById('btnNovo');
         const feedbackDiv = document.getElementById('feedback');
-        // NOVOS ELEMENTOS
         const btnReiniciar = document.getElementById('btnReiniciar');
         const acertosSpan = document.getElementById('acertos');
         const errosSpan = document.getElementById('erros');
-        
-        let respostaCorreta; 
-        // NOVAS VARIÁVEIS
+
+        let respostaCorreta;
         let acertos = 0;
         let erros = 0;
         let problemaJaRespondido = false;
 
+        // A cada 5 acertos vem uma comemoração. Rodadas de verdade chegam na T14.
+        const ACERTOS_PARA_COMEMORAR = 5;
+
+        // Troca a classe de estado do feedback sem perder a classe base.
+        function mostrarFeedback(texto, estado) {
+            feedbackDiv.textContent = texto;
+            feedbackDiv.className = 'feedback' + (estado ? ' feedback--' + estado : '');
+        }
+
         // --- 2. FUNÇÃO PARA GERAR UM NOVO PROBLEMA ---
         function gerarNovoProblema() {
             let numero1, numero2;
-            
-            // MODIFICADO: Continua gerando números até que a soma seja <= 100
+
+            // Continua gerando números até que a soma seja <= 100
             do {
                 numero1 = Math.floor(Math.random() * 90) + 10;
                 numero2 = Math.floor(Math.random() * 90) + 10;
@@ -186,62 +105,70 @@
 
             problemaJaRespondido = false; // Permite responder ao novo problema
             respostaInput.value = '';
-            feedbackDiv.innerHTML = '';
-            feedbackDiv.className = '';
+            mostrarFeedback('', null);
             respostaInput.focus();
         }
 
         // --- 3. FUNÇÃO PARA CONFERIR A RESPOSTA ---
         function conferirResposta() {
-            // MODIFICADO: Bloqueia nova tentativa se o problema já foi respondido
+            // Bloqueia nova tentativa se o problema já foi respondido
             if (problemaJaRespondido) {
-                return; 
+                return;
             }
 
             const respostaUsuario = parseInt(respostaInput.value);
 
             if (isNaN(respostaUsuario)) {
-                feedbackDiv.textContent = 'Digite um número!';
-                feedbackDiv.className = 'errado';
+                mostrarFeedback('Digite um número!', 'errado');
+                tocar('erro');
+                animar(feedbackDiv, 'tremer');
                 return;
             }
-            
+
             problemaJaRespondido = true; // Marca o problema como respondido
 
             if (respostaUsuario === respostaCorreta) {
-                feedbackDiv.textContent = '🎉 Parabéns! Você acertou!';
-                feedbackDiv.className = 'correto';
-                acertos++; // Incrementa o placar de acertos
+                acertos++;
                 acertosSpan.textContent = acertos;
+                if (acertos % ACERTOS_PARA_COMEMORAR === 0) {
+                    mostrarFeedback(`🏆 ${acertos} acertos! Você está voando!`, 'certo');
+                    tocar('vitoria');
+                    lancarConfete();
+                } else {
+                    mostrarFeedback('🎉 Parabéns! Você acertou!', 'certo');
+                    tocar('acerto');
+                }
+                animar(feedbackDiv, 'pular');
             } else {
-                feedbackDiv.innerHTML = `Ops! A resposta certa era ${respostaCorreta}.`;
-                feedbackDiv.className = 'errado';
-                erros++; // Incrementa o placar de erros
+                mostrarFeedback(`Ops! A resposta certa era ${respostaCorreta}.`, 'errado');
+                erros++;
                 errosSpan.textContent = erros;
+                tocar('erro');
+                animar(feedbackDiv, 'tremer');
             }
         }
-        
-        // --- NOVA FUNÇÃO: REINICIAR PLACAR ---
+
+        // --- 4. REINICIAR PLACAR ---
         function reiniciarPlacar() {
             acertos = 0;
             erros = 0;
             acertosSpan.textContent = acertos;
             errosSpan.textContent = erros;
-            gerarNovoProblema(); // Gera um novo problema ao reiniciar
+            gerarNovoProblema();
         }
 
-        // --- 4. CONFIGURANDO OS EVENTOS DOS BOTÕES ---
+        // --- 5. CONFIGURANDO OS EVENTOS DOS BOTÕES ---
         btnConferir.addEventListener('click', conferirResposta);
-        btnNovo.addEventListener('click', gerarNovoProblema);
-        btnReiniciar.addEventListener('click', reiniciarPlacar); // Evento do novo botão
-        
-        respostaInput.addEventListener('keydown', function(event) {
+        btnNovo.addEventListener('click', () => { tocar('clique'); gerarNovoProblema(); });
+        btnReiniciar.addEventListener('click', () => { tocar('clique'); reiniciarPlacar(); });
+
+        respostaInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
                 conferirResposta();
             }
         });
 
-        // --- 5. INICIANDO O JOGO ---
+        // --- 6. INICIANDO O JOGO ---
         gerarNovoProblema();
     </script>
 

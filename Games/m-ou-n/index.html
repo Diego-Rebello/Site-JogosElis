@@ -5,173 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%E2%9C%8F%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E">
     <title>Jogo do M ou N</title>
+    <link rel="stylesheet" href="../../shared/base.css">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f8ff; /* Azul bem clarinho */
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px 10px;
-            box-sizing: border-box;
-            text-transform: uppercase; /* TODAS AS LETRAS EM CAIXA ALTA */
-        }
-
-        #container-jogo {
-            background-color: #ffffff;
-            padding: 30px 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        /* Só o que é específico deste jogo: o resto vem do base.css. */
+        .mn {
+            max-width: 520px;
             text-align: center;
-            width: 100%;
-            max-width: 500px;
-            box-sizing: border-box;
+            text-transform: uppercase;   /* o jogo inteiro em caixa alta */
         }
-
-        h1 {
-            color: #0056b3; /* Azul escuro */
-            margin-bottom: 20px;
-            font-size: 1.8em;
+        .mn__instrucao {
+            font-family: var(--fonte-leitura);
+            text-transform: none;
+            color: var(--cor-suave);
+            margin: 0 0 18px;
         }
-
-        #placar {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin: 20px 0;
-            padding: 10px;
-            background-color: #e9ecef;
-            border-radius: 8px;
-        }
-
-        #placar-acertos {
-            color: #28a745; /* Verde */
-        }
-
-        #placar-erros {
-            color: #dc3545; /* Vermelho */
-        }
-
         #palavra-desafio {
-            font-size: 2.2em;
-            font-weight: bold;
-            color: #007bff; /* Azul */
-            letter-spacing: 4px; /* Espaço entre as letras */
-            margin: 30px 0;
+            font-size: clamp(1.7rem, 9vw, 2.2rem);
+            color: var(--cor-principal-escura);
+            letter-spacing: 4px;
+            margin: 24px 0;
             padding: 15px 10px;
-            border: 2px dashed #ced4da;
-            border-radius: 10px;
+            border: 3px dashed var(--cor-secundaria);
+            border-radius: 12px;
             overflow-wrap: break-word;
         }
-
         #campo-resposta {
-            font-size: 1.5em;
-            padding: 10px;
-            width: 100%;
             max-width: 340px;
-            min-height: 44px;
-            margin-bottom: 20px;
-            border: 2px solid #ced4da;
-            border-radius: 8px;
-            text-align: center;
-            text-transform: uppercase; /* Garante que o input também fique em caixa alta */
-            box-sizing: border-box;
-        }
-
-        #feedback {
-            font-size: 1.1em;
-            font-weight: bold;
-            min-height: 60px; /* Evita que a interface "pule" */
-            padding: 10px;
-        }
-
-        .feedback-correto {
-            color: #28a745;
-        }
-
-        .feedback-incorreto {
-            color: #dc3545;
-        }
-
-        .palavra-certa {
-            color: #0056b3;
-            font-size: 1.2em;
-            letter-spacing: 2px;
-        }
-
-        .botoes button {
-            font-size: 1em;
-            font-weight: bold;
-            padding: 12px 25px;
-            min-height: 44px;
-            min-width: 44px;
-            margin: 5px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
+            margin: 0 auto 20px;
             text-transform: uppercase;
         }
-
-        #btn-verificar {
-            background-color: #007bff;
-            color: white;
+        .palavra-certa {
+            color: var(--cor-principal-escura);
+            font-size: 1.15em;
+            letter-spacing: 2px;
         }
-        #btn-verificar:hover {
-            background-color: #0056b3;
-        }
-
-        #btn-novo {
-            background-color: #28a745;
-            color: white;
-        }
-        #btn-novo:hover {
-            background-color: #218838;
-        }
-
-        #btn-reiniciar {
-            background-color: #ffc107;
-            color: #333;
-        }
-        #btn-reiniciar:hover {
-            background-color: #e0a800;
-        }
-
-        .botoes button:active {
-            transform: scale(0.98);
+        .botoes {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
     </style>
 </head>
-<body>
+<body class="pagina">
 
-    <div id="container-jogo">
-        <h1>JOGO DO M OU N</h1>
-        <p>Complete a palavra com M ou N e clique em verificar!</p>
+    <script src="../../shared/cabecalho.js" data-titulo="Jogo do M ou N"></script>
 
-        <div id="placar">
-            <span>ACERTOS: <span id="placar-acertos">0</span></span> |
-            <span>ERROS: <span id="placar-erros">0</span></span>
-        </div>
+    <div class="pagina__conteudo pagina__conteudo--centro">
+        <div class="cartao mn">
+            <p class="mn__instrucao">Complete a palavra com M ou N e clique em verificar!</p>
 
-        <div id="palavra-desafio"></div>
+            <div class="placar">
+                <span class="placar__certo">ACERTOS: <span id="placar-acertos">0</span></span>
+                <span class="placar__errado">ERROS: <span id="placar-erros">0</span></span>
+            </div>
 
-        <input type="text" id="campo-resposta" placeholder="DIGITE A PALAVRA AQUI" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <div id="palavra-desafio"></div>
 
-        <div class="botoes">
-            <button id="btn-verificar">VERIFICAR</button>
-        </div>
+            <label class="so-leitor" for="campo-resposta">Escreva a palavra completa</label>
+            <input type="text" id="campo-resposta" class="campo" placeholder="DIGITE AQUI"
+                   autocomplete="off" autocapitalize="characters" spellcheck="false">
 
-        <div id="feedback" aria-live="polite"></div>
+            <div class="botoes">
+                <button id="btn-verificar" class="botao">VERIFICAR</button>
+            </div>
 
-        <div class="botoes" style="margin-top: 20px;">
-            <button id="btn-novo">NOVA PALAVRA</button>
-            <button id="btn-reiniciar">REINICIAR PLACAR</button>
+            <div id="feedback" class="feedback" aria-live="polite"></div>
+
+            <div class="botoes">
+                <button id="btn-novo" class="botao botao--sucesso">NOVA PALAVRA</button>
+                <button id="btn-reiniciar" class="botao botao--neutro">REINICIAR PLACAR</button>
+            </div>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { normalizar, sortear } from '../../shared/texto.js';
+        import { tocar } from '../../shared/sons.js';
+        import { lancarConfete, animar } from '../../shared/confete.js';
+
         // --- LÓGICA DO JOGO ---
 
         // Lista de palavras com grafia e acentuação corretas.
@@ -216,11 +128,6 @@
             return { texto: palavra.slice(0, i) + '_' + palavra.slice(i + 1), resposta: palavra[i], indice: i };
         }
 
-        // Tira os acentos e a cedilha para comparar o que a criança digitou.
-        function normalizar(texto) {
-            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
-        }
-
         // Confere a lista inteira ao carregar a página: uma palavra inválida quebra na hora.
         listaDePalavras.forEach(gerarLacuna);
 
@@ -228,6 +135,9 @@
         let palavraCorreta;
         let acertos = 0;
         let erros = 0;
+
+        // A cada 5 acertos vem uma comemoração. Rodadas de verdade chegam na T15.
+        const ACERTOS_PARA_COMEMORAR = 5;
 
         // Elementos da página (DOM)
         const elPalavraDesafio = document.getElementById('palavra-desafio');
@@ -239,15 +149,19 @@
         const btnNovo = document.getElementById('btn-novo');
         const btnReiniciar = document.getElementById('btn-reiniciar');
 
+        // Troca a classe de estado do feedback sem perder a classe base.
+        function mostrarFeedback(html, estado) {
+            elFeedback.innerHTML = html;
+            elFeedback.className = 'feedback' + (estado ? ' feedback--' + estado : '');
+        }
+
         // Função para gerar uma nova palavra
         function gerarNovaPalavra() {
-            const indiceAleatorio = Math.floor(Math.random() * listaDePalavras.length);
-            palavraCorreta = listaDePalavras[indiceAleatorio];
+            palavraCorreta = sortear(listaDePalavras, palavraCorreta);
 
             elPalavraDesafio.textContent = gerarLacuna(palavraCorreta).texto;
             elCampoResposta.value = "";
-            elFeedback.textContent = "";
-            elFeedback.className = "";
+            mostrarFeedback('', null);
             elCampoResposta.focus();
         }
 
@@ -256,25 +170,33 @@
             const respostaUsuario = elCampoResposta.value.trim();
 
             if (respostaUsuario === "") {
-                elFeedback.textContent = "POR FAVOR, DIGITE UMA PALAVRA.";
-                elFeedback.className = "feedback-incorreto";
+                mostrarFeedback('POR FAVOR, DIGITE UMA PALAVRA.', 'errado');
+                tocar('erro');
+                animar(elFeedback, 'tremer');
                 return;
             }
 
             if (normalizar(respostaUsuario) === normalizar(palavraCorreta)) {
                 acertos++;
                 elPlacarAcertos.textContent = acertos;
-                elFeedback.innerHTML = 'PARABÉNS, VOCÊ ACERTOU!<br>A PALAVRA É <strong class="palavra-certa">'
-                    + palavraCorreta + '</strong>';
-                elFeedback.className = "feedback-correto";
+                mostrarFeedback('PARABÉNS, VOCÊ ACERTOU!<br>A PALAVRA É <strong class="palavra-certa">'
+                    + palavraCorreta + '</strong>', 'certo');
+                if (acertos % ACERTOS_PARA_COMEMORAR === 0) {
+                    tocar('vitoria');
+                    lancarConfete();
+                } else {
+                    tocar('acerto');
+                }
+                animar(elFeedback, 'pular');
 
                 setTimeout(gerarNovaPalavra, 1800);
 
             } else {
                 erros++;
                 elPlacarErros.textContent = erros;
-                elFeedback.innerHTML = "OPS, TENTE DE NOVO!<br>LEMBRE-SE: USAMOS <strong>M</strong> ANTES DE <strong>P</strong> E <strong>B</strong>.";
-                elFeedback.className = "feedback-incorreto";
+                mostrarFeedback('OPS, TENTE DE NOVO!<br>LEMBRE-SE: USAMOS <strong>M</strong> ANTES DE <strong>P</strong> E <strong>B</strong>.', 'errado');
+                tocar('erro');
+                animar(elFeedback, 'tremer');
             }
         }
 
@@ -294,8 +216,8 @@
                 verificarResposta();
             }
         });
-        btnNovo.addEventListener('click', gerarNovaPalavra);
-        btnReiniciar.addEventListener('click', reiniciarJogo);
+        btnNovo.addEventListener('click', () => { tocar('clique'); gerarNovaPalavra(); });
+        btnReiniciar.addEventListener('click', () => { tocar('clique'); reiniciarJogo(); });
 
         // --- Inicia o jogo pela primeira vez ---
         gerarNovaPalavra();

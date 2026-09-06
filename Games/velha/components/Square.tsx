@@ -13,7 +13,7 @@ const Square: React.FC<SquareProps> = ({ value, onClick, isWinning }) => {
   const baseClasses = "w-24 h-24 md:w-28 md:h-28 flex items-center justify-center rounded-xl transition-all duration-300 transform";
   const stateClasses = isWinning 
     ? "bg-yellow-300 scale-110"
-    : "bg-white hover:bg-sky-50 shadow-md hover:shadow-lg cursor-pointer";
+    : "bg-white hover:bg-pink-50 shadow-md hover:shadow-lg cursor-pointer";
 
   const animation = value ? 'animate-jump-in' : '';
   const color = value === PLAYER_X ? 'text-sky-600' : 'text-rose-500';

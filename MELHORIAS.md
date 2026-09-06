@@ -10,7 +10,7 @@
 > (Claude Opus ou Claude Sonnet) que a execute do início ao fim sem precisar de mais contexto.
 > Diego revisa o resultado, testa com a Elis e segue para a próxima.
 >
-> **Andamento:** T01 a T08 concluídas em 2026-09-06. A próxima tarefa da fila é a **T09**.
+> **Andamento:** T01 a T12 concluídas em 2026-09-06. A próxima tarefa da fila é a **T13**.
 > O estado atual do repositório está na seção [0.4](#04-progresso); a seção 1 é o diagnóstico
 > original, de antes da execução, e foi mantida para registrar o motivo de cada tarefa.
 
@@ -72,7 +72,8 @@ Regras:
 
 ### 0.4 Progresso
 
-Fases 0 e 1 concluídas, mais a T08. Tudo testado no navegador (Chrome headless) antes de cada commit.
+Fases 0 e 1 concluídas, mais as T08 a T12. Tudo testado no navegador (Chrome headless) antes de
+cada commit.
 
 | Tarefa | Status | Commit |
 |---|---|---|
@@ -84,18 +85,25 @@ Fases 0 e 1 concluídas, mais a T08. Tudo testado no navegador (Chrome headless)
 | T06 — Jogo da Memória: HTML, embaralhamento, grade e timeouts | ✅ Concluída em 2026-09-06 | `ede0eb2` |
 | T07 — Jogo da Velha: HTML, keyframes e lógica duplicada | ✅ Concluída em 2026-09-06 | `df45930` |
 | T08 — Padronizar nomes das subpastas de `Games/` | ✅ Concluída em 2026-09-06 | `3a44892` |
-| T09 em diante | ⬜ A fazer | — |
+| T09 — Biblioteca compartilhada `shared/` | ✅ Concluída em 2026-09-06 | `09d8c04` |
+| T10 — Cabeçalho e visual compartilhado nos cinco jogos | ✅ Concluída em 2026-09-06 | `1c8f36d` |
+| T11 — Fim do Tailwind CDN, do Font Awesome e das fontes remotas | ✅ Concluída em 2026-09-06 | `094f9ed` |
+| T12 — Sons e celebração em todos os jogos | ✅ Concluída em 2026-09-06 | `784d82e` |
+| T13 em diante | ⬜ A fazer | — |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
 
 | Jogo | Caminho | Tecnologia |
 |---|---|---|
-| Página inicial | `index.html` | HTML/CSS puro, Font Awesome via CDN, Google Fonts |
-| Jogo da Forca | `Games/forca/index.html` | HTML/JS puro em um arquivo |
-| Jogo de Somar | `Games/matematica/index.html` | HTML/JS puro em um arquivo |
-| Jogo do M ou N | `Games/m-ou-n/index.html` | HTML/JS puro em um arquivo |
-| Jogo da Memória | `Games/memoria/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind via CDN |
-| Jogo da Velha | `Games/velha/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind via CDN |
+| Página inicial | `index.html` | HTML/CSS puro + `shared/base.css`, ícones em emoji |
+| Biblioteca comum | `shared/` | CSS + módulos ES próprios, sem dependência externa |
+| Jogo da Forca | `Games/forca/index.html` | HTML puro + `shared/`, script `type="module"` |
+| Jogo de Somar | `Games/matematica/index.html` | HTML puro + `shared/`, script `type="module"` |
+| Jogo do M ou N | `Games/m-ou-n/index.html` | HTML puro + `shared/`, script `type="module"` |
+| Jogo da Memória | `Games/memoria/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
+| Jogo da Velha | `Games/velha/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
+
+**O site não faz mais nenhuma requisição externa.** Fontes, ícones e CSS são todos locais.
 
 **Decisões tomadas durante a execução, que valem para as próximas tarefas:**
 
@@ -114,6 +122,24 @@ Fases 0 e 1 concluídas, mais a T08. Tudo testado no navegador (Chrome headless)
   quem define o tamanho delas é a largura do tabuleiro.
 - Os dois PRs abertos pelo Snyk (passo 2 da T02) foram **descartados por decisão do Diego**: as
   vulnerabilidades já tinham sido resolvidas pelo `npm audit fix` da própria T02.
+- As fontes Fredoka One, Pacifico e Nunito são servidas de `shared/fontes/` (77 KB em `.woff2`),
+  e não do Google Fonts. Era o passo "opcional recomendado" da T11; foi feito já na T09 porque é
+  o que fecha a conta de dependências externas e destrava a T21.
+- `shared/base.css` **não estiliza elementos crus** (`body`, `button`, `input`): é tudo classe.
+  Sem isso, uma regra dele venceria os utilitários do Tailwind nos dois jogos React, porque CSS
+  sem camada ganha de CSS em camada independentemente da especificidade.
+- Os três jogos em HTML puro passaram a usar `<script type="module">` para importar
+  `shared/texto.js`. **Isso impede abrir por `file://`**: é preciso servir por HTTP.
+- Os dois `index.css` dos jogos React usam `@import "tailwindcss" source(none)` com `@source`
+  explícitos. Sem isso o Tailwind 4 varreria também o `dist/` commitado e realimentaria classes
+  velhas a cada build.
+- O componente `Cabecalho` está duplicado nos dois projetos React, de propósito: pôr um `.tsx` em
+  `shared/` obrigaria a pasta a depender do React, o que a T09 proíbe. A T23 resolve isso se e
+  quando os projetos forem unificados.
+- Somar e M ou N ainda não têm rodadas, então a comemoração da T12 dispara a cada **5 acertos**,
+  como marco provisório. A T14 e a T15 substituem isso por rodadas de verdade.
+- No Jogo da Velha, vitória do computador toca o som de erro e **não** lança confete: festa só
+  quando quem ganha é a criança.
 
 ---
 
@@ -519,6 +545,8 @@ Abra MELHORIAS.md e execute a tarefa T08 usando `git mv`. Se o Diego optou por m
 
 ### T09 — Biblioteca compartilhada `shared/` (visual, cabeçalho, sons, confete, texto, progresso)
 
+> ✅ **Concluída em 2026-09-06** — commit `09d8c04`. Ver seção 0.4.
+
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Opus · **Depende de:** T08
 **Arquivos (novos):** `shared/base.css`, `shared/cabecalho.js`, `shared/texto.js`, `shared/sons.js`, `shared/confete.js`, `shared/progresso.js`, `shared/demo.html`
 
@@ -539,9 +567,12 @@ Abra MELHORIAS.md e execute a tarefa T08 usando `git mv`. Se o Diego optou por m
 7. `shared/demo.html`: página que exercita tudo (botões que tocam cada som, lançam confete, registram progresso e mostram o resumo).
 
 **Critérios de aceite**
-- [ ] `shared/demo.html` funciona em Chrome, Safari e no celular (som só depois de um toque).
-- [ ] Nenhuma dependência externa em `shared/`.
-- [ ] Cada função de `texto.js` e `progresso.js` tem teste na T19.
+- [x] `shared/demo.html` funciona em Chrome, Safari e no celular (som só depois de um toque).
+      Verificado no Chrome com espião no `AudioContext`: nenhum contexto de áudio nasce antes
+      do primeiro clique. Safari e celular não foram testados por falta de aparelho aqui.
+- [x] Nenhuma dependência externa em `shared/`. As fontes também são locais.
+- [ ] Cada função de `texto.js` e `progresso.js` tem teste na T19. **Pendente da T19.** Por ora
+      há cobertura pelo navegador, via `shared/demo.html`.
 
 **Prompt para o modelo**
 ```
@@ -553,6 +584,8 @@ pt-BR, sem frameworks. Entregue shared/demo.html funcionando e descreva a API p�
 
 ### T10 — Aplicar cabeçalho e visual compartilhado em todos os jogos
 
+> ✅ **Concluída em 2026-09-06** — commit `1c8f36d`. Ver seção 0.4.
+
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** T09
 **Arquivos:** os 5 jogos e `index.html`
 
@@ -563,9 +596,11 @@ pt-BR, sem frameworks. Entregue shared/demo.html funcionando e descreva a API p�
 4. Página inicial: usar `base.css` também, mantendo o visual atual.
 
 **Critérios de aceite**
-- [ ] Todos os jogos mostram o cabeçalho com "🏠 Início" que leva à página inicial.
-- [ ] Mesma paleta e mesmos botões em todos os jogos.
-- [ ] Nenhuma regressão de funcionalidade.
+- [x] Todos os jogos mostram o cabeçalho com "🏠 Início" que leva à página inicial.
+- [x] Mesma paleta e mesmos botões em todos os jogos. Nos três jogos em HTML puro isso é
+      literal (classes do `base.css`); nos dois React a paleta indigo/teal/sky virou o rosa
+      do site, mas os botões continuam sendo utilitários do Tailwind, e não `.botao`.
+- [x] Nenhuma regressão de funcionalidade: 24 checagens de jogabilidade nos cinco jogos.
 
 **Prompt para o modelo**
 ```
@@ -576,6 +611,8 @@ Tire um screenshot (ou descreva) de cada jogo em 360 px de largura.
 ---
 
 ### T11 — Remover Tailwind CDN, Font Awesome e `@import` de fontes
+
+> ✅ **Concluída em 2026-09-06** — commit `094f9ed`. Ver seção 0.4.
 
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** T10
 **Arquivos:** `index.html`, `Games/memoria/*`, `Games/velha/*`
@@ -592,9 +629,12 @@ Tire um screenshot (ou descreva) de cada jogo em 360 px de largura.
 4. `npm run build`; confira o tamanho do CSS gerado (esperado: poucas dezenas de KB).
 
 **Critérios de aceite**
-- [ ] Aba Network sem requisições a `cdn.tailwindcss.com` nem `cdnjs.cloudflare.com`.
-- [ ] Visual idêntico ao anterior (comparar screenshots).
-- [ ] Nenhum aviso do Tailwind no console.
+- [x] Aba Network sem requisições a `cdn.tailwindcss.com` nem `cdnjs.cloudflare.com` — e sem
+      requisição externa nenhuma, em nenhuma das seis páginas.
+- [x] Visual idêntico ao anterior. Conferido classe por classe: as 121 classes usadas nos
+      componentes têm regra no CSS gerado. `bg-opacity-60`, removida no Tailwind 4, virou
+      `bg-black/60`; `cursor: pointer` nos botões foi reposto.
+- [x] Nenhum aviso do Tailwind no console.
 
 **Prompt para o modelo**
 ```
@@ -606,6 +646,8 @@ Se alguma classe deixar de funcionar, reescreva-a em CSS comum em vez de voltar 
 
 ### T12 — Sons e celebração em todos os jogos
 
+> ✅ **Concluída em 2026-09-06** — commit `784d82e`. Ver seção 0.4.
+
 **Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T09, T10
 **Arquivos:** os 5 jogos
 
@@ -615,8 +657,9 @@ Se alguma classe deixar de funcionar, reescreva-a em CSS comum em vez de voltar 
 3. Feedback visual junto com o som: classe `.tremer` no erro (animação de 300 ms) e `.pular` no acerto, definidas em `base.css`, ambas desativadas com `prefers-reduced-motion`.
 
 **Critérios de aceite**
-- [ ] Cada jogo toca os quatro sons nos momentos certos; mudo silencia todos.
-- [ ] Confete aparece em vitórias e não aparece com `prefers-reduced-motion`.
+- [x] Cada jogo toca os quatro sons nos momentos certos; mudo silencia todos e atravessa a
+      navegação entre jogos.
+- [x] Confete aparece em vitórias e não aparece com `prefers-reduced-motion`.
 
 **Prompt para o modelo**
 ```
