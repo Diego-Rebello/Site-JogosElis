@@ -10,7 +10,7 @@
 > (Claude Opus ou Claude Sonnet) que a execute do início ao fim sem precisar de mais contexto.
 > Diego revisa o resultado, testa com a Elis e segue para a próxima.
 >
-> **Andamento:** T01 a T12 concluídas em 2026-09-06. A próxima tarefa da fila é a **T13**.
+> **Andamento:** T01 a T13 concluídas em 2026-09-06. A próxima tarefa da fila é a **T14**.
 > O estado atual do repositório está na seção [0.4](#04-progresso); a seção 1 é o diagnóstico
 > original, de antes da execução, e foi mantida para registrar o motivo de cada tarefa.
 
@@ -72,7 +72,7 @@ Regras:
 
 ### 0.4 Progresso
 
-Fases 0 e 1 concluídas, mais as T08 a T12. Tudo testado no navegador (Chrome headless) antes de
+Fases 0 e 1 concluídas, mais as T08 a T13. Tudo testado no navegador (Chrome headless) antes de
 cada commit.
 
 | Tarefa | Status | Commit |
@@ -89,7 +89,8 @@ cada commit.
 | T10 — Cabeçalho e visual compartilhado nos cinco jogos | ✅ Concluída em 2026-09-06 | `1c8f36d` |
 | T11 — Fim do Tailwind CDN, do Font Awesome e das fontes remotas | ✅ Concluída em 2026-09-06 | `094f9ed` |
 | T12 — Sons e celebração em todos os jogos | ✅ Concluída em 2026-09-06 | `784d82e` |
-| T13 em diante | ⬜ A fazer | — |
+| T13 — Progresso salvo e Mural de Conquistas | ✅ Concluída em 2026-09-06 | `157e101` |
+| T14 em diante | ⬜ A fazer | — |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
 
@@ -136,8 +137,9 @@ cada commit.
 - O componente `Cabecalho` está duplicado nos dois projetos React, de propósito: pôr um `.tsx` em
   `shared/` obrigaria a pasta a depender do React, o que a T09 proíbe. A T23 resolve isso se e
   quando os projetos forem unificados.
-- Somar e M ou N ainda não têm rodadas, então a comemoração da T12 dispara a cada **5 acertos**,
-  como marco provisório. A T14 e a T15 substituem isso por rodadas de verdade.
+- A T13 criou rodadas provisórias de **10 questões** em Somar e **10 palavras concluídas** em
+  M ou N para permitir o registro de progresso. A T14 e a T15 vão ampliar essas rodadas com as
+  telas, modos e regras pedagógicas planejadas.
 - No Jogo da Velha, vitória do computador toca o som de erro e **não** lança confete: festa só
   quando quem ganha é a criança.
 
@@ -670,6 +672,8 @@ Abra MELHORIAS.md e execute a tarefa T12 usando apenas shared/sons.js e shared/c
 
 ### T13 — Progresso salvo e "Mural de Conquistas" na página inicial
 
+> ✅ **Concluída em 2026-09-06** — commit `157e101`. Ver seção 0.4.
+
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** T09, T10
 **Arquivos:** `index.html`, `shared/progresso.js`, os 5 jogos, `configuracoes.html` (novo)
 
@@ -680,9 +684,9 @@ Abra MELHORIAS.md e execute a tarefa T12 usando apenas shared/sons.js e shared/c
 4. Tudo em `localStorage`; sem servidor.
 
 **Critérios de aceite**
-- [ ] Ao terminar uma rodada em qualquer jogo, a página inicial reflete as estrelas.
-- [ ] "Zerar progresso" limpa tudo após confirmação.
-- [ ] O nome configurado aparece nas mensagens de vitória.
+- [x] Ao terminar uma rodada em qualquer jogo, a página inicial reflete as estrelas.
+- [x] "Zerar progresso" limpa tudo após confirmação.
+- [x] O nome configurado aparece nas mensagens de vitória.
 
 **Prompt para o modelo**
 ```
