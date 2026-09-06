@@ -9,6 +9,10 @@
 > Este documento é um **backlog executável**: cada tarefa foi escrita para ser entregue a um modelo
 > (Claude Opus ou Claude Sonnet) que a execute do início ao fim sem precisar de mais contexto.
 > Diego revisa o resultado, testa com a Elis e segue para a próxima.
+>
+> **Andamento:** T01 a T08 concluídas em 2026-09-06. A próxima tarefa da fila é a **T09**.
+> O estado atual do repositório está na seção [0.4](#04-progresso); a seção 1 é o diagnóstico
+> original, de antes da execução, e foi mantida para registrar o motivo de cada tarefa.
 
 ---
 
@@ -38,7 +42,8 @@ Regras:
    principal, alvos de toque com pelo menos 44 px, sem rolagem horizontal.
 4. O site é publicado pelo Netlify (projeto `jogosdaelis`) direto do GitHub, sem comando de build:
    o que está na branch `main` vai ao ar como está. Após alterar um jogo React, rode `npm run build`
-   na pasta do jogo e faça commit da pasta `dist/` atualizada (deixa de ser necessário depois da T20).
+   na pasta do jogo (`Games/memoria` ou `Games/velha`) e faça commit da pasta `dist/` atualizada
+   (deixa de ser necessário depois da T20).
 5. Nunca faça commit de node_modules, .env.local, .DS_Store ou arquivos de build fora de dist/.
 6. Trabalhe em uma branch nova criada a partir de `main`. Commits pequenos, mensagens em português.
    Todo push em `main` é publicado automaticamente pelo Netlify em cerca de um minuto, então só
@@ -47,6 +52,12 @@ Regras:
    confira o console sem erros e a aba Network sem 404.
 8. Não remova funcionalidades existentes a menos que a tarefa peça explicitamente.
 9. Ao final, escreva um resumo: o que mudou, como foi testado, o que ficou pendente.
+10. Atenção ao caminho local do projeto: ele contém ":" (`/Users/diego/Desktop/Programas : Jogos/`),
+    que é o separador do PATH. Por isso o npm não consegue prefixar `node_modules/.bin` e os scripts
+    caem no binário global. Os scripts dos dois jogos React já chamam o binário local direto
+    (`node ./node_modules/vite/bin/vite.js build`); mantenha esse formato. Se for rodar uma
+    ferramenta nova pela linha de comando, chame o binário local pelo caminho, não pelo nome, e
+    confira a versão na saída (deve ser Vite 6.x, não 7.x).
 ```
 
 ### 0.3 Dados que o Diego deve preencher antes de começar
@@ -59,9 +70,57 @@ Regras:
 | Como o site é publicado hoje | **Confirmado no painel (2026-09-06):** deploy contínuo a partir de `github.com/Diego-Rebello/Site-JogosElis`, branch `main`, *auto publishing* ligado, publicado em `main@5f482ec`. Em *Build settings*: Runtime, Build command, Publish directory e Package directory **não definidos**; Base directory `/`; Build status *Active*; logs de deploy públicos. Ou seja, o Netlify publica a raiz do repositório exatamente como está no git, sem build. |
 | Manter a pasta `Games/` ou renomear para `Games/` (tarefa T08)? | **Manter `Games/`**; só as subpastas são renomeadas para kebab-case. Respondido em 2026-09-06. |
 
+### 0.4 Progresso
+
+Fases 0 e 1 concluídas, mais a T08. Tudo testado no navegador (Chrome headless) antes de cada commit.
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T01 — Higiene do repositório | ✅ Concluída em 2026-09-06 | `b6d320c` |
+| T02 — Sincronizar git e atualizar dependências | ✅ Concluída em 2026-09-06 | `74b6342` |
+| T03 — Remover restos do AI Studio e endurecer o TypeScript | ✅ Concluída em 2026-09-06 | `94355b9` |
+| T04 — Jogo do M ou N: lista de palavras e lacuna | ✅ Concluída em 2026-09-06 | `623809d` |
+| T05 — Jogo da Forca: viewport, acentos, Ç e vitória | ✅ Concluída em 2026-09-06 | `4a43a17` |
+| T06 — Jogo da Memória: HTML, embaralhamento, grade e timeouts | ✅ Concluída em 2026-09-06 | `ede0eb2` |
+| T07 — Jogo da Velha: HTML, keyframes e lógica duplicada | ✅ Concluída em 2026-09-06 | `df45930` |
+| T08 — Padronizar nomes das subpastas de `Games/` | ✅ Concluída em 2026-09-06 | `3a44892` |
+| T09 em diante | ⬜ A fazer | — |
+
+**Inventário atual** (substitui o caminho da tabela 1.1):
+
+| Jogo | Caminho | Tecnologia |
+|---|---|---|
+| Página inicial | `index.html` | HTML/CSS puro, Font Awesome via CDN, Google Fonts |
+| Jogo da Forca | `Games/forca/index.html` | HTML/JS puro em um arquivo |
+| Jogo de Somar | `Games/matematica/index.html` | HTML/JS puro em um arquivo |
+| Jogo do M ou N | `Games/m-ou-n/index.html` | HTML/JS puro em um arquivo |
+| Jogo da Memória | `Games/memoria/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind via CDN |
+| Jogo da Velha | `Games/velha/` (publicado de `dist/`) | React 19.2 + Vite 6.4 + Tailwind via CDN |
+
+**Decisões tomadas durante a execução, que valem para as próximas tarefas:**
+
+- Os scripts npm dos dois jogos React chamam o binário local pelo caminho
+  (`node ./node_modules/vite/bin/vite.js build`) por causa do ":" no caminho do projeto — ver a
+  regra 10 da seção 0.2. Existe também o script `npm run typecheck`.
+- O `_redirects` da T08 aponta os dois jogos React para `.../dist/`, e não para a raiz da pasta como
+  dizia a tabela original da tarefa: a raiz serve o `index.html` de desenvolvimento, que carrega
+  `index.tsx` e não roda no navegador. Isso deixa de ser necessário na T20.
+- O Jogo da Forca ganhou um oitavo tema além dos sete sugeridos na T05: **Corpo**
+  (`CORAÇÃO`, `CABEÇA`, `BRAÇO`…), que dá bons casos de Ç e til.
+- As cinco páginas e a página inicial ganharam favicon SVG embutido em `data:` URI. Antes todas
+  respondiam 404 em `/favicon.ico`. Não há arquivo de ícone no repositório; a T22 pode trocar por um
+  ícone próprio.
+- O Jogo da Memória usa `max-w-lg` no tabuleiro de 16 cartas: como as cartas agora são `w-full`,
+  quem define o tamanho delas é a largura do tabuleiro.
+- Os dois PRs abertos pelo Snyk (passo 2 da T02) foram **descartados por decisão do Diego**: as
+  vulnerabilidades já tinham sido resolvidas pelo `npm audit fix` da própria T02.
+
 ---
 
 ## 1. Diagnóstico do estado atual
+
+> Fotografia de 2026-09-06, **antes** da execução das tarefas. Mantida como registro do motivo de
+> cada tarefa. Para o estado atual, ver a seção [0.4](#04-progresso).
 
 ### 1.1 Inventário
 
@@ -139,6 +198,8 @@ Regras:
 
 ### T01 — Higiene do repositório
 
+> ✅ **Concluída em 2026-09-06** — commit `b6d320c`. Ver seção 0.4.
+
 **Prioridade:** Alta · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** —
 **Arquivos:** `.gitignore` (novo), `.DS_Store`, `Games/.DS_Store`, `.vscode/launch.json`, `README.md`, `Games/emoji-memory-game/.git/`
 
@@ -163,10 +224,10 @@ Regras:
 5. Reescreva `README.md` em pt-BR com: o que é o site, lista dos jogos, estrutura de pastas, como abrir localmente (`npx serve .` ou `python3 -m http.server`), como rodar/buildar os jogos React, como publicar, link para `MELHORIAS.md`.
 
 **Critérios de aceite**
-- [ ] `git ls-files | grep -c DS_Store` retorna 0.
-- [ ] `ls Games/emoji-memory-game/.git` falha (pasta não existe).
-- [ ] `git status` limpo depois do commit; `git log -1` mostra o commit de higiene.
-- [ ] README explica como rodar e publicar.
+- [x] `git ls-files | grep -c DS_Store` retorna 0.
+- [x] `ls Games/emoji-memory-game/.git` falha (pasta não existe; depois da T08 a pasta é `Games/memoria`).
+- [x] `git status` limpo depois do commit; `git log -1` mostra o commit de higiene.
+- [x] README explica como rodar e publicar.
 
 **Prompt para o modelo**
 ```
@@ -177,6 +238,8 @@ Antes de apagar qualquer pasta .git, prove com o comando indicado que é o repos
 ---
 
 ### T02 — Sincronizar git e atualizar dependências
+
+> ✅ **Concluída em 2026-09-06** — commit `74b6342`. Ver seção 0.4.
 
 **Prioridade:** Alta · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T01
 **Arquivos:** `Games/emoji-memory-game/package*.json`, `Games/jogo-da-velha-divertido/package*.json`, `dist/` dos dois jogos
@@ -195,10 +258,11 @@ Antes de apagar qualquer pasta .git, prove com o comando indicado que é o repos
 5. Teste os dois jogos no navegador a partir do `dist/index.html`.
 
 **Critérios de aceite**
-- [ ] `npm audit` sem vulnerabilidades altas nos dois projetos.
-- [ ] `react` e `react-dom` com a mesma versão nos dois `package.json`.
-- [ ] Os dois jogos abrem e funcionam a partir do `dist/`.
-- [ ] Branches do Snyk fechadas.
+- [x] `npm audit` sem vulnerabilidades altas nos dois projetos.
+- [x] `react` e `react-dom` com a mesma versão nos dois `package.json`.
+- [x] Os dois jogos abrem e funcionam a partir do `dist/`.
+- [ ] ~~Branches do Snyk fechadas.~~ **Descartado por decisão do Diego:** o `npm audit fix`
+      da própria T02 já resolveu as vulnerabilidades, então os PRs do Snyk ficaram sem efeito.
 
 **Prompt para o modelo**
 ```
@@ -209,6 +273,8 @@ Abra MELHORIAS.md e execute a tarefa T02. Não suba para Vite 7 ou 8 nesta taref
 ---
 
 ### T03 — Remover restos do template AI Studio e endurecer o TypeScript
+
+> ✅ **Concluída em 2026-09-06** — commit `94355b9`. Ver seção 0.4.
 
 **Prioridade:** Alta · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T02
 **Arquivos:** `vite.config.ts`, `tsconfig.json`, `package.json`, `metadata.json`, `README.md`, `.env.local` dos dois jogos React
@@ -228,9 +294,9 @@ Abra MELHORIAS.md e execute a tarefa T02. Não suba para Vite 7 ou 8 nesta taref
 6. `npm run build` nos dois e commite `dist/`.
 
 **Critérios de aceite**
-- [ ] `grep -r GEMINI Games/` não encontra nada.
-- [ ] `npm run typecheck` passa nos dois jogos em menos de 30 s.
-- [ ] `npm run build` funciona e os jogos abrem normalmente.
+- [x] `grep -r GEMINI Games/` não encontra nada.
+- [x] `npm run typecheck` passa nos dois jogos em menos de 30 s.
+- [x] `npm run build` funciona e os jogos abrem normalmente.
 
 **Prompt para o modelo**
 ```
@@ -241,6 +307,8 @@ nem `!` (non-null assertion) exceto onde for realmente impossível evitar; expli
 ---
 
 ### T04 — Jogo do M ou N: corrigir lista de palavras e lógica da lacuna
+
+> ✅ **Concluída em 2026-09-06** — commit `623809d`. Ver seção 0.4.
 
 **Prioridade:** Alta · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** —
 **Arquivos:** `Games/Jogo M N-digitar/Jogo M N-digitar.html`
@@ -267,10 +335,10 @@ nem `!` (non-null assertion) exceto onde for realmente impossível evitar; expli
 5. Mantenha o placar, o botão de nova palavra e o atalho Enter.
 
 **Critérios de aceite**
-- [ ] Nenhuma palavra da lista lança erro em `gerarLacuna`.
-- [ ] `MEMBRO` → `ME_BRO`, `NUNCA` → `NU_CA`, `CAMPO` → `CA_PO`, `MENSAGEM` → `ME_SAGEM`.
-- [ ] Digitar `ONCA` para `ONÇA` é aceito; o feedback mostra `ONÇA`.
-- [ ] Todas as palavras exibidas com acentuação correta.
+- [x] Nenhuma palavra da lista lança erro em `gerarLacuna`.
+- [x] `MEMBRO` → `ME_BRO`, `NUNCA` → `NU_CA`, `CAMPO` → `CA_PO`, `MENSAGEM` → `ME_SAGEM`.
+- [x] Digitar `ONCA` para `ONÇA` é aceito; o feedback mostra `ONÇA`.
+- [x] Todas as palavras exibidas com acentuação correta.
 
 **Prompt para o modelo**
 ```
@@ -281,6 +349,8 @@ uma a uma e liste no resumo as palavras removidas, adicionadas e corrigidas.
 ---
 
 ### T05 — Jogo da Forca: viewport, acentos, Ç e verificação de vitória
+
+> ✅ **Concluída em 2026-09-06** — commit `4a43a17`. Ver seção 0.4.
 
 **Prioridade:** Alta · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** —
 **Arquivos:** `Games/Jogo da Forca/forca.html`
@@ -301,10 +371,10 @@ uma a uma e liste no resumo as palavras removidas, adicionadas e corrigidas.
 7. Ao terminar (vitória ou derrota), mostre a palavra completa com acentos.
 
 **Critérios de aceite**
-- [ ] No celular (360 px) os botões cabem na tela sem rolagem horizontal.
-- [ ] `PÁSSARO`: clicar em `A` revela as duas letras (`Á` e `A`).
-- [ ] `CORAÇÃO` (se incluída): clicar em `C` revela `C` e `Ç`; clicar em `A` revela `A` e `Ã`.
-- [ ] Vitória e derrota disparam corretamente e o placar da sessão acumula.
+- [x] No celular (360 px) os botões cabem na tela sem rolagem horizontal.
+- [x] `PÁSSARO`: clicar em `A` revela as duas letras (`Á` e `A`).
+- [x] `CORAÇÃO` (se incluída): clicar em `C` revela `C` e `Ç`; clicar em `A` revela `A` e `Ã`.
+- [x] Vitória e derrota disparam corretamente e o placar da sessão acumula.
 
 **Prompt para o modelo**
 ```
@@ -315,6 +385,8 @@ Abra MELHORIAS.md e execute a tarefa T05 no arquivo do Jogo da Forca. Mantenha o
 ---
 
 ### T06 — Jogo da Memória: HTML corrompido, 404, embaralhamento, grade responsiva e timeouts
+
+> ✅ **Concluída em 2026-09-06** — commit `ede0eb2`. Ver seção 0.4.
 
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** T03
 **Arquivos:** `Games/emoji-memory-game/index.html`, `App.tsx`, `dist/`
@@ -345,10 +417,10 @@ Abra MELHORIAS.md e execute a tarefa T05 no arquivo do Jogo da Forca. Mantenha o
 6. `npm run typecheck && npm run build`; commite `dist/`.
 
 **Critérios de aceite**
-- [ ] Aba Network sem 404 ao abrir `dist/index.html`.
-- [ ] Nenhum `}` visível na página; apenas um `<div id="root">` no DOM.
-- [ ] Com 32 cartas em 360 px de largura: sem rolagem horizontal e sem sobreposição.
-- [ ] Clicar em "Novo Jogo" durante a espera de 1 s não troca o jogador da partida nova.
+- [x] Aba Network sem 404 ao abrir `dist/index.html`.
+- [x] Nenhum `}` visível na página; apenas um `<div id="root">` no DOM.
+- [x] Com 32 cartas em 360 px de largura: sem rolagem horizontal e sem sobreposição.
+- [x] Clicar em "Novo Jogo" durante a espera de 1 s não troca o jogador da partida nova.
 
 **Prompt para o modelo**
 ```
@@ -359,6 +431,8 @@ Abra MELHORIAS.md e execute a tarefa T06. Teste a grade nas larguras 360, 768 e 
 ---
 
 ### T07 — Jogo da Velha: limpar `index.html`, keyframes e lógica duplicada
+
+> ✅ **Concluída em 2026-09-06** — commit `df45930`. Ver seção 0.4.
 
 **Prioridade:** Alta · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T03
 **Arquivos:** `Games/jogo-da-velha-divertido/index.html`, `components/Square.tsx`, `App.tsx`, `dist/`
@@ -380,9 +454,9 @@ Abra MELHORIAS.md e execute a tarefa T06. Teste a grade nas larguras 360, 768 e 
 4. `npm run typecheck && npm run build`; commite `dist/`.
 
 **Critérios de aceite**
-- [ ] Aba Network sem 404 e sem requisições a `esm.sh`.
-- [ ] Apenas uma definição de `@keyframes jump-in` no DOM.
-- [ ] Modos "Com um Amigo" e "Contra o Computador" chegam a vitória, derrota e empate corretamente.
+- [x] Aba Network sem 404 e sem requisições a `esm.sh`.
+- [x] Apenas uma definição de `@keyframes jump-in` no DOM.
+- [x] Modos "Com um Amigo" e "Contra o Computador" chegam a vitória, derrota e empate corretamente.
 
 **Prompt para o modelo**
 ```
@@ -393,6 +467,8 @@ da IA (65 % de chance de bloquear, jogada aleatória caso contrário).
 ---
 
 ### T08 — Padronizar nomes das subpastas de `Games/` (pasta `Games/` mantida por decisão do Diego)
+
+> ✅ **Concluída em 2026-09-06** — commit `3a44892`. Ver seção 0.4.
 
 **Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T01, T04–T07 · **Decisão do Diego:** ver 0.3
 **Arquivos:** `Games/**`, `index.html`, `README.md`
@@ -420,12 +496,18 @@ da IA (65 % de chance de bloquear, jogada aleatória caso contrário).
    /games/emoji-memory-game/*          /Games/memoria/      301
    /games/jogo-da-velha-divertido/*    /Games/velha/        301
    ```
+
+   **Como ficou de verdade:** os dois últimos destinos foram entregues como
+   `/Games/memoria/dist/` e `/Games/velha/dist/`. A raiz dessas pastas serve o `index.html` de
+   desenvolvimento, que carrega `index.tsx` e dá página em branco no navegador. Volta a ser
+   `/Games/memoria/` e `/Games/velha/` depois da T20, quando o `build-all.sh` passar a copiar o
+   conteúdo de `dist/` para a raiz de cada pasta publicada.
 4. Verifique: `find Games -name "* *"` deve retornar vazio.
 
 **Critérios de aceite**
-- [ ] Os 5 cartões da página inicial abrem os jogos.
-- [ ] Nenhum caminho com espaço dentro de `Games/`.
-- [ ] `git log --follow Games/forca/index.html` mostra o histórico antigo.
+- [x] Os 5 cartões da página inicial abrem os jogos.
+- [x] Nenhum caminho com espaço dentro de `Games/`.
+- [x] `git log --follow Games/forca/index.html` mostra o histórico antigo.
 
 **Prompt para o modelo**
 ```
