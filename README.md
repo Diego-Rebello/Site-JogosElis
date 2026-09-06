@@ -33,6 +33,15 @@ caminhos acima. Todos os links são relativos, então o site funciona em qualque
 ├── .gitignore
 ├── .vscode/launch.json              Abre index.html no Chrome pelo VS Code
 ├── _redirects                       Redireciona os endereços antigos dos jogos (Netlify)
+├── shared/                          Biblioteca compartilhada pelos jogos (sem dependências)
+│   ├── base.css                     Cores, fontes, botões, cartão, placar e feedback
+│   ├── cabecalho.js                 Injeta a barra "🏠 Início / título / 🔊"
+│   ├── texto.js                     normalizar, embaralhar, sortear, sortearVarios
+│   ├── sons.js                      Efeitos sonoros gerados pela Web Audio API
+│   ├── confete.js                   Chuva de confete em canvas
+│   ├── progresso.js                 Histórico de partidas em localStorage
+│   ├── demo.html                    Página que exercita tudo acima
+│   └── fontes/                      Fredoka One, Pacifico e Nunito em .woff2
 └── Games/
     ├── forca/index.html             Jogo da Forca
     ├── m-ou-n/index.html            Jogo do M ou N
@@ -48,6 +57,84 @@ caminhos acima. Todos os links são relativos, então o site funciona em qualque
 Os jogos em HTML puro ficam cada um em um único arquivo, sem dependências locais.
 Os dois jogos em React têm o `dist/` versionado porque o Netlify publica a raiz do
 repositório sem rodar build (ver "Como publicar").
+
+---
+
+## A biblioteca `shared/`
+
+Tudo aqui é código próprio, sem framework e sem CDN, escrito em módulos ES. Para ver as peças
+funcionando, sirva o projeto e abra `shared/demo.html`.
+
+### `base.css`
+
+Basta um `<link>`. Define os tokens (`--cor-principal`, `--cor-secundaria`, `--cor-destaque`,
+`--fonte-titulo`, `--fonte-corpo`, `--fonte-leitura`, `--toque`) e as classes:
+
+`.pagina`, `.pagina__conteudo`, `.pagina__conteudo--centro`, `.cabecalho`, `.botao`,
+`.botao--secundario`, `.botao--sucesso`, `.botao--neutro`, `.cartao`, `.placar`,
+`.placar__certo`, `.placar__errado`, `.campo`, `.feedback`, `.feedback--certo`,
+`.feedback--errado`, `.so-leitor`, `.pular`, `.tremer`.
+
+Todo alvo de toque tem no mínimo 44 px, há `:focus-visible` visível em tudo e as animações
+somem com `prefers-reduced-motion: reduce`. O arquivo **não estiliza elementos crus**
+(`body`, `button`, `input`): é tudo classe, para poder conviver com o Tailwind dos dois
+jogos React sem atropelar os utilitários deles.
+
+### `cabecalho.js`
+
+Script clássico (sem `type="module"`, porque ele lê o próprio `data-titulo`):
+
+```html
+<script src="../../shared/cabecalho.js" data-titulo="Jogo da Forca"></script>
+```
+
+Injeta no topo do `<body>` a barra com "🏠 Início", o título e o botão 🔊/🔇. O caminho da
+página inicial sai de `location.pathname`, então funciona tanto em `Games/forca/` quanto em
+`Games/memoria/dist/`. Os jogos React não usam este arquivo: têm o componente `Cabecalho`,
+com o mesmo HTML e as mesmas classes.
+
+### `texto.js`
+
+| Função | O que faz |
+|---|---|
+| `normalizar(texto)` | Tira acentos e cedilha e sobe para maiúsculas: `"coração"` → `"CORACAO"` |
+| `embaralhar(lista)` | Cópia embaralhada por Fisher-Yates (sem o viés do `sort` aleatório) |
+| `sortear(lista, evitar)` | Um item ao acaso, tentando não repetir `evitar` |
+| `sortearVarios(lista, n)` | `n` itens diferentes, já embaralhados |
+
+### `sons.js`
+
+| Função | O que faz |
+|---|---|
+| `tocar(nome)` | `'clique'`, `'acerto'`, `'erro'` ou `'vitoria'` |
+| `estaMudo()` | Lê o estado atual |
+| `alternarMudo()` | Inverte e devolve o novo estado |
+| `definirMudo(valor)` | Força ligado/desligado |
+
+Sem arquivos de áudio: as notas são geradas pela Web Audio API. O `AudioContext` só nasce na
+primeira chamada de `tocar()`, que na prática acontece dentro de um toque do usuário — é o que
+o iOS exige. O mudo fica em `localStorage['jogos-elis:mudo']`.
+
+### `confete.js`
+
+`lancarConfete(duracaoMs = 1500)` — canvas em tela cheia, ~80 partículas nas cores dos tokens,
+`pointer-events: none`, some sozinho no fim. Não faz nada com `prefers-reduced-motion: reduce`.
+
+### `progresso.js`
+
+| Função | O que faz |
+|---|---|
+| `registrarPartida(jogoId, { acertos, erros, estrelas })` | Soma uma partida e devolve o registro |
+| `obterProgresso()` | O objeto inteiro (`{}` se ainda não houver nada) |
+| `estrelasDe(jogoId)` | Melhor quantidade de estrelas já conquistada |
+| `calcularEstrelas(acertos, erros)` | 3 se acertou ≥ 90 %, 2 se ≥ 70 %, 1 por terminar |
+| `zerarProgresso()` | Apaga tudo |
+
+Guardado em `localStorage['jogos-elis:progresso']`, só neste aparelho:
+
+```json
+{ "forca": { "partidas": 12, "acertos": 30, "erros": 10, "melhorEstrelas": 3, "ultimaEm": "2026-09-06T14:00:00Z" } }
+```
 
 ---
 

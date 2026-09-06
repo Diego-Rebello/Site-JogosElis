@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peças compartilhadas dos Jogos da Elis</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%A7%B0%3C%2Ftext%3E%3C%2Fsvg%3E">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .secao { margin-bottom: 24px; }
+    .secao h2 {
+      font-family: var(--fonte-titulo);
+      color: var(--cor-principal-escura);
+      font-size: 1.4rem;
+      margin: 0 0 4px;
+      font-weight: 400;
+    }
+    .secao p.ajuda {
+      font-family: var(--fonte-leitura);
+      color: var(--cor-suave);
+      margin: 0 0 12px;
+    }
+    .linha { display: flex; flex-wrap: wrap; gap: 10px; }
+    .amostra-fontes p { margin: 6px 0; }
+    #resumo {
+      font-family: var(--fonte-leitura);
+      background: #fff;
+      border: 2px dashed var(--cor-secundaria);
+      border-radius: 12px;
+      padding: 12px;
+      white-space: pre-wrap;
+      text-align: left;
+      font-size: 0.95rem;
+      overflow-x: auto;
+    }
+    .demo-conteudo { max-width: 640px; margin: 0 auto; }
+  </style>
+</head>
+<body class="pagina">
+  <script src="cabecalho.js" data-titulo="Peças compartilhadas"></script>
+
+  <div class="pagina__conteudo">
+    <div class="demo-conteudo">
+
+      <div class="cartao secao">
+        <h2>Fontes locais</h2>
+        <p class="ajuda">Nenhuma requisição ao Google Fonts: os arquivos estão em <code>shared/fontes/</code>.</p>
+        <div class="amostra-fontes">
+          <p style="font-family: var(--fonte-titulo); font-size: 1.6rem;">Pacifico — Jogos da Elis</p>
+          <p style="font-family: var(--fonte-corpo); font-size: 1.3rem;">Fredoka One — Coração, avião, açúcar</p>
+          <p style="font-family: var(--fonte-leitura);">Nunito — texto corrido para ler com calma.</p>
+          <p style="font-family: var(--fonte-leitura); font-weight: 700;">Nunito 700 — mesmo arquivo, peso variável.</p>
+        </div>
+      </div>
+
+      <div class="cartao secao">
+        <h2>Botões</h2>
+        <p class="ajuda">Todos com pelo menos 44&nbsp;px de altura e de largura.</p>
+        <div class="linha">
+          <button class="botao" data-som="clique">Principal</button>
+          <button class="botao botao--secundario" data-som="clique">Secundário</button>
+          <button class="botao botao--sucesso" data-som="clique">Sucesso</button>
+          <button class="botao botao--neutro" data-som="clique">Neutro</button>
+          <button class="botao" disabled>Desligado</button>
+        </div>
+      </div>
+
+      <div class="cartao secao">
+        <h2>Placar e feedback</h2>
+        <div class="placar" style="margin-bottom: 12px;">
+          <span class="placar__certo">✔️ Acertos: 8</span>
+          <span class="placar__errado">❌ Erros: 2</span>
+        </div>
+        <div class="feedback feedback--certo">Parabéns, você acertou!</div>
+        <div class="feedback feedback--errado">Ops, tente de novo!</div>
+        <label class="so-leitor" for="campo-demo">Campo de exemplo</label>
+        <input class="campo" id="campo-demo" placeholder="DIGITE AQUI">
+      </div>
+
+      <div class="cartao secao">
+        <h2>Sons</h2>
+        <p class="ajuda">O áudio só nasce no primeiro toque (exigência do iPhone e do iPad). O botão 🔊 lá em cima silencia tudo.</p>
+        <div class="linha">
+          <button class="botao" data-som="clique">🔈 clique</button>
+          <button class="botao botao--sucesso" data-som="acerto">✅ acerto</button>
+          <button class="botao botao--secundario" data-som="erro">❌ erro</button>
+          <button class="botao" data-som="vitoria">🏆 vitória</button>
+        </div>
+      </div>
+
+      <div class="cartao secao">
+        <h2>Animações e confete</h2>
+        <p class="ajuda">Com “reduzir movimento” ligado no sistema, o confete não aparece e as animações somem.</p>
+        <div class="linha">
+          <button class="botao" id="btn-confete">🎉 Lançar confete</button>
+          <button class="botao botao--neutro" id="btn-pular">Animar acerto</button>
+          <button class="botao botao--neutro" id="btn-tremer">Animar erro</button>
+        </div>
+        <p id="alvo-animacao" style="font-size: 2.5rem; margin: 16px 0 0;">🐣</p>
+      </div>
+
+      <div class="cartao secao">
+        <h2>Texto e sorteio</h2>
+        <div class="linha">
+          <button class="botao botao--neutro" id="btn-normalizar">normalizar()</button>
+          <button class="botao botao--neutro" id="btn-embaralhar">embaralhar()</button>
+          <button class="botao botao--neutro" id="btn-sortear">sortearVarios()</button>
+        </div>
+      </div>
+
+      <div class="cartao secao">
+        <h2>Progresso salvo</h2>
+        <p class="ajuda">Fica só neste navegador, na chave <code>jogos-elis:progresso</code>.</p>
+        <div class="linha" style="margin-bottom: 12px;">
+          <button class="botao botao--sucesso" id="btn-boa">Registrar rodada boa (9×1)</button>
+          <button class="botao botao--secundario" id="btn-ruim">Registrar rodada ruim (4×6)</button>
+          <button class="botao botao--neutro" id="btn-zerar">Zerar progresso</button>
+        </div>
+        <pre id="resumo"></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { tocar } from './sons.js';
+    import { lancarConfete } from './confete.js';
+    import { normalizar, embaralhar, sortearVarios } from './texto.js';
+    import { registrarPartida, obterProgresso, estrelasDe, zerarProgresso } from './progresso.js';
+
+    const resumo = document.getElementById('resumo');
+    const alvo = document.getElementById('alvo-animacao');
+
+    function mostrar(texto) {
+      resumo.textContent = texto;
+    }
+
+    function mostrarProgresso() {
+      const dados = obterProgresso();
+      const jogos = Object.keys(dados);
+      if (jogos.length === 0) {
+        mostrar('Nenhuma partida registrada ainda.');
+        return;
+      }
+      const linhas = jogos.map(id => {
+        const p = dados[id];
+        return `${id}: ${p.partidas} partida(s), ${p.acertos} acertos, ${p.erros} erros, `
+          + `melhor = ${'⭐'.repeat(p.melhorEstrelas)} (${estrelasDe(id)})`;
+      });
+      mostrar(linhas.join('\n') + '\n\n' + JSON.stringify(dados, null, 2));
+    }
+
+    // Todo botão com data-som toca aquele som.
+    document.querySelectorAll('[data-som]').forEach(botao => {
+      botao.addEventListener('click', () => tocar(botao.dataset.som));
+    });
+
+    function animar(classe) {
+      alvo.classList.remove('pular', 'tremer');
+      void alvo.offsetWidth;                 // reinicia a animação
+      alvo.classList.add(classe);
+    }
+
+    document.getElementById('btn-confete').addEventListener('click', () => {
+      tocar('vitoria');
+      lancarConfete();
+    });
+    document.getElementById('btn-pular').addEventListener('click', () => {
+      tocar('acerto');
+      animar('pular');
+    });
+    document.getElementById('btn-tremer').addEventListener('click', () => {
+      tocar('erro');
+      animar('tremer');
+    });
+
+    document.getElementById('btn-normalizar').addEventListener('click', () => {
+      const exemplos = ['  coração ', 'Ímpar', 'AÇÚCAR', 'não'];
+      mostrar(exemplos.map(e => `"${e}" → "${normalizar(e)}"`).join('\n'));
+    });
+    document.getElementById('btn-embaralhar').addEventListener('click', () => {
+      mostrar(embaralhar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).join(', '));
+    });
+    document.getElementById('btn-sortear').addEventListener('click', () => {
+      mostrar(sortearVarios(['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'], 4).join(' '));
+    });
+
+    document.getElementById('btn-boa').addEventListener('click', () => {
+      registrarPartida('demo', { acertos: 9, erros: 1 });
+      tocar('vitoria');
+      mostrarProgresso();
+    });
+    document.getElementById('btn-ruim').addEventListener('click', () => {
+      registrarPartida('demo', { acertos: 4, erros: 6 });
+      tocar('erro');
+      mostrarProgresso();
+    });
+    document.getElementById('btn-zerar').addEventListener('click', () => {
+      zerarProgresso();
+      mostrarProgresso();
+    });
+
+    mostrarProgresso();
+  </script>
+</body>
+</html>
