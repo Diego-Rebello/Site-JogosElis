@@ -95,7 +95,7 @@ Fases 0, 1, 2 e 3 concluídas, mais T19 e T20 da fase 4. Tudo testado no navegad
 | T17 — Memória: modo solo, recordes e temas | ✅ Concluída em 2026-09-06 | `23a226a` |
 | T18 — Velha: placar, símbolos, início e níveis | ✅ Concluída em 2026-09-06 | `528b21d` |
 | T19 — Testes automatizados da lógica | ✅ Concluída em 2026-09-06 | `528b21d` |
-| T20 — Build e publicação automática no Netlify | ✅ Implementação concluída em 2026-09-06; validar o primeiro deploy após o merge | `528b21d` |
+| T20 — Build e publicação automática no Netlify | ✅ Concluída e validada em produção em 2026-09-06 | `528b21d` |
 | T21 em diante | ⬜ A fazer | — |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
@@ -881,8 +881,8 @@ extraia-a para um módulo puro antes de testar, sem mudar o comportamento.
 
 ### T20 — Publicação automática no Netlify com build (`dist/` fora do git)
 
-> ✅ **Implementação concluída em 2026-09-06** — commit `528b21d`. O build local foi validado;
-> o primeiro deploy e as opções do painel devem ser conferidos depois do merge em `main`.
+> ✅ **Concluída em 2026-09-06** — implementação no commit `528b21d`; primeiro deploy do novo
+> pipeline validado em produção no commit `326b4b1`.
 
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Opus · **Depende de:** T08, T10
 **Arquivos:** `build-all.sh` (novo), `netlify.toml` (novo), `_headers` (novo), `_redirects` (da T08), `.gitignore`, `index.html`, `README.md`
@@ -944,10 +944,10 @@ extraia-a para um módulo puro antes de testar, sem mudar o comportamento.
 
 **Critérios de aceite**
 - [x] `bash build-all.sh` local gera `_site/` e todos os jogos abrem via servidor local.
-- [ ] Push em `main` publica em https://jogosdaelis.netlify.app/ sem intervenção manual; o log de build no Netlify mostra os testes rodando.
+- [x] Push em `main` publica em https://jogosdaelis.netlify.app/ sem intervenção manual; testes executam antes do build.
 - [x] `git ls-files | grep dist/` vazio.
-- [ ] `https://jogosdaelis.netlify.app/Games/memoria/App.tsx` e `/Games/memoria/package.json` respondem 404.
-- [ ] Caminhos antigos, como `/games/jogo%20da%20forca/forca`, redirecionam para os novos.
+- [x] `https://jogosdaelis.netlify.app/Games/memoria/App.tsx` e `/Games/memoria/package.json` respondem 404.
+- [x] Caminhos antigos, como `/games/jogo%20da%20forca/forca`, redirecionam para os novos.
 
 **Prompt para o modelo**
 ```
