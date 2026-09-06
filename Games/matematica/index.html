@@ -40,6 +40,7 @@
             <div class="placar">
                 <span class="placar__certo">✔️ Acertos: <span id="acertos">0</span></span>
                 <span class="placar__errado">❌ Erros: <span id="erros">0</span></span>
+                <span>Questão: <span id="questaoAtual">1</span>/10</span>
             </div>
 
             <div class="conta">
@@ -63,6 +64,7 @@
     <script type="module">
         import { tocar } from '../../shared/sons.js';
         import { lancarConfete, animar } from '../../shared/confete.js';
+        import { calcularEstrelas, nomeDaCrianca, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 
         // --- 1. SELECIONANDO OS ELEMENTOS DA PÁGINA ---
         const num1Span = document.getElementById('num1');
@@ -74,11 +76,17 @@
         const btnReiniciar = document.getElementById('btnReiniciar');
         const acertosSpan = document.getElementById('acertos');
         const errosSpan = document.getElementById('erros');
+        const questaoAtualSpan = document.getElementById('questaoAtual');
 
         let respostaCorreta;
         let acertos = 0;
         let erros = 0;
+        let respondidas = 0;
         let problemaJaRespondido = false;
+        let rodadaEncerrada = false;
+        const TOTAL_QUESTOES = 10;
+        const nivelPadrao = obterConfiguracoes().niveis.matematica;
+        const nomeCrianca = nomeDaCrianca();
 
         // A cada 5 acertos vem uma comemoração. Rodadas de verdade chegam na T14.
         const ACERTOS_PARA_COMEMORAR = 5;
@@ -93,20 +101,56 @@
         function gerarNovoProblema() {
             let numero1, numero2;
 
-            // Continua gerando números até que a soma seja <= 100
-            do {
-                numero1 = Math.floor(Math.random() * 90) + 10;
-                numero2 = Math.floor(Math.random() * 90) + 10;
-            } while (numero1 + numero2 > 100);
+            if (rodadaEncerrada) {
+                iniciarRodada();
+                return;
+            }
+
+            // A configuracao do adulto define a faixa inicial deste jogo de soma.
+            if (nivelPadrao === '1') {
+                do {
+                    numero1 = Math.floor(Math.random() * 9) + 1;
+                    numero2 = Math.floor(Math.random() * 9) + 1;
+                } while (numero1 + numero2 > 10);
+            } else if (nivelPadrao === '2') {
+                do {
+                    numero1 = Math.floor(Math.random() * 21);
+                    numero2 = Math.floor(Math.random() * 21);
+                } while (numero1 + numero2 > 20);
+            } else {
+                do {
+                    numero1 = Math.floor(Math.random() * 90) + 10;
+                    numero2 = Math.floor(Math.random() * 90) + 10;
+                } while (numero1 + numero2 > 100);
+            }
 
             num1Span.textContent = numero1;
             num2Span.textContent = numero2;
             respostaCorreta = numero1 + numero2;
 
             problemaJaRespondido = false; // Permite responder ao novo problema
+            btnConferir.disabled = false;
+            respostaInput.disabled = false;
+            btnNovo.textContent = 'Gerar Novo';
             respostaInput.value = '';
             mostrarFeedback('', null);
+            questaoAtualSpan.textContent = Math.min(respondidas + 1, TOTAL_QUESTOES);
             respostaInput.focus();
+        }
+
+        function finalizarRodada() {
+            rodadaEncerrada = true;
+            const estrelas = calcularEstrelas(acertos, erros);
+            registrarPartida('matematica', { acertos, erros, estrelas });
+            mostrarFeedback(
+                `🏆 Parabéns, ${nomeCrianca}! Rodada concluída: ${acertos} acertos e ${erros} erros. ${'⭐'.repeat(estrelas)}`,
+                'certo'
+            );
+            btnConferir.disabled = true;
+            respostaInput.disabled = true;
+            btnNovo.textContent = 'Nova rodada';
+            tocar('vitoria');
+            lancarConfete();
         }
 
         // --- 3. FUNÇÃO PARA CONFERIR A RESPOSTA ---
@@ -130,7 +174,7 @@
             if (respostaUsuario === respostaCorreta) {
                 acertos++;
                 acertosSpan.textContent = acertos;
-                if (acertos % ACERTOS_PARA_COMEMORAR === 0) {
+                if (acertos % ACERTOS_PARA_COMEMORAR === 0 && respondidas + 1 < TOTAL_QUESTOES) {
                     mostrarFeedback(`🏆 ${acertos} acertos! Você está voando!`, 'certo');
                     tocar('vitoria');
                     lancarConfete();
@@ -146,12 +190,17 @@
                 tocar('erro');
                 animar(feedbackDiv, 'tremer');
             }
+
+            respondidas++;
+            if (respondidas >= TOTAL_QUESTOES) finalizarRodada();
         }
 
         // --- 4. REINICIAR PLACAR ---
-        function reiniciarPlacar() {
+        function iniciarRodada() {
             acertos = 0;
             erros = 0;
+            respondidas = 0;
+            rodadaEncerrada = false;
             acertosSpan.textContent = acertos;
             errosSpan.textContent = erros;
             gerarNovoProblema();
@@ -160,7 +209,7 @@
         // --- 5. CONFIGURANDO OS EVENTOS DOS BOTÕES ---
         btnConferir.addEventListener('click', conferirResposta);
         btnNovo.addEventListener('click', () => { tocar('clique'); gerarNovoProblema(); });
-        btnReiniciar.addEventListener('click', () => { tocar('clique'); reiniciarPlacar(); });
+        btnReiniciar.addEventListener('click', () => { tocar('clique'); iniciarRodada(); });
 
         respostaInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
@@ -169,7 +218,7 @@
         });
 
         // --- 6. INICIANDO O JOGO ---
-        gerarNovoProblema();
+        iniciarRodada();
     </script>
 
 </body>

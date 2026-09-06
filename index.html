@@ -66,11 +66,54 @@
             font-size: 1.35rem;
         }
 
+        .game-card__progresso {
+            display: grid;
+            gap: 4px;
+            font-family: var(--fonte-leitura);
+            font-size: 0.95rem;
+            color: var(--cor-suave);
+        }
+
+        .game-card__estrelas {
+            color: #a66b00;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        .mural {
+            max-width: 620px;
+            margin: 36px auto 0;
+            text-align: center;
+        }
+
+        .mural h2 {
+            margin-top: 0;
+            color: var(--cor-principal-escura);
+            font-size: clamp(1.5rem, 6vw, 2rem);
+        }
+
+        .mural__dados {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px 28px;
+            font-family: var(--fonte-leitura);
+            font-size: 1.1rem;
+        }
+
         .rodape {
             margin-top: 50px;
             padding-bottom: 20px;
             color: var(--cor-suave);
             font-family: var(--fonte-leitura);
+        }
+
+        .rodape a {
+            color: var(--cor-suave);
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            padding: 0 8px;
         }
     </style>
 </head>
@@ -80,7 +123,7 @@
         <div class="container">
             <div class="topo">
                 <h1>Jogos da Elis</h1>
-                <p>Um mundo de diversão e aprendizado espera por você!</p>
+                <p id="saudacao">Um mundo de diversão e aprendizado espera por você!</p>
             </div>
 
             <main>
@@ -88,35 +131,85 @@
                     <a href="Games/forca/index.html" class="cartao game-card">
                         <span class="icone" aria-hidden="true">👻</span>
                         <span class="nome">Jogo da Forca</span>
+                        <span class="game-card__progresso" data-progresso="forca"></span>
                     </a>
 
                     <a href="Games/memoria/dist/index.html" class="cartao game-card">
                         <span class="icone" aria-hidden="true">🧠</span>
                         <span class="nome">Jogo da Memória</span>
+                        <span class="game-card__progresso" data-progresso="memoria"></span>
                     </a>
 
                     <a href="Games/matematica/index.html" class="cartao game-card">
                         <span class="icone" aria-hidden="true">🧮</span>
                         <span class="nome">Jogo de Somar</span>
+                        <span class="game-card__progresso" data-progresso="matematica"></span>
                     </a>
 
                     <a href="Games/m-ou-n/index.html" class="cartao game-card">
                         <span class="icone" aria-hidden="true">⌨️</span>
                         <span class="nome">Jogo do M ou N</span>
+                        <span class="game-card__progresso" data-progresso="m-ou-n"></span>
                     </a>
 
                     <a href="Games/velha/dist/index.html" class="cartao game-card">
                         <span class="icone" aria-hidden="true">⭕</span>
                         <span class="nome">Jogo da Velha</span>
+                        <span class="game-card__progresso" data-progresso="velha"></span>
                     </a>
                 </div>
+
+                <section class="cartao mural" aria-labelledby="titulo-mural">
+                    <h2 id="titulo-mural">🏆 Mural de Conquistas</h2>
+                    <div class="mural__dados">
+                        <span>⭐ Total de estrelas: <strong id="total-estrelas">0</strong></span>
+                        <span>💖 Jogo favorito: <strong id="jogo-favorito">Comece a jogar!</strong></span>
+                    </div>
+                </section>
             </main>
 
             <div class="rodape">
                 <p>Feito com ❤️ para a Elis se divertir!</p>
+                <a href="configuracoes.html">⚙️ Configurações dos adultos</a>
             </div>
         </div>
     </div>
 
+<script type="module">
+    import { obterConfiguracoes, obterProgresso } from './shared/progresso.js';
+
+    const nomes = {
+        forca: 'Jogo da Forca',
+        memoria: 'Jogo da Memória',
+        matematica: 'Jogo de Somar',
+        'm-ou-n': 'Jogo do M ou N',
+        velha: 'Jogo da Velha',
+    };
+    const progresso = obterProgresso();
+    const configuracoes = obterConfiguracoes();
+
+    document.getElementById('saudacao').textContent =
+        `${configuracoes.nomeCrianca}, um mundo de diversão e aprendizado espera por você!`;
+
+    document.querySelectorAll('[data-progresso]').forEach(elemento => {
+        const registro = progresso[elemento.dataset.progresso] || {};
+        const estrelas = Math.max(0, Math.min(3, Number(registro.melhorEstrelas) || 0));
+        const partidas = Math.max(0, Number(registro.partidas) || 0);
+        elemento.innerHTML = `
+            <span class="game-card__estrelas" aria-label="${estrelas} de 3 estrelas">${'⭐'.repeat(estrelas)}${'☆'.repeat(3 - estrelas)}</span>
+            <span>${partidas === 1 ? 'Jogou 1 vez' : `Jogou ${partidas} vezes`}</span>`;
+    });
+
+    const registros = Object.entries(nomes).map(([id, nome]) => ({
+        nome,
+        partidas: Math.max(0, Number(progresso[id]?.partidas) || 0),
+        estrelas: Math.max(0, Math.min(3, Number(progresso[id]?.melhorEstrelas) || 0)),
+    }));
+    document.getElementById('total-estrelas').textContent =
+        registros.reduce((total, jogo) => total + jogo.estrelas, 0);
+    const favorito = registros.reduce((melhor, jogo) =>
+        jogo.partidas > melhor.partidas ? jogo : melhor, { nome: 'Comece a jogar!', partidas: 0 });
+    document.getElementById('jogo-favorito').textContent = favorito.nome;
+</script>
 </body>
 </html>

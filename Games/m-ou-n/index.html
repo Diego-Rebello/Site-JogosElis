@@ -58,6 +58,7 @@
             <div class="placar">
                 <span class="placar__certo">ACERTOS: <span id="placar-acertos">0</span></span>
                 <span class="placar__errado">ERROS: <span id="placar-erros">0</span></span>
+                <span>PALAVRA: <span id="palavra-atual">1</span>/10</span>
             </div>
 
             <div id="palavra-desafio"></div>
@@ -83,6 +84,7 @@
         import { normalizar, sortear } from '../../shared/texto.js';
         import { tocar } from '../../shared/sons.js';
         import { lancarConfete, animar } from '../../shared/confete.js';
+        import { calcularEstrelas, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 
         // --- LÓGICA DO JOGO ---
 
@@ -131,10 +133,24 @@
         // Confere a lista inteira ao carregar a página: uma palavra inválida quebra na hora.
         listaDePalavras.forEach(gerarLacuna);
 
+        const configuracoes = obterConfiguracoes();
+        const nivelPadrao = configuracoes.niveis['m-ou-n'];
+        const nomeCrianca = configuracoes.nomeCrianca;
+        const listaAtiva = listaDePalavras.filter(palavra => {
+            if (nivelPadrao === 'facil') return palavra.length <= 6;
+            if (nivelPadrao === 'normal') return palavra.length <= 9;
+            return true;
+        });
+
         // Variáveis do estado do jogo
         let palavraCorreta;
         let acertos = 0;
         let erros = 0;
+        let palavrasConcluidas = 0;
+        let palavraRespondida = false;
+        let rodadaEncerrada = false;
+        let proximaPalavraTimeout = null;
+        const TOTAL_PALAVRAS = 10;
 
         // A cada 5 acertos vem uma comemoração. Rodadas de verdade chegam na T15.
         const ACERTOS_PARA_COMEMORAR = 5;
@@ -145,6 +161,7 @@
         const elFeedback = document.getElementById('feedback');
         const elPlacarAcertos = document.getElementById('placar-acertos');
         const elPlacarErros = document.getElementById('placar-erros');
+        const elPalavraAtual = document.getElementById('palavra-atual');
         const btnVerificar = document.getElementById('btn-verificar');
         const btnNovo = document.getElementById('btn-novo');
         const btnReiniciar = document.getElementById('btn-reiniciar');
@@ -155,18 +172,48 @@
             elFeedback.className = 'feedback' + (estado ? ' feedback--' + estado : '');
         }
 
+        function escaparHtml(texto) {
+            const substituicoes = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return texto.replace(/[&<>"']/g, caractere => substituicoes[caractere]);
+        }
+
         // Função para gerar uma nova palavra
         function gerarNovaPalavra() {
-            palavraCorreta = sortear(listaDePalavras, palavraCorreta);
+            if (proximaPalavraTimeout !== null) {
+                clearTimeout(proximaPalavraTimeout);
+                proximaPalavraTimeout = null;
+            }
+            palavraCorreta = sortear(listaAtiva, palavraCorreta);
 
             elPalavraDesafio.textContent = gerarLacuna(palavraCorreta).texto;
             elCampoResposta.value = "";
+            elCampoResposta.disabled = false;
+            btnVerificar.disabled = false;
+            palavraRespondida = false;
+            btnNovo.textContent = 'NOVA PALAVRA';
+            elPalavraAtual.textContent = Math.min(palavrasConcluidas + 1, TOTAL_PALAVRAS);
             mostrarFeedback('', null);
             elCampoResposta.focus();
         }
 
+        function finalizarRodada() {
+            rodadaEncerrada = true;
+            const estrelas = calcularEstrelas(acertos, erros);
+            registrarPartida('m-ou-n', { acertos, erros, estrelas });
+            mostrarFeedback(
+                `🏆 PARABÉNS, ${escaparHtml(nomeCrianca.toUpperCase())}! RODADA CONCLUÍDA COM ${acertos} ACERTOS. ${'⭐'.repeat(estrelas)}`,
+                'certo'
+            );
+            elCampoResposta.disabled = true;
+            btnVerificar.disabled = true;
+            btnNovo.textContent = 'NOVA RODADA';
+            tocar('vitoria');
+            lancarConfete();
+        }
+
         // Função para verificar a resposta da criança
         function verificarResposta() {
+            if (palavraRespondida || rodadaEncerrada) return;
             const respostaUsuario = elCampoResposta.value.trim();
 
             if (respostaUsuario === "") {
@@ -177,11 +224,17 @@
             }
 
             if (normalizar(respostaUsuario) === normalizar(palavraCorreta)) {
+                palavraRespondida = true;
                 acertos++;
+                palavrasConcluidas++;
                 elPlacarAcertos.textContent = acertos;
-                mostrarFeedback('PARABÉNS, VOCÊ ACERTOU!<br>A PALAVRA É <strong class="palavra-certa">'
+                mostrarFeedback(`PARABÉNS, ${escaparHtml(nomeCrianca.toUpperCase())}! VOCÊ ACERTOU!<br>A PALAVRA É <strong class="palavra-certa">`
                     + palavraCorreta + '</strong>', 'certo');
-                if (acertos % ACERTOS_PARA_COMEMORAR === 0) {
+                elCampoResposta.disabled = true;
+                btnVerificar.disabled = true;
+                if (palavrasConcluidas >= TOTAL_PALAVRAS) {
+                    finalizarRodada();
+                } else if (acertos % ACERTOS_PARA_COMEMORAR === 0) {
                     tocar('vitoria');
                     lancarConfete();
                 } else {
@@ -189,7 +242,9 @@
                 }
                 animar(elFeedback, 'pular');
 
-                setTimeout(gerarNovaPalavra, 1800);
+                if (!rodadaEncerrada) {
+                    proximaPalavraTimeout = setTimeout(gerarNovaPalavra, 1800);
+                }
 
             } else {
                 erros++;
@@ -202,8 +257,12 @@
 
         // Função para reiniciar o jogo
         function reiniciarJogo() {
+            if (proximaPalavraTimeout !== null) clearTimeout(proximaPalavraTimeout);
+            proximaPalavraTimeout = null;
             acertos = 0;
             erros = 0;
+            palavrasConcluidas = 0;
+            rodadaEncerrada = false;
             elPlacarAcertos.textContent = acertos;
             elPlacarErros.textContent = erros;
             gerarNovaPalavra();
@@ -216,11 +275,15 @@
                 verificarResposta();
             }
         });
-        btnNovo.addEventListener('click', () => { tocar('clique'); gerarNovaPalavra(); });
+        btnNovo.addEventListener('click', () => {
+            tocar('clique');
+            if (rodadaEncerrada) reiniciarJogo();
+            else gerarNovaPalavra();
+        });
         btnReiniciar.addEventListener('click', () => { tocar('clique'); reiniciarJogo(); });
 
         // --- Inicia o jogo pela primeira vez ---
-        gerarNovaPalavra();
+        reiniciarJogo();
 
     </script>
 </body>

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameMode, Player, SquareValue, Vitoria } from './types';
 import GameBoard from './components/GameBoard';
 import GameStatus from './components/GameStatus';
@@ -9,13 +9,19 @@ import { aplicarJogada, findBestMove } from './lib/logica';
 import Cabecalho from './components/Cabecalho';
 import { tocar } from '../../shared/sons.js';
 import { lancarConfete } from '../../shared/confete.js';
+import { obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
+
+const configuracoes = obterConfiguracoes();
+const nomeCrianca = configuracoes.nomeCrianca;
+const modoPadrao = configuracoes.niveis.velha === GameMode.PVP ? GameMode.PVP : GameMode.PVC;
 
 const App: React.FC = () => {
-  const [gameMode, setGameMode] = useState<GameMode | null>(null);
+  const [gameMode, setGameMode] = useState<GameMode | null>(modoPadrao);
   const [board, setBoard] = useState<SquareValue[]>(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState<Player>(PLAYER_X);
   const [winner, setWinner] = useState<Vitoria | null>(null);
   const [isDraw, setIsDraw] = useState<boolean>(false);
+  const partidaRegistradaRef = useRef(false);
 
   const handleSquareClick = useCallback((index: number) => {
     if (board[index] || winner || isDraw) {
@@ -55,6 +61,17 @@ const App: React.FC = () => {
     } else if (isDraw) {
       tocar('acerto');
     }
+
+    if ((winner || isDraw) && !partidaRegistradaRef.current) {
+      const criancaVenceu = winner?.player === PLAYER_X;
+      const criancaPerdeu = winner?.player === PLAYER_O;
+      registrarPartida('velha', {
+        acertos: criancaVenceu ? 1 : 0,
+        erros: criancaPerdeu ? 1 : 0,
+        estrelas: criancaVenceu ? 3 : isDraw ? 2 : 1,
+      });
+      partidaRegistradaRef.current = true;
+    }
   }, [winner, isDraw, gameMode]);
   
   useEffect(() => {
@@ -85,6 +102,7 @@ const App: React.FC = () => {
     setCurrentPlayer(PLAYER_X);
     setWinner(null);
     setIsDraw(false);
+    partidaRegistradaRef.current = false;
   };
   
   const changeMode = () => {
@@ -107,7 +125,7 @@ const App: React.FC = () => {
           <ModeSelector onSelectMode={escolherModo} />
         ) : (
           <>
-            <GameStatus winner={winner} currentPlayer={currentPlayer} isDraw={isDraw} />
+            <GameStatus winner={winner} currentPlayer={currentPlayer} isDraw={isDraw} nomeCrianca={nomeCrianca} />
             <GameBoard 
               board={board} 
               onSquareClick={handleSquareClick} 

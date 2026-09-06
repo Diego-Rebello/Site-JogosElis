@@ -14,3 +14,19 @@ export declare function registrarPartida(
 ): RegistroDeJogo;
 export declare function estrelasDe(jogoId: string): number;
 export declare function zerarProgresso(): boolean;
+export interface Configuracoes {
+  nomeCrianca: string;
+  niveis: {
+    forca: string;
+    matematica: string;
+    'm-ou-n': string;
+    memoria: string;
+    velha: string;
+    [jogoId: string]: string;
+  };
+}
+export declare function obterConfiguracoes(): Configuracoes;
+export declare function salvarConfiguracoes(
+  configuracoes?: Partial<Omit<Configuracoes, 'niveis'>> & { niveis?: Partial<Configuracoes['niveis']> },
+): Configuracoes;
+export declare function nomeDaCrianca(): string;

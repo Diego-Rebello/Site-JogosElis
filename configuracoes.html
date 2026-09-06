@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações — Jogos da Elis</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%E2%9A%99%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E">
+  <link rel="stylesheet" href="shared/base.css">
+  <style>
+    .configuracoes { max-width: 680px; margin: 0 auto; }
+    .configuracoes h1 { margin-top: 0; color: var(--cor-principal-escura); text-align: center; }
+    .configuracoes__intro { font-family: var(--fonte-leitura); text-align: center; }
+    .formulario { display: grid; gap: 20px; margin-top: 24px; }
+    .grupo { display: grid; gap: 7px; text-align: left; }
+    .grupo label, .grupo legend { font-family: var(--fonte-leitura); font-weight: 700; }
+    .grupo select { appearance: auto; }
+    .grupo--mudo { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+    .grupo--mudo input { width: 24px; height: 24px; }
+    .niveis { border: 0; padding: 0; margin: 0; display: grid; gap: 14px; }
+    .acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 8px; }
+    #mensagem { text-align: center; }
+  </style>
+</head>
+<body class="pagina">
+  <script src="shared/cabecalho.js" data-titulo="Configurações"></script>
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao configuracoes">
+      <h1>Configurações dos adultos</h1>
+      <p class="configuracoes__intro">Escolha como os jogos começam neste aparelho.</p>
+
+      <form id="formulario" class="formulario">
+        <div class="grupo">
+          <label for="nome">Nome da criança</label>
+          <input id="nome" name="nome" class="campo" maxlength="40" required>
+        </div>
+
+        <fieldset class="niveis">
+          <legend>Nível ou modo padrão</legend>
+          <div class="grupo">
+            <label for="forca">Jogo da Forca</label>
+            <select id="forca" class="campo"><option value="facil">Fácil — 8 erros</option><option value="normal">Normal — 6 erros</option><option value="desafio">Desafio — 4 erros</option></select>
+          </div>
+          <div class="grupo">
+            <label for="matematica">Jogo de Somar</label>
+            <select id="matematica" class="campo"><option value="1">Nível 1 — até 10</option><option value="2">Nível 2 — até 20</option><option value="3">Nível 3 — até 100</option></select>
+          </div>
+          <div class="grupo">
+            <label for="m-ou-n">Jogo do M ou N</label>
+            <select id="m-ou-n" class="campo"><option value="facil">Fácil — palavras curtas</option><option value="normal">Normal — palavras médias</option><option value="desafio">Desafio — todas as palavras</option></select>
+          </div>
+          <div class="grupo">
+            <label for="memoria">Jogo da Memória</label>
+            <select id="memoria" class="campo"><option value="16">Fácil — 16 cartas</option><option value="24">Normal — 24 cartas</option><option value="32">Desafio — 32 cartas</option></select>
+          </div>
+          <div class="grupo">
+            <label for="velha">Jogo da Velha</label>
+            <select id="velha" class="campo"><option value="PVC">Contra o computador</option><option value="PVP">Com um amigo</option></select>
+          </div>
+        </fieldset>
+
+        <label class="grupo--mudo"><input id="mudo" type="checkbox"> Deixar os sons desligados</label>
+
+        <div class="acoes">
+          <button class="botao botao--sucesso" type="submit">Salvar configurações</button>
+          <button class="botao botao--neutro" id="zerar" type="button">Zerar progresso</button>
+        </div>
+        <div id="mensagem" class="feedback" aria-live="polite"></div>
+      </form>
+    </section>
+  </main>
+
+  <script type="module">
+    import { obterConfiguracoes, salvarConfiguracoes, zerarProgresso } from './shared/progresso.js';
+    import { definirMudo, estaMudo, tocar } from './shared/sons.js';
+
+    const ids = ['forca', 'matematica', 'm-ou-n', 'memoria', 'velha'];
+    const formulario = document.getElementById('formulario');
+    const mensagem = document.getElementById('mensagem');
+    const configuracoes = obterConfiguracoes();
+
+    document.getElementById('nome').value = configuracoes.nomeCrianca;
+    ids.forEach(id => { document.getElementById(id).value = configuracoes.niveis[id]; });
+    document.getElementById('mudo').checked = estaMudo();
+
+    formulario.addEventListener('submit', evento => {
+      evento.preventDefault();
+      const niveis = Object.fromEntries(ids.map(id => [id, document.getElementById(id).value]));
+      const mudo = document.getElementById('mudo').checked;
+      salvarConfiguracoes({ nomeCrianca: document.getElementById('nome').value, niveis });
+      definirMudo(mudo);
+      if (!mudo) tocar('acerto');
+      mensagem.textContent = '✅ Configurações salvas neste aparelho!';
+      mensagem.className = 'feedback feedback--certo';
+    });
+
+    document.getElementById('zerar').addEventListener('click', () => {
+      tocar('clique');
+      if (!window.confirm('Quer mesmo apagar todas as conquistas e partidas?')) return;
+      const apagou = zerarProgresso();
+      mensagem.textContent = apagou
+        ? 'Progresso zerado. As configurações foram mantidas.'
+        : 'Não foi possível apagar o progresso neste navegador.';
+      mensagem.className = `feedback feedback--${apagou ? 'certo' : 'errado'}`;
+    });
+  </script>
+</body>
+</html>

@@ -69,6 +69,7 @@
     import { normalizar, sortear } from '../../shared/texto.js';
     import { tocar } from '../../shared/sons.js';
     import { lancarConfete, animar } from '../../shared/confete.js';
+    import { nomeDaCrianca, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 
     // Cada palavra vem com o tema, escrita com a acentuação correta.
     const palavras = [
@@ -193,8 +194,11 @@
       { palavra: "JOELHO", categoria: "Corpo" }
     ];
 
-    const estagios = ["😀", "😮", "😕", "😟", "😣", "😭", "💀"];
-    const MAX_ERROS = estagios.length - 1; // 6 erros
+    const estagios = ["😀", "🙂", "😮", "😕", "😟", "😣", "😢", "😭", "💀"];
+    const limitesPorNivel = { facil: 8, normal: 6, desafio: 4 };
+    const nivelPadrao = obterConfiguracoes().niveis.forca;
+    const MAX_ERROS = limitesPorNivel[nivelPadrao] || limitesPorNivel.normal;
+    const nomeCrianca = nomeDaCrianca();
 
     // Estado da rodada
     let atual = null;          // { palavra, categoria }
@@ -272,18 +276,19 @@
         mostrarPalavra(false);
         if (venceu()) {
           vitorias++;
-          elMensagem.textContent = `🎉 Você ganhou! A palavra era: ${atual.palavra}`;
+          elMensagem.textContent = `🎉 Parabéns, ${nomeCrianca}! A palavra era: ${atual.palavra}`;
           elMensagem.classList.add('feedback--certo');
           tocar('vitoria');
           lancarConfete();
-          fimDeJogo();
+          fimDeJogo(true);
         } else {
           tocar('acerto');
           animar(elPalavra, 'pular');
         }
       } else {
         erros++;
-        elForca.textContent = estagios[erros];
+        const indiceEstagio = Math.ceil((erros / MAX_ERROS) * (estagios.length - 1));
+        elForca.textContent = estagios[indiceEstagio];
         tocar('erro');
         animar(elForca, 'tremer');
         if (erros >= MAX_ERROS) {
@@ -291,14 +296,20 @@
           mostrarPalavra(true);
           elMensagem.textContent = `💀 Você perdeu! A palavra era: ${atual.palavra}`;
           elMensagem.classList.add('feedback--errado');
-          fimDeJogo();
+          fimDeJogo(false);
         }
       }
       atualizarPlacar();
     }
 
-    function fimDeJogo() {
+    function fimDeJogo(ganhou) {
       jogoEncerrado = true;
+      const estrelas = ganhou ? (erros <= 1 ? 3 : erros <= 3 ? 2 : 1) : 1;
+      registrarPartida('forca', {
+        acertos: ganhou ? 1 : 0,
+        erros: ganhou ? erros : Math.max(1, erros),
+        estrelas,
+      });
       btnNovaPalavra.style.display = "inline-block";
       elBotoes.querySelectorAll("button").forEach(b => { b.disabled = true; });
       btnNovaPalavra.focus();

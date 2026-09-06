@@ -7,6 +7,18 @@
  */
 
 const CHAVE = 'jogos-elis:progresso';
+const CHAVE_CONFIGURACOES = 'jogos-elis:configuracoes';
+
+const CONFIGURACOES_PADRAO = Object.freeze({
+  nomeCrianca: 'Elis',
+  niveis: Object.freeze({
+    forca: 'normal',
+    matematica: '3',
+    'm-ou-n': 'normal',
+    memoria: '16',
+    velha: 'PVC',
+  }),
+});
 
 /**
  * Estrelas de uma rodada:
@@ -84,4 +96,57 @@ export function zerarProgresso() {
   } catch {
     return false;
   }
+}
+
+/**
+ * Preferencias do adulto. Cada leitura devolve um objeto completo, mesmo se
+ * ainda nao houver configuracao salva ou se o armazenamento estiver bloqueado.
+ */
+export function obterConfiguracoes() {
+  let salvas = {};
+  try {
+    const bruto = localStorage.getItem(CHAVE_CONFIGURACOES);
+    const dados = bruto ? JSON.parse(bruto) : {};
+    if (dados && typeof dados === 'object') salvas = dados;
+  } catch {
+    /* Usa os valores padrao. */
+  }
+
+  const niveisSalvos = salvas.niveis && typeof salvas.niveis === 'object'
+    ? salvas.niveis
+    : {};
+
+  return {
+    nomeCrianca: typeof salvas.nomeCrianca === 'string' && salvas.nomeCrianca.trim()
+      ? salvas.nomeCrianca.trim().slice(0, 40)
+      : CONFIGURACOES_PADRAO.nomeCrianca,
+    niveis: { ...CONFIGURACOES_PADRAO.niveis, ...niveisSalvos },
+  };
+}
+
+/** Salva preferencias validas e devolve o objeto completo que ficou em uso. */
+export function salvarConfiguracoes(novasConfiguracoes = {}) {
+  const atuais = obterConfiguracoes();
+  const nomeInformado = typeof novasConfiguracoes.nomeCrianca === 'string'
+    ? novasConfiguracoes.nomeCrianca.trim().slice(0, 40)
+    : atuais.nomeCrianca;
+  const niveisInformados = novasConfiguracoes.niveis && typeof novasConfiguracoes.niveis === 'object'
+    ? novasConfiguracoes.niveis
+    : {};
+  const atualizadas = {
+    nomeCrianca: nomeInformado || CONFIGURACOES_PADRAO.nomeCrianca,
+    niveis: { ...atuais.niveis, ...niveisInformados },
+  };
+
+  try {
+    localStorage.setItem(CHAVE_CONFIGURACOES, JSON.stringify(atualizadas));
+  } catch {
+    /* As preferencias continuam valendo nesta chamada, mesmo sem persistir. */
+  }
+  return atualizadas;
+}
+
+/** Atalho para personalizar mensagens sem repetir a leitura defensiva. */
+export function nomeDaCrianca() {
+  return obterConfiguracoes().nomeCrianca;
 }

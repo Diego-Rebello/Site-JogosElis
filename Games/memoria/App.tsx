@@ -4,6 +4,7 @@ import { embaralhar } from '../../shared/texto.js';
 import Cabecalho from './components/Cabecalho';
 import { tocar } from '../../shared/sons.js';
 import { lancarConfete } from '../../shared/confete.js';
+import { calcularEstrelas, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 
 // --- Game Configuration & Logic ---
 
@@ -14,6 +15,10 @@ const PLAYER_COLORS = [
   'bg-emerald-500',// Player 3
   'bg-amber-500',  // Player 4
 ];
+const configuracoes = obterConfiguracoes();
+const nomeCrianca = configuracoes.nomeCrianca;
+const cartasConfiguradas = Number(configuracoes.niveis.memoria);
+const quantidadePadraoDeCartas = [16, 24, 32].includes(cartasConfiguradas) ? cartasConfiguradas : 16;
 
 const generateCards = (cardCount: number): CardData[] => {
   const pairCount = cardCount / 2;
@@ -34,10 +39,11 @@ const generateCards = (cardCount: number): CardData[] => {
 // Setup Screen Component
 interface SetupScreenProps {
   onStartGame: (playerCount: number, cardCount: number) => void;
+  defaultCardCount: number;
 }
-const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
-    const [selectedPlayers, setSelectedPlayers] = useState<number | null>(null);
-    const [selectedCards, setSelectedCards] = useState<number | null>(null);
+const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame, defaultCardCount }) => {
+    const [selectedPlayers, setSelectedPlayers] = useState<number | null>(1);
+    const [selectedCards, setSelectedCards] = useState<number | null>(defaultCardCount);
 
     const canStart = selectedPlayers !== null && selectedCards !== null;
 
@@ -128,13 +134,15 @@ const CardComponent: React.FC<CardComponentProps> = ({ card, onClick, isDisabled
 interface VictoryModalProps {
   players: Player[];
   onPlayAgain: () => void;
+  erros: number;
 }
-const VictoryModal: React.FC<VictoryModalProps> = ({ players, onPlayAgain }) => {
+const VictoryModal: React.FC<VictoryModalProps> = ({ players, onPlayAgain, erros }) => {
   const soloMode = players.length === 1;
   const highScore = players.reduce((maior, p) => Math.max(maior, p.score), 0);
+  const totalDePares = players.reduce((total, p) => total + p.score, 0);
   const winners = players.filter(p => p.score === highScore);
   const winnerMessage = soloMode
-    ? 'Você encontrou todos os pares!'
+    ? `Parabéns, ${nomeCrianca}! Você encontrou todos os pares!`
     : winners.length > 1
       ? 'É um empate!'
       : `${winners.map(w => w.name).join(' e ')} Venceu!`;
@@ -150,6 +158,9 @@ const VictoryModal: React.FC<VictoryModalProps> = ({ players, onPlayAgain }) => 
             ))}
           </div>
         )}
+        <p className="mt-4 text-2xl" aria-label={`${calcularEstrelas(totalDePares, erros)} estrelas`}>
+          {'⭐'.repeat(calcularEstrelas(totalDePares, erros))}
+        </p>
         <button onClick={onPlayAgain} className="mt-6 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105">
           Jogar Novamente
         </button>
@@ -240,6 +251,8 @@ const App: React.FC = () => {
   // Guarda os setTimeout pendentes para nenhum deles disparar depois de
   // "Novo Jogo" ou "Voltar" e bagunçar a partida seguinte.
   const timeoutsRef = useRef<number[]>([]);
+  const errosRef = useRef(0);
+  const partidaRegistradaRef = useRef(false);
 
   const agendar = useCallback((acao: () => void, ms: number) => {
     const id = window.setTimeout(() => {
@@ -283,6 +296,7 @@ const App: React.FC = () => {
     }
 
     // No match, switch turns
+    errosRef.current += 1;
     tocar('erro');
     setTremendo(true);
     const id = agendar(() => {
@@ -300,6 +314,15 @@ const App: React.FC = () => {
   useEffect(() => {
     if (cards.length === 0 || matchedIds.length !== cards.length) return;
     const id = agendar(() => {
+      if (!partidaRegistradaRef.current) {
+        const totalDePares = cards.length / 2;
+        registrarPartida('memoria', {
+          acertos: totalDePares,
+          erros: errosRef.current,
+          estrelas: calcularEstrelas(totalDePares, errosRef.current),
+        });
+        partidaRegistradaRef.current = true;
+      }
       setGameState('finished');
       tocar('vitoria');
       lancarConfete();
@@ -313,7 +336,7 @@ const App: React.FC = () => {
     setCardCount(selectedcardCount);
     const newPlayers = Array.from({ length: playerCount }, (_, i) => ({
       id: i + 1,
-      name: `Jogador ${i + 1}`,
+      name: i === 0 ? nomeCrianca : `Jogador ${i + 1}`,
       score: 0,
     }));
     setPlayers(newPlayers);
@@ -322,6 +345,8 @@ const App: React.FC = () => {
     setMatchedIds([]);
     setCurrentPlayerId(1);
     setIsChecking(false);
+    errosRef.current = 0;
+    partidaRegistradaRef.current = false;
     setGameState('playing');
   };
 
@@ -335,6 +360,8 @@ const App: React.FC = () => {
     setMatchedIds([]);
     setCurrentPlayerId(1);
     setIsChecking(false);
+    errosRef.current = 0;
+    partidaRegistradaRef.current = false;
   }, [limparTimeouts]);
 
   const handleNewGame = useCallback(() => {
@@ -347,6 +374,8 @@ const App: React.FC = () => {
     setMatchedIds([]);
     setCurrentPlayerId(1);
     setIsChecking(false);
+    errosRef.current = 0;
+    partidaRegistradaRef.current = false;
     setGameState('playing');
   }, [cardCount, limparTimeouts]);
 
@@ -370,10 +399,10 @@ const App: React.FC = () => {
     'max-w-lg';
 
   const conteudo = gameState === 'setup' ? (
-    <SetupScreen onStartGame={handleStartGame} />
+    <SetupScreen onStartGame={handleStartGame} defaultCardCount={quantidadePadraoDeCartas} />
   ) : (
     <div className="flex flex-1 flex-col items-center justify-center p-4">
-      {gameState === 'finished' && <VictoryModal players={players} onPlayAgain={handleNewGame} />}
+      {gameState === 'finished' && <VictoryModal players={players} onPlayAgain={handleNewGame} erros={errosRef.current} />}
       
       <div className={`w-full ${containerWidthClass} mx-auto transition-all duration-500`}>
         <header className="text-center mb-6">

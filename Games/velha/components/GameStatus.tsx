@@ -7,6 +7,7 @@ interface GameStatusProps {
   winner: Vitoria | null;
   currentPlayer: Player;
   isDraw: boolean;
+  nomeCrianca: string;
 }
 
 const PlayerIndicator: React.FC<{player: Player}> = ({ player }) => (
@@ -18,13 +19,15 @@ const PlayerIndicator: React.FC<{player: Player}> = ({ player }) => (
 );
 
 
-const GameStatus: React.FC<GameStatusProps> = ({ winner, currentPlayer, isDraw }) => {
+const GameStatus: React.FC<GameStatusProps> = ({ winner, currentPlayer, isDraw, nomeCrianca }) => {
   let statusMessage;
 
   if (winner) {
     statusMessage = (
       <div className="flex flex-col items-center gap-2">
-        <span className="text-3xl font-bold text-amber-500">Venceu!</span>
+        <span className="text-3xl font-bold text-amber-500">
+          {winner.player === PLAYER_X ? `Parabéns, ${nomeCrianca}!` : 'Venceu!'}
+        </span>
         <PlayerIndicator player={winner.player} />
       </div>
     );
