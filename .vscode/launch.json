@@ -8,7 +8,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Open index",
-            "file": "/Users/diego/Desktop/Programas : Jogos/Site-JogosElis/Homepage/index"
+            "file": "${workspaceFolder}/index.html"
         }
     ]
 }
