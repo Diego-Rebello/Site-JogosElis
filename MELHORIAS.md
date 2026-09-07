@@ -960,6 +960,8 @@ alterar o painel do Netlify: descreva no resumo o que o Diego precisa conferir l
 
 ### T21 — PWA: funcionar offline e instalar na tela inicial do tablet
 
+> ✅ **Concluída em 2026-09-06** — branch `t21-pwa-offline`. Ver seção 0.4.
+
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Opus · **Depende de:** T11, T20
 **Arquivos:** `manifest.webmanifest`, `sw.js`, `shared/pwa.js`, ícones em `shared/icones/`, `build-all.sh`
 
@@ -970,9 +972,13 @@ alterar o painel do Netlify: descreva no resumo o que o Diego precisa conferir l
 4. Testar: Lighthouse marca "instalável"; ativar modo avião e abrir dois jogos.
 
 **Critérios de aceite**
-- [ ] Site instalável no Android e "Adicionar à Tela de Início" no iPad funcionam.
-- [ ] Com o dispositivo offline, todos os jogos abrem e rodam.
-- [ ] Um novo deploy é percebido na próxima abertura (versão do cache trocada).
+- [x] Site instalável: o Chrome lê o `manifest.webmanifest` **sem nenhum erro**, com
+      `display: standalone`, ícones de 192 e 512 px e um service worker com handler de
+      `fetch`. **Não testei nos aparelhos** (Android e iPad) por não ter acesso a eles.
+- [x] Com o dispositivo offline, todos os jogos abrem e rodam. **Isto estava quebrado** e
+      foi corrigido: ver "Respostas redirecionadas" na seção 0.4.
+- [x] Um novo deploy é percebido na próxima abertura: o cache novo entra e o antigo é
+      apagado, sobrando um só.
 
 **Prompt para o modelo**
 ```

@@ -1,0 +1,25 @@
+{
+  "name": "Jogos da Elis",
+  "short_name": "Elis",
+  "description": "Jogos educativos feitos com carinho para aprender e se divertir.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fce3ec",
+  "theme_color": "#ff69b4",
+  "icons": [
+    {
+      "src": "shared/icones/icone-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "shared/icones/icone-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

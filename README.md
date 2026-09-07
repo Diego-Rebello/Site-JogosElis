@@ -38,6 +38,9 @@ caminhos acima. Todos os links são relativos, então o site funciona em qualque
 ├── .gitignore
 ├── .vscode/launch.json              Abre index.html no Chrome pelo VS Code
 ├── _redirects                       Redireciona os endereços antigos dos jogos (Netlify)
+├── manifest.webmanifest             Nome, cores e ícones do app instalável (T21)
+├── sw.js                            Modelo do service worker; o build injeta versão e lista
+├── scripts/gerar-service-worker.mjs Gera o sw.js final a partir do que foi para _site/
 ├── shared/                          Biblioteca compartilhada pelos jogos (sem dependências)
 │   ├── base.css                     Cores, fontes, botões, cartão, placar e feedback
 │   ├── cabecalho.js                 Injeta a barra "🏠 Início / título / 🔊"
@@ -212,6 +215,66 @@ npx serve _site
 
 O script instala as dependências dos jogos React, compila seus arquivos e reúne somente o que
 é público em `_site/`. Código-fonte TypeScript, configurações e dependências não são copiados.
+
+---
+
+## Funcionar offline (PWA)
+
+O site é instalável e roda sem internet. Três peças:
+
+| Arquivo | Papel |
+|---|---|
+| `manifest.webmanifest` | Nome, cores e ícones (192 e 512 px em `shared/icones/`) |
+| `sw.js` | **Modelo** do service worker, com `__VERSAO__` e `__ARQUIVOS_PRECACHE__` |
+| `shared/pwa.js` | Registra o service worker; incluído em todas as páginas |
+
+O `build-all.sh` chama `scripts/gerar-service-worker.mjs`, que lista tudo o que foi para `_site/`,
+injeta essa lista no modelo e carimba a versão. A versão é o `COMMIT_REF` do Netlify (ou o SHA
+curto do commit local), então **cada deploy gera um cache novo** e o service worker apaga os
+antigos ao ativar. O `_headers` manda `Cache-Control: no-cache` no `sw.js`, então o navegador
+percebe a troca na abertura seguinte.
+
+Estratégia: páginas HTML vão pela rede primeiro (para pegar novidades) e caem no cache se não
+houver internet; o resto vem do cache primeiro.
+
+### Por que as respostas são recriadas antes de ir para o cache
+
+O Netlify responde `/Games/forca/` com um 301 para `/games/forca/`. O `fetch` segue o desvio e
+traz o conteúdo certo, mas a resposta fica marcada como *redirecionada* — e o navegador se
+recusa a usar uma resposta assim para uma navegação. O sintoma era específico: a página inicial
+abria offline e **nenhum dos cinco jogos abria**. Por isso o `sw.js` recria a `Response` antes de
+guardar, o que descarta a marca. O precache também baixa um endereço de cada vez, em vez de usar
+`cache.addAll`: com `addAll`, um único endereço com problema derrubaria o modo offline inteiro.
+
+### Forçar a atualização do cache durante o desenvolvimento
+
+Como o `sw.js` local carimba o SHA do commit, editar um arquivo **não** troca a versão sozinho.
+Enquanto estiver mexendo no site:
+
+```bash
+# 1. Gerar o site com uma versão inventada, para forçar cache novo a cada rodada
+bash build-all.sh
+COMMIT_REF="dev-$(date +%s)" node scripts/gerar-service-worker.mjs sw.js _site/sw.js _site
+
+# 2. Servir o _site (o service worker só funciona em localhost ou HTTPS)
+python3 -m http.server 8000 --directory _site
+```
+
+No navegador, o caminho mais rápido é o DevTools → **Application**:
+
+- **Service Workers** → marque *Update on reload* (e *Bypass for network* para ignorar o cache);
+- **Storage** → *Clear site data* apaga service worker, caches e `localStorage` de uma vez.
+
+Pelo console dá para limpar tudo sem o DevTools:
+
+```js
+for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+for (const n of await caches.keys()) await caches.delete(n);
+location.reload();
+```
+
+Para testar o modo avião de verdade, use DevTools → Network → *Offline*, e não o wi-fi do
+computador: assim só a aba fica sem rede.
 
 ---
 
