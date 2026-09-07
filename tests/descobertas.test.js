@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  FIGURINHAS, obterAlbum, obterConfiguracoes, obterEstado, proximaFigurinha,
+  FIGURINHAS, nivelDaEtapa, obterAlbum, obterConfiguracoes, obterEstado, proximaFigurinha,
   registrarRodada, rodadasDe, salvarConfiguracoes, zerarAlbum,
 } from '../shared/descobertas.js';
 
@@ -54,6 +54,14 @@ describe('Primeiras Descobertas — preferências', () => {
   it('recusa modo de voz desconhecido', () => {
     salvarConfiguracoes({ voz: 'robozinho' }, armazenamento);
     expect(obterConfiguracoes(armazenamento).voz).toBe('auto');
+  });
+
+  it('lê o número de alternativas como nível nas atividades sem alternativa', () => {
+    expect(nivelDaEtapa(armazenamento)).toBe('normal');
+    salvarConfiguracoes({ alternativas: 2 }, armazenamento);
+    expect(nivelDaEtapa(armazenamento)).toBe('facil');
+    salvarConfiguracoes({ alternativas: 4 }, armazenamento);
+    expect(nivelDaEtapa(armazenamento)).toBe('esperto');
   });
 
   it('aguenta armazenamento quebrado sem derrubar a tela', () => {

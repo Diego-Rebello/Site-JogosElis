@@ -9,7 +9,7 @@ import {
  * `audioOk: false` simula a gravação que não carrega — o caso em que a fala
  * precisa cair para a voz do aparelho.
  */
-function criarAmbiente({ audioOk = true, temSintese = true, mudo = false } = {}) {
+function criarAmbiente({ audioOk = true, temSintese = true, mudo = false, comecaDeVerdade = true } = {}) {
   const registro = { falado: [], tocado: [], cancelamentos: 0, pausas: 0 };
 
   class Enunciado {
@@ -23,12 +23,16 @@ function criarAmbiente({ audioOk = true, temSintese = true, mudo = false } = {})
     cancel: () => { registro.cancelamentos += 1; },
     speak: enunciado => {
       if (enunciado.text) registro.falado.push(enunciado.text);
-      // O navegador avisa o fim depois; aqui basta o próximo tique.
-      setTimeout(() => enunciado.onend?.(), 0);
+      // O navegador avisa começo e fim; aqui basta o próximo tique.
+      setTimeout(() => {
+        if (comecaDeVerdade) enunciado.onstart?.();
+        if (comecaDeVerdade) enunciado.onend?.();
+      }, 0);
     },
   } : null;
 
   const ambiente = {
+    esperaDoComeco: 40,          // no navegador são 2,5 s; aqui basta um piscar
     sintese,
     Enunciado: temSintese ? Enunciado : null,
     mudo: () => mudo,
@@ -128,6 +132,17 @@ describe('uma fala por vez', () => {
     expect(registro.falado).toEqual(['Olha só.', 'O gato.', 'Toque no gato!']);
   });
 
+  it('avisa a tela antes de cada item, para acender um círculo por sílaba', async () => {
+    const { ambiente, registro } = criarAmbiente();
+    configurarAmbiente(ambiente);
+    const acesos = [];
+    await falarSequencia([{ texto: 'BOR' }, { texto: 'BO' }, { texto: 'LE' }, { texto: 'TA' }], {
+      aoComecar: (posicao, item) => acesos.push(`${posicao}:${item.texto}`),
+    });
+    expect(acesos).toEqual(['0:BOR', '1:BO', '2:LE', '3:TA']);
+    expect(registro.falado).toHaveLength(4);
+  });
+
   it('parar() abandona o resto da fila e cancela o que estava falando', async () => {
     const { ambiente, registro } = criarAmbiente();
     configurarAmbiente(ambiente);
@@ -179,6 +194,31 @@ describe('ouvir de novo', () => {
     configurarAmbiente(ambiente);
     expect(await repetir()).toBe('sem-fala');
     expect(registro.falado).toEqual([]);
+  });
+});
+
+describe('voz que existe mas não funciona', () => {
+  it('desiste depois de duas falas que nem começam e vira modo acompanhado', async () => {
+    const { ambiente } = criarAmbiente({ comecaDeVerdade: false });
+    configurarAmbiente(ambiente);
+    // Cada uma espera o limite de começo e devolve 'sem-fala'.
+    expect(await falar({ texto: 'Primeira' })).toBe('sem-fala');
+    expect(await falar({ texto: 'Segunda' })).toBe('sem-fala');
+    // A partir daqui nem tenta mais: responde na hora e a tela mostra o roteiro.
+    const antes = Date.now();
+    expect(await falar({ texto: 'Terceira' })).toBe('sem-fala');
+    expect(Date.now() - antes).toBeLessThan(200);
+    expect(modoAcompanhado()).toBe(true);
+  });
+
+  it('preparar() dá uma chance nova à voz do aparelho', async () => {
+    const { ambiente } = criarAmbiente({ comecaDeVerdade: false });
+    configurarAmbiente(ambiente);
+    await falar({ texto: 'Uma' });
+    await falar({ texto: 'Outra' });
+    expect(modoAcompanhado()).toBe(true);
+    await preparar();
+    expect(modoAcompanhado()).toBe(false);
   });
 });
 

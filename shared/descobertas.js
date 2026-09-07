@@ -150,6 +150,18 @@ export function obterAlbum(armazenamento = armazenamentoPadrao()) {
   };
 }
 
+/**
+ * O botão de dificuldade da etapa é um só: o número de alternativas.
+ * Nas atividades que não são de escolher entre figuras (Encaixe as Figuras,
+ * Palmas nas Palavras, Meu Nome), ele é lido como nível. Assim o adulto mexe
+ * num lugar só e nada vira desbloqueio obrigatório.
+ */
+export function nivelDaEtapa(armazenamento = armazenamentoPadrao()) {
+  const { alternativas } = obterEstado(armazenamento);
+  if (alternativas <= 2) return 'facil';
+  return alternativas >= 4 ? 'esperto' : 'normal';
+}
+
 /** Quantas rodadas uma atividade já teve. */
 export function rodadasDe(atividade, armazenamento = armazenamentoPadrao()) {
   return Number(obterEstado(armazenamento).atividades[atividade]?.rodadas) || 0;

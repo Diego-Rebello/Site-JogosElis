@@ -35,6 +35,8 @@ const paginas = {
   rael: 'rael/index.html',
   'rael-configuracoes': 'rael/configuracoes.html',
   'rael-toque-na-figura': 'rael/toque-na-figura/index.html',
+  'rael-encaixe-as-figuras': 'rael/encaixe-as-figuras/index.html',
+  'rael-palmas-nas-palavras': 'rael/palmas-nas-palavras/index.html',
 };
 
 export default defineConfig({

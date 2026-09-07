@@ -326,3 +326,178 @@
   font-size: 1rem;
   color: var(--cor-suave);
 }
+
+/* --- Encaixe as Figuras (P02) --------------------------------------------- */
+
+/* Os destinos e as peças ficam em duas faixas: destinos em cima, peças embaixo.
+   A silhueta e os pedaços saem do mesmo SVG da figura — a sombra é a imagem
+   pintada de preto por filtro, e o pedaço é a imagem recortada por
+   background-position. Nenhum arquivo novo por cena. */
+
+.cena {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+}
+
+.destinos {
+  display: grid;
+  gap: 10px;
+  justify-content: center;
+}
+
+.destinos--grade {
+  width: min(300px, 86vw);
+  aspect-ratio: 1;
+  grid-template-columns: repeat(var(--colunas), 1fr);
+  grid-template-rows: repeat(var(--linhas), 1fr);
+  gap: 4px;
+}
+
+.destinos--fila {
+  grid-auto-flow: column;
+}
+
+.destino {
+  display: grid;
+  place-items: center;
+  border: 4px dashed var(--cor-secundaria);
+  border-radius: 16px;
+  background: var(--cor-secundaria-clara);
+  overflow: hidden;
+  padding: 0;
+}
+
+.destino--alvo {
+  border-color: var(--cor-realce, #b3510a);
+  animation: descobertas-piscar 1.2s ease-in-out 2;
+}
+
+.destino--cheio {
+  border-style: solid;
+  border-color: var(--cor-certo);
+  background: #fff;
+}
+
+/* A sombra: a mesma figura, toda preta e clarinha. */
+.sombra {
+  filter: brightness(0);
+  opacity: 0.22;
+}
+
+.pecas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  min-height: 96px;
+}
+
+.peca {
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border: 4px solid var(--cor-secundaria);
+  border-radius: 18px;
+  background: #fff;
+  cursor: pointer;
+  touch-action: none;          /* deixa o arraste por ponteiro funcionar no toque */
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.peca--escolhida {
+  border-color: var(--cor-realce, #b3510a);
+  transform: scale(1.06);
+}
+
+.peca--guardada {
+  visibility: hidden;
+}
+
+.peca--voando {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  margin: 0;
+  box-shadow: 0 10px 24px var(--cor-sombra);
+}
+
+/* Um pedaço da figura: o recorte sai do próprio SVG. */
+.recorte {
+  background-repeat: no-repeat;
+  background-position: var(--posicao);
+  background-size: var(--tamanho);
+}
+
+/* --- Palmas nas Palavras (P03) -------------------------------------------- */
+
+.palavra {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.palavra__figura {
+  width: min(38vw, 140px);
+  height: min(38vw, 140px);
+}
+
+.palavra__escrita {
+  font-family: var(--fonte-leitura);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 8vw, 2.2rem);
+  letter-spacing: 4px;
+  color: var(--cor-texto-destaque);
+}
+
+.circulos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  min-height: 52px;
+  margin: 4px 0 12px;
+}
+
+.circulo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid var(--cor-secundaria);
+  background: #fff;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+/* Vazio e pontilhado: é o modelo, mostra quantos pedaços a palavra tem. */
+.circulo--modelo {
+  border-style: dashed;
+}
+
+.circulo--aceso {
+  background: var(--cor-principal);
+  border-style: solid;
+  border-color: var(--cor-principal-profunda);
+  transform: scale(1.12);
+}
+
+.botao--palma {
+  width: min(100%, 340px);
+  min-height: 104px;
+  font-size: 1.7rem;
+  border-radius: 24px;
+}
+
+.numeros {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.numero {
+  min-width: 76px;
+  min-height: 76px;
+  font-size: 2rem;
+  border-radius: 20px;
+}
