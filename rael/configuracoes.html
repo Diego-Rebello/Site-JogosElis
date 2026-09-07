@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ajuste o nome, o número de opções, o tema e a voz dos Jogos do Rael. Tudo fica salvo só neste aparelho.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Configurações — Jogos do Rael">
+  <meta property="og:description" content="Ajuste o nome, o número de opções, o tema e a voz dos Jogos do Rael. Tudo fica salvo só neste aparelho.">
+  <meta name="theme-color" content="#0f5aa8">
+  <title>Configurações — Jogos do Rael</title>
+  <link rel="manifest" href="/rael.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/rael-192.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%E2%9A%99%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E">
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="../shared/tema-rael.css">
+  <script type="module" src="../shared/pwa.js"></script>
+  <style>
+    .configuracoes { max-width: 680px; margin: 0 auto; }
+    .configuracoes h1 { margin-top: 0; color: var(--cor-texto-destaque); text-align: center; }
+    .configuracoes__intro { font-family: var(--fonte-leitura); text-align: center; margin-top: 0; }
+    .formulario { display: grid; gap: 20px; margin-top: 24px; }
+    .grupo { display: grid; gap: 7px; text-align: left; }
+    .grupo label, .grupo legend { font-family: var(--fonte-leitura); font-weight: 700; }
+    .grupo select { appearance: auto; }
+    .grupo__ajuda { font-family: var(--fonte-leitura); font-size: 0.95rem; color: var(--cor-suave); margin: 0; }
+    .grupo--mudo { display: flex; align-items: center; gap: 12px; min-height: var(--toque);
+                   font-family: var(--fonte-leitura); font-weight: 700; cursor: pointer; }
+    .grupo--mudo input { width: 28px; height: 28px; flex: 0 0 auto; }
+    .acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 8px; }
+    #mensagem, #diagnostico { text-align: center; }
+    #diagnostico { font-family: var(--fonte-leitura); font-size: 1rem; color: var(--cor-suave); }
+    .privacidade { font-family: var(--fonte-leitura); font-size: 0.95rem; color: var(--cor-suave);
+                   border-top: 2px dashed var(--cor-secundaria); padding-top: 14px; margin-bottom: 0; }
+  </style>
+</head>
+<body class="pagina">
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao configuracoes">
+      <h1>Configurações dos adultos</h1>
+      <p class="configuracoes__intro">Como as brincadeiras do Rael começam neste aparelho.</p>
+
+      <form id="formulario" class="formulario">
+        <div class="grupo">
+          <label for="nome">Primeiro nome da criança</label>
+          <input id="nome" name="nome" class="campo" maxlength="15" autocomplete="off">
+          <p class="grupo__ajuda">Só o primeiro nome, para a saudação e, mais adiante, para a
+            brincadeira de montar o nome. Nunca peça sobrenome nem data de nascimento aqui.</p>
+        </div>
+
+        <div class="grupo">
+          <label for="alternativas">Quantas opções por vez</label>
+          <select id="alternativas" class="campo">
+            <option value="2">Duas — mais fácil</option>
+            <option value="3">Três — o normal</option>
+            <option value="4">Quatro — modo esperto</option>
+          </select>
+          <p class="grupo__ajuda">Comece em três. Duas ajudam quem está aprendendo a brincadeira;
+            quatro só quando ele já estiver confortável.</p>
+        </div>
+
+        <div class="grupo">
+          <label for="tema">Tema das figuras</label>
+          <select id="tema" class="campo"></select>
+          <p class="grupo__ajuda">O tema muda só as figuras que aparecem, nunca as regras.</p>
+        </div>
+
+        <div class="grupo">
+          <label for="voz">Voz das instruções</label>
+          <select id="voz" class="campo">
+            <option value="auto">Automática — gravação quando houver, senão a voz do aparelho</option>
+            <option value="gravada">Só gravações</option>
+            <option value="sintetizada">Só a voz do aparelho</option>
+            <option value="sem-fala">Sem fala — um adulto lê as frases da tela</option>
+          </select>
+          <p class="grupo__ajuda" id="diagnostico"></p>
+          <div class="acoes">
+            <button class="botao botao--neutro" id="testar-voz" type="button">🔊 Testar a voz</button>
+          </div>
+        </div>
+
+        <label class="grupo--mudo"><input id="mudo" type="checkbox"> Deixar os sons desligados</label>
+
+        <div class="acoes">
+          <button class="botao botao--sucesso" type="submit">Salvar configurações</button>
+          <button class="botao botao--neutro" id="zerar" type="button">Zerar álbum</button>
+        </div>
+        <div id="mensagem" class="feedback" aria-live="polite"></div>
+      </form>
+
+      <p class="privacidade">
+        Tudo fica salvo só neste aparelho, separado das conquistas da Elis: zerar o álbum aqui
+        não mexe no progresso dela, e "Zerar progresso" nas configurações dela não mexe no álbum daqui.
+      </p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { montarCabecalho } from '../shared/cabecalho.js';
+    montarCabecalho('Configurações do Rael');
+
+    import { obterConfiguracoes, salvarConfiguracoes, zerarAlbum } from '../shared/descobertas.js';
+    import { TEMAS } from '../shared/catalogo-figuras.js';
+    import { definirMudo, estaMudo, tocar } from '../shared/sons.js';
+    import { definirPreferencia, falarSequencia, preparar } from '../shared/fala.js';
+
+    const mensagem = document.getElementById('mensagem');
+    const configuracoes = obterConfiguracoes();
+
+    document.getElementById('tema').innerHTML = Object.entries(TEMAS)
+      .map(([id, tema]) => `<option value="${id}">${tema.nome}</option>`).join('');
+
+    document.getElementById('nome').value = configuracoes.nome;
+    document.getElementById('alternativas').value = String(configuracoes.alternativas);
+    document.getElementById('tema').value = configuracoes.tema;
+    document.getElementById('voz').value = configuracoes.voz;
+    document.getElementById('mudo').checked = estaMudo();
+
+    document.getElementById('formulario').addEventListener('submit', evento => {
+      evento.preventDefault();
+      const mudo = document.getElementById('mudo').checked;
+      const salvas = salvarConfiguracoes({
+        nome: document.getElementById('nome').value,
+        alternativas: Number(document.getElementById('alternativas').value),
+        tema: document.getElementById('tema').value,
+        voz: document.getElementById('voz').value,
+      });
+      document.getElementById('nome').value = salvas.nome;
+      definirMudo(mudo);
+      if (!mudo) tocar('acerto');
+      mensagem.textContent = '✅ Configurações salvas neste aparelho!';
+      mensagem.className = 'feedback feedback--certo';
+    });
+
+    document.getElementById('zerar').addEventListener('click', () => {
+      tocar('clique');
+      if (!window.confirm('Quer mesmo apagar as figurinhas e as rodadas do Rael?')) return;
+      const apagou = zerarAlbum();
+      mensagem.textContent = apagou
+        ? 'Álbum zerado. As configurações e o progresso da Elis continuam intactos.'
+        : 'Não foi possível apagar o álbum neste navegador.';
+      mensagem.className = `feedback feedback--${apagou ? 'certo' : 'errado'}`;
+    });
+
+    // O teste precisa acontecer dentro de um toque: é a regra do iOS para
+    // liberar a voz do aparelho, e é o mesmo caminho do "Vamos brincar".
+    document.getElementById('testar-voz').addEventListener('click', async () => {
+      const diagnostico = document.getElementById('diagnostico');
+      definirPreferencia(document.getElementById('voz').value);
+      const estado = await preparar();
+      const [resultado] = await falarSequencia([
+        { texto: `Oi, ${document.getElementById('nome').value || 'tudo bem'}! Vamos brincar?` },
+      ]);
+      const explicacao = {
+        sintetizada: `Falou com a voz do aparelho${estado.voz ? ` (${estado.voz}, ${estado.idiomaDaVoz})` : ''}.`,
+        gravada: 'Falou com uma gravação.',
+        'sem-som': 'Os sons estão desligados: nada vai falar.',
+        'sem-fala': 'Nada falou. As frases aparecem escritas para um adulto ler.',
+      };
+      diagnostico.textContent = explicacao[resultado] || 'Não deu para testar a voz agora.';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Primeiras Descobertas: brincadeiras faladas com sons, figuras, letras e números para crianças de 5 anos que ainda não leem. Sem cadastro, sem anúncios e funciona no tablet.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="Jogos do Rael">
+    <meta property="og:description" content="Primeiras Descobertas: brincadeiras faladas com sons, figuras, letras e números para crianças de 5 anos que ainda não leem.">
+    <meta name="theme-color" content="#0f5aa8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Rael">
+    <title>🚀 Jogos do Rael</title>
+    <link rel="manifest" href="/rael.webmanifest">
+    <link rel="apple-touch-icon" href="/icones/rael-192.png">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%9A%80%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <link rel="stylesheet" href="../shared/base.css">
+    <link rel="stylesheet" href="../shared/tema-rael.css">
+    <link rel="stylesheet" href="../shared/descobertas.css">
+    <script type="module" src="../shared/pwa.js"></script>
+    <style>
+        /* Só o que é desta página; o resto vem das três folhas acima. */
+        .container { max-width: 900px; margin: 0 auto; text-align: center; }
+
+        .topo { padding: 8px 12px; }
+
+        .topo h1 {
+            font-family: var(--fonte-titulo);
+            font-weight: 400;
+            font-size: clamp(2.1rem, 10vw, 3.2rem);
+            color: var(--cor-texto-destaque);
+            margin: 0;
+        }
+
+        .topo p {
+            font-family: var(--fonte-leitura);
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            margin: 10px 0 0;
+        }
+
+        .secao { margin-top: 30px; text-align: center; }
+
+        .secao h2 {
+            margin: 0 0 6px;
+            color: var(--cor-texto-destaque);
+            font-size: clamp(1.4rem, 6vw, 1.9rem);
+        }
+
+        .secao__nota {
+            font-family: var(--fonte-leitura);
+            color: var(--cor-suave);
+            margin: 0;
+        }
+
+        .album-cartao { max-width: 640px; margin: 26px auto 0; }
+
+        .em-breve {
+            font-family: var(--fonte-leitura);
+            color: var(--cor-suave);
+            max-width: 44ch;
+            margin: 22px auto 0;
+            line-height: 1.5;
+        }
+
+        .rodape {
+            margin-top: 46px;
+            padding-bottom: 20px;
+            color: var(--cor-suave);
+            font-family: var(--fonte-leitura);
+        }
+
+        .rodape a {
+            color: var(--cor-suave);
+            display: inline-flex;
+            min-height: var(--toque);
+            align-items: center;
+            padding: 0 8px;
+        }
+
+        .creditos { font-size: 0.9rem; margin-top: 4px; }
+    </style>
+</head>
+<body class="pagina">
+
+    <div class="pagina__conteudo">
+        <div class="container">
+
+            <nav class="trocador" aria-label="Escolher de quem são os jogos">
+                <a class="trocador__aba" href="../index.html">✨ Jogos da Elis</a>
+                <a class="trocador__aba" href="./index.html" aria-current="page">🚀 Jogos do Rael</a>
+            </nav>
+
+            <div class="topo">
+                <h1>Jogos do Rael</h1>
+                <p id="saudacao">Vamos brincar de ouvir, olhar e descobrir!</p>
+            </div>
+
+            <main>
+                <section class="secao" aria-labelledby="titulo-atividades">
+                    <h2 id="titulo-atividades">Primeiras Descobertas</h2>
+                    <p class="secao__nota">Toque em uma brincadeira. Tudo é falado: não precisa saber ler.</p>
+
+                    <div class="atividades">
+                        <a href="toque-na-figura/index.html" class="cartao atividade">
+                            <img class="atividade__figura" src="/figuras/dinossauro.svg" alt="" aria-hidden="true" width="92" height="92">
+                            <span class="atividade__nome">Toque na Figura</span>
+                            <span class="atividade__conta" data-rodadas="toque-na-figura"></span>
+                        </a>
+
+                        <a href="encaixe-as-figuras/index.html" class="cartao atividade">
+                            <img class="atividade__figura" src="/figuras/foguete.svg" alt="" aria-hidden="true" width="92" height="92">
+                            <span class="atividade__nome">Encaixe as Figuras</span>
+                            <span class="atividade__conta" data-rodadas="encaixe-as-figuras"></span>
+                        </a>
+
+                        <a href="palmas-nas-palavras/index.html" class="cartao atividade">
+                            <img class="atividade__figura" src="/figuras/banana.svg" alt="" aria-hidden="true" width="92" height="92">
+                            <span class="atividade__nome">Palmas nas Palavras</span>
+                            <span class="atividade__conta" data-rodadas="palmas-nas-palavras"></span>
+                        </a>
+                    </div>
+
+                    <p class="em-breve">
+                        Em breve: Quem Faz Esse Som?, Meu Nome, Conta Comigo,
+                        Letras para Explorar e Começa com o Mesmo Som.
+                    </p>
+                </section>
+
+                <section class="cartao album-cartao" aria-labelledby="titulo-album">
+                    <h2 id="titulo-album">🎁 Meu álbum de figurinhas</h2>
+                    <p class="secao__nota" id="resumo-album">Cada brincadeira até o fim ganha uma figurinha.</p>
+                    <ul class="album" id="album"></ul>
+                </section>
+            </main>
+
+            <div class="rodape">
+                <p>Feito com ❤️ para o Rael brincar!</p>
+                <a href="configuracoes.html">⚙️ Configurações dos adultos</a>
+                <p class="creditos">Figuras do <a href="https://openmoji.org" rel="noopener">OpenMoji</a> (CC BY-SA 4.0).</p>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { FIGURINHAS, obterAlbum, obterConfiguracoes } from '../shared/descobertas.js';
+    import { caminhoDaFigura, figura } from '../shared/catalogo-figuras.js';
+
+    const { nome } = obterConfiguracoes();
+    const album = obterAlbum();
+
+    document.getElementById('saudacao').textContent =
+        `${nome}, vamos brincar de ouvir, olhar e descobrir!`;
+
+    document.querySelectorAll('[data-rodadas]').forEach(elemento => {
+        const rodadas = Number(album.atividades[elemento.dataset.rodadas]?.rodadas) || 0;
+        elemento.textContent = rodadas === 0
+            ? 'Vamos experimentar!'
+            : rodadas === 1 ? 'Você brincou 1 vez' : `Você brincou ${rodadas} vezes`;
+    });
+
+    const ganhas = new Set(album.figurinhas);
+    document.getElementById('album').innerHTML = FIGURINHAS.map(id => {
+        if (!ganhas.has(id)) {
+            return '<li class="album__item album__item--vazio" aria-hidden="true">?</li>';
+        }
+        const dados = figura(id);
+        const nomeDaFigura = dados ? dados.nome : id;
+        return `<li class="album__item">
+            <img class="album__figura" src="${caminhoDaFigura(id)}" alt="Figurinha: ${nomeDaFigura}" width="60" height="60" loading="lazy">
+        </li>`;
+    }).join('');
+
+    document.getElementById('resumo-album').textContent = album.figurinhas.length === 0
+        ? 'Cada brincadeira até o fim ganha uma figurinha.'
+        : `${album.figurinhas.length} de ${album.total} figurinhas. Cada brincadeira até o fim ganha uma nova.`;
+</script>
+</body>
+</html>

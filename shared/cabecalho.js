@@ -26,6 +26,10 @@ function caminhoDoInicio() {
   if (/\/games\//i.test(caminho)) {
     return caminho.replace(/\/games\/.*$/i, '/index.html');
   }
+  // Os Jogos do Rael são um site irmão: o Início dele é /rael/, não a raiz.
+  if (/\/rael\//i.test(caminho)) {
+    return caminho.replace(/\/rael\/.*$/i, '/rael/index.html');
+  }
   // Fora do padrão (a demo de shared/, por exemplo): sobe um nível.
   return '../index.html';
 }

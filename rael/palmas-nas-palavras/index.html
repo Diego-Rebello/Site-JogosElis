@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bata uma palma para cada pedaço da palavra. Brincadeira falada de Primeiras Descobertas, para crianças que ainda não leem.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="Palmas nas Palavras — Jogos do Rael">
+    <meta property="og:description" content="Bata uma palma para cada pedaço da palavra. Brincadeira falada de Primeiras Descobertas, para crianças que ainda não leem.">
+    <meta name="theme-color" content="#0f5aa8">
+    <title>Palmas nas Palavras</title>
+    <link rel="manifest" href="/rael.webmanifest">
+    <link rel="apple-touch-icon" href="/icones/rael-192.png">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%91%8F%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <link rel="stylesheet" href="../../shared/base.css">
+    <link rel="stylesheet" href="../../shared/tema-rael.css">
+    <link rel="stylesheet" href="../../shared/descobertas.css">
+    <script type="module" src="../../shared/pwa.js"></script>
+    <style>
+        .tela[hidden] { display: none; }
+        .descobertas__cartao { max-width: 600px; }
+    </style>
+</head>
+<body class="pagina">
+
+    <main class="pagina__conteudo pagina__conteudo--centro">
+        <section class="cartao descobertas descobertas__cartao">
+
+            <div class="tela convite" id="tela-convite">
+                <img class="convite__figura" src="/figuras/banana.svg" alt="" aria-hidden="true" width="120" height="120">
+                <h2 class="instrucao__texto">Palmas nas Palavras</h2>
+                <p class="convite__texto">Toda palavra tem pedaços. Bata uma palma para cada pedaço!</p>
+                <button class="botao botao--gigante" id="comecar" type="button">▶ Vamos brincar</button>
+                <p class="convite__texto" id="aviso-voz" hidden></p>
+            </div>
+
+            <div class="tela" id="tela-brincadeira" hidden>
+                <div class="passos" id="passos" aria-hidden="true"></div>
+
+                <div class="palavra">
+                    <img class="palavra__figura" id="figura-palavra" src="" alt="" width="140" height="140">
+                    <span class="palavra__escrita" id="palavra-escrita"></span>
+                </div>
+
+                <div class="instrucao">
+                    <p class="instrucao__texto" id="instrucao">Bata as palmas!</p>
+                    <button class="botao botao--repetir" id="repetir" type="button">🔊 Ouvir de novo</button>
+                </div>
+
+                <div class="circulos" id="circulos" aria-live="polite" aria-label="Palmas batidas"></div>
+
+                <div class="conclusao__acoes">
+                    <button class="botao botao--gigante botao--palma" id="palma" type="button">👏 Bater palma</button>
+                </div>
+
+                <div class="conclusao__acoes">
+                    <button class="botao botao--sucesso" id="pronto" type="button">✅ Pronto!</button>
+                    <button class="botao botao--neutro" id="limpar" type="button">↺ Começar de novo</button>
+                    <button class="botao botao--neutro" id="modelo" type="button">👂 Ouvir em pedaços</button>
+                </div>
+
+                <div id="area-pergunta" hidden>
+                    <p class="instrucao__texto" id="pergunta">Quantos pedaços?</p>
+                    <div class="numeros" id="numeros"></div>
+                </div>
+
+                <p class="feedback retorno" id="retorno" aria-live="polite"></p>
+
+                <div class="conclusao__acoes">
+                    <button class="botao botao--gigante" id="continuar" type="button" hidden>Continuar ▶</button>
+                </div>
+
+                <div class="roteiro" id="roteiro" hidden>
+                    <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
+                    <span class="roteiro__fala" id="roteiro-fala"></span>
+                </div>
+            </div>
+
+            <div class="tela conclusao" id="tela-fim" hidden>
+                <h2 class="instrucao__texto">Quantas palmas!</h2>
+                <img class="conclusao__figurinha" id="figurinha" src="" alt="" width="150" height="150">
+                <p class="convite__texto" id="texto-fim"></p>
+                <div class="conclusao__acoes">
+                    <button class="botao botao--gigante" id="de-novo" type="button">🔁 Brincar de novo</button>
+                    <a class="botao botao--secundario" href="../index.html">🏠 Voltar</a>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script type="module" src="./tela.js"></script>
+</body>
+</html>

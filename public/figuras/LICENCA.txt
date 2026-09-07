@@ -1,0 +1,17 @@
+Figuras da área Primeiras Descobertas (Jogos do Rael)
+=====================================================
+
+Todos os arquivos .svg desta pasta são do projeto OpenMoji.
+
+  OpenMoji — the open-source emoji and icon project
+  https://openmoji.org
+  Licença: Creative Commons Attribution-ShareAlike 4.0 International
+           (CC BY-SA 4.0) — https://creativecommons.org/licenses/by-sa/4.0/
+
+Os arquivos foram baixados da versão colorida (color/svg) do repositório
+oficial e apenas renomeados: o nome do arquivo passou a ser o nome da figura
+em português (1F431.svg virou gato.svg), para que o catálogo em
+shared/catalogo-figuras.js fique legível.
+
+Nenhum desenho foi alterado. Quem redistribuir estes arquivos precisa manter
+esta atribuição e a mesma licença.

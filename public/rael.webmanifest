@@ -1,0 +1,25 @@
+{
+  "name": "Jogos do Rael",
+  "short_name": "Rael",
+  "description": "Primeiras Descobertas: brincadeiras faladas com sons, figuras, letras e números.",
+  "start_url": "./rael/",
+  "scope": "./rael/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#dff0fb",
+  "theme_color": "#0f5aa8",
+  "icons": [
+    {
+      "src": "icones/rael-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icones/rael-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
