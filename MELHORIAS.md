@@ -1147,6 +1147,8 @@ export const pacotes = {
 
 ### J02 — Tabuada Relâmpago
 
+> ✅ **Concluída em 2026-09-06** — integrada diretamente na `main` junto com J04, J05 e J06.
+
 **Prioridade:** Alta · **Esforço:** P · **Modelo:** Sonnet · **Objetivo pedagógico:** multiplicação (e divisão como inverso)
 
 **Mecânica**
@@ -1157,8 +1159,12 @@ export const pacotes = {
 **Dados:** gerados por função `gerarQuestao(tabuada, modo)`; evitar repetir a última questão; no "Todas", sortear tabuada com peso maior para as que a criança mais errou (guardar erros por fato em `localStorage`).
 
 **Critérios de aceite**
-- [ ] Recorde do modo Relâmpago salvo por tabuada.
-- [ ] Teste: 1000 questões geradas estão dentro da tabuada escolhida.
+- [x] Recorde do modo Relâmpago salvo por tabuada.
+- [x] Teste: 1000 questões geradas estão dentro da tabuada escolhida.
+
+**Como ficou:** treino de 10 fatos com três opções e grade de pontos; Relâmpago de 60 segundos;
+multiplicação e divisão exata; erros guardados por fato para ponderar o modo "Todas"; recordes
+separados para as tabuadas 2–10 e para "Todas". O teste amostra 1.000 questões de cada tabuada.
 
 ---
 
@@ -1187,6 +1193,8 @@ export const pacotes = {
 
 ### J04 — Caça-Palavras
 
+> ✅ **Concluída em 2026-09-06** — integrada diretamente na `main` junto com J02, J05 e J06.
+
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Opus · **Objetivo pedagógico:** reconhecimento visual de palavras e atenção
 
 **Mecânica**
@@ -1201,12 +1209,19 @@ export const pacotes = {
 3. Cronômetro e estrelas por tempo.
 
 **Critérios de aceite**
-- [ ] Teste: em 200 grades geradas, todas as palavras estão presentes e localizáveis.
-- [ ] Seleção por toque funciona em tablet sem rolar a página.
+- [x] Teste: em 200 grades geradas, todas as palavras estão presentes e localizáveis.
+- [x] Seleção por toque funciona em tablet sem rolar a página.
+
+**Como ficou:** seis temas com 62 palavras revisadas e oito opções que cabem até na grade 8×8
+em cada tema. A lista mantém acentos e a grade usa a forma normalizada. A seleção aceita arraste
+com Pointer Events ou dois toques, fica restrita às oito direções retas e usa `touch-action: none`.
+Foram testadas 200 grades em cada dificuldade (600 no total), sempre com as oito palavras localizáveis.
 
 ---
 
 ### J05 — Forme a Palavra (sílabas)
+
+> ✅ **Concluída em 2026-09-06** — integrada diretamente na `main` junto com J02, J04 e J06.
 
 **Prioridade:** Baixa · **Esforço:** P · **Modelo:** Sonnet · **Objetivo pedagógico:** consciência silábica e ordem das sílabas. Para 9 anos, só faz sentido com palavras longas (4+ sílabas), sílabas intrusas e cronômetro; os níveis 1 e 2 são revisão.
 
@@ -1217,12 +1232,19 @@ export const pacotes = {
 **Dados:** `{ palavra: 'BANANA', silabas: ['BA','NA','NA'], emoji: '🍌' }`, mínimo 60 palavras revisadas (a divisão silábica deve seguir a norma do português).
 
 **Critérios de aceite**
-- [ ] Teste: `silabas.join('') === palavra` para todos os itens.
-- [ ] Peças com 56 px de altura no mínimo (fáceis de tocar).
+- [x] Teste: `silabas.join('') === palavra` para todos os itens.
+- [x] Peças com 56 px de altura no mínimo (fáceis de tocar).
+
+**Como ficou:** 60 palavras revisadas, 20 em cada nível. A validação também exige exatamente
+duas sílabas no nível 1, três no nível 2 e quatro ou mais no Desafio. As peças repetidas têm
+identidade própria, a intrusa nunca repete uma sílaba correta e a altura de 56 px é preservada
+também no CSS compilado pelo Vite.
 
 ---
 
 ### J06 — Que Horas São?
+
+> ✅ **Concluída em 2026-09-06** — integrada diretamente na `main` junto com J02, J04 e J05.
 
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Sonnet · **Objetivo pedagógico:** leitura de relógio analógico
 
@@ -1234,8 +1256,13 @@ export const pacotes = {
 **Níveis:** hora cheia · meia hora · quartos de hora · de 5 em 5 minutos · minuto a minuto (Desafio). Nível padrão: de 5 em 5 minutos.
 
 **Critérios de aceite**
-- [ ] Os distratores no modo Leia são plausíveis (trocar hora e minuto, ±30 min).
-- [ ] Teste: conversão hora↔ângulo dos ponteiros para 0 a 23 h e 0 a 59 min.
+- [x] Os distratores no modo Leia são plausíveis (trocar hora e minuto, ±30 min).
+- [x] Teste: conversão hora↔ângulo dos ponteiros para 0 a 23 h e 0 a 59 min.
+
+**Como ficou:** SVG com 60 marcas, números e ponteiros que consideram o avanço do ponteiro das
+horas a cada minuto. O modo Leia oferece quatro horários únicos feitos de troca dos ponteiros,
+±30 minutos ou ±1 hora. O modo Ajuste tem os quatro botões pedidos e acrescenta ±1 minuto no
+Desafio. O teste percorre todas as 1.440 combinações de hora e minuto na ida e na volta.
 
 ---
 

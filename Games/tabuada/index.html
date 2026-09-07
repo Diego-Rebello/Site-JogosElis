@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Treine multiplicação e divisão com apoio visual ou tente bater seu recorde em 60 segundos.">
+  <meta property="og:title" content="Tabuada Relâmpago — Jogos da Elis"><meta property="og:description" content="Multiplicação e divisão em um treino divertido.">
+  <meta name="theme-color" content="#ff69b4"><title>Tabuada Relâmpago</title>
+  <link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icones/icone-192.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../../shared/base.css"><script type="module" src="../../shared/pwa.js"></script>
+  <style>
+    .jogo{max-width:650px;text-align:center}.tela[hidden]{display:none}.escolhas{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:14px 0 22px}.escolha[aria-pressed="true"]{background:var(--cor-principal-profunda);color:#fff}.subtitulo{font-family:var(--fonte-leitura);color:var(--cor-suave)}
+    .progresso{width:100%;height:15px;accent-color:var(--cor-principal)}.conta{font-size:clamp(2.4rem,14vw,4.5rem);margin:14px 0;color:var(--cor-texto-destaque)}.opcoes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.opcao{min-height:64px;font-size:1.65rem}.campo-resposta{max-width:220px;margin:auto;font-size:2rem}.acoes{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}.apoio{overflow:auto;margin:8px auto 16px;max-height:180px}.pontos{display:grid;gap:5px;width:max-content;margin:auto;padding:10px}.ponto{font-size:.85rem;line-height:1}.relogio{font-size:1.3rem;color:var(--cor-errado)}.recorde{font-family:var(--fonte-leitura);font-weight:700}.divisao{margin-top:10px}
+    @media(max-width:400px){.jogo{padding:18px 12px}.botao{padding:11px 14px}.opcoes{gap:7px}.opcao{font-size:1.35rem;padding:10px}}
+    .botao.opcao{min-height:64px;font-size:1.65rem}.divisao{display:inline-flex;align-items:center;min-height:44px}
+  </style>
+</head>
+<body class="pagina"><main class="pagina__conteudo pagina__conteudo--centro"><div class="cartao jogo">
+  <section id="inicio" class="tela"><h2>⚡ ESCOLHA SUA TABUADA</h2><p class="subtitulo">Comece no Treino ou encare 60 segundos no Relâmpago!</p><div id="tabuadas" class="escolhas"></div><h3>COMO JOGAR?</h3><div class="escolhas"><button class="botao modo" data-ritmo="treino">🎯 Treino</button><button class="botao modo" data-ritmo="relampago">⚡ Relâmpago</button></div><label class="divisao"><input id="divisao" type="checkbox"> Misturar divisões (nível extra)</label><p id="recorde" class="recorde"></p></section>
+  <section id="partida" class="tela" hidden><div class="placar"><span class="placar__certo">ACERTOS: <span id="acertos">0</span></span><span class="placar__errado">ERROS: <span id="erros">0</span></span><span id="contador">QUESTÃO: <span id="atual">1</span>/10</span><span id="tempo" class="relogio" hidden>⏱️ 60 s</span></div><progress id="progresso" class="progresso" max="10" value="0"></progress><div id="conta" class="conta"></div><div id="apoio" class="apoio"></div><div id="opcoes" class="opcoes"></div><input id="resposta" class="campo campo-resposta" type="number" inputmode="numeric" aria-label="Resposta" hidden><div id="feedback" class="feedback" aria-live="polite"></div><div class="acoes"><button id="conferir" class="botao botao--sucesso" hidden>CONFERIR</button><button id="proxima" class="botao" hidden>PRÓXIMA</button><button id="sair" class="botao botao--neutro">TROCAR MODO</button></div></section>
+  <section id="final" class="tela" hidden><h2>🏆 FIM DA RODADA!</h2><p id="resumo"></p><p id="estrelas" style="font-size:2rem"></p><p id="novo-recorde" class="recorde"></p><div class="acoes"><button id="de-novo" class="botao botao--sucesso">JOGAR DE NOVO</button><button id="trocar" class="botao botao--neutro">TROCAR MODO</button></div></section>
+</div></main><script type="module" src="./tela.js"></script></body></html>
