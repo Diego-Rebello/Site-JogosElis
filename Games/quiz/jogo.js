@@ -1,0 +1,5 @@
+import { embaralhar } from '../../shared/texto.js';import { categorias } from './dados.js';export const MISTURADO='misturado';
+export function listarPerguntas(categoria=MISTURADO){if(categoria===MISTURADO)return Object.entries(categorias).flatMap(([id,c])=>c.perguntas.map(p=>({...p,categoria:id})));if(!categorias[categoria])throw new RangeError(`Categoria inválida: ${categoria}`);return categorias[categoria].perguntas.map(p=>({...p,categoria}))}
+export function montarRodada(categoria=MISTURADO,quantidade=10){return embaralhar(listarPerguntas(categoria)).slice(0,quantidade)}
+export function conferir(pergunta,resposta){return resposta===pergunta.correta}
+export function conferirDados(){return Object.entries(categorias).flatMap(([categoria,dados])=>dados.perguntas.flatMap((p,i)=>{const erros=[];if(p.opcoes.length!==4)erros.push(`${categoria} ${i}: não tem 4 opções`);if(new Set(p.opcoes).size!==4)erros.push(`${categoria} ${i}: opções repetidas`);if(p.opcoes.filter(o=>o===p.correta).length!==1)erros.push(`${categoria} ${i}: resposta correta inválida`);if(!p.explicacao||p.explicacao.length<15)erros.push(`${categoria} ${i}: explicação curta`);return erros}))}

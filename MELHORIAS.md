@@ -1268,6 +1268,8 @@ Desafio. O teste percorre todas as 1.440 combinações de hora e minuto na ida e
 
 ### J07 — Genius das Cores (sequência)
 
+> ✅ **Concluída em 2026-09-06** — integrada diretamente na `main` junto com J08, J09 e J10.
+
 **Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Objetivo pedagógico:** memória de trabalho e atenção
 
 **Mecânica**
@@ -1276,12 +1278,18 @@ Desafio. O teste percorre todas as 1.440 combinações de hora e minuto na ida e
 - Recorde salvo; estrelas por tamanho da sequência (5 / 8 / 12).
 
 **Critérios de aceite**
-- [ ] Sequência reproduzível pelo teste (gerador com semente injetável).
-- [ ] Funciona no iOS (áudio após o primeiro toque).
+- [x] Sequência reproduzível pelo teste (gerador com semente injetável).
+- [x] Funciona no iOS (áudio após o primeiro toque).
+
+**Como ficou:** gerador Mulberry32 com semente injetável, quatro cores com frequências próprias,
+modos Calmo e Rápido, recorde separado por modo e estrelas nos marcos 5/8/12. O `AudioContext`
+é criado e retomado diretamente no toque do botão Começar, como o iOS exige.
 
 ---
 
 ### J08 — Sudoku de Emojis
+
+> ✅ **Concluída em 2026-09-06** — integrada diretamente na `main` junto com J07, J09 e J10.
 
 **Prioridade:** Média · **Esforço:** M · **Modelo:** Opus · **Objetivo pedagógico:** lógica e dedução
 
@@ -1294,12 +1302,19 @@ Desafio. O teste percorre todas as 1.440 combinações de hora e minuto na ida e
 2. `tela.js`: grade responsiva com `aspect-ratio: 1`, células ≥ 48 px no 6×6 em 360 px de largura (usar a largura total da tela).
 
 **Critérios de aceite**
-- [ ] Teste: 100 tabuleiros gerados têm solução única.
-- [ ] 6×6 cabe em 360 px sem rolagem horizontal.
+- [x] Teste: 100 tabuleiros gerados têm solução única.
+- [x] 6×6 cabe em 360 px sem rolagem horizontal.
+
+**Como ficou:** soluções completas 4×4, 6×6 e 9×9 são permutadas por linhas, colunas e símbolos;
+cada célula só é removida se o resolvedor ainda contar exatamente uma solução. A suíte valida
+100 tabuleiros de cada tamanho (300 no total). Conflitos de linha, coluna e bloco são destacados,
+e dicas viram células fixas e determinam as estrelas.
 
 ---
 
 ### J09 — Dinheirinho (compras e troco)
+
+> ✅ **Concluída em 2026-09-06** — integrada diretamente na `main` junto com J07, J08 e J10.
 
 **Prioridade:** Baixa · **Esforço:** M · **Modelo:** Sonnet · **Objetivo pedagógico:** valores monetários e decimais
 
@@ -1309,11 +1324,17 @@ Desafio. O teste percorre todas as 1.440 combinações de hora e minuto na ida e
 - Moedas e notas desenhadas em CSS/SVG simples com o valor escrito (não usar imagens do dinheiro real).
 
 **Critérios de aceite**
-- [ ] Soma em centavos (inteiros) para evitar erro de ponto flutuante; teste cobre isso.
+- [x] Soma em centavos (inteiros) para evitar erro de ponto flutuante; teste cobre isso.
+
+**Como ficou:** 30 produtos revisados, dez por nível, moedas e notas próprias desenhadas em CSS,
+botão para desfazer e rodadas de dez compras. Todos os preços, pagamentos, trocos e denominações
+são inteiros em centavos; os testes cobrem inclusive R$ 0,10 + R$ 0,20 = R$ 0,30 sem ponto flutuante.
 
 ---
 
 ### J10 — Quiz Sabe-Tudo
+
+> ✅ **Concluída em 2026-09-06** — integrada diretamente na `main` junto com J07, J08 e J09.
 
 **Prioridade:** Baixa · **Esforço:** P · **Modelo:** Sonnet · **Objetivo pedagógico:** conhecimentos gerais (ciências, animais, Brasil, corpo humano, planetas)
 
@@ -1322,8 +1343,13 @@ Desafio. O teste percorre todas as 1.440 combinações de hora e minuto na ida e
 - Categorias com pelo menos 25 perguntas cada em `dados.js`; sortear 10 sem repetir.
 
 **Critérios de aceite**
-- [ ] O modelo revisa cada fato antes de entregar e marca no resumo qualquer pergunta sobre a qual tenha dúvida.
-- [ ] Teste: toda pergunta tem exatamente uma resposta correta e 4 opções distintas.
+- [x] O modelo revisa cada fato antes de entregar e marca no resumo qualquer pergunta sobre a qual tenha dúvida.
+- [x] Teste: toda pergunta tem exatamente uma resposta correta e 4 opções distintas.
+
+**Como ficou:** 125 fatos revisados — 25 em Ciências, Animais, Brasil, Corpo humano e Planetas —,
+todos acompanhados de explicação curta. Foram escolhidos fatos estáveis e sem ambiguidade; não
+ficou nenhuma pergunta com dúvida factual. O teste percorre o banco inteiro, exige quatro opções
+distintas e exatamente uma ocorrência da resposta correta, além de validar rodadas sem repetição.
 
 ---
 

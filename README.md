@@ -21,6 +21,10 @@ computador, e não precisa de cadastro nem de internet rápida.
 | Caça-Palavras | `Games/caca-palavras/index.html` | HTML/CSS/JS puro |
 | Forme a Palavra | `Games/forme-palavra/index.html` | HTML/CSS/JS puro |
 | Que Horas São? | `Games/horas/index.html` | HTML/CSS/JS puro |
+| Genius das Cores | `Games/genius/index.html` | HTML/CSS/JS puro |
+| Sudoku de Emojis | `Games/sudoku/index.html` | HTML/CSS/JS puro |
+| Dinheirinho | `Games/dinheirinho/index.html` | HTML/CSS/JS puro |
+| Quiz Sabe-Tudo | `Games/quiz/index.html` | HTML/CSS/JS puro |
 | Jogo da Velha | `Games/velha/` | React 19 + Vite 6 |
 
 A página inicial (`index.html`) é o índice: ela lista os jogos em cartões e aponta para os
@@ -68,6 +72,10 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
     ├── caca-palavras/               index.html + jogo.js + tela.js + dados.js
     ├── forme-palavra/               index.html + jogo.js + tela.js + dados.js
     ├── horas/                       index.html + jogo.js + tela.js
+    ├── genius/                      index.html + jogo.js + tela.js
+    ├── sudoku/                      index.html + jogo.js + tela.js
+    ├── dinheirinho/                 index.html + jogo.js + tela.js + dados.js
+    ├── quiz/                         index.html + jogo.js + tela.js + dados.js
     ├── memoria/                     index.html + main.tsx + App.tsx + components/ + lib/
     └── velha/                       index.html + main.tsx + App.tsx + components/ + lib/
 ```
@@ -200,11 +208,12 @@ npm run preview   # serve o dist/ para conferir o resultado
 ```
 
 O `npm run build` é exatamente o que o Netlify roda. Ele faz duas coisas: `vite build`, que
-compila as treze páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
+compila as dezessete páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
 gerado e escreve o `dist/sw.js` com a lista de precache e a versão.
 
 Os testes cobrem texto e embaralhamento, M ou N, Ortografia, Matemática, Tabuada, Caça-Palavras,
-Forme a Palavra, Horas, Forca, Memória, progresso e as duas inteligências do Jogo da Velha.
+Forme a Palavra, Horas, Genius, Sudoku, Dinheirinho, Quiz, Forca, Memória, progresso e as duas
+inteligências do Jogo da Velha.
 Eles importam o código-fonte direto (`Games/*/lib/…`,
 `Games/*/jogo.js`, `shared/…`), sem passar pelo build.
 

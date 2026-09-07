@@ -78,6 +78,22 @@
             <select id="horas" class="campo"><option value="cheia">Hora cheia</option><option value="meia">Meia hora</option><option value="quartos">Quartos de hora</option><option value="cinco">De 5 em 5 minutos</option><option value="desafio">Desafio — minuto a minuto</option></select>
           </div>
           <div class="grupo">
+            <label for="genius">Genius das Cores</label>
+            <select id="genius" class="campo"><option value="calmo">Calmo — velocidade fixa</option><option value="rapido">Rápido — acelera a cada rodada</option></select>
+          </div>
+          <div class="grupo">
+            <label for="sudoku">Sudoku de Emojis</label>
+            <select id="sudoku" class="campo"><option value="4">Revisão — 4×4</option><option value="6">Intermediário — 6×6</option><option value="9">Desafio — 9×9</option></select>
+          </div>
+          <div class="grupo">
+            <label for="dinheirinho">Dinheirinho</label>
+            <select id="dinheirinho" class="campo"><option value="1">Revisão — valores inteiros</option><option value="2">Intermediário — valores com centavos</option><option value="3">Desafio — calcular troco</option></select>
+          </div>
+          <div class="grupo">
+            <label for="quiz">Quiz Sabe-Tudo</label>
+            <select id="quiz" class="campo"><option value="misturado">Misturado</option><option value="ciencias">Ciências</option><option value="animais">Animais</option><option value="brasil">Brasil</option><option value="corpo">Corpo humano</option><option value="planetas">Planetas e espaço</option></select>
+          </div>
+          <div class="grupo">
             <label for="memoria">Jogo da Memória</label>
             <select id="memoria" class="campo"><option value="16">Fácil — 16 cartas</option><option value="24">Normal — 24 cartas</option><option value="32">Desafio — 32 cartas</option></select>
           </div>
@@ -105,7 +121,7 @@
     import { obterConfiguracoes, salvarConfiguracoes, zerarProgresso } from './shared/progresso.js';
     import { definirMudo, estaMudo, tocar } from './shared/sons.js';
 
-    const ids = ['forca', 'matematica', 'm-ou-n', 'ortografia', 'tabuada', 'caca-palavras', 'forme-palavra', 'horas', 'memoria', 'velha'];
+    const ids = ['forca', 'matematica', 'm-ou-n', 'ortografia', 'tabuada', 'caca-palavras', 'forme-palavra', 'horas', 'genius', 'sudoku', 'dinheirinho', 'quiz', 'memoria', 'velha'];
     const formulario = document.getElementById('formulario');
     const mensagem = document.getElementById('mensagem');
     const configuracoes = obterConfiguracoes();
