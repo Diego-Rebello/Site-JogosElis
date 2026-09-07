@@ -1,8 +1,14 @@
 # Jogos da Elis
 
-Site estático com jogos educativos em português do Brasil, feito por um pai para a filha Elis.
-Cada jogo é pensado para criança de 9 anos (4.º ano), funciona no celular, no tablet e no
-computador, e não precisa de cadastro nem de internet rápida.
+Site estático com jogos educativos em português do Brasil, feito por um pai para os filhos.
+Funciona no celular, no tablet e no computador, e não precisa de cadastro nem de internet rápida.
+
+São **dois sites irmãos no mesmo endereço**, com abas para trocar de um para o outro:
+
+| Site | Entrada | Público |
+|---|---|---|
+| **Jogos da Elis** | `index.html` | 9 anos (4.º ano): quatorze jogos de palavras, contas, lógica e memória |
+| **Jogos do Rael** | `rael/index.html` | 5 anos, pré-alfabetização: brincadeiras faladas, sem exigir leitura |
 
 **No ar em:** https://jogosdaelis.netlify.app/
 
@@ -30,6 +36,21 @@ computador, e não precisa de cadastro nem de internet rápida.
 A página inicial (`index.html`) é o índice: ela lista os jogos em cartões e aponta para os
 caminhos acima. Todos os links são relativos, então o site funciona em qualquer subpasta.
 
+## Jogos do Rael — Primeiras Descobertas
+
+Área própria para uma criança de 5 anos que ainda não lê. Mesma base de código, tema azul,
+alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, vida ou recorde.
+
+| Página | Arquivo de entrada | O que é |
+|---|---|---|
+| Casa do Rael | `rael/index.html` | Cartões das brincadeiras e o álbum de figurinhas |
+| Toque na Figura | `rael/toque-na-figura/index.html` | Ouça o nome e toque na figura certa |
+| Configurações | `rael/configuracoes.html` | Nome, número de opções, tema, voz e zerar o álbum |
+
+O progresso dele fica numa chave própria (`localStorage['jogos-elis:descobertas']`), então não
+entra no Mural de Conquistas da Elis e não é apagado pelo "Zerar progresso" das configurações
+dela. As próximas brincadeiras estão especificadas na seção 6 do [MELHORIAS.md](MELHORIAS.md).
+
 ---
 
 ## Estrutura de pastas
@@ -38,7 +59,7 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 
 ```
 .
-├── index.html                       Página inicial com os cartões dos jogos
+├── index.html                       Página inicial da Elis, com os cartões dos jogos
 ├── configuracoes.html               Nome da criança, som e níveis
 ├── package.json                     Único do repositório: deps, build, testes e tipos
 ├── vite.config.ts                   Uma entrada por página (build.rollupOptions.input)
@@ -50,19 +71,31 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 ├── public/                          Copiado sem alteração para a raiz do dist/
 │   ├── _headers                     Regras de cache da hospedagem
 │   ├── _redirects                   Endereços antigos dos jogos (Netlify)
-│   ├── manifest.webmanifest         Nome, cores e ícones do app instalável
-│   └── icones/                      icone-192.png, icone-512.png e icone.svg
+│   ├── manifest.webmanifest         Nome, cores e ícones do app instalável (Elis)
+│   ├── rael.webmanifest             O mesmo para os Jogos do Rael, com start_url /rael/
+│   ├── figuras/                     SVGs do OpenMoji usados nas Primeiras Descobertas
+│   └── icones/                      icone-*.png e rael-*.png (192 e 512) mais os .svg
 ├── shared/                          Biblioteca compartilhada (sem dependências externas)
 │   ├── base.css                     Cores, fontes, botões, cartão, placar e feedback
+│   ├── tema-rael.css                Os mesmos tokens repintados de azul, para /rael/
+│   ├── descobertas.css              Peças de tela das brincadeiras do Rael
 │   ├── cabecalho.js                 Módulo: montarCabecalho('Nome do jogo')
 │   ├── texto.js                     normalizar, embaralhar, sortear, sortearVarios
 │   ├── sons.js                      Efeitos sonoros gerados pela Web Audio API
 │   ├── confete.js                   Confete em canvas e as animações de feedback
 │   ├── progresso.js                 Histórico de partidas em localStorage
+│   ├── fala.js                      Instrução falada em três camadas (Primeiras Descobertas)
+│   ├── descobertas.js               Preferências, rodadas e álbum de figurinhas do Rael
+│   ├── rodada.js                    Motor das rodadas curtas de alternativas
+│   ├── catalogo-figuras.js          Nome, artigo e categoria de cada figura de public/figuras/
 │   ├── pwa.js                       Registra o service worker
 │   ├── demo.html                    Página que exercita tudo acima
 │   └── fontes/                      Fredoka One, Pacifico e Nunito em .woff2
 ├── tests/                           Testes de lógica pura (Vitest)
+├── rael/                            Jogos do Rael (área Primeiras Descobertas)
+│   ├── index.html                   Casa do Rael: cartões e álbum
+│   ├── configuracoes.html           Preferências do adulto para a etapa
+│   └── toque-na-figura/             index.html + tela.js
 └── Games/
     ├── forca/                       index.html + jogo.js
     ├── m-ou-n/                      index.html + jogo.js
@@ -112,16 +145,18 @@ jogos React sem atropelar os utilitários deles.
 
 ### `cabecalho.js`
 
-Script clássico (sem `type="module"`, porque ele lê o próprio `data-titulo`):
+Módulo ES (virou módulo na T23; antes era script clássico com `data-titulo`):
 
-```html
-<script src="../../shared/cabecalho.js" data-titulo="Jogo da Forca"></script>
+```js
+import { montarCabecalho } from '../../shared/cabecalho.js';
+montarCabecalho('Jogo da Forca');
 ```
 
 Injeta no topo do `<body>` a barra com "🏠 Início", o título e o botão 🔊/🔇. O caminho da
-página inicial sai de `location.pathname`, então funciona tanto em `Games/forca/` quanto em
-`Games/memoria/`. Os jogos React não usam este arquivo: têm o componente `Cabecalho`,
-com o mesmo HTML e as mesmas classes.
+página inicial sai de `location.pathname`, então funciona em `Games/forca/`, em
+`Games/memoria/` e dentro de `rael/` — onde o Início volta para a casa do Rael, não para a
+raiz. Os jogos React não usam este arquivo: têm o componente `Cabecalho`, com o mesmo HTML
+e as mesmas classes.
 
 ### `texto.js`
 
@@ -169,6 +204,56 @@ Guardado em `localStorage['jogos-elis:progresso']`, só neste aparelho:
 { "forca": { "partidas": 12, "acertos": 30, "erros": 10, "melhorEstrelas": 3, "ultimaEm": "2026-09-06T14:00:00Z" } }
 ```
 
+### `fala.js` — a voz das Primeiras Descobertas
+
+A criança de 5 anos não lê, então toda instrução é falada. Gravar tudo daria centenas de
+arquivos antes de a primeira brincadeira rodar, por isso a fala sai em três camadas, nesta
+ordem: **gravação local** (quando o item tem `audio`) → **voz do próprio aparelho**
+(`speechSynthesis` em pt-BR, que funciona offline depois de instalada) → **modo acompanhado**,
+em que nada toca e a tela mostra a frase para um adulto ler.
+
+| Função | O que faz |
+|---|---|
+| `preparar()` | Escolhe a voz pt-BR e destrava o iOS. Chamar dentro do primeiro toque |
+| `falar(item)` | Devolve como falou: `'gravada'`, `'sintetizada'`, `'sem-som'` ou `'sem-fala'` |
+| `falarSequencia(itens)` | Fala em ordem, uma por vez |
+| `repetir()` | Repete a última fala (o botão "Ouvir de novo") |
+| `parar()` / `limpar()` | Cala gravação, síntese e fila pendente |
+| `definirPreferencia(modo)` | `'auto'`, `'gravada'`, `'sintetizada'` ou `'sem-fala'` |
+| `modoAcompanhado()` | `true` quando nada vai soar e o adulto precisa ler |
+| `diagnostico()` | Estado atual: voz escolhida, mudo, se há síntese |
+
+Um item é `{ texto, audio? }`. Só uma fala por vez, e sair da tela ou trocar de questão
+interrompe a anterior. `configurarAmbiente()` existe para os testes trocarem o navegador por
+um dublê.
+
+### `descobertas.js`, `rodada.js` e `catalogo-figuras.js`
+
+| Módulo | O que faz |
+|---|---|
+| `descobertas.js` | Preferências do adulto, rodadas por atividade e álbum de figurinhas, em `localStorage['jogos-elis:descobertas']` |
+| `rodada.js` | `montarDesafios()` sorteia alvos e alternativas sem repetir; `criarSessao()` conta tentativas e manda demonstrar depois de duas |
+| `catalogo-figuras.js` | 62 figuras com nome, artigo (`o`/`a`) e categoria, mais os temas e `caminhoDaFigura(id)` |
+
+As figuras são arquivos SVG em `public/figuras/`, e não emoji: o mesmo emoji é desenhado de um
+jeito no iPad, de outro no Android e de outro no computador, e a criança precisa reconhecer a
+figura. Os desenhos são do [OpenMoji](https://openmoji.org) (CC BY-SA 4.0) — a atribuição fica
+em `public/figuras/LICENCA.txt`.
+
+Aqui não existe estrela nem recorde de propósito: cada rodada terminada rende uma figurinha,
+com ajuda ou sem ajuda.
+
+### `tema-rael.css` e `descobertas.css`
+
+`tema-rael.css` redeclara os tokens do `base.css` na classe `.tema-rael`, posta no `<html>`
+das páginas de `rael/`. Como propriedade personalizada herda, tudo que já usa `var(--cor-…)`
+muda de cor sem uma segunda folha inteira — inclusive `--toque`, que sobe de 44 px para 64 px
+e faz todos os botões crescerem sozinhos.
+
+`descobertas.css` traz as peças repetidas das brincadeiras: convite "Vamos brincar", instrução
+com botão de repetir, grade de alternativas grandes, trilha de passos, roteiro do adulto,
+tela de conclusão com figurinha e o álbum.
+
 ---
 
 ## Como abrir localmente
@@ -212,8 +297,9 @@ compila as dezessete páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, 
 gerado e escreve o `dist/sw.js` com a lista de precache e a versão.
 
 Os testes cobrem texto e embaralhamento, M ou N, Ortografia, Matemática, Tabuada, Caça-Palavras,
-Forme a Palavra, Horas, Genius, Sudoku, Dinheirinho, Quiz, Forca, Memória, progresso e as duas
-inteligências do Jogo da Velha.
+Forme a Palavra, Horas, Genius, Sudoku, Dinheirinho, Quiz, Forca, Memória, progresso, as duas
+inteligências do Jogo da Velha e, das Primeiras Descobertas, a fala em camadas, o motor de
+rodada, o álbum e a correspondência entre o catálogo e os arquivos de figura.
 Eles importam o código-fonte direto (`Games/*/lib/…`,
 `Games/*/jogo.js`, `shared/…`), sem passar pelo build.
 
@@ -233,6 +319,7 @@ O site é instalável e roda sem internet. Três peças:
 | Arquivo | Papel |
 |---|---|
 | `public/manifest.webmanifest` | Nome, cores e ícones (192 e 512 px em `public/icones/`) |
+| `public/rael.webmanifest` | O mesmo para os Jogos do Rael: `start_url` e `scope` em `/rael/`, ícone de foguete |
 | `sw.js` | **Modelo** do service worker, com `__VERSAO__` e `__ARQUIVOS_PRECACHE__` |
 | `shared/pwa.js` | Registra o service worker; incluído em todas as páginas |
 
@@ -314,4 +401,4 @@ Cada tarefa lá tem passos, critérios de aceite e um prompt pronto para ser exe
 
 ---
 
-Feito com ❤️ para a Elis se divertir.
+Feito com ❤️ para a Elis e o Rael se divertirem.

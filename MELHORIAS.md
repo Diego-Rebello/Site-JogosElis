@@ -10,9 +10,15 @@
 > (Claude Opus ou Claude Sonnet) que a execute do início ao fim sem precisar de mais contexto.
 > Diego revisa o resultado, testa com a Elis e segue para a próxima.
 >
-> **Andamento:** T01 a T20 concluídas em 2026-09-06. A próxima tarefa da fila é a **T21**.
+> **Andamento:** T01 a T23 e J01 concluídas em 2026-09-06; J02 e J04 a J10 em 2026-09-07;
+> P00 em 2026-09-07. Faltam **J03** (Ditado Mágico), **J11** a **J14** e **P01** a **P13**.
 > O estado atual do repositório está na seção [0.4](#04-progresso); a seção 1 é o diagnóstico
 > original, de antes da execução, e foi mantida para registrar o motivo de cada tarefa.
+>
+> **Planejamento ampliado em 2026-09-07:** Labirinto e Rimas detalhados na seção 3.1;
+> nova etapa de pré-alfabetização para um menino de 5 anos na seção 6 (revisada para essa idade
+> no mesmo dia). A **P00 foi implementada em 2026-09-07**: os Jogos do Rael estão de pé, com a
+> primeira brincadeira. As demais tarefas da seção 6 continuam pendentes.
 
 ---
 
@@ -26,7 +32,7 @@
 | **Esforço** | P = até ~1 h de trabalho do modelo · M = 1 a 3 h · G = meio dia ou mais |
 | **Modelo** | Sonnet para tarefas mecânicas e bem delimitadas · Opus para arquitetura, geradores e refatorações amplas |
 | **Depende de** | Tarefas que precisam estar prontas antes |
-| **IDs** | `T` = melhoria técnica · `J` = jogo novo |
+| **IDs** | `T` = melhoria técnica · `J` = jogo novo · `P` = tarefa da etapa de pré-alfabetização (seção 6) |
 
 ### 0.2 Regras gerais para o modelo executor (colar no início de toda sessão)
 
@@ -71,7 +77,8 @@ Regras:
 
 ### 0.4 Progresso
 
-Todas as tarefas de T01 a T23 concluídas, e o primeiro jogo novo (J01) no ar.
+Todas as tarefas de T01 a T23 concluídas, nove jogos novos no ar (J01, J02 e J04 a J10) e a
+P00 entregue: os **Jogos do Rael** existem, com a primeira brincadeira falada.
 Tudo testado no navegador (Chrome headless) antes de cada commit.
 
 | Tarefa | Status | Commit |
@@ -100,6 +107,9 @@ Tudo testado no navegador (Chrome headless) antes de cada commit.
 | T22 — Acessibilidade, SEO e polimento | ✅ Concluída em 2026-09-06 | `b0d3606` |
 | T23 — Projeto Vite único multipágina | ✅ Concluída em 2026-09-06 | branch `t23-vite-unico`, já na `main` |
 | J01 — Ortografia Divertida | ✅ Concluída em 2026-09-06 | branch `j01-ortografia` |
+| J02, J04, J05, J06 — Tabuada, Caça-Palavras, Forme a Palavra, Horas | ✅ Concluídas em 2026-09-07 | `939c3c7` |
+| J07, J08, J09, J10 — Genius, Sudoku, Dinheirinho, Quiz | ✅ Concluídas em 2026-09-07 | `05378b0` |
+| P00 — Jogos do Rael: área, fala, figuras, álbum e configurações | ✅ Concluída em 2026-09-07, falta validar com a criança | branch `p00-jogos-do-rael` |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
 
@@ -113,6 +123,9 @@ Tudo testado no navegador (Chrome headless) antes de cada commit.
 | Ortografia Divertida | `Games/ortografia/` | HTML puro + `dados.js`/`jogo.js`/`tela.js`, `shared/` |
 | Jogo da Memória | `Games/memoria/` (compilado para `_site/Games/memoria/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
 | Jogo da Velha | `Games/velha/` (compilado para `_site/Games/velha/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
+| **Jogos do Rael** — casa | `rael/index.html` | HTML puro + `shared/`, tema `tema-rael.css` |
+| Jogos do Rael — Toque na Figura | `rael/toque-na-figura/` | HTML puro + `tela.js`, usa `fala.js` e `rodada.js` |
+| Jogos do Rael — configurações | `rael/configuracoes.html` | HTML puro + `shared/descobertas.js` |
 
 **O site não faz mais nenhuma requisição externa.** Fontes, ícones e CSS são todos locais.
 
@@ -1080,6 +1093,11 @@ Games/<slug>/
 
 **Faixa etária de referência:** Elis tem **9 anos** (4.º ano). Todo jogo novo abre por padrão no nível intermediário e precisa ter um nível **Desafio**; os níveis iniciais ficam como revisão rápida. Evitar conteúdo de alfabetização básica (sílabas simples, contagem até 10) como foco principal.
 
+**Exceção — etapa de pré-alfabetização:** as tarefas `P00` a `P13` da seção 6 são voltadas a uma
+criança de **5 anos** em pré-alfabetização. Nelas prevalecem as regras da seção 6.0: início no nível mais simples,
+rodadas curtas, instruções faladas e nenhuma exigência de leitura, escrita ou cronômetro.
+Isso também vale para os modos de Labirinto e Rimas abertos por essa etapa.
+
 **Prompt base para qualquer jogo novo**
 ```
 Abra MELHORIAS.md, leia a seção 3.0 e implemente o jogo <ID> exatamente como especificado.
@@ -1169,6 +1187,11 @@ separados para as tabuadas 2–10 e para "Todas". O teste amostra 1.000 questõe
 ---
 
 ### J03 — Ditado Mágico (voz do navegador)
+
+> **Nota de 2026-09-07:** foi a única tarefa J pulada, porque dependia da voz do navegador.
+> A P00 criou `shared/fala.js`, que já resolve escolha de voz pt-BR, fila de uma fala por vez,
+> repetir e o caso de o aparelho não ter voz nenhuma. Quem retomar a J03 deve usar esse módulo
+> em vez de chamar `speechSynthesis` direto.
 
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Objetivo pedagógico:** escrita a partir da escuta, sem precisar de um adulto ditando
 
@@ -1382,12 +1405,113 @@ distintas e exatamente uma ocorrência da resposta correta, além de validar rod
 
 ---
 
-### 3.1 Outras ideias, em uma linha cada (para depois)
+### 3.1 Ideias detalhadas — Labirinto e Rimas
 
-- **Labirinto** gerado aleatoriamente com controle por setas na tela.
+#### J13 — Labirinto de Aventuras
+
+**Status:** Proposto · **Prioridade:** Média · **Esforço:** M · **Modelo:** Opus · **Depende de:** T09
+
+**Objetivo:** brincar com orientação espacial, antecipação de movimentos e planejamento de caminhos.
+O personagem precisa chegar a um destino: levar o dinossauro ao ninho, o carrinho à garagem ou
+o cachorro à casinha. O tema muda a apresentação, sem mudar as regras.
+
+**Mecânica**
+- Mostrar personagem, destino e paredes bem distintos. Uma demonstração inicial faz dois
+  movimentos em um minitabuleiro e convida a criança a experimentar.
+- Mover uma casa por toque nas quatro setas grandes abaixo do tabuleiro; aceitar também setas
+  do teclado e toque em uma casa vizinha livre. Arrastar é opcional, nunca obrigatório.
+- Ao tentar atravessar uma parede, manter a posição e dar retorno visual suave, sem perder vida.
+- Botão de dica ilumina apenas o próximo passo de uma rota válida. Permitir recomeçar o mesmo
+  mapa ou trocar por outro; mostrar o caminho percorrido com uma trilha discreta.
+- Rodada de três mapas; comemoração curta em cada chegada. Sem tempo limite no modo padrão.
+
+**Níveis e variações**
+
+| Modo | Tabuleiro | Desafio |
+|---|---|---|
+| Primeiros caminhos — usado por P07 | 3×3, depois 4×4 | Destino visível, poucas bifurcações, sem itens obrigatórios; um mapa por rodada |
+| Explorador — revisão | 5×5 | Pequenos becos sem saída; chegar ao destino |
+| Aventureiro — padrão para Elis | 7×7 | Buscar uma chave antes de entrar no destino |
+| Desafio | 9×9 | Buscar dois itens em qualquer ordem e depois chegar ao destino; planejar uma rota mais curta |
+
+**Implementação proposta** (`Games/labirinto/`)
+1. Representar células e paredes em dados; separar `gerarLabirinto`, `mover` e `resolver` da tela.
+   Gerar mapas conectados por busca em profundidade com semente injetável. Nos primeiros
+   caminhos, usar mapas revisados à mão para controlar a quantidade de decisões.
+2. Colocar início e destino em células distintas. Itens precisam estar em células acessíveis,
+   diferentes do início e do destino; a chave libera a chegada, sem bloquear o acesso a si mesma.
+3. Calcular dicas considerando posição e itens já coletados. No Desafio, a referência de menor
+   rota também deve considerar os itens obrigatórios, não apenas a distância até a saída.
+4. Renderizar em SVG ou grade CSS responsiva. No 9×9, as células são apenas visuais quando
+   pequenas; o controle principal continua sendo as setas com pelo menos 56 px.
+5. Registrar conclusões, movimentos válidos e dicas por modo. Na etapa de 5 anos (P07), celebrar a
+   chegada sem avaliar eficiência; nos demais modos, estrelas por conclusão e uso de dicas.
+
+**Critérios de aceite**
+- [ ] Em 200 mapas por nível gerado, o destino e todos os itens são alcançáveis.
+- [ ] Movimentos nunca atravessam paredes nem saem do tabuleiro; chegar sem os itens pedidos não encerra a partida.
+- [ ] A dica continua válida após desvios e coleta de itens; recomeçar limpa a partida anterior.
+- [ ] Funciona por toque e teclado em 360 px, com personagem e destino reconhecíveis.
+- [ ] P07 abre diretamente em Primeiros caminhos e salva progresso separado dos modos de Elis.
+
+#### J14 — Brincando de Rimar
+
+**Status:** Proposto · **Prioridade:** Média · **Esforço:** M · **Modelo:** Opus · **Depende de:** T09
+
+**Objetivo:** perceber palavras que terminam com sons parecidos. A brincadeira começa pela
+escuta e pelas figuras; o texto entra como apoio nos modos para quem já lê.
+
+**Mecânica**
+- Mostrar uma figura e dizer seu nome: “Gato! O que rima com gato?”. Apresentar as figuras das
+  alternativas e falar seus nomes antes de liberar a resposta; permitir ouvir tudo novamente.
+- Exemplo de rodada: **gato → pato / bola**. Ao acertar, repetir “Gato, pato! Os finais combinam!”.
+  Ao errar, repetir os nomes e permitir nova tentativa; depois de duas tentativas, demonstrar o par.
+- Cada alternativa tem um botão próprio para ouvir seu nome, separado do botão de resposta.
+  Não exigir microfone, digitação ou leitura para os níveis de escuta.
+- Depois da resposta, destacar as duas figuras e reproduzir os nomes em sequência. Nos modos
+  com texto, manter a grafia correta e destacar o trecho da rima apenas se revisado no banco.
+
+**Níveis e variações**
+
+| Modo | Proposta | Tamanho da rodada |
+|---|---|---|
+| Ouvir e combinar — usado por P04 | Duas figuras como alternativas, narração e exemplo guiado | 5 pares |
+| Encontrar a rima — revisão | Três alternativas com figura, áudio e palavra | 8 pares |
+| Versinho — padrão para Elis | Completar um verso curto e original com uma entre quatro palavras; áudio opcional | 10 versos |
+| Desafio | Encontrar, entre quatro palavras, a única que não rima com as outras três | 10 grupos |
+
+**Conteúdo e cuidados**
+- Banco inicial: pelo menos 20 questões de figuras, 20 versos originais e 20 grupos do Desafio.
+  Para o modo de duas alternativas, selecionar a resposta e um distrator da questão de figuras.
+- Pares iniciais: **gato/pato**, **mão/pão**, **balão/leão**, **janela/panela**. Usar nomes comuns e
+  figuras inequívocas; o áudio fixa o nome pretendido quando a imagem admite mais de um nome.
+- Rima é sonora: revisar a pronúncia desde a vogal tônica até o fim da palavra. Não gerar respostas
+  comparando apenas as últimas letras, nem apresentar duas alternativas que rimem com o alvo.
+- Evitar diferenças de pronúncia que tornem a questão ambígua. Distratores não podem ser sinônimos
+  da resposta nem depender só da categoria da figura. Variar a posição da resposta correta.
+- Em Versinho, a resposta precisa rimar e fazer sentido. Exemplo original: “Olha só aquele gato,
+  brincando perto do ___” → **pato / sino / trem / sol**.
+
+**Dados e implementação** (`Games/rimas/`)
+- Questões de figuras: `{ id, alvo: { nome, imagem, audio }, alternativas: [{ id, nome, imagem,
+  audio }], respostaId, grupoRima, explicacao }`. Versos e grupos têm bancos próprios e respostas explícitas.
+- Reutilizar o sorteio e o feedback entre modos; sortear sem repetir a questão na mesma rodada.
+- Os modos de escuta usam gravações locais em pt-BR e funcionam offline após o conteúdo ser
+  armazenado pelo PWA. P04 reutiliza a infraestrutura de P00. Não depender de voz online do navegador.
+- Se faltar áudio, oferecer repetição/tentativa de carregamento e modo acompanhado por adulto;
+  não transformar silenciosamente uma questão de escuta em leitura obrigatória.
+
+**Critérios de aceite**
+- [ ] Toda questão tem IDs distintos, uma única resposta e arquivos de imagem/áudio presentes.
+- [ ] Revisão por escuta confirma as rimas e elimina distratores ambíguos; registrar a revisão no resumo.
+- [ ] Uma criança que não lê consegue jogar o modo inicial após a demonstração, com áudio disponível.
+- [ ] Áudios não se sobrepõem; sair ou reiniciar interrompe a narração anterior.
+- [ ] Rodadas respeitam o modo escolhido e o progresso de P04 fica separado do de Elis.
+
+### 3.2 Outras ideias para depois
+
 - **Pintar por Números** em `canvas` com paleta grande.
-- **Rimas**: qual palavra rima com a figura?
-- **Qual é o Intruso?**: 4 emojis, um de categoria diferente.
+- **Qual é o Intruso?**: 4 emojis, um de categoria diferente. A versão com figuras e narração virou a P11 da seção 6; uma versão com palavras pode voltar aqui para Elis.
 - **Plural e Singular**: toque na forma certa.
 - **Sequência Lógica**: qual figura vem depois?
 - **Mapa do Brasil**: toque no estado pedido (SVG).
@@ -1438,6 +1562,10 @@ distintas e exatamente uma ocorrência da resposta correta, além de validar rod
 | J10 | Quiz Sabe-Tudo | Baixa | P | Sonnet | T09 |
 | J11 | Memória de Contas | Baixa | P | Sonnet | T17 |
 | J12 | Quebra-Cabeça Deslizante | Baixa | P | Sonnet | T09 |
+| J13 | Labirinto de Aventuras | Média | M | Opus | T09 |
+| J14 | Brincando de Rimar | Média | M | Opus | T09 |
+
+As tarefas da nova etapa de pré-alfabetização têm sua própria ordem e matriz na seção 6.2.
 
 **Caminho mínimo recomendado para a primeira semana:** T01 → T02 → T03 → T04 → T05 → T06 → T07 (tudo pequeno, elimina todos os bugs conhecidos). Depois T08 → T09 → T10 → T20, que destravam o resto.
 
@@ -1452,3 +1580,503 @@ distintas e exatamente uma ocorrência da resposta correta, além de validar rod
 - [ ] Nada de `node_modules`, `.env.local`, `.DS_Store` no commit.
 - [ ] Jogos React: `npm run typecheck` e `npm run build`; `dist/` permanece fora do git.
 - [ ] Resumo final com: o que mudou, como foi testado, pendências.
+
+---
+
+## 6. Nova etapa — Jogos do Rael / Primeiras Descobertas (5 anos, pré-alfabetização)
+
+> **Planejada em 2026-09-07 e revisada no mesmo dia para 5 anos. P00 implementada em 2026-09-07;
+> P01 a P13 pendentes.** Público: **Rael**, 5 anos, fase de pré-alfabetização (Pré II da
+> Educação Infantil).
+>
+> **Como ficou na prática:** em vez de uma seção dentro do site da Elis, a etapa virou um
+> **site irmão no mesmo endereço**, os **Jogos do Rael**, em `rael/`, com tema azul próprio e
+> duas abas no alto das duas páginas iniciais para trocar de um lado para o outro. Nada nos
+> jogos da Elis mudou além do aparecimento dessas abas.
+
+**Proposta:** brincar com sons, palavras faladas, figuras, letras, o próprio nome, quantidades e
+sequências, sem exigir que a criança já leia. Dinossauros, veículos, animais e espaço são opções
+de tema a experimentar conforme o interesse dele. A escolha do tema não depende de gênero.
+
+**O que muda em relação ao rascunho para 4 anos.** Aos 5 anos a criança costuma reconhecer várias
+letras (em especial as do próprio nome), escrever ou tentar escrever o nome, bater palmas nas
+sílabas, perceber rimas e sons iniciais, contar até 10 com correspondência um a um e classificar
+figuras por categoria. Por isso:
+
+- **Três alternativas** viram o padrão; duas ficam como modo mais fácil e quatro como modo esperto.
+- **Rodadas de 5 a 8 desafios**, e não de 3 a 5; a atenção sustentada é maior.
+- **Letras e nome próprio** deixam de ser exploração opcional e passam a ser eixo da etapa
+  (P06 sobe de prioridade; entra P09 — Meu Nome).
+- **Som inicial** (P05) sobe para prioridade Alta e começa pelas vogais, que em português têm
+  nome e som iguais.
+- **Contagem até 10** entra (P10). A regra da seção 3.0 que evita contagem básica vale para Elis,
+  não para esta etapa.
+- **Encaixe de silhuetas** (P02) fica mais difícil e cai para prioridade Média: duas formas
+  distintas seriam fáceis demais.
+- Entram ainda **Qual é o Intruso?** (P11), **Qual Vem Primeiro?** (P12) e **Memória Pequena** (P13).
+
+**Referência pedagógica.** Os objetivos de aprendizagem da BNCC para crianças pequenas (4 a 5 anos
+e 11 meses) que a etapa cobre: escrita espontânea e hipóteses sobre a escrita (EI05EF09), relação
+entre número e quantidade (EI05ET07), classificação por semelhanças e diferenças (EI05ET05),
+reconto e ordenação de histórias (EI05EF05) e coordenação manual (EI05CG05). Serve de guia para o
+modelo executor e para a validação com a criança, não como meta a cobrar dele.
+
+### 6.0 Regras próprias desta etapa
+
+- **Começar brincando:** tela com poucos cartões grandes, instrução curta falada e uma demonstração
+  antes da primeira rodada. Texto pode acompanhar, mas nenhuma ação depende de ler.
+- **Rodadas de 5 a 8 desafios**, com saída livre a qualquer momento. Meta de projeto: cerca de
+  3 a 5 minutos por rodada, sem transformar essa duração em limite ou cobrança.
+- **Três alternativas como padrão.** O adulto pode escolher **duas** (modo mais fácil) ou **quatro**
+  (modo esperto) nas configurações; a escolha vale para todas as atividades e nunca é desbloqueio.
+- **Toque simples como padrão:** alvos de pelo menos 64 px e bom espaçamento. Todo arraste tem
+  alternativa por toque em dois passos (tocar na peça, tocar no destino). Não exigir precisão de
+  traçado, teclado ou coordenação fina para avançar.
+- **Retorno acolhedor:** ao errar, repetir a pista; após duas tentativas, demonstrar a resposta e
+  seguir em frente. Sem vidas, contagem regressiva, ranking ou perda de pontos. Celebrar
+  participação e conclusão, inclusive com ajuda.
+- **Figurinhas em vez de estrelas:** cada rodada concluída dá uma figurinha para o **Álbum** da
+  etapa (dinossauros, foguetes, animais...). O álbum não tem meta, não some e não compara.
+  Não usar `calcularEstrelas` de `shared/progresso.js` nesta etapa.
+- **Fala em pt-BR em três camadas** (decisão desta revisão, ver P00): (1) gravação local quando
+  existir; (2) voz sintetizada do aparelho via `speechSynthesis` com `lang = 'pt-BR'`, que no iOS,
+  Android e macOS funciona sem internet depois de a voz estar instalada; (3) modo acompanhado, com
+  roteiro curto na tela para o adulto ler. Uma fala por vez; botão de repetir sempre visível;
+  primeira fala só depois de um toque em “Vamos brincar”. Volume e silêncio respeitam
+  `shared/sons.js`. Gravações são **obrigatórias** apenas onde a síntese não serve: sons de
+  animais e objetos (P01), sons isolados como /f/ e /s/ (P05) e as sílabas separadas (P03, se a
+  síntese soar artificial). O ideal é o próprio Diego gravar no celular: a voz de casa é a que ele
+  mais reconhece.
+- **Figuras consistentes entre aparelhos:** SVGs do OpenMoji (CC BY-SA 4.0) em
+  `public/figuras/`, um arquivo por figura, catalogados em `shared/catalogo-figuras.js` e com a
+  atribuição em `public/figuras/LICENCA.txt`. Nunca depender do emoji do sistema, que muda de
+  desenho entre iPhone, Android e computador. Ilustrações próprias só quando a atividade pedir
+  cena ou peças (P02, P12). A P00 já baixou 62 figuras (300 KB): animais, veículos, natureza,
+  coisas de casa, objetos, roupa e comida.
+- **Letras em caixa alta, tipo bastão**, como na escola. Usar a fonte Nunito de `shared/fontes/`
+  com pesos que deixem I, L, J, O e Q inequívocos; conferir A, G e Q em tamanho grande.
+- **Progresso próprio:** tudo da etapa (preferências, rodadas por atividade e álbum) vive numa
+  chave só, `localStorage['jogos-elis:descobertas']`, separada da chave de progresso da Elis.
+  O Mural de `index.html` soma apenas os IDs do mapa `nomes` dele, então nada daqui entra nas
+  conquistas dela; "Zerar progresso" nas configurações da Elis não apaga o álbum, e "Zerar álbum"
+  nas do Rael não apaga o progresso dela. O único dado pessoal é o **primeiro nome**, opcional,
+  digitado pelo adulto para P09 e para a saudação. Sem sobrenome, data de nascimento ou conta.
+- **Validação com a criança:** observar se entende o convite, identifica as figuras e consegue tocar
+  nas opções. Ajustar vocabulário e quantidade de escolhas pela experiência; não usar o álbum
+  como diagnóstico.
+
+### P00 — Preparar a área Primeiras Descobertas ✅
+
+**Prioridade:** Alta · **Esforço:** M · **Modelo:** Opus · **Depende de:** T09, T13, T21, T23 (todas concluídas)
+
+**✅ Concluída em 2026-09-07.** O que está escrito abaixo é a especificação original; o que foi
+entregue está no bloco **"Como ficou"**, no fim da tarefa.
+
+**Entrega**
+1. Criar a página `Games/descobertas/index.html` (entrada `descobertas` em `paginas` do
+   `vite.config.ts`) com os cartões das atividades desta etapa, e um cartão grande e ilustrado na
+   página inicial. Disponibilizar somente cartões de atividades já implementadas. Cada atividade
+   fica em `Games/descobertas/<slug>/` seguindo a estrutura da seção 3.0.
+2. Criar `shared/fala.js`: `falar(item)`, `parar()`, `repetirUltima()` e `disponivel()`. Um item
+   é `{ texto, audio? }`; a função toca `audio` se o arquivo existir e carregar, senão sintetiza
+   `texto` com a voz pt-BR disponível (escolher voz com `lang` começando por `pt-BR`; se só houver
+   `pt-PT`, usar e avisar nas configurações), senão devolve `false` para a tela abrir o modo
+   acompanhado. Fila de uma fala por vez; `parar()` ao trocar de questão, repetir ou sair.
+   Testes em `tests/fala.test.js` com `speechSynthesis` e `Audio` simulados.
+3. Criar `shared/descobertas.js` com os blocos comuns: demonstração guiada, rodada curta com
+   alternativas embaralhadas (`sortearVarios` de `shared/texto.js`), retorno acolhedor, tela de
+   conclusão com figurinha, e `registrarRodada(atividade)` / `obterAlbum()` usando as chaves
+   com prefixo `descobertas:`.
+4. Criar `shared/figuras/` com os SVGs usados (catálogo em `shared/figuras/catalogo.js`:
+   `{ id, arquivo, nome, audio? }`) e `shared/audio/` para as gravações. Um teste em
+   `tests/catalogo.test.js` confirma que todo arquivo referenciado existe. Como o service worker
+   pré-cacheia tudo que sai em `dist/`, manter áudio em `.m4a` ou `.mp3` mono, curto, e o total da
+   etapa abaixo de 8 MB; registrar o tamanho no resumo.
+5. Ampliar `configuracoes.html` com um bloco “Primeiras Descobertas”: primeiro nome (opcional,
+   até 15 letras, salvo em `nomeDescobertas`), alternativas (2/3/4), tema, voz (gravada quando
+   houver / sintetizada / sem fala) e um botão para zerar só o álbum. Nada disso é exigido para jogar.
+
+**Aceite**
+- [x] Entrada e retorno à página inicial funcionam em 360 px; botões têm pelo menos 64 px.
+- [x] Depois de uma visita com cache completo, figuras e a voz funcionam em modo avião — conferido em Chrome com a rede cortada, com as 149 URLs no precache. **Falta conferir no iPad e no Android de casa.**
+- [x] Repetir, trocar de questão e sair não deixam falas sobrepostas ou pendentes.
+- [x] Partidas desta etapa não alteram o Mural, os recordes nem os níveis dos jogos existentes.
+- [x] Sem voz pt-BR e sem gravação, a tela oferece o modo acompanhado em vez de ficar muda.
+
+**Como ficou**
+
+1. **Site irmão, não seção.** A etapa virou os **Jogos do Rael**, em `rael/`, com página
+   inicial, configurações e uma brincadeira. As duas páginas iniciais ganharam abas
+   (`.trocador` no `base.css`) para trocar de site. `montarCabecalho` aprendeu que, dentro de
+   `/rael/`, o botão "Início" volta para a casa do Rael.
+2. **Tema por variáveis, não por folha nova.** `shared/tema-rael.css` redeclara os tokens do
+   `base.css` em `:root.tema-rael`, no `<html>`. Como propriedade personalizada herda, tudo que
+   já usava `var(--cor-…)` mudou de cor de graça — inclusive `--toque`, que passou de 44 px para
+   64 px e fez todos os botões crescerem sozinhos. Contrastes conferidos e anotados no arquivo
+   (o pior fica em 5,06:1, acima do 4,5:1 do WCAG AA).
+3. **Fala em três camadas** em `shared/fala.js`: gravação → voz do aparelho (`speechSynthesis`
+   pt-BR) → modo acompanhado com a frase escrita para o adulto ler. É o que destrava a etapa
+   sem esperar por centenas de gravações: só P01, P05 e talvez P03 vão precisar de arquivos.
+4. **Figuras** em `public/figuras/`: 62 SVGs do OpenMoji (CC BY-SA 4.0, 300 KB), com nome,
+   artigo (`o`/`a`) e categoria em `shared/catalogo-figuras.js`. Um teste confere que catálogo e
+   arquivos batem nos dois sentidos.
+5. **Motor de rodada** em `shared/rodada.js` e **estado da etapa** em `shared/descobertas.js`,
+   este último numa chave própria do `localStorage`. Sem estrela e sem recorde: cada rodada
+   terminada rende uma figurinha para o álbum.
+6. **Configurações do adulto** em `rael/configuracoes.html`: primeiro nome, 2/3/4 alternativas,
+   tema das figuras, modo de voz, som e "zerar álbum". Tem um botão **Testar a voz** que diz
+   qual camada falou e qual voz do aparelho foi escolhida — é por ele que se confere o iPad.
+7. **Uma brincadeira de verdade junto**, "Toque na Figura" (`rael/toque-na-figura/`): ouvir o
+   nome e tocar na figura entre 2, 3 ou 4 opções. Ela não estava na lista P01–P13; foi feita
+   porque a P00 não tem como ser aceita sem uma tela que exercite fala, demonstração, rodada,
+   retorno depois de dois erros e figurinha. Ela **não substitui a P01**, que é de som de bicho.
+8. **PWA próprio:** `public/rael.webmanifest` com `start_url` e `scope` em `/rael/`, nome
+   "Jogos do Rael" e ícone de foguete (`public/icones/rael-192.png` e `rael-512.png`, gerados a
+   partir de `rael.svg`). Instalar os dois lados dá dois atalhos diferentes no tablet.
+9. **Um bug achado no caminho:** o atributo `hidden` não escondia nada que tivesse classe
+   `.botao` ou `.roteiro`, porque uma regra de `display` do autor ganha do `[hidden]` do
+   navegador. O botão "Continuar" ficava clicável no meio da pergunta. Corrigido com
+   `[hidden] { display: none !important; }` no `descobertas.css`.
+
+**Como foi testado:** `npm test` (141 testes, 54 novos), `npm run typecheck`, `npm run build` e
+um roteiro no Chrome sem interface que joga a rodada inteira em 360 px — 46 verificações, sem
+erro de console e sem 404 —, mais um teste de modo avião com o service worker. **Falta a
+validação com o Rael e nos aparelhos de casa.**
+
+### P01 — Quem Faz Esse Som?
+
+**Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** atenção auditiva e associação entre som e figura.
+
+**Como brincar:** ouvir um miado e tocar no gato entre três figuras. Primeiro demonstrar um
+exemplo com a resposta destacada; nas rodadas seguintes, oferecer apenas o som e as opções.
+Depois do acerto, dizer “É o gato!”, repetir o miado e mostrar a palavra **GATO** em caixa alta
+sob a figura, como exposição à escrita, sem pedir leitura.
+
+**Progressão:** animais bem diferentes → veículos e sons de casa (campainha, chuva, trem,
+telefone) → “dois sons seguidos”: ouvir dois sons e tocar nas duas figuras na ordem. Seis desafios
+por rodada, com repetição livre do som.
+
+**Conteúdo inicial:** 16 sons gravados ou obtidos com licença CC0 (registrar a origem no
+catálogo): 8 animais, 4 veículos, 4 sons de casa. Revisar para evitar gravações ambíguas ou
+assustadoras. Separar o som da pista do áudio que fala o nome, para não entregar a resposta.
+
+**Aceite:** cada pista tem uma única figura correspondente entre as opções; o nome só é falado
+na demonstração ou no retorno da resposta; rodadas sem repetição do alvo; sons funcionam offline.
+**Risco:** esta é a única atividade que não funciona sem arquivos gravados; se os sons atrasarem,
+entregar antes P09, P10 e P06.
+
+### P02 — Encaixe as Figuras
+
+**Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** discriminação visual, reconhecimento de formas e coordenação manual.
+
+**Como brincar:** levar uma figura até sua silhueta ou lugar na cena. Tocar primeiro na peça e
+depois no destino produz o mesmo resultado de arrastar. No primeiro exemplo, uma animação mostra o encaixe.
+
+**Progressão (revisada para 5 anos):** três silhuetas parecidas (gato/cachorro/coelho) → cena com
+quatro peças (foguete: bico, corpo, asas, fogo) → quebra-cabeça de seis peças em grade 2×3, sem
+rotação. Três cenas por rodada.
+
+**Conteúdo inicial:** 12 cenas locais com encaixes definidos e peças grandes. Uma peça encaixada
+permanece no lugar; uma tentativa diferente só devolve a peça à origem. As silhuetas podem vir
+dos SVGs de `shared/figuras/` preenchidos em cinza; as cenas de peças precisam de ilustração própria.
+
+**Aceite:** funciona integralmente sem arrastar; encaixes não se sobrepõem; todas as peças e
+destinos cabem em 360 px e a criança pode repetir a demonstração.
+
+### P03 — Palmas nas Palavras
+
+**Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** explorar oralmente as partes das palavras, sem ler sílabas escritas.
+
+**Como brincar:** mostrar um pato, dizer “Pato” e demonstrar “PA — TO”, iluminando dois círculos.
+A criança toca em um botão grande de palma uma vez para cada parte; cada toque acende um círculo.
+Um botão visual de concluir permite conferir sem exigir ritmo ou rapidez.
+
+**Progressão:** imitar palavras de duas sílabas com círculos visíveis → uma, duas e três sílabas
+com modelo disponível → tentar antes de ouvir a divisão → **“Quantos pedaços?”**: depois de bater
+palmas, tocar no número (1 a 4), ligando com a contagem de P10. Exemplos: **SOL**, **PA-TO**,
+**BO-LA**, **BA-NA-NA**, **BOR-BO-LE-TA**. Seis palavras por rodada; oferecer limpar e tentar novamente.
+
+**Conteúdo inicial:** 30 palavras ilustráveis de uma a quatro sílabas, com áudio da palavra
+inteira, áudio segmentado e divisão revisada. Se a síntese das sílabas soar artificial, gravar só
+o áudio segmentado. Não interpretar o tempo entre toques como acerto ou erro.
+
+**Aceite:** contagem depende somente dos toques; exemplo e nova tentativa zeram os círculos;
+quantidade de partes no áudio corresponde à divisão cadastrada; o número escolhido em
+“Quantos pedaços?” é comparado com a divisão, não com os toques.
+
+### P04 — Rimas com Figuras
+
+**Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00, J14
+
+**Foco:** perceber semelhanças sonoras no final de palavras.
+
+**Como brincar:** usar os modos **Ouvir e combinar** (duas figuras) e **Encontrar a rima** (três
+figuras) de J14, com seis pares por rodada. Começar com uma demonstração de **gato/pato**;
+disponibilizar nomes e instruções em áudio. A palavra escrita pode aparecer sob a figura, mas
+nunca é condição para responder.
+
+**Escopo:** criar a entrada e a apresentação para esta etapa, reutilizando o motor e o banco de
+J14. Abrir em Ouvir e combinar quando o adulto escolher duas alternativas e em Encontrar a rima
+quando escolher três ou quatro. Selecionar os pares mais familiares e registrar progresso com o
+prefixo da etapa.
+
+**Aceite:** entrada abre no modo correto, não oferece Versinho/Desafio durante a rodada e permite
+ouvir cada figura sem selecionar a resposta; uma rodada completa funciona sem leitura.
+
+### P05 — Começa com o Mesmo Som
+
+**Prioridade:** Alta · **Esforço:** M · **Modelo:** Opus · **Depende de:** P00
+
+**Foco:** comparar sons no início de palavras faladas, e só depois associá-los à letra.
+
+**Como brincar:** ouvir “Foca” e escolher entre **fita**, **bola** e **mesa** qual começa com o
+mesmo som. Na demonstração, realçar naturalmente o /f/ nas duas palavras; depois falar as palavras
+inteiras. Três alternativas e seis desafios, com repetição disponível.
+
+**Progressão:** **vogais** primeiro (A de abelha, E de elefante, I de igreja, O de ovo, U de uva),
+porque em português o nome da vogal é o próprio som → consoantes prolongáveis /f/, /v/, /m/,
+/s/, /l/, /n/, /z/, /j/ → oclusivas /p/, /b/, /t/, /d/ só por escolha do adulto. Depois do
+acerto, mostrar a letra e a palavra em caixa alta (“A de ABELHA”) como associação, sem
+transformar o desafio em escolher pela inicial escrita.
+
+**Conteúdo inicial:** 30 questões com figuras do catálogo e áudio revisado. Agrupar pelo som
+inicial, não pela letra: evitar C de casa/cenoura e G de gato/girafa nesta primeira versão.
+Cuidado com a qualidade das vogais: escolher palavras cuja vogal inicial soe como o nome da letra
+(**elefante**, **ovo**, **olho**; evitar **óculos**, **época**). Não pronunciar “efe” quando a
+pista pede o som /f/; não adicionar uma vogal ao som isolado. Os sons isolados (cerca de 15
+arquivos) precisam de gravação; o resto pode usar a síntese.
+
+**Aceite:** exatamente uma alternativa compartilha o som do alvo; a posição correta varia;
+revisão por escuta confirma cada questão e nenhuma resposta depende de reconhecer letras.
+
+### P06 — Letras para Explorar
+
+**Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** reconhecer formas e nomes das letras, começando pelas do próprio nome.
+
+**Como brincar:** mostrar uma letra grande e convidar a encontrar outra igual entre três peças.
+Ao tocar, falar o nome da letra e apresentar uma palavra ilustrada: “B. Bola!”. Não cobrar leitura
+da palavra nem tratar o nome da letra como se fosse seu som.
+
+**Progressão:** parear letras iguais com modelo sempre visível → encontrar a letra depois de
+ouvir seu nome, sem modelo → “Qual letra começa **ABELHA**?”, apenas para as letras já vistas em
+P05. Mais um modo livre, **Mesa de letras**: tocar em qualquer letra para ouvir o nome e ver duas
+figuras; sem pontuação.
+
+**Conjunto inicial:** vogais mais as letras do primeiro nome (lidas de `nomeDescobertas`, sem
+repetir) e, se sobrar espaço, B, M, P, L e S. O adulto pode ampliar até o alfabeto completo; sem
+obrigação de completar. Seis desafios por rodada.
+
+**Aceite:** pareamento inicial pode ser resolvido visualmente; letras usam a fonte e a forma da
+seção 6.0; ouvir de novo não conta como tentativa; o conjunto escolhido fica salvo localmente;
+sem nome cadastrado, a atividade funciona com o conjunto padrão.
+
+### P07 — Meu Primeiro Labirinto
+
+**Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00, J13
+
+**Foco:** orientação espacial e planejamento de pequenos trajetos.
+
+**Como brincar:** levar o carrinho à garagem usando as setas. Reutilizar **Primeiros caminhos**
+de J13, com um mapa 4×4 por rodada; oferecer 3×3 (mais fácil) e 5×5 com uma estrela para pegar
+no caminho (modo esperto) nas configurações do adulto. Destino sempre visível, sem cronômetro
+ou avaliação pelo número de movimentos.
+
+**Conteúdo inicial:** dez mapas revisados, com caminho curto e poucas bifurcações. Dica mostra
+o próximo passo e pode ser repetida livremente. Setas de pelo menos 64 px nesta apresentação.
+
+**Aceite:** abre no 4×4, a dica sempre leva a um caminho possível e a comemoração é a mesma com
+ou sem ajuda. Reutilizar a lógica de J13, sem manter um segundo gerador.
+
+### P08 — O Que Vem Depois?
+
+**Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** reconhecer e continuar padrões visuais simples.
+
+**Como brincar:** mostrar **carro, bola, carro, bola, ?** e oferecer carro/bola/estrela. A
+narração aponta cada figura em sequência; a criança toca na que completa o padrão.
+
+**Progressão:** padrão AB com quatro elementos visíveis → AAB e ABB com seis elementos → ABC com
+seis elementos → “o que está faltando no meio?”. Seis desafios; ao errar, animar o padrão novamente.
+
+**Conteúdo inicial:** 20 sequências com objetos conhecidos. Diferenciar elementos por forma e
+figura, sem depender apenas da cor. Contagem pode aparecer oralmente como brincadeira
+complementar, sem virar requisito para responder.
+
+**Aceite:** todas as sequências têm ao menos duas repetições completas do padrão e uma única
+continuação correta entre as opções; tela não exige rolagem horizontal.
+
+### P09 — Meu Nome
+
+**Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** o próprio nome como primeira palavra escrita (BNCC EI05EF09); é o que mais motiva
+nessa idade e não precisa de banco de conteúdo.
+
+**Como brincar:** o nome aparece em caixa alta no alto da tela, e as mesmas letras embaralhadas
+em peças grandes embaixo. Tocar numa peça a leva para a próxima casa vazia; tocar numa casa
+preenchida devolve a letra. A cada toque, falar o nome da letra; ao completar, falar “Você
+escreveu **DAVI**!” e comemorar. Arrastar é opcional.
+
+**Progressão:** modelo visível → modelo some depois da primeira letra colocada (e volta se pedir
+ajuda) → sem modelo, com uma letra intrusa entre as peças. O adulto pode acrescentar até cinco
+outras palavras da casa (ELIS, MAMÃE, PAPAI, o nome do cachorro), que seguem a mesma brincadeira.
+
+**Conteúdo:** primeiro nome vindo de `nomeDescobertas`; aceitar letras com acento e Ç, maiúsculas
+sempre. Sem nome cadastrado, a atividade convida o adulto a digitar um nome nas configurações e
+oferece **DINO** e **CARRO** como exemplo. Nunca pedir sobrenome.
+
+**Aceite:** letras repetidas funcionam (LUCAS tem um só S, ISABELA tem dois A); uma peça só
+ocupa uma casa; “ouvir de novo” e “mostrar o modelo” não contam como erro; funciona com nomes
+de 2 a 15 letras em 360 px, quebrando em duas linhas se necessário.
+
+### P10 — Conta Comigo
+
+**Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** contar objetos com correspondência um a um e ligar quantidade ao numeral (BNCC EI05ET07).
+
+**Como brincar:** “Quantos dinossauros?” mostra de 1 a 5 figuras espalhadas. Tocar em cada
+figura a marca e fala o número (“um, dois, três”); ao final, escolher entre três numerais grandes.
+Nada exige ler além de reconhecer o algarismo, que é falado ao tocar.
+
+**Progressão:** 1 a 5 com marcação por toque → 1 a 10 → “Pegue 4”: dado o número, tocar em
+exatamente quatro figuras entre mais figuras → “Qual tem mais?”: duas caixas, tocar na mais cheia.
+Seis desafios por rodada.
+
+**Conteúdo:** gerado no código a partir do catálogo de figuras, sem banco. Numerais com a mesma
+fonte das letras.
+
+**Aceite:** a quantidade pedida nunca é ambígua; as figuras não se sobrepõem em 360 px; tocar
+de novo numa figura já contada não conta duas vezes; a posição do numeral correto varia.
+
+### P11 — Qual é o Intruso?
+
+**Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** classificar por categoria e explicar diferenças (BNCC EI05ET05). Ideia trazida da
+seção 3.2; uma versão com palavras pode virar mais tarde um jogo para Elis.
+
+**Como brincar:** quatro figuras, três da mesma categoria e uma intrusa (gato, cachorro, vaca,
+**carro**). A narração fala o nome de cada figura; a criança toca na que não combina. Depois do
+acerto, dizer o motivo: “Gato, cachorro e vaca são animais. Carro não é!”.
+
+**Progressão:** categorias bem distantes (animais × veículos) → categorias próximas (frutas ×
+legumes, roupas × calçados) → intruso por atributo (três coisas que voam e uma que não voa).
+Três figuras no modo mais fácil, quatro no padrão. Seis desafios por rodada.
+
+**Conteúdo inicial:** 24 grupos com explicação curta gravável, usando figuras do catálogo.
+Evitar categorias discutíveis (tomate é fruta?) e figuras que caibam em duas categorias.
+
+**Aceite:** cada grupo tem um único intruso defensável; a explicação é falada no acerto e na
+demonstração; a posição do intruso varia.
+
+### P12 — Qual Vem Primeiro?
+
+**Prioridade:** Baixa · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** ordenar acontecimentos e contar uma historinha (BNCC EI05EF05).
+
+**Como brincar:** três cartões embaralhados (semente, broto, flor). Tocar nos cartões na ordem
+em que acontecem; cada toque o coloca na próxima posição da linha. Ao terminar na ordem certa,
+a narração conta a história completa em uma frase por cartão.
+
+**Progressão:** três cartões com ordem óbvia (ovo, pintinho, galinha) → quatro cartões
+(acordar, escovar os dentes, tomar café, ir à escola) → convidar a criança a contar a história
+com as próprias palavras, sem avaliação.
+
+**Conteúdo inicial:** 12 histórias. Preferir sequências que o catálogo de figuras já cubra
+(🥚🐣🐔, 🌱🌿🌳, 🌑🌓🌕) para reduzir ilustração própria; registrar as que precisarem de desenho.
+
+**Aceite:** só existe uma ordem correta por história; tocar num cartão já posicionado o devolve;
+a narração final segue a ordem cadastrada.
+
+### P13 — Memória Pequena
+
+**Prioridade:** Baixa · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00
+
+**Foco:** memória visual e nomes das figuras, reaproveitando o Jogo da Memória.
+
+**Como brincar:** o Jogo da Memória com 6 cartas (3 pares) ou 8 cartas (4 pares), figuras do
+catálogo, e o nome da figura falado a cada virada. Sem cronômetro, sem recorde e sem contagem
+de jogadas na tela.
+
+**Escopo:** o jogo React aceita `?modo=descobertas&cartas=6`, esconde os elementos de
+competição, usa `shared/fala.js` e registra a rodada com o prefixo da etapa. A entrada fica na
+página da etapa; nada muda para Elis sem o parâmetro.
+
+**Aceite:** com o parâmetro, não aparecem recorde nem cronômetro; sem ele, o jogo continua como
+está; o progresso vai para `descobertas:memoria`.
+
+### 6.1 Ordem sugerida de entrega
+
+1. **Preparar e experimentar com pouco conteúdo:** ~~P00~~ (feita) → P09 → P10. Meu Nome e Conta Comigo
+   não precisam de gravações nem de banco de dados, então validam navegação, voz sintetizada e
+   toque com ele antes de produzir áudio e figuras.
+2. **Letras e sons:** P06 → P05 → P03. Aqui entram as primeiras gravações obrigatórias (sons
+   isolados e, se preciso, sílabas).
+3. **Escuta e figuras:** P01 → J14 + P04 → P11.
+4. **Ampliar conforme o interesse:** J13 + P07 → P08 → P02 → P12 → P13.
+
+Essa é uma ordem de implementação, não uma trilha obrigatória para a criança. Labirinto e Rimas
+podem ser antecipados se forem os temas que mais despertarem interesse. Se uma atividade ainda
+não fizer sentido para ele, manter as anteriores disponíveis e ajustar a demonstração.
+
+### 6.2 Matriz da etapa
+
+| ID | Entrega | Prioridade | Esforço | Modelo | Depende de |
+|---|---|---|---|---|---|
+| P00 | Área, fala em camadas, figuras, álbum e configurações | ✅ Concluída em 2026-09-07 | M | Opus | T09, T13, T21, T23 |
+| P01 | Quem Faz Esse Som? | Alta | M | Sonnet | P00 |
+| P02 | Encaixe as Figuras | Média | P | Sonnet | P00 |
+| P03 | Palmas nas Palavras | Alta | M | Sonnet | P00 |
+| P04 | Rimas com Figuras | Média | P | Sonnet | P00, J14 |
+| P05 | Começa com o Mesmo Som | Alta | M | Opus | P00 |
+| P06 | Letras para Explorar | Alta | M | Sonnet | P00 |
+| P07 | Meu Primeiro Labirinto | Média | P | Sonnet | P00, J13 |
+| P08 | O Que Vem Depois? | Média | P | Sonnet | P00 |
+| P09 | Meu Nome | Alta | M | Sonnet | P00 |
+| P10 | Conta Comigo | Média | P | Sonnet | P00 |
+| P11 | Qual é o Intruso? | Média | P | Sonnet | P00 |
+| P12 | Qual Vem Primeiro? | Baixa | M | Sonnet | P00 |
+| P13 | Memória Pequena | Baixa | P | Sonnet | P00 |
+
+### 6.3 Riscos e decisões desta revisão
+
+- **Áudio era o gargalo — resolvido na P00.** O rascunho anterior exigia gravação para toda
+  fala; somadas, as atividades passariam de 300 arquivos antes de qualquer coisa rodar. Com a
+  fala em três camadas (gravação → síntese do aparelho → modo acompanhado), só P01, P05 e talvez
+  P03 dependem de gravação, e a etapa começou sem nenhuma. **Pendente:** a qualidade da voz
+  pt-BR varia por aparelho; usar o botão "Testar a voz" das configurações do Rael no iPad e no
+  Android de casa e anotar aqui o nome da voz que aparecer.
+- **Figuras.** Emojis do sistema mudam de desenho entre aparelhos; SVGs copiados de um conjunto
+  livre resolvem isso sem ilustrar à mão. Só P02 e parte de P12 pedem desenho próprio.
+- **Dois perfis no mesmo aparelho — resolvido de outro jeito.** Em vez de um seletor
+  “Quem vai brincar?”, a P00 fez dois sites irmãos com abas no alto de cada página inicial.
+  Cada lado tem tema, ícone de instalação, configurações e progresso próprios, e nenhum precisa
+  saber do outro. Se um dia isso incomodar, o seletor continua sendo uma opção.
+- **Peso do PWA.** O service worker pré-cacheia todo o `dist/`; a etapa não pode inflar a
+  primeira visita. Limite de 8 MB para áudio e figuras da etapa, revisado a cada tarefa.
+- **Escrita com o dedo** (traçar letras) ficou de fora de propósito: a seção 6.0 evita cobrar
+  traçado, e um traçado livre sem avaliação rende pouco numa tela. Reavaliar depois de P06 e P09.
+
+**Prompt base para esta etapa**
+```
+Abra MELHORIAS.md e implemente a tarefa <Pxx>. Leia as seções 3.0, 5 e 6; para idade,
+dificuldade, duração, pontuação, fala e tamanho dos controles, prevalece a seção 6.0.
+Verifique as dependências antes de começar. Reutilize shared/ (em especial fala.js,
+descobertas.js e o catálogo de figuras) e os motores de J13/J14 quando indicado.
+Entregue a atividade utilizável sem leitura, os arquivos locais de áudio e figuras com origem
+registrada, a integração com a área Primeiras Descobertas, o registro no álbum e os testes da
+lógica aplicáveis. No resumo, informe a revisão do conteúdo, os testes por toque, com voz
+sintetizada e offline, o peso adicionado ao precache e o que ainda precisa ser observado com a
+criança. Não marque validação com a criança como concluída sem realizá-la.
+```
