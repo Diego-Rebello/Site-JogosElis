@@ -13,6 +13,9 @@ for arquivo in configuracoes.html _redirects _headers manifest.webmanifest; do
 done
 
 cp -R "$RAIZ/shared" "$SAIDA/shared"
+# Declarações de tipo do TypeScript não servem para nada no navegador
+# e ainda entravam no precache do service worker.
+find "$SAIDA/shared" -name '*.d.ts' -delete
 
 for pasta in "$RAIZ"/Games/*/; do
   nome="$(basename "$pasta")"

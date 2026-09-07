@@ -3,12 +3,48 @@ const VERSAO = '__VERSAO__';
 const CACHE_ATUAL = `jogos-da-elis-${VERSAO}`;
 const ARQUIVOS_PRECACHE = __ARQUIVOS_PRECACHE__;
 
+/**
+ * Guarda a resposta no cache tirando a marca de "redirecionada".
+ *
+ * O Netlify responde /Games/forca/ com um 301 para /games/forca/. O fetch
+ * segue o desvio e traz o conteúdo certo, mas a resposta fica marcada como
+ * redirecionada — e o navegador se recusa a usar uma resposta assim para
+ * uma navegação. Era isso que deixava os cinco jogos fora do ar no modo
+ * avião, enquanto a página inicial (que não redireciona) abria normal.
+ * Recriar a Response descarta essa marca.
+ */
+async function guardarSemDesvio(cache, endereco, resposta) {
+  if (!resposta.ok) return false;
+  const limpa = resposta.redirected
+    ? new Response(await resposta.blob(), {
+        status: resposta.status,
+        statusText: resposta.statusText,
+        headers: resposta.headers,
+      })
+    : resposta;
+  await cache.put(endereco, limpa);
+  return true;
+}
+
+/**
+ * Baixa um endereço de cada vez em vez de usar cache.addAll: com addAll,
+ * um único endereço com problema derruba a instalação inteira e o site
+ * fica sem modo offline nenhum.
+ */
+async function precarregar() {
+  const cache = await caches.open(CACHE_ATUAL);
+  const resultados = await Promise.allSettled(ARQUIVOS_PRECACHE.map(async endereco => {
+    const resposta = await fetch(endereco, { cache: 'reload' });
+    if (!await guardarSemDesvio(cache, endereco, resposta)) {
+      throw new Error(`${endereco} respondeu ${resposta.status}`);
+    }
+  }));
+  const falhas = resultados.filter(r => r.status === 'rejected');
+  if (falhas.length) console.warn('[sw] ficaram fora do cache:', falhas.map(f => f.reason.message));
+}
+
 self.addEventListener('install', evento => {
-  evento.waitUntil(
-    caches.open(CACHE_ATUAL)
-      .then(cache => cache.addAll(ARQUIVOS_PRECACHE))
-      .then(() => self.skipWaiting()),
-  );
+  evento.waitUntil(precarregar().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', evento => {
@@ -37,7 +73,8 @@ async function paginaComRedePrimeiro(requisicao) {
   const cache = await caches.open(CACHE_ATUAL);
   try {
     const resposta = await fetch(requisicao);
-    if (resposta.ok) await cache.put(requisicao, resposta.clone());
+    // clone() porque o corpo só pode ser lido uma vez.
+    if (resposta.ok) await guardarSemDesvio(cache, requisicao, resposta.clone());
     return resposta;
   } catch {
     return (await buscarNoCache(requisicao)) || buscarNoCache(new Request('/index.html'));
