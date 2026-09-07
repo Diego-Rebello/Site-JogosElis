@@ -16,6 +16,7 @@ computador, e não precisa de cadastro nem de internet rápida.
 | Jogo da Memória | `Games/memoria/` | React 19 + Vite 6 |
 | Matemática | `Games/matematica/index.html` | HTML/CSS/JS puro |
 | Jogo do M ou N (toque ou digitar) | `Games/m-ou-n/index.html` | HTML/CSS/JS puro |
+| Ortografia Divertida (7 regras) | `Games/ortografia/index.html` | HTML/CSS/JS puro |
 | Jogo da Velha | `Games/velha/` | React 19 + Vite 6 |
 
 A página inicial (`index.html`) é o índice: ela lista os jogos em cartões e aponta para os
@@ -58,6 +59,7 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
     ├── forca/                       index.html + jogo.js
     ├── m-ou-n/                      index.html + jogo.js
     ├── matematica/                  index.html + jogo.js
+    ├── ortografia/                  index.html + jogo.js + tela.js + dados.js
     ├── memoria/                     index.html + main.tsx + App.tsx + components/ + lib/
     └── velha/                       index.html + main.tsx + App.tsx + components/ + lib/
 ```
@@ -190,11 +192,11 @@ npm run preview   # serve o dist/ para conferir o resultado
 ```
 
 O `npm run build` é exatamente o que o Netlify roda. Ele faz duas coisas: `vite build`, que
-compila as oito páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
+compila as nove páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
 gerado e escreve o `dist/sw.js` com a lista de precache e a versão.
 
-Os testes cobrem texto e embaralhamento, M ou N, Matemática, Forca, Memória, progresso e as
-duas inteligências do Jogo da Velha. Eles importam o código-fonte direto (`Games/*/lib/…`,
+Os testes cobrem texto e embaralhamento, M ou N, Ortografia, Matemática, Forca, Memória,
+progresso e as duas inteligências do Jogo da Velha. Eles importam o código-fonte direto (`Games/*/lib/…`,
 `Games/*/jogo.js`, `shared/…`), sem passar pelo build.
 
 ### Tailwind

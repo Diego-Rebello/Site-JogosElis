@@ -58,6 +58,10 @@
             <select id="m-ou-n" class="campo"><option value="facil">Fácil — palavras curtas</option><option value="normal">Normal — palavras médias</option><option value="desafio">Desafio — todas as palavras</option></select>
           </div>
           <div class="grupo">
+            <label for="ortografia">Ortografia Divertida</label>
+            <select id="ortografia" class="campo"><option value="m-n">Nível 1 — M ou N</option><option value="r-rr">Nível 2 — R ou RR</option><option value="s-ss">Nível 2 — S ou SS</option><option value="g-j">Nível 3 — G ou J</option><option value="x-ch">Nível 3 — X ou CH</option><option value="c-ss-s">Nível 4 — Ç, SS ou S</option><option value="l-u">Nível 4 — L ou U</option><option value="misturado">Misturado — todas as regras</option></select>
+          </div>
+          <div class="grupo">
             <label for="memoria">Jogo da Memória</label>
             <select id="memoria" class="campo"><option value="16">Fácil — 16 cartas</option><option value="24">Normal — 24 cartas</option><option value="32">Desafio — 32 cartas</option></select>
           </div>
@@ -85,7 +89,7 @@
     import { obterConfiguracoes, salvarConfiguracoes, zerarProgresso } from './shared/progresso.js';
     import { definirMudo, estaMudo, tocar } from './shared/sons.js';
 
-    const ids = ['forca', 'matematica', 'm-ou-n', 'memoria', 'velha'];
+    const ids = ['forca', 'matematica', 'm-ou-n', 'ortografia', 'memoria', 'velha'];
     const formulario = document.getElementById('formulario');
     const mensagem = document.getElementById('mensagem');
     const configuracoes = obterConfiguracoes();

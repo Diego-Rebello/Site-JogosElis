@@ -71,8 +71,7 @@ Regras:
 
 ### 0.4 Progresso
 
-Todas as tarefas de T01 a T23 concluídas. A T23 é a única que **não está na `main`**:
-ela reestrutura o repositório inteiro e o próprio plano pede aprovação antes do merge.
+Todas as tarefas de T01 a T23 concluídas, e o primeiro jogo novo (J01) no ar.
 Tudo testado no navegador (Chrome headless) antes de cada commit.
 
 | Tarefa | Status | Commit |
@@ -99,7 +98,8 @@ Tudo testado no navegador (Chrome headless) antes de cada commit.
 | T20 — Build e publicação automática no Netlify | ✅ Concluída e validada em produção em 2026-09-06 | `528b21d` |
 | T21 — PWA: offline e instalável | ✅ Concluída em 2026-09-06 | `cdd0b6b` |
 | T22 — Acessibilidade, SEO e polimento | ✅ Concluída em 2026-09-06 | `b0d3606` |
-| T23 — Projeto Vite único multipágina | ✅ Concluída em 2026-09-06, **fora da `main`** | branch `t23-vite-unico` |
+| T23 — Projeto Vite único multipágina | ✅ Concluída em 2026-09-06 | branch `t23-vite-unico`, já na `main` |
+| J01 — Ortografia Divertida | ✅ Concluída em 2026-09-06 | branch `j01-ortografia` |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
 
@@ -110,6 +110,7 @@ Tudo testado no navegador (Chrome headless) antes de cada commit.
 | Jogo da Forca | `Games/forca/index.html` | HTML puro + `shared/`, script `type="module"` |
 | Matemática | `Games/matematica/` | HTML puro + módulo de lógica testável, `shared/` |
 | Jogo do M ou N | `Games/m-ou-n/index.html` | HTML puro + `shared/`, script `type="module"` |
+| Ortografia Divertida | `Games/ortografia/` | HTML puro + `dados.js`/`jogo.js`/`tela.js`, `shared/` |
 | Jogo da Memória | `Games/memoria/` (compilado para `_site/Games/memoria/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
 | Jogo da Velha | `Games/velha/` (compilado para `_site/Games/velha/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
 
@@ -1090,6 +1091,8 @@ na página inicial. No resumo, liste os dados criados e como foram revisados.
 
 ### J01 — Ortografia Divertida (evolução do "M ou N")
 
+> ✅ **Concluída em 2026-09-06** — commit na branch `j01-ortografia`. Ver as decisões no fim desta seção.
+
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Opus · **Objetivo pedagógico:** regras ortográficas mais comuns do 2.º ao 4.º ano
 
 **Mecânica**
@@ -1116,8 +1119,29 @@ export const pacotes = {
 4. Manter o jogo "M ou N" atual como atalho para o pacote 1 ou substituí-lo por este (decisão do Diego).
 
 **Critérios de aceite**
-- [ ] Cada item tem exatamente uma resposta correta entre as opções e a palavra final coincide com `texto` preenchido.
-- [ ] Teste automatizado valida essa coerência para todos os itens.
+- [x] Cada item tem exatamente uma resposta correta entre as opções e a palavra final coincide com `texto` preenchido.
+- [x] Teste automatizado valida essa coerência para todos os itens.
+
+**Como ficou** (`Games/ortografia/`, 25 testes em `tests/ortografia.test.js`)
+
+- **Sete pacotes, 418 itens**: `m-n` (164, reaproveitados da T04), `r-rr` (43), `s-ss` (41),
+  `g-j` (41), `x-ch` (41), `c-ss-s` (47) e `l-u` (41). Mais o modo **Misturado**, que sorteia de
+  todos. Mínimo pedido era 30 por pacote.
+- **Decisão do passo 4 (Diego):** os dois jogos convivem. O "M ou N" continua no ar com o modo
+  de digitar a palavra inteira, e o pacote 1 daqui importa `listaDePalavras` e `gerarLacuna` de
+  `Games/m-ou-n/jogo.js` — assim as duas telas nunca discordam sobre onde fica a lacuna.
+- **Toda palavra tem uma dica** (menos as do M/N, em que a letra seguinte já decide). Sem ela
+  "CA_O" seria CARO ou CARRO: é a dica que garante o primeiro critério de aceite. Pares em que as
+  duas opções dão palavras reais e a dica não resolveria bem (ALTO/AUTO, MEU/MEL, MAU/MAL,
+  ASA/ASSA, ROSA/ROÇA) ficaram fora da lista.
+- A lacuna é sempre **um `_` só**, mesmo quando a resposta tem duas letras: dois underscores
+  entregariam que a resposta é RR, SS ou CH.
+- **Progresso em duas chaves**: `ortografia:<pacote>` guarda o histórico de cada regra e
+  `ortografia` é a chave que a página inicial e o Mural mostram no cartão do jogo.
+- Nas Configurações dá para escolher qual regra abre marcada como "seu nível" (padrão: `g-j`,
+  o nível 3, seguindo a regra de abrir no intermediário da seção 3.0).
+- Testado no Chrome headless em 360 px: rodada inteira até a tela final, sem erro no console e
+  sem rolagem horizontal.
 
 ---
 

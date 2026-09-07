@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Treine as regras de ortografia mais comuns do 2.º ao 4.º ano: M/N, R/RR, S/SS, G/J, X/CH, Ç/SS/S e L/U. Toque na opção certa e veja a regra explicada em uma frase.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="Ortografia Divertida — Jogos da Elis">
+    <meta property="og:description" content="Treine as regras de ortografia mais comuns do 2.º ao 4.º ano: M/N, R/RR, S/SS, G/J, X/CH, Ç/SS/S e L/U. Toque na opção certa e veja a regra explicada em uma frase.">
+    <meta name="theme-color" content="#ff69b4">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/icones/icone-192.png">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%93%9D%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <title>Ortografia Divertida</title>
+    <link rel="stylesheet" href="../../shared/base.css">
+    <script type="module" src="../../shared/pwa.js"></script>
+    <style>
+        /* Só o que é específico deste jogo: o resto vem do base.css. */
+        .orto { max-width: 560px; text-align: center; }
+        .orto__instrucao {
+            font-family: var(--fonte-leitura);
+            color: var(--cor-suave);
+            margin: 0 0 18px;
+        }
+        .tela[hidden] { display: none; }
+
+        /* --- escolha da regra --- */
+        .nivel { margin: 0 0 22px; text-align: left; }
+        .nivel__titulo {
+            font-family: var(--fonte-leitura);
+            font-weight: 700;
+            color: var(--cor-suave);
+            margin: 0 0 8px;
+            font-size: 1.05rem;
+        }
+        .pacotes { display: grid; gap: 12px; }
+        .pacote {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 14px;
+            min-height: 76px;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 1.2rem;
+        }
+        .pacote__emoji { font-size: 2rem; line-height: 1; }
+        .pacote__exemplo {
+            display: block;
+            font-family: var(--fonte-leitura);
+            font-size: 0.95rem;
+            font-weight: 700;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+        .pacote__padrao {
+            display: inline-block;
+            font-family: var(--fonte-leitura);
+            font-size: 0.8rem;
+            background: var(--cor-secundaria-clara);
+            border: 2px solid var(--cor-secundaria);
+            border-radius: 999px;
+            padding: 1px 9px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        /* --- rodada --- */
+        .progresso { width: 100%; height: 16px; accent-color: var(--cor-principal); margin: 12px 0; }
+        .dica {
+            font-family: var(--fonte-leitura);
+            font-size: 1.15rem;
+            line-height: 1.5;
+            background: #fff7cf;
+            border: 3px solid #f2ca52;
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin: 14px 0 0;
+        }
+        .palavra {
+            font-size: clamp(1.7rem, 9vw, 2.3rem);
+            color: var(--cor-texto-destaque);
+            letter-spacing: 4px;
+            margin: 18px 0;
+            padding: 16px 10px;
+            border: 3px dashed var(--cor-secundaria);
+            border-radius: 12px;
+            overflow-wrap: break-word;
+        }
+        .palavra__lacuna { color: var(--cor-principal-escura); }
+        .opcoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0 auto 8px; max-width: 380px; }
+        .opcoes--tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .opcao { min-height: 92px; font-size: 2.2rem; letter-spacing: 2px; }
+        .regra {
+            font-family: var(--fonte-leitura);
+            font-size: 1.1rem;
+            line-height: 1.55;
+            color: var(--cor-texto);
+            background: var(--cor-secundaria-clara);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin: 4px 0 14px;
+        }
+        .letra-destaque { color: var(--cor-texto-destaque); text-decoration: underline; }
+        .botoes { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+
+        @media (max-width: 380px) {
+            .opcoes--tres { gap: 10px; }
+            .opcao { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body class="pagina">
+
+    <main class="pagina__conteudo pagina__conteudo--centro">
+        <div class="cartao orto">
+
+          <section id="tela-pacotes" class="tela">
+            <h2>QUAL REGRA VOCÊ QUER TREINAR?</h2>
+            <p class="orto__instrucao">Cada regra tem 10 palavras. Escolha uma para começar.</p>
+            <div id="lista-niveis"></div>
+          </section>
+
+          <section id="tela-jogo" class="tela" hidden>
+            <p id="nome-do-pacote" class="orto__instrucao"></p>
+            <div class="placar">
+                <span class="placar__certo">ACERTOS: <span id="placar-acertos">0</span></span>
+                <span class="placar__errado">ERROS: <span id="placar-erros">0</span></span>
+                <span>PALAVRA: <span id="palavra-atual">1</span>/<span id="total-itens">10</span></span>
+            </div>
+            <progress id="progresso" class="progresso" max="10" value="0">0 de 10</progress>
+            <p id="dica" class="dica"></p>
+            <p id="palavra" class="palavra"></p>
+            <div id="opcoes" class="opcoes" role="group" aria-labelledby="dica"></div>
+            <div id="aviso" aria-live="polite">
+                <div id="feedback" class="feedback"></div>
+                <p id="regra" class="regra" hidden></p>
+            </div>
+            <div class="botoes">
+                <button id="btn-entendi" class="botao botao--sucesso" hidden>ENTENDI!</button>
+                <button id="btn-trocar" class="botao botao--neutro">TROCAR REGRA</button>
+            </div>
+          </section>
+
+          <section id="tela-final" class="tela" hidden>
+            <h2>🏆 RODADA CONCLUÍDA!</h2>
+            <p id="resumo-final"></p>
+            <p id="estrelas-final" style="font-size:2rem"></p>
+            <div class="botoes">
+                <button id="btn-de-novo" class="botao botao--sucesso">JOGAR DE NOVO</button>
+                <button id="btn-outra-regra" class="botao botao--neutro">TROCAR REGRA</button>
+            </div>
+          </section>
+
+        </div>
+    </main>
+
+    <script type="module" src="./tela.js"></script>
+</body>
+</html>
