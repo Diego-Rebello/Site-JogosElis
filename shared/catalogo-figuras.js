@@ -60,6 +60,7 @@ export const FIGURAS = [
   { id: 'flor', nome: 'flor', artigo: 'a', categoria: 'natureza' },
   { id: 'arvore', nome: 'árvore', artigo: 'a', categoria: 'natureza' },
   { id: 'nuvem', nome: 'nuvem', artigo: 'a', categoria: 'natureza' },
+  { id: 'ilha', nome: 'ilha', artigo: 'a', categoria: 'natureza' },
 
   // --- coisas de casa ---
   { id: 'casa', nome: 'casa', artigo: 'a', categoria: 'casa' },
@@ -69,6 +70,7 @@ export const FIGURAS = [
   { id: 'sino', nome: 'sino', artigo: 'o', categoria: 'casa' },
   { id: 'relogio', nome: 'relógio', artigo: 'o', categoria: 'casa' },
   { id: 'telefone', nome: 'telefone', artigo: 'o', categoria: 'casa' },
+  { id: 'igreja', nome: 'igreja', artigo: 'a', categoria: 'casa' },
 
   // --- objetos ---
   { id: 'bola', nome: 'bola', artigo: 'a', categoria: 'objetos' },

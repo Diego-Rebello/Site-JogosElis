@@ -76,7 +76,8 @@ export function criarSessao({ desafios = [], tentativasAteDemonstrar = 2 } = {})
     responder(idEscolhido) {
       if (fase !== 'pergunta') return { ...estado(), certo: fase === 'acertou', ultimo: indice >= desafios.length - 1 };
       const desafio = desafios[indice];
-      const certo = Boolean(desafio) && String(idEscolhido) === String(desafio.alvo.id);
+      const idCerto = desafio?.respostaId ?? desafio?.alvo?.id;
+      const certo = Boolean(desafio) && String(idEscolhido) === String(idCerto);
       tentativas += 1;
 
       if (certo) {

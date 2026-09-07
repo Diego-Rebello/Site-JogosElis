@@ -64,6 +64,13 @@ describe('criarSessao', () => {
     expect(sessao.avancar()).toMatchObject({ indice: 1, fase: 'pergunta', tentativas: 0 });
   });
 
+  it('aceita uma resposta diferente do id da pista', () => {
+    const sessao = criarSessao({
+      desafios: [{ alvo: { id: 'gato' }, respostaId: 'pato', opcoes: [{ id: 'pato' }, { id: 'bola' }] }],
+    });
+    expect(sessao.responder('pato').certo).toBe(true);
+  });
+
   it('mostra a resposta depois de duas tentativas e a rodada segue', () => {
     const sessao = criarSessao({ desafios });
     const errada = desafios[0].opcoes.find(opcao => opcao.id !== desafios[0].alvo.id).id;

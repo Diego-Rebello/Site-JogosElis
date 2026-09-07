@@ -67,6 +67,8 @@
   font-size: clamp(1.4rem, 6vw, 1.9rem);
   line-height: 1.25;
   color: var(--cor-texto-destaque);
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .botao--repetir {
@@ -501,3 +503,91 @@
   font-size: 2rem;
   border-radius: 20px;
 }
+
+/* --- Rimas, sons iniciais e letras (P04–P06) ----------------------------- */
+
+.figuras-convite, .alvo-falado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sinal-grande { font-size: 2.4rem; color: var(--cor-texto-destaque); }
+.alvo-falado { margin-bottom: 12px; }
+.alvo-falado img { width: min(34vw, 128px); height: min(34vw, 128px); }
+.palavra-grande {
+  font-family: var(--fonte-leitura);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 8vw, 2.5rem);
+  letter-spacing: 3px;
+  color: var(--cor-texto-destaque);
+}
+
+.opcao-com-audio { display: grid; gap: 8px; min-width: 0; }
+.opcao-com-audio .opcao { width: 100%; }
+.ouvir-opcao {
+  width: 100%;
+  min-height: 56px;
+  padding: 8px;
+  font-family: var(--fonte-leitura);
+  font-size: 1rem;
+}
+
+.letra-revelada {
+  width: fit-content;
+  margin: 0 auto 14px;
+  padding: 10px 18px;
+  border: 4px solid var(--cor-certo);
+  border-radius: 18px;
+  background: #eafaf0;
+  color: var(--cor-texto-destaque);
+  font-family: var(--fonte-leitura);
+  font-size: clamp(1.5rem, 7vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.letra-cartaz, .modelo-letra, .opcao-letra, .exemplo-letra {
+  font-family: var(--fonte-leitura);
+  font-weight: 700;
+}
+.letra-cartaz { font-size: clamp(2.8rem, 15vw, 5rem); letter-spacing: 10px; color: var(--cor-texto-destaque); }
+.modos-letras { display: grid; gap: 12px; width: min(100%, 480px); }
+.modos-letras .botao { justify-content: center; font-size: 1.25rem; padding: 14px 18px; }
+.modelo-letra {
+  display: grid;
+  place-items: center;
+  width: min(42vw, 164px);
+  min-height: min(42vw, 164px);
+  margin: 0 auto 14px;
+  border: 5px solid var(--cor-principal-profunda);
+  border-radius: 26px;
+  background: #fff;
+  color: var(--cor-texto-destaque);
+  font-size: clamp(5rem, 25vw, 8rem);
+  line-height: 1;
+}
+.opcoes-letras { grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); }
+.opcao-letra { min-height: 116px; font-size: clamp(3.5rem, 18vw, 6rem); line-height: 1; }
+.exemplos-letra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px auto 0;
+  padding: 12px;
+  border-radius: 18px;
+  background: var(--cor-secundaria-clara);
+  font-family: var(--fonte-leitura);
+}
+.exemplo-letra { font-size: 3.4rem; color: var(--cor-texto-destaque); }
+.exemplo-figura { display: grid; justify-items: center; gap: 4px; font-weight: 700; font-size: 0.9rem; }
+.exemplo-figura img { width: 72px; height: 72px; }
+.mesa__ajuda { margin: 8px auto 18px; }
+.mesa-letras { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.mesa-letra { min-height: 76px; border: 3px solid var(--cor-secundaria); border-radius: 16px; background: #fff;
+  color: var(--cor-texto-destaque); font-size: 2.4rem; cursor: pointer; }
+.exemplos-letra--mesa { min-height: 112px; margin-bottom: 18px; }

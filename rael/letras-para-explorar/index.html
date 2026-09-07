@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Veja, ouça e encontre letras grandes em caixa alta nos Jogos do Rael.">
+  <meta name="theme-color" content="#0f5aa8">
+  <title>Letras para Explorar — Jogos do Rael</title>
+  <link rel="manifest" href="/rael.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/rael-192.png">
+  <link rel="icon" href="/icones/rael.svg">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="../../shared/tema-rael.css">
+  <link rel="stylesheet" href="../../shared/descobertas.css">
+  <script type="module" src="../../shared/pwa.js"></script>
+</head>
+<body class="pagina">
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao descobertas">
+      <div class="tela convite" id="tela-convite">
+        <div class="letra-cartaz" aria-hidden="true">A B C</div>
+        <h2 class="instrucao__texto">Letras para Explorar</h2>
+        <p class="convite__texto">Escolha uma brincadeira. As letras começam pelas do nome e pelas vogais.</p>
+        <div class="modos-letras">
+          <button class="botao botao--gigante" type="button" data-modo="iguais">👀 Letras iguais</button>
+          <button class="botao botao--gigante" type="button" data-modo="ouvir">👂 Ouvir e encontrar</button>
+          <button class="botao botao--gigante" type="button" data-modo="inicio">🖼️ Letra da figura</button>
+          <button class="botao botao--gigante botao--neutro" type="button" data-modo="mesa">🔤 Mesa de letras</button>
+        </div>
+        <p class="convite__texto" id="aviso-voz" hidden></p>
+      </div>
+
+      <div class="tela" id="tela-brincadeira" hidden>
+        <div class="passos" id="passos" aria-hidden="true"></div>
+        <div class="modelo-letra" id="modelo-letra"></div>
+        <div class="alvo-falado" id="alvo-palavra" hidden>
+          <img id="figura-palavra" src="" alt="" width="128" height="128">
+          <span class="palavra-grande" id="nome-palavra"></span>
+        </div>
+        <div class="instrucao">
+          <p class="instrucao__texto" id="instrucao">Encontre a letra.</p>
+          <button class="botao botao--repetir" id="repetir" type="button">🔊 Ouvir de novo</button>
+        </div>
+        <div class="opcoes opcoes-letras" id="opcoes"></div>
+        <div class="exemplos-letra" id="exemplos" hidden></div>
+        <p class="feedback retorno" id="retorno" aria-live="polite"></p>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="continuar" type="button" hidden>Continuar ▶</button>
+        </div>
+        <div class="roteiro" id="roteiro" hidden>
+          <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
+          <span class="roteiro__fala" id="roteiro-fala"></span>
+        </div>
+      </div>
+
+      <div class="tela" id="tela-mesa" hidden>
+        <h2 class="instrucao__texto">Mesa de letras</h2>
+        <p class="convite__texto mesa__ajuda">Toque em qualquer letra para ouvir o nome e ver figuras.</p>
+        <div class="mesa-letras" id="mesa-letras"></div>
+        <div class="exemplos-letra exemplos-letra--mesa" id="exemplos-mesa"></div>
+        <div class="conclusao__acoes">
+          <button class="botao botao--secundario" id="voltar-modos" type="button">↩ Escolher outra brincadeira</button>
+          <a class="botao botao--secundario" href="../index.html">🏠 Voltar</a>
+        </div>
+      </div>
+
+      <div class="tela conclusao" id="tela-fim" hidden>
+        <h2 class="instrucao__texto">Você explorou as letras!</h2>
+        <img class="conclusao__figurinha" id="figurinha" src="" alt="" width="150" height="150">
+        <p class="convite__texto" id="texto-fim"></p>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="de-novo" type="button">🔁 Brincar de novo</button>
+          <a class="botao botao--secundario" href="../index.html">🏠 Voltar</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./tela.js"></script>
+</body>
+</html>

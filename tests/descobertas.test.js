@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  FIGURINHAS, nivelDaEtapa, obterAlbum, obterConfiguracoes, obterEstado, proximaFigurinha,
+  ALFABETO, FIGURINHAS, letrasIniciais, nivelDaEtapa, obterAlbum, obterConfiguracoes, obterEstado, proximaFigurinha,
   registrarRodada, rodadasDe, salvarConfiguracoes, zerarAlbum,
 } from '../shared/descobertas.js';
 
@@ -20,13 +20,13 @@ describe('Primeiras Descobertas — preferências', () => {
 
   it('abre nos padrões da etapa quando não há nada salvo', () => {
     expect(obterConfiguracoes(armazenamento)).toEqual({
-      nome: 'Rael', alternativas: 3, tema: 'tudo', voz: 'auto',
+      nome: 'Rael', alternativas: 3, tema: 'tudo', voz: 'auto', letras: letrasIniciais('Rael'),
     });
   });
 
   it('salva o que veio e devolve o que ficou valendo', () => {
     const salvas = salvarConfiguracoes({ nome: 'Rael', alternativas: 2, tema: 'animais', voz: 'sintetizada' }, armazenamento);
-    expect(salvas).toEqual({ nome: 'Rael', alternativas: 2, tema: 'animais', voz: 'sintetizada' });
+    expect(salvas).toEqual({ nome: 'Rael', alternativas: 2, tema: 'animais', voz: 'sintetizada', letras: letrasIniciais('Rael') });
     expect(obterConfiguracoes(armazenamento)).toEqual(salvas);
   });
 
@@ -54,6 +54,14 @@ describe('Primeiras Descobertas — preferências', () => {
   it('recusa modo de voz desconhecido', () => {
     salvarConfiguracoes({ voz: 'robozinho' }, armazenamento);
     expect(obterConfiguracoes(armazenamento).voz).toBe('auto');
+  });
+
+  it('salva um conjunto de letras válido e recusa conjunto pequeno demais', () => {
+    salvarConfiguracoes({ letras: ['a', 'R', 'A', '?'] }, armazenamento);
+    expect(obterConfiguracoes(armazenamento).letras).toEqual(['A', 'R']);
+    salvarConfiguracoes({ letras: ['X'] }, armazenamento);
+    expect(obterConfiguracoes(armazenamento).letras).toEqual(letrasIniciais('Rael'));
+    expect(ALFABETO).toHaveLength(26);
   });
 
   it('lê o número de alternativas como nível nas atividades sem alternativa', () => {

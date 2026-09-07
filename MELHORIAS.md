@@ -11,15 +11,15 @@
 > Diego revisa o resultado, testa com a Elis e segue para a próxima.
 >
 > **Andamento:** T01 a T23 e J01 concluídas em 2026-09-06; J02 e J04 a J10 em 2026-09-07;
-> P00, P02 e P03 em 2026-09-07. Faltam **J03** (Ditado Mágico), **J11** a **J14**,
-> **P01**, **P04** a **P13**.
+> P00 e P02 a P06 em 2026-09-07. Faltam **J03** (Ditado Mágico), **J11** a **J14**,
+> **P01** e **P07** a **P13**.
 > O estado atual do repositório está na seção [0.4](#04-progresso); a seção 1 é o diagnóstico
 > original, de antes da execução, e foi mantida para registrar o motivo de cada tarefa.
 >
 > **Planejamento ampliado em 2026-09-07:** Labirinto e Rimas detalhados na seção 3.1;
 > nova etapa de pré-alfabetização para um menino de 5 anos na seção 6 (revisada para essa idade
-> no mesmo dia). **P00, P02 e P03 implementadas em 2026-09-07**: os Jogos do Rael estão no ar
-> com três brincadeiras. As demais tarefas da seção 6 continuam pendentes.
+> no mesmo dia). **P00 e P02 a P06 implementadas em 2026-09-07**: os Jogos do Rael estão no ar
+> com seis brincadeiras. As demais tarefas da seção 6 continuam pendentes.
 
 ---
 
@@ -1591,7 +1591,7 @@ As tarefas da nova etapa de pré-alfabetização têm sua própria ordem e matri
 ## 6. Nova etapa — Jogos do Rael / Primeiras Descobertas (5 anos, pré-alfabetização)
 
 > **Planejada em 2026-09-07 e revisada no mesmo dia para 5 anos. P00 implementada em 2026-09-07;
-> P01 a P13 pendentes.** Público: **Rael**, 5 anos, fase de pré-alfabetização (Pré II da
+> P01 e P07 a P13 pendentes.** Público: **Rael**, 5 anos, fase de pré-alfabetização (Pré II da
 > Educação Infantil).
 >
 > **Como ficou na prática:** em vez de uma seção dentro do site da Elis, a etapa virou um
@@ -1859,9 +1859,11 @@ o áudio segmentado. Não interpretar o tempo entre toques como acerto ou erro.
    soarem artificiais no aparelho de casa, é só gravar os áudios segmentados e apontar `audio`
    em cada sílaba: `fala.js` prefere a gravação sozinho.
 
-### P04 — Rimas com Figuras
+### P04 — Rimas com Figuras ✅
 
 **Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00, J14
+
+**✅ Concluída em 2026-09-07.** Especificação original abaixo; o entregue está em "Como ficou".
 
 **Foco:** perceber semelhanças sonoras no final de palavras.
 
@@ -1878,9 +1880,20 @@ prefixo da etapa.
 **Aceite:** entrada abre no modo correto, não oferece Versinho/Desafio durante a rodada e permite
 ouvir cada figura sem selecionar a resposta; uma rodada completa funciona sem leitura.
 
-### P05 — Começa com o Mesmo Som
+**Como ficou**
+
+1. Banco inicial de 20 questões em três famílias sonoras familiares: GATO/PATO/RATO/SAPATO,
+   PÃO/LEÃO/AVIÃO/CAMINHÃO e ABELHA/OVELHA. O código rejeita distratores da mesma família.
+2. Seis alvos diferentes por rodada, com duas, três ou quatro figuras conforme a configuração.
+   Cada alternativa tem um botão separado para ouvir o nome, que não registra tentativa.
+3. Como J14 ainda está pendente, o motor e os dados ficaram separados da tela e prontos para
+   serem promovidos ao jogo da Elis, sem expor Versinho ou Desafio no lado do Rael.
+
+### P05 — Começa com o Mesmo Som ✅
 
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Opus · **Depende de:** P00
+
+**✅ Concluída em 2026-09-07.** Especificação original abaixo; o entregue está em "Como ficou".
 
 **Foco:** comparar sons no início de palavras faladas, e só depois associá-los à letra.
 
@@ -1904,9 +1917,22 @@ arquivos) precisam de gravação; o resto pode usar a síntese.
 **Aceite:** exatamente uma alternativa compartilha o som do alvo; a posição correta varia;
 revisão por escuta confirma cada questão e nenhuma resposta depende de reconhecer letras.
 
-### P06 — Letras para Explorar
+**Como ficou**
+
+1. Trinta palavras com figura e gravação local, agrupadas por som, mais doze arquivos de som
+   inicial. O pacote WAV mono ocupa 1,5 MB e entra no precache do PWA.
+2. A primeira rodada e o nível fácil usam somente vogais. O nível normal acrescenta F, M, S e L;
+   P, B e T aparecem apenas quando o adulto escolhe quatro alternativas (modo esperto).
+3. A letra só aparece depois da resposta. Palavras e alternativas podem ser ouvidas quantas
+   vezes quiser; os testes garantem uma única opção do mesmo grupo sonoro em cada desafio.
+4. As gravações foram geradas com a voz offline Luciana (pt-BR). Conferir os sons isolados no
+   iPad/Android e substituir pela voz de casa se algum deles não soar natural para o Rael.
+
+### P06 — Letras para Explorar ✅
 
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** P00
+
+**✅ Concluída em 2026-09-07.** Especificação original abaixo; o entregue está em "Como ficou".
 
 **Foco:** reconhecer formas e nomes das letras, começando pelas do próprio nome.
 
@@ -1926,6 +1952,16 @@ obrigação de completar. Seis desafios por rodada.
 **Aceite:** pareamento inicial pode ser resolvido visualmente; letras usam a fonte e a forma da
 seção 6.0; ouvir de novo não conta como tentativa; o conjunto escolhido fica salvo localmente;
 sem nome cadastrado, a atividade funciona com o conjunto padrão.
+
+**Como ficou**
+
+1. Quatro modos: Letras iguais, Ouvir e encontrar, Letra da figura e Mesa de letras. Os três
+   primeiros têm demonstração e seis desafios; a mesa é livre e não pontua.
+2. O conjunto começa pelas vogais, letras do primeiro nome e B/M/P/L/S. As configurações dos
+   adultos permitem marcar letras individualmente, restaurar o conjunto inicial ou usar A–Z.
+3. A letra é falada pelo nome, em vez de ser confundida com seu som. Depois da descoberta, até
+   duas figuras do catálogo ligam a forma da letra a palavras familiares; IGREJA e ILHA foram
+   acrescentadas para que a vogal I também tenha dois exemplos.
 
 ### P07 — Meu Primeiro Labirinto
 
@@ -2087,9 +2123,9 @@ não fizer sentido para ele, manter as anteriores disponíveis e ajustar a demon
 | P01 | Quem Faz Esse Som? | Alta | M | Sonnet | P00 |
 | P02 | Encaixe as Figuras | ✅ Concluída em 2026-09-07 | P | Sonnet | P00 |
 | P03 | Palmas nas Palavras | ✅ Concluída em 2026-09-07 | M | Sonnet | P00 |
-| P04 | Rimas com Figuras | Média | P | Sonnet | P00, J14 |
-| P05 | Começa com o Mesmo Som | Alta | M | Opus | P00 |
-| P06 | Letras para Explorar | Alta | M | Sonnet | P00 |
+| P04 | Rimas com Figuras | ✅ Concluída em 2026-09-07 | P | Sonnet | P00, J14 |
+| P05 | Começa com o Mesmo Som | ✅ Concluída em 2026-09-07 | M | Opus | P00 |
+| P06 | Letras para Explorar | ✅ Concluída em 2026-09-07 | M | Sonnet | P00 |
 | P07 | Meu Primeiro Labirinto | Média | P | Sonnet | P00, J13 |
 | P08 | O Que Vem Depois? | Média | P | Sonnet | P00 |
 | P09 | Meu Nome | Alta | M | Sonnet | P00 |

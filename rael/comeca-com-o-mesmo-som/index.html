@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ouça palavras e encontre as que começam com o mesmo som. Brincadeira falada dos Jogos do Rael.">
+  <meta name="theme-color" content="#0f5aa8">
+  <title>Começa com o Mesmo Som — Jogos do Rael</title>
+  <link rel="manifest" href="/rael.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/rael-192.png">
+  <link rel="icon" href="/icones/rael.svg">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="../../shared/tema-rael.css">
+  <link rel="stylesheet" href="../../shared/descobertas.css">
+  <script type="module" src="../../shared/pwa.js"></script>
+</head>
+<body class="pagina">
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao descobertas">
+      <div class="tela convite" id="tela-convite">
+        <img class="convite__figura" src="/figuras/abelha.svg" alt="" aria-hidden="true" width="120" height="120">
+        <h2 class="instrucao__texto">Começa com o Mesmo Som</h2>
+        <p class="convite__texto">Escute uma palavra e encontre outra que começa igual.</p>
+        <button class="botao botao--gigante" id="comecar" type="button">▶ Vamos brincar</button>
+        <p class="convite__texto" id="aviso-voz" hidden></p>
+      </div>
+
+      <div class="tela" id="tela-brincadeira" hidden>
+        <div class="passos" id="passos" aria-hidden="true"></div>
+        <div class="alvo-falado">
+          <img id="figura-alvo" src="" alt="" width="128" height="128">
+          <span class="palavra-grande" id="palavra-alvo"></span>
+        </div>
+        <div class="instrucao">
+          <p class="instrucao__texto" id="instrucao">Qual começa com o mesmo som?</p>
+          <button class="botao botao--repetir" id="repetir" type="button">🔊 Ouvir de novo</button>
+        </div>
+        <div class="letra-revelada" id="letra-revelada" hidden></div>
+        <div class="opcoes" id="opcoes"></div>
+        <p class="feedback retorno" id="retorno" aria-live="polite"></p>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="continuar" type="button" hidden>Continuar ▶</button>
+        </div>
+        <div class="roteiro" id="roteiro" hidden>
+          <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
+          <span class="roteiro__fala" id="roteiro-fala"></span>
+        </div>
+      </div>
+
+      <div class="tela conclusao" id="tela-fim" hidden>
+        <h2 class="instrucao__texto">Ouvidos atentos!</h2>
+        <img class="conclusao__figurinha" id="figurinha" src="" alt="" width="150" height="150">
+        <p class="convite__texto" id="texto-fim"></p>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="de-novo" type="button">🔁 Brincar de novo</button>
+          <a class="botao botao--secundario" href="../index.html">🏠 Voltar</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./tela.js"></script>
+</body>
+</html>

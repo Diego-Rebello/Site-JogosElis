@@ -47,7 +47,10 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Toque na Figura | `rael/toque-na-figura/index.html` | Ouça o nome e toque na figura certa |
 | Encaixe as Figuras | `rael/encaixe-as-figuras/index.html` | Leve cada figura à sua sombra e monte quebra-cabeças de 4 e 6 peças |
 | Palmas nas Palavras | `rael/palmas-nas-palavras/index.html` | Uma palma para cada pedaço da palavra |
-| Configurações | `rael/configuracoes.html` | Nome, número de opções, tema, voz e zerar o álbum |
+| Rimas com Figuras | `rael/rimas-com-figuras/index.html` | Ouça e encontre palavras que terminam com sons parecidos |
+| Começa com o Mesmo Som | `rael/comeca-com-o-mesmo-som/index.html` | Compare o começo de palavras faladas |
+| Letras para Explorar | `rael/letras-para-explorar/index.html` | Pareie, ouça e explore letras em caixa alta |
+| Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras
 de escolher entre figuras ele é a quantidade de alternativas; nas outras, `nivelDaEtapa()` o lê
@@ -80,6 +83,7 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── manifest.webmanifest         Nome, cores e ícones do app instalável (Elis)
 │   ├── rael.webmanifest             O mesmo para os Jogos do Rael, com start_url /rael/
 │   ├── figuras/                     SVGs do OpenMoji usados nas Primeiras Descobertas
+│   ├── audio/                       Palavras e sons iniciais locais do Rael
 │   └── icones/                      icone-*.png e rael-*.png (192 e 512) mais os .svg
 ├── shared/                          Biblioteca compartilhada (sem dependências externas)
 │   ├── base.css                     Cores, fontes, botões, cartão, placar e feedback
@@ -306,14 +310,14 @@ npm run preview   # serve o dist/ para conferir o resultado
 ```
 
 O `npm run build` é exatamente o que o Netlify roda. Ele faz duas coisas: `vite build`, que
-compila as dezessete páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
+compila as vinte e cinco páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
 gerado e escreve o `dist/sw.js` com a lista de precache e a versão.
 
 Os testes cobrem texto e embaralhamento, M ou N, Ortografia, Matemática, Tabuada, Caça-Palavras,
 Forme a Palavra, Horas, Genius, Sudoku, Dinheirinho, Quiz, Forca, Memória, progresso, as duas
 inteligências do Jogo da Velha e, das Primeiras Descobertas, a fala em camadas, o motor de
 rodada, o álbum, a correspondência entre o catálogo e os arquivos de figura, as cenas de encaixe
-e a divisão silábica das trinta palavras.
+e a divisão silábica das trinta palavras, além de rimas, sons iniciais e exploração de letras.
 Eles importam o código-fonte direto (`Games/*/lib/…`,
 `Games/*/jogo.js`, `shared/…`), sem passar pelo build.
 

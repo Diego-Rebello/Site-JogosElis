@@ -37,6 +37,9 @@ const paginas = {
   'rael-toque-na-figura': 'rael/toque-na-figura/index.html',
   'rael-encaixe-as-figuras': 'rael/encaixe-as-figuras/index.html',
   'rael-palmas-nas-palavras': 'rael/palmas-nas-palavras/index.html',
+  'rael-rimas-com-figuras': 'rael/rimas-com-figuras/index.html',
+  'rael-comeca-com-o-mesmo-som': 'rael/comeca-com-o-mesmo-som/index.html',
+  'rael-letras-para-explorar': 'rael/letras-para-explorar/index.html',
 };
 
 export default defineConfig({

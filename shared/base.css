@@ -146,6 +146,7 @@
 
 .cabecalho__titulo {
   flex: 1;
+  min-width: 0;
   margin: 0;
   font-family: var(--fonte-titulo);
   font-weight: 400;

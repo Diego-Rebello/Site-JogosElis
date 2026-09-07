@@ -33,6 +33,10 @@
     #diagnostico { font-family: var(--fonte-leitura); font-size: 1rem; color: var(--cor-suave); }
     .privacidade { font-family: var(--fonte-leitura); font-size: 0.95rem; color: var(--cor-suave);
                    border-top: 2px dashed var(--cor-secundaria); padding-top: 14px; margin-bottom: 0; }
+    .letras { display: grid; grid-template-columns: repeat(auto-fit, minmax(52px, 1fr)); gap: 8px; }
+    .letra-opcao { display: grid; place-items: center; min-height: 56px; border: 2px solid var(--cor-secundaria);
+                   border-radius: 12px; background: #fff; cursor: pointer; }
+    .letra-opcao input { width: 22px; height: 22px; }
   </style>
 </head>
 <body class="pagina">
@@ -80,6 +84,16 @@
           </div>
         </div>
 
+        <fieldset class="grupo">
+          <legend>Letras para explorar</legend>
+          <div class="letras" id="letras"></div>
+          <div class="acoes">
+            <button class="botao botao--neutro" id="letras-iniciais" type="button">Nome + letras iniciais</button>
+            <button class="botao botao--neutro" id="alfabeto-todo" type="button">Alfabeto completo</button>
+          </div>
+          <p class="grupo__ajuda">O conjunto fica salvo neste aparelho. Comece pelas vogais e pelas letras do nome.</p>
+        </fieldset>
+
         <label class="grupo--mudo"><input id="mudo" type="checkbox"> Deixar os sons desligados</label>
 
         <div class="acoes">
@@ -100,7 +114,7 @@
     import { montarCabecalho } from '../shared/cabecalho.js';
     montarCabecalho('Configurações do Rael');
 
-    import { obterConfiguracoes, salvarConfiguracoes, zerarAlbum } from '../shared/descobertas.js';
+    import { ALFABETO, letrasIniciais, obterConfiguracoes, salvarConfiguracoes, zerarAlbum } from '../shared/descobertas.js';
     import { TEMAS } from '../shared/catalogo-figuras.js';
     import { definirMudo, estaMudo, tocar } from '../shared/sons.js';
     import { definirPreferencia, falarSequencia, preparar } from '../shared/fala.js';
@@ -117,6 +131,18 @@
     document.getElementById('voz').value = configuracoes.voz;
     document.getElementById('mudo').checked = estaMudo();
 
+    const areaLetras = document.getElementById('letras');
+    areaLetras.innerHTML = ALFABETO.map(letra => `<label class="letra-opcao">${letra}<input type="checkbox" value="${letra}"></label>`).join('');
+    function marcarLetras(letras) {
+      const escolhidas = new Set(letras);
+      areaLetras.querySelectorAll('input').forEach(input => { input.checked = escolhidas.has(input.value); });
+    }
+    marcarLetras(configuracoes.letras);
+    document.getElementById('letras-iniciais').addEventListener('click', () => {
+      marcarLetras(letrasIniciais(document.getElementById('nome').value));
+    });
+    document.getElementById('alfabeto-todo').addEventListener('click', () => marcarLetras(ALFABETO));
+
     document.getElementById('formulario').addEventListener('submit', evento => {
       evento.preventDefault();
       const mudo = document.getElementById('mudo').checked;
@@ -125,6 +151,7 @@
         alternativas: Number(document.getElementById('alternativas').value),
         tema: document.getElementById('tema').value,
         voz: document.getElementById('voz').value,
+        letras: [...areaLetras.querySelectorAll('input:checked')].map(input => input.value),
       });
       document.getElementById('nome').value = salvas.nome;
       definirMudo(mudo);

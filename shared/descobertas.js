@@ -15,6 +15,7 @@ const CHAVE = 'jogos-elis:descobertas';
 
 export const ALTERNATIVAS_VALIDAS = [2, 3, 4];
 export const VOZES_VALIDAS = ['auto', 'gravada', 'sintetizada', 'sem-fala'];
+export const ALFABETO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 const PADRAO = Object.freeze({
   versao: 1,
@@ -23,6 +24,20 @@ const PADRAO = Object.freeze({
   tema: 'tudo',
   voz: 'auto',
 });
+
+/** Vogais, letras do primeiro nome e um pequeno conjunto frequente. */
+export function letrasIniciais(nome = PADRAO.nome) {
+  const doNome = String(nome).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
+    .split('').filter(letra => ALFABETO.includes(letra));
+  return [...new Set([...doNome, ...'AEIOU', ...'BMPLS'])];
+}
+
+export function normalizarLetras(letras, nome = PADRAO.nome) {
+  if (!Array.isArray(letras)) return letrasIniciais(nome);
+  const limpas = [...new Set(letras.map(letra => String(letra).toUpperCase())
+    .filter(letra => ALFABETO.includes(letra)))];
+  return limpas.length >= 2 ? limpas : letrasIniciais(nome);
+}
 
 /**
  * As figurinhas do álbum são figuras do catálogo escolhidas por serem
@@ -76,12 +91,14 @@ function limparNome(valor, anterior) {
 export function obterEstado(armazenamento = armazenamentoPadrao()) {
   const salvo = ler(armazenamento);
   const alternativas = Number(salvo.alternativas);
+  const nome = limparNome(salvo.nome, PADRAO.nome);
   return {
     versao: PADRAO.versao,
-    nome: limparNome(salvo.nome, PADRAO.nome),
+    nome,
     alternativas: ALTERNATIVAS_VALIDAS.includes(alternativas) ? alternativas : PADRAO.alternativas,
     tema: typeof salvo.tema === 'string' && salvo.tema ? salvo.tema : PADRAO.tema,
     voz: VOZES_VALIDAS.includes(salvo.voz) ? salvo.voz : PADRAO.voz,
+    letras: normalizarLetras(salvo.letras, nome),
     atividades: salvo.atividades && typeof salvo.atividades === 'object' ? salvo.atividades : {},
     figurinhas: Array.isArray(salvo.figurinhas) ? salvo.figurinhas.filter(id => typeof id === 'string') : [],
   };
@@ -89,8 +106,8 @@ export function obterEstado(armazenamento = armazenamentoPadrao()) {
 
 /** As preferências do adulto, sem o progresso junto. */
 export function obterConfiguracoes(armazenamento = armazenamentoPadrao()) {
-  const { nome, alternativas, tema, voz } = obterEstado(armazenamento);
-  return { nome, alternativas, tema, voz };
+  const { nome, alternativas, tema, voz, letras } = obterEstado(armazenamento);
+  return { nome, alternativas, tema, voz, letras };
 }
 
 /** Salva o que veio, mantém o resto e devolve as preferências que ficaram valendo. */
@@ -104,9 +121,12 @@ export function salvarConfiguracoes(novas = {}, armazenamento = armazenamentoPad
     tema: typeof novas.tema === 'string' && novas.tema ? novas.tema : estado.tema,
     voz: VOZES_VALIDAS.includes(novas.voz) ? novas.voz : estado.voz,
   };
+  if (Object.hasOwn(novas, 'letras')) {
+    atualizado.letras = normalizarLetras(novas.letras, atualizado.nome);
+  }
   gravar(atualizado, armazenamento);
-  const { nome, tema, voz } = atualizado;
-  return { nome, alternativas: atualizado.alternativas, tema, voz };
+  const { nome, tema, voz, letras } = atualizado;
+  return { nome, alternativas: atualizado.alternativas, tema, voz, letras };
 }
 
 /**
