@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MAIS_PEDACOS, PALAVRAS } from '../rael/palmas-nas-palavras/dados.js';
-import { criarPalmas, montarRodada, regrasDoNivel } from '../rael/palmas-nas-palavras/jogo.js';
+import { criarPalmas, montarRodada, regrasDoNivel, silabasParaFala } from '../rael/palmas-nas-palavras/jogo.js';
 import { figura } from '../shared/catalogo-figuras.js';
 
 const semEmbaralhar = lista => [...lista];
@@ -75,6 +75,17 @@ describe('montarRodada', () => {
   it('no fácil o modelo vem antes; nos outros, só se pedirem', () => {
     expect(regrasDoNivel('facil').modelo).toBe('antes');
     expect(regrasDoNivel('normal').modelo).toBe('sob-pedido');
+  });
+});
+
+describe('fala das sílabas', () => {
+  it('fala LI e VRO como sílabas inteiras, sem enviar siglas em caixa alta', () => {
+    const livro = PALAVRAS.find(item => item.id === 'livro');
+    expect(silabasParaFala(livro.silabas)).toEqual([{ texto: 'li' }, { texto: 'vro' }]);
+  });
+
+  it('preserva os acentos necessários à pronúncia', () => {
+    expect(silabasParaFala(['PÃO', 'ÁR'])).toEqual([{ texto: 'pão' }, { texto: 'ár' }]);
   });
 });
 

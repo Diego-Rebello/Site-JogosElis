@@ -21,7 +21,7 @@ import { definirPreferencia, falarSequencia, limpar as limparFala, modoAcompanha
 import { nivelDaEtapa, obterConfiguracoes, registrarRodada } from '../../shared/descobertas.js';
 import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
 import { MAIS_PEDACOS, PALAVRAS } from './dados.js';
-import { criarPalmas, montarRodada, regrasDoNivel } from './jogo.js';
+import { criarPalmas, montarRodada, regrasDoNivel, silabasParaFala } from './jogo.js';
 
 const ATIVIDADE = 'palmas-nas-palavras';
 
@@ -89,7 +89,7 @@ async function mostrarModelo() {
   const desta = palmas;
   const { silabas } = palmas.palavra;
   pintarCirculos({ modelo: silabas.length, acesos: 0 });
-  await dizerPista(silabas.map(silaba => ({ texto: silaba })), {
+  await dizerPista(silabasParaFala(silabas), {
     aoComecar: posicao => pintarCirculos({ modelo: silabas.length, acesos: posicao + 1 }),
   });
   // Deixa o último círculo à vista um instante antes de voltar ao estado real.
@@ -151,7 +151,7 @@ async function conferir() {
     await dizerPista([{ texto: 'Vamos juntos.' }]);
     const { silabas } = palmas.palavra;
     pintarCirculos({ modelo: silabas.length, acesos: 0 });
-    await dizerPista(silabas.map(silaba => ({ texto: silaba })), {
+    await dizerPista(silabasParaFala(silabas), {
       aoComecar: posicao => pintarCirculos({ modelo: silabas.length, acesos: posicao + 1 }),
     });
     if (regras.pergunta) abrirPergunta();

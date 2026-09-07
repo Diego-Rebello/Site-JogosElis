@@ -31,6 +31,15 @@ export function montarRodada(palavras, { nivel = 'normal', quantidade = 6, embar
 }
 
 /**
+ * A tela mantém as sílabas em caixa alta, mas a voz recebe minúsculas.
+ * Sintetizadores costumam soletrar `LI` como "ele, i"; `li` é pronunciado
+ * como uma sílaba inteira. O mesmo vale para encontros como `vro`.
+ */
+export function silabasParaFala(silabas = []) {
+  return silabas.map(silaba => ({ texto: silaba.toLocaleLowerCase('pt-BR') }));
+}
+
+/**
  * As palmas de uma palavra. `limite` evita que uma sequência de toques
  * acidentais vire um número enorme na tela; não é erro, é só teto.
  */
