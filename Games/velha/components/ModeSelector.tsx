@@ -96,7 +96,7 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ modoPadrao, nomeCrianca, on
             </button>
           ))}
         </div>
-        <p className="mt-2 text-sm text-slate-600">Depois, quem começa alterna a cada partida.</p>
+        <p className="mt-2 text-base text-slate-600">Depois, quem começa alterna a cada partida.</p>
       </fieldset>
 
       <button type="submit" className="min-h-12 rounded-full bg-pink-600 px-6 py-3 text-xl font-bold text-white shadow-lg hover:bg-pink-700">

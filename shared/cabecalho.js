@@ -48,7 +48,7 @@
     inicio.className = 'cabecalho__inicio';
     inicio.href = caminhoDoInicio();
     inicio.innerHTML = '🏠 <span class="cabecalho__inicio-texto">Início</span>';
-    inicio.setAttribute('aria-label', 'Voltar para a página inicial');
+    inicio.setAttribute('aria-label', 'Início: voltar para a página inicial');
 
     var h1 = document.createElement('h1');
     h1.className = 'cabecalho__titulo';

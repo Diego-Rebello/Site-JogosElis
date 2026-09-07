@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="Página de desenvolvimento que exercita as peças compartilhadas dos Jogos da Elis: cores, botões, sons, confete e progresso.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Peças compartilhadas — Jogos da Elis">
+  <meta property="og:description" content="Página de desenvolvimento que exercita as peças compartilhadas dos Jogos da Elis: cores, botões, sons, confete e progresso.">
   <meta name="theme-color" content="#ff69b4">
   <link rel="manifest" href="../manifest.webmanifest">
   <link rel="apple-touch-icon" href="icones/icone-192.png">
@@ -14,7 +20,7 @@
     .secao { margin-bottom: 24px; }
     .secao h2 {
       font-family: var(--fonte-titulo);
-      color: var(--cor-principal-escura);
+      color: var(--cor-texto-destaque);
       font-size: 1.4rem;
       margin: 0 0 4px;
       font-weight: 400;
@@ -43,7 +49,7 @@
 <body class="pagina">
   <script src="cabecalho.js" data-titulo="Peças compartilhadas"></script>
 
-  <div class="pagina__conteudo">
+  <main class="pagina__conteudo">
     <div class="demo-conteudo">
 
       <div class="cartao secao">
@@ -124,7 +130,7 @@
       </div>
 
     </div>
-  </div>
+  </main>
 
   <script type="module">
     import { tocar } from './sons.js';

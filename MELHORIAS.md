@@ -990,6 +990,8 @@ e comentado. Documente como forçar a atualização do cache durante o desenvolv
 
 ### T22 — Acessibilidade, SEO básico e polimento
 
+> ✅ **Concluída em 2026-09-06** — branch `t22-acessibilidade`. Ver seção 0.4.
+
 **Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T10
 **Arquivos:** todas as páginas, `shared/base.css`
 
@@ -1001,8 +1003,14 @@ e comentado. Documente como forçar a atualização do cache durante o desenvolv
 5. Fontes grandes: mínimo 18 px no corpo dos jogos; alvos de toque ≥ 44 px (auditar com DevTools).
 
 **Critérios de aceite**
-- [ ] Lighthouse Acessibilidade ≥ 95 e Boas práticas ≥ 95 em todas as páginas.
-- [ ] Leitor de tela anuncia acerto/erro.
+- [x] Lighthouse Acessibilidade ≥ 95 e Boas práticas ≥ 95 em todas as páginas.
+      **100/100 nas oito páginas**, nas duas categorias. Antes: acessibilidade 92 a 100
+      (home 94, m-ou-n 92, memória 94, demo 92, matemática 95, forca 98, velha 100,
+      configurações 100); boas práticas já era 100 em todas.
+- [x] Leitor de tela anuncia acerto/erro. Forca, Matemática, M ou N e Configurações já
+      tinham `aria-live`; a Velha anuncia pelo status. O **Jogo da Memória não tinha nada**
+      (o retorno era só visual) e ganhou uma região `role="status"` que fala "Par
+      encontrado: 🐶" ou "Não foi dessa vez".
 
 **Prompt para o modelo**
 ```

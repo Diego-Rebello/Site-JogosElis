@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Treine a regra do M antes de P e B. Complete as palavras por toque ou digitando, com a regra explicada e placar por rodada.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="Jogo do M ou N — Jogos da Elis">
+    <meta property="og:description" content="Treine a regra do M antes de P e B. Complete as palavras por toque ou digitando, com a regra explicada e placar por rodada.">
     <meta name="theme-color" content="#ff69b4">
     <link rel="manifest" href="../../manifest.webmanifest">
     <link rel="apple-touch-icon" href="../../shared/icones/icone-192.png">
@@ -25,7 +30,7 @@
         }
         #palavra-desafio {
             font-size: clamp(1.7rem, 9vw, 2.2rem);
-            color: var(--cor-principal-escura);
+            color: var(--cor-texto-destaque);
             letter-spacing: 4px;
             margin: 24px 0;
             padding: 15px 10px;
@@ -39,7 +44,7 @@
             text-transform: uppercase;
         }
         .palavra-certa {
-            color: var(--cor-principal-escura);
+            color: var(--cor-texto-destaque);
             font-size: 1.15em;
             letter-spacing: 2px;
         }
@@ -56,7 +61,7 @@
         .progresso { width: 100%; height: 16px; accent-color: var(--cor-principal); margin: 12px 0; }
         .letras-toque { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 16px auto; max-width: 330px; }
         .letra-toque { min-height: 92px; font-size: 2.5rem; }
-        .letra-destaque { color: var(--cor-principal-escura); text-decoration: underline; }
+        .letra-destaque { color: var(--cor-texto-destaque); text-decoration: underline; }
         @media (max-width: 420px) { .modos { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -64,7 +69,7 @@
 
     <script src="../../shared/cabecalho.js" data-titulo="Jogo do M ou N"></script>
 
-    <div class="pagina__conteudo pagina__conteudo--centro">
+    <main class="pagina__conteudo pagina__conteudo--centro">
         <div class="cartao mn">
           <section id="tela-modos" class="tela">
             <h1>JOGO DO M OU N</h1><p class="mn__instrucao">COMO VOCÊ QUER JOGAR?</p>
@@ -97,7 +102,7 @@
           </section>
           <section id="tela-final" class="tela" hidden><h2>🏆 RODADA CONCLUÍDA!</h2><p id="resumo-final"></p><p id="estrelas-final" style="font-size:2rem"></p><div class="botoes"><button id="jogar-novamente" class="botao botao--sucesso">JOGAR DE NOVO</button><button id="trocar-modo" class="botao botao--neutro">TROCAR MODO</button></div></section>
         </div>
-    </div>
+    </main>
 
     <script type="module">
         import { normalizar, sortearVarios } from '../../shared/texto.js';
