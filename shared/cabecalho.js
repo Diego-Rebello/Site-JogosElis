@@ -1,91 +1,71 @@
 /*
- * cabecalho.js — injeta a barra de cima com "🏠 Início", o título do jogo e
- * o botão de som. Use como script clássico (sem type="module"), porque ele
- * lê o próprio data-titulo por document.currentScript:
+ * cabecalho.js — a barra de cima com "🏠 Início", o título do jogo e o botão
+ * de som. Módulo ES:
  *
- *   <script src="../../shared/cabecalho.js" data-titulo="Jogo da Forca"></script>
+ *   import { montarCabecalho } from '../../shared/cabecalho.js';
+ *   montarCabecalho('Jogo da Forca');
+ *
+ * Até a T22 era um <script> clássico que lia o próprio data-titulo por
+ * document.currentScript. Virou módulo na T23 por dois motivos: o Vite não
+ * empacota script clássico (o arquivo simplesmente não ia para o dist/), e
+ * document.currentScript é sempre null dentro de um módulo. De quebra, o
+ * import de sons.js deixou de precisar ser dinâmico.
  *
  * Os jogos em React não usam este arquivo: eles têm o componente Cabecalho,
  * com o mesmo HTML e as mesmas classes.
  */
-(function () {
-  // Tem de ser lido agora: dentro de um callback, currentScript já é null.
-  var script = document.currentScript;
-  var titulo = (script && script.dataset.titulo) || document.title;
-  var urlSons = script ? new URL('sons.js', script.src).href : null;
+import { alternarMudo, estaMudo, tocar } from './sons.js';
 
-  /**
-   * Descobre o caminho da página inicial a partir de onde o jogo está.
-   * Serve tanto para Games/forca/ quanto para Games/memoria/dist/, e o /i
-   * cobre o Netlify, que publica a pasta como /games/ em minúsculas.
-   */
-  function caminhoDoInicio() {
-    var caminho = location.pathname;
-    if (/\/games\//i.test(caminho)) {
-      return caminho.replace(/\/games\/.*$/i, '/index.html');
-    }
-    // Fora do padrão (a demo desta pasta, por exemplo): a raiz do site é
-    // sempre um nível acima de shared/, e shared/ é onde este script mora.
-    if (script) return new URL('../index.html', script.src).href;
-    return '../../index.html';
+/**
+ * Descobre o caminho da página inicial a partir de onde o jogo está.
+ * Serve tanto para Games/forca/ quanto para Games/memoria/, e o /i cobre o
+ * Netlify, que publica a pasta como /games/ em minúsculas.
+ */
+function caminhoDoInicio() {
+  const caminho = location.pathname;
+  if (/\/games\//i.test(caminho)) {
+    return caminho.replace(/\/games\/.*$/i, '/index.html');
   }
+  // Fora do padrão (a demo de shared/, por exemplo): sobe um nível.
+  return '../index.html';
+}
 
-  function lerMudo() {
-    try {
-      return localStorage.getItem('jogos-elis:mudo') === '1';
-    } catch (e) {
-      return false;
-    }
+/** Injeta o cabeçalho no topo do <body>. Chamar mais de uma vez não duplica. */
+export function montarCabecalho(titulo = document.title) {
+  if (document.querySelector('.cabecalho')) return;
+
+  const cabecalho = document.createElement('header');
+  cabecalho.className = 'cabecalho';
+
+  const inicio = document.createElement('a');
+  inicio.className = 'cabecalho__inicio';
+  inicio.href = caminhoDoInicio();
+  inicio.innerHTML = '🏠 <span class="cabecalho__inicio-texto">Início</span>';
+  // O nome acessível precisa conter o texto visível (WCAG 2.5.3, T22).
+  inicio.setAttribute('aria-label', 'Início: voltar para a página inicial');
+
+  const h1 = document.createElement('h1');
+  h1.className = 'cabecalho__titulo';
+  h1.textContent = titulo;
+
+  const mudo = document.createElement('button');
+  mudo.type = 'button';
+  mudo.className = 'cabecalho__mudo';
+
+  function pintarBotao(estaMudoAgora) {
+    mudo.textContent = estaMudoAgora ? '🔇' : '🔊';
+    mudo.setAttribute('aria-pressed', String(estaMudoAgora));
+    mudo.setAttribute('aria-label', estaMudoAgora ? 'Ligar o som' : 'Desligar o som');
+    mudo.title = estaMudoAgora ? 'Ligar o som' : 'Desligar o som';
   }
+  pintarBotao(estaMudo());
 
-  function montar() {
-    if (document.querySelector('.cabecalho')) return; // não duplica
+  mudo.addEventListener('click', () => {
+    const agoraMudo = alternarMudo();
+    pintarBotao(agoraMudo);
+    if (!agoraMudo) tocar('clique');
+  });
 
-    var cabecalho = document.createElement('header');
-    cabecalho.className = 'cabecalho';
-
-    var inicio = document.createElement('a');
-    inicio.className = 'cabecalho__inicio';
-    inicio.href = caminhoDoInicio();
-    inicio.innerHTML = '🏠 <span class="cabecalho__inicio-texto">Início</span>';
-    inicio.setAttribute('aria-label', 'Início: voltar para a página inicial');
-
-    var h1 = document.createElement('h1');
-    h1.className = 'cabecalho__titulo';
-    h1.textContent = titulo;
-
-    var mudo = document.createElement('button');
-    mudo.type = 'button';
-    mudo.className = 'cabecalho__mudo';
-
-    function pintarBotao(estaMudo) {
-      mudo.textContent = estaMudo ? '🔇' : '🔊';
-      mudo.setAttribute('aria-pressed', String(estaMudo));
-      mudo.setAttribute('aria-label', estaMudo ? 'Ligar o som' : 'Desligar o som');
-      mudo.title = estaMudo ? 'Ligar o som' : 'Desligar o som';
-    }
-    pintarBotao(lerMudo());
-
-    mudo.addEventListener('click', function () {
-      if (!urlSons) return;
-      // import dinâmico: funciona em script clássico e só carrega o áudio
-      // quando a criança mexe no botão.
-      import(urlSons).then(function (sons) {
-        var agoraMudo = sons.alternarMudo();
-        pintarBotao(agoraMudo);
-        if (!agoraMudo) sons.tocar('clique');
-      });
-    });
-
-    cabecalho.appendChild(inicio);
-    cabecalho.appendChild(h1);
-    cabecalho.appendChild(mudo);
-    document.body.insertBefore(cabecalho, document.body.firstChild);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', montar);
-  } else {
-    montar();
-  }
-})();
+  cabecalho.append(inicio, h1, mudo);
+  document.body.insertBefore(cabecalho, document.body.firstChild);
+}

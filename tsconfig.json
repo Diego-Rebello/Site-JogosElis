@@ -2,29 +2,23 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "strict": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
     "jsx": "react-jsx",
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
   "include": [
-    "*.ts",
-    "*.tsx",
-    "components",
-    "lib"
+    "vite-env.d.ts",
+    "Games/*/*.ts",
+    "Games/*/*.tsx",
+    "Games/*/components",
+    "Games/*/lib",
+    "shared/*.d.ts",
+    "tests"
   ]
 }

@@ -2,5 +2,10 @@
 node_modules/
 *.local
 .env*
-_site/
-Games/*/dist/
+dist/
+
+# A sincronização do Desktop deste Mac cria cópias com sufixo " 2", " 3"…
+# (apareceram até dentro de node_modules/@types, quebrando o tsc). Nenhum
+# arquivo de verdade aqui tem nome assim, então é seguro barrar o padrão.
+* [0-9].*
+* [0-9]

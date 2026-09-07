@@ -2,10 +2,28 @@
   "name": "jogos-da-elis",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "build": "node ./node_modules/vite/bin/vite.js build && node scripts/gerar-service-worker.mjs sw.js dist/sw.js dist",
+    "preview": "node ./node_modules/vite/bin/vite.js preview",
+    "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit",
     "test": "node ./node_modules/vitest/vitest.mjs run"
   },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.8.2",
+    "vite": "^7.3.6",
     "vitest": "^3.2.4"
   }
 }
