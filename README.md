@@ -25,45 +25,50 @@ caminhos acima. Todos os links são relativos, então o site funciona em qualque
 
 ## Estrutura de pastas
 
+Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por página.
+
 ```
 .
 ├── index.html                       Página inicial com os cartões dos jogos
-├── README.md                        Este arquivo
-├── MELHORIAS.md                     Backlog de melhorias e de jogos novos
-├── package.json                     Testes automatizados da lógica dos jogos
+├── configuracoes.html               Nome da criança, som e níveis
+├── package.json                     Único do repositório: deps, build, testes e tipos
+├── vite.config.ts                   Uma entrada por página (build.rollupOptions.input)
+├── tsconfig.json                    Tipos de todo o código TypeScript
 ├── vitest.config.ts                 Configuração do Vitest
-├── build-all.sh                     Gera o site completo em _site/
-├── netlify.toml                     Testa, compila e publica _site/ no Netlify
-├── _headers                         Regras de cache da hospedagem
-├── .gitignore
-├── .vscode/launch.json              Abre index.html no Chrome pelo VS Code
-├── _redirects                       Redireciona os endereços antigos dos jogos (Netlify)
-├── manifest.webmanifest             Nome, cores e ícones do app instalável (T21)
+├── netlify.toml                     Testa, compila e publica dist/ no Netlify
 ├── sw.js                            Modelo do service worker; o build injeta versão e lista
-├── scripts/gerar-service-worker.mjs Gera o sw.js final a partir do que foi para _site/
-├── shared/                          Biblioteca compartilhada pelos jogos (sem dependências)
+├── scripts/gerar-service-worker.mjs Gera o sw.js final a partir do que foi para dist/
+├── public/                          Copiado sem alteração para a raiz do dist/
+│   ├── _headers                     Regras de cache da hospedagem
+│   ├── _redirects                   Endereços antigos dos jogos (Netlify)
+│   ├── manifest.webmanifest         Nome, cores e ícones do app instalável
+│   └── icones/                      icone-192.png, icone-512.png e icone.svg
+├── shared/                          Biblioteca compartilhada (sem dependências externas)
 │   ├── base.css                     Cores, fontes, botões, cartão, placar e feedback
-│   ├── cabecalho.js                 Injeta a barra "🏠 Início / título / 🔊"
+│   ├── cabecalho.js                 Módulo: montarCabecalho('Nome do jogo')
 │   ├── texto.js                     normalizar, embaralhar, sortear, sortearVarios
 │   ├── sons.js                      Efeitos sonoros gerados pela Web Audio API
-│   ├── confete.js                   Chuva de confete em canvas
+│   ├── confete.js                   Confete em canvas e as animações de feedback
 │   ├── progresso.js                 Histórico de partidas em localStorage
+│   ├── pwa.js                       Registra o service worker
 │   ├── demo.html                    Página que exercita tudo acima
 │   └── fontes/                      Fredoka One, Pacifico e Nunito em .woff2
+├── tests/                           Testes de lógica pura (Vitest)
 └── Games/
-    ├── forca/index.html             Jogo da Forca
-    ├── m-ou-n/index.html            Jogo do M ou N
-    ├── matematica/                  Matemática (interface e lógica testável)
-    ├── memoria/                     Jogo da Memória (React + Vite)
-    │   ├── App.tsx, index.tsx, index.html, vite.config.ts, tsconfig.json
-    │   └── dist/                    Build local ignorado pelo git
-    └── velha/                       Jogo da Velha (React + Vite)
-        ├── App.tsx, index.tsx, components/, lib/logica.ts, constants.tsx
-        └── dist/                    Build local ignorado pelo git
+    ├── forca/                       index.html + jogo.js
+    ├── m-ou-n/                      index.html + jogo.js
+    ├── matematica/                  index.html + jogo.js
+    ├── memoria/                     index.html + main.tsx + App.tsx + components/ + lib/
+    └── velha/                       index.html + main.tsx + App.tsx + components/ + lib/
 ```
 
-Os jogos em HTML puro usam apenas HTML/CSS e módulos JavaScript locais, sem pacotes externos. Os dois jogos em React são compilados pelo
-`build-all.sh`; suas pastas `dist/` são artefatos locais e não ficam no git.
+Nenhuma subpasta tem `package.json`, `node_modules` ou `vite.config.ts` própria: são só
+código-fonte. Os três jogos em HTML puro também passam pelo bundler agora, então ganham
+minificação e hash de cache como os dois em React.
+
+**O que fica de fora do bundler:** o que está em `public/`. O `manifest.webmanifest` aponta
+para os ícones por caminho fixo, então eles não podem ganhar hash; `_headers` e `_redirects`
+são lidos pelo Netlify e precisam do nome exato.
 
 ---
 
@@ -170,51 +175,34 @@ No VS Code, a configuração "Open index" (`.vscode/launch.json`) abre o `index.
 
 ---
 
-## Como rodar e buildar os jogos React
+## Como desenvolver, testar e compilar
 
-Vale para `Games/memoria` e `Games/velha`. Requer Node.js 18 ou mais novo.
+Um `package.json` só, na raiz. Requer Node.js 20.19+ ou 22.12+ (exigência do Vite 7).
 
 ```bash
-cd Games/memoria   # ou Games/velha
+npm install       # uma vez
 
-npm install     # instala as dependências (cria node_modules/, fora do git)
-npm run dev     # servidor de desenvolvimento com recarga automática
-npm run build   # gera a pasta dist/
-npm run preview # serve o dist/ para conferir o resultado do build
+npm run dev       # servidor de desenvolvimento, com todas as páginas
+npm test          # testes de lógica pura (sem navegador, sem rede)
 npm run typecheck # confere os tipos sem gerar arquivos
+npm run build     # gera o dist/ completo e o service worker
+npm run preview   # serve o dist/ para conferir o resultado
 ```
 
-As pastas `dist/` servem para conferência local e são ignoradas pelo git. No deploy, o Netlify
-instala as dependências e refaz os dois builds a partir do código-fonte.
-
-O CSS dos dois jogos é **Tailwind 4 compilado no build** (plugin `@tailwindcss/vite`), não mais
-o "Play CDN". O ponto de entrada é o `index.css` de cada jogo, que importa o Tailwind e o
-`shared/base.css`. Ele usa `source(none)` e `@source` explícitos de propósito: sem isso o
-Tailwind varreria também o `dist/` gerado e realimentaria classes velhas a cada build.
-
----
-
-## Testes e build completo
-
-Na raiz, instale as dependências uma vez e rode a suíte de lógica pura:
-
-```bash
-npm install
-npm test
-```
+O `npm run build` é exatamente o que o Netlify roda. Ele faz duas coisas: `vite build`, que
+compila as oito páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
+gerado e escreve o `dist/sw.js` com a lista de precache e a versão.
 
 Os testes cobrem texto e embaralhamento, M ou N, Matemática, Forca, Memória, progresso e as
-duas inteligências do Jogo da Velha. Eles não precisam de navegador nem de rede.
+duas inteligências do Jogo da Velha. Eles importam o código-fonte direto (`Games/*/lib/…`,
+`Games/*/jogo.js`, `shared/…`), sem passar pelo build.
 
-Para reproduzir exatamente o site que o Netlify publica:
+### Tailwind
 
-```bash
-bash build-all.sh
-npx serve _site
-```
-
-O script instala as dependências dos jogos React, compila seus arquivos e reúne somente o que
-é público em `_site/`. Código-fonte TypeScript, configurações e dependências não são copiados.
+Os dois jogos React usam **Tailwind 4 compilado no build** (plugin `@tailwindcss/vite`). O
+ponto de entrada é o `index.css` de cada jogo, que importa o Tailwind e o `shared/base.css`.
+Ele usa `source(none)` com `@source` explícitos de propósito: sem isso o Tailwind varreria
+também o `dist/` gerado e realimentaria classes velhas a cada build.
 
 ---
 
@@ -224,11 +212,11 @@ O site é instalável e roda sem internet. Três peças:
 
 | Arquivo | Papel |
 |---|---|
-| `manifest.webmanifest` | Nome, cores e ícones (192 e 512 px em `shared/icones/`) |
+| `public/manifest.webmanifest` | Nome, cores e ícones (192 e 512 px em `public/icones/`) |
 | `sw.js` | **Modelo** do service worker, com `__VERSAO__` e `__ARQUIVOS_PRECACHE__` |
 | `shared/pwa.js` | Registra o service worker; incluído em todas as páginas |
 
-O `build-all.sh` chama `scripts/gerar-service-worker.mjs`, que lista tudo o que foi para `_site/`,
+O `npm run build` chama `scripts/gerar-service-worker.mjs`, que lista tudo o que foi para `dist/`,
 injeta essa lista no modelo e carimba a versão. A versão é o `COMMIT_REF` do Netlify (ou o SHA
 curto do commit local), então **cada deploy gera um cache novo** e o service worker apaga os
 antigos ao ativar. O `_headers` manda `Cache-Control: no-cache` no `sw.js`, então o navegador
@@ -253,11 +241,11 @@ Enquanto estiver mexendo no site:
 
 ```bash
 # 1. Gerar o site com uma versão inventada, para forçar cache novo a cada rodada
-bash build-all.sh
-COMMIT_REF="dev-$(date +%s)" node scripts/gerar-service-worker.mjs sw.js _site/sw.js _site
+npm run build
+COMMIT_REF="dev-$(date +%s)" node scripts/gerar-service-worker.mjs sw.js dist/sw.js dist
 
-# 2. Servir o _site (o service worker só funciona em localhost ou HTTPS)
-python3 -m http.server 8000 --directory _site
+# 2. Servir o dist/ (o service worker só funciona em localhost ou HTTPS)
+npm run preview
 ```
 
 No navegador, o caminho mais rápido é o DevTools → **Application**:
@@ -284,13 +272,13 @@ A publicação é automática:
 
 - Hospedagem: **Netlify**, projeto `jogosdaelis`.
 - Deploy contínuo a partir do GitHub, branch `main`, com *auto publishing* ligado.
-- O `netlify.toml` roda `npm ci`, `npm test` e `bash build-all.sh`.
-- Somente a pasta `_site/` é publicada; um teste quebrado impede o deploy.
+- O `netlify.toml` roda `npm ci`, `npm test` e `npm run build`.
+- Somente a pasta `dist/` é publicada; um teste quebrado impede o deploy.
 
 Ou seja, **todo push (ou merge de PR) na `main` publica o site**. O fluxo de trabalho:
 
 1. Crie uma branch a partir da `main`.
-2. Faça as alterações e rode `npm test` e `bash build-all.sh`.
+2. Faça as alterações e rode `npm test` e `npm run build`.
 3. Abra um PR e confira todos os jogos na URL de preview criada pelo Netlify.
 4. Mescle na `main` somente depois da validação. O Netlify testa e publica em seguida.
 

@@ -71,8 +71,9 @@ Regras:
 
 ### 0.4 Progresso
 
-Fases 0, 1, 2 e 3 concluídas, mais T19 e T20 da fase 4. Tudo testado no navegador
-(Chrome headless) antes de cada commit.
+Todas as tarefas de T01 a T23 concluídas. A T23 é a única que **não está na `main`**:
+ela reestrutura o repositório inteiro e o próprio plano pede aprovação antes do merge.
+Tudo testado no navegador (Chrome headless) antes de cada commit.
 
 | Tarefa | Status | Commit |
 |---|---|---|
@@ -96,7 +97,9 @@ Fases 0, 1, 2 e 3 concluídas, mais T19 e T20 da fase 4. Tudo testado no navegad
 | T18 — Velha: placar, símbolos, início e níveis | ✅ Concluída em 2026-09-06 | `528b21d` |
 | T19 — Testes automatizados da lógica | ✅ Concluída em 2026-09-06 | `528b21d` |
 | T20 — Build e publicação automática no Netlify | ✅ Concluída e validada em produção em 2026-09-06 | `528b21d` |
-| T21 em diante | ⬜ A fazer | — |
+| T21 — PWA: offline e instalável | ✅ Concluída em 2026-09-06 | `cdd0b6b` |
+| T22 — Acessibilidade, SEO e polimento | ✅ Concluída em 2026-09-06 | `b0d3606` |
+| T23 — Projeto Vite único multipágina | ✅ Concluída em 2026-09-06, **fora da `main`** | branch `t23-vite-unico` |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
 
@@ -1021,6 +1024,9 @@ Abra MELHORIAS.md e execute a tarefa T22. Rode o Lighthouse antes e depois e inc
 
 ### T23 — (Opcional) Unificar tudo em um único projeto Vite multipágina
 
+> ✅ **Concluída em 2026-09-06** — branch `t23-vite-unico`, **não mesclada**.
+> Aguarda aprovação do Diego, como o prompt da própria tarefa pede.
+
 **Prioridade:** Baixa · **Esforço:** G · **Modelo:** Opus · **Depende de:** T19, T20
 
 **Contexto**
@@ -1033,8 +1039,14 @@ Abra MELHORIAS.md e execute a tarefa T22. Rode o Lighthouse antes e depois e inc
 4. Atualizar workflow, README e este documento.
 
 **Critérios de aceite**
-- [ ] Um único `npm run build` gera o site completo.
-- [ ] Todos os testes e o deploy continuam funcionando.
+- [x] Um único `npm run build` gera o site completo (`vite build` mais o gerador do
+      service worker). O `build-all.sh` deixou de existir.
+- [x] Todos os testes e o deploy continuam funcionando: 28 do Vitest, 19 de modo avião,
+      13 de jogabilidade, 50 de acessibilidade e Lighthouse 100/100 nas oito páginas.
+      **Foi preciso subir o Vite de 6.4.3 para 7.3.6**: com o Vite 6 na raiz, o
+      `vite-node` do Vitest quebrava com `Cannot find module '/@vite/env'`. Na `main` o
+      Vitest já usava Vite 7 por dependência transitiva; o problema só apareceu quando
+      a versão passou a ser fixada no `package.json` único.
 
 **Prompt para o modelo**
 ```
