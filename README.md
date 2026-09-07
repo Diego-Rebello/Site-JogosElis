@@ -45,7 +45,13 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 |---|---|---|
 | Casa do Rael | `rael/index.html` | Cartões das brincadeiras e o álbum de figurinhas |
 | Toque na Figura | `rael/toque-na-figura/index.html` | Ouça o nome e toque na figura certa |
+| Encaixe as Figuras | `rael/encaixe-as-figuras/index.html` | Leve cada figura à sua sombra e monte quebra-cabeças de 4 e 6 peças |
+| Palmas nas Palavras | `rael/palmas-nas-palavras/index.html` | Uma palma para cada pedaço da palavra |
 | Configurações | `rael/configuracoes.html` | Nome, número de opções, tema, voz e zerar o álbum |
+
+O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras
+de escolher entre figuras ele é a quantidade de alternativas; nas outras, `nivelDaEtapa()` o lê
+como nível (2 = fácil, 3 = normal, 4 = esperto).
 
 O progresso dele fica numa chave própria (`localStorage['jogos-elis:descobertas']`), então não
 entra no Mural de Conquistas da Elis e não é apagado pelo "Zerar progresso" das configurações
@@ -95,7 +101,9 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 ├── rael/                            Jogos do Rael (área Primeiras Descobertas)
 │   ├── index.html                   Casa do Rael: cartões e álbum
 │   ├── configuracoes.html           Preferências do adulto para a etapa
-│   └── toque-na-figura/             index.html + tela.js
+│   ├── toque-na-figura/             index.html + tela.js
+│   ├── encaixe-as-figuras/          index.html + dados.js + jogo.js + tela.js
+│   └── palmas-nas-palavras/         index.html + dados.js + jogo.js + tela.js
 └── Games/
     ├── forca/                       index.html + jogo.js
     ├── m-ou-n/                      index.html + jogo.js
@@ -216,7 +224,7 @@ em que nada toca e a tela mostra a frase para um adulto ler.
 |---|---|
 | `preparar()` | Escolhe a voz pt-BR e destrava o iOS. Chamar dentro do primeiro toque |
 | `falar(item)` | Devolve como falou: `'gravada'`, `'sintetizada'`, `'sem-som'` ou `'sem-fala'` |
-| `falarSequencia(itens)` | Fala em ordem, uma por vez |
+| `falarSequencia(itens, { aoComecar })` | Fala em ordem, uma por vez; `aoComecar` avisa a tela antes de cada item |
 | `repetir()` | Repete a última fala (o botão "Ouvir de novo") |
 | `parar()` / `limpar()` | Cala gravação, síntese e fila pendente |
 | `definirPreferencia(modo)` | `'auto'`, `'gravada'`, `'sintetizada'` ou `'sem-fala'` |
@@ -227,11 +235,16 @@ Um item é `{ texto, audio? }`. Só uma fala por vez, e sair da tela ou trocar d
 interrompe a anterior. `configurarAmbiente()` existe para os testes trocarem o navegador por
 um dublê.
 
+Alguns aparelhos têm `speechSynthesis`, aceitam `speak()` e não falam nem avisam nada. Por isso
+existe um relógio de 2,5 s esperando o evento `start`: depois de duas falas que nem começam, a
+camada 2 é dada como perdida e o modo acompanhado assume na hora, em vez de a tela ficar
+esperando o tempo máximo a cada frase.
+
 ### `descobertas.js`, `rodada.js` e `catalogo-figuras.js`
 
 | Módulo | O que faz |
 |---|---|
-| `descobertas.js` | Preferências do adulto, rodadas por atividade e álbum de figurinhas, em `localStorage['jogos-elis:descobertas']` |
+| `descobertas.js` | Preferências do adulto, rodadas por atividade, álbum de figurinhas e `nivelDaEtapa()`, em `localStorage['jogos-elis:descobertas']` |
 | `rodada.js` | `montarDesafios()` sorteia alvos e alternativas sem repetir; `criarSessao()` conta tentativas e manda demonstrar depois de duas |
 | `catalogo-figuras.js` | 62 figuras com nome, artigo (`o`/`a`) e categoria, mais os temas e `caminhoDaFigura(id)` |
 
@@ -299,7 +312,8 @@ gerado e escreve o `dist/sw.js` com a lista de precache e a versão.
 Os testes cobrem texto e embaralhamento, M ou N, Ortografia, Matemática, Tabuada, Caça-Palavras,
 Forme a Palavra, Horas, Genius, Sudoku, Dinheirinho, Quiz, Forca, Memória, progresso, as duas
 inteligências do Jogo da Velha e, das Primeiras Descobertas, a fala em camadas, o motor de
-rodada, o álbum e a correspondência entre o catálogo e os arquivos de figura.
+rodada, o álbum, a correspondência entre o catálogo e os arquivos de figura, as cenas de encaixe
+e a divisão silábica das trinta palavras.
 Eles importam o código-fonte direto (`Games/*/lib/…`,
 `Games/*/jogo.js`, `shared/…`), sem passar pelo build.
 

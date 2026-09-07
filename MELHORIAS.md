@@ -11,14 +11,15 @@
 > Diego revisa o resultado, testa com a Elis e segue para a próxima.
 >
 > **Andamento:** T01 a T23 e J01 concluídas em 2026-09-06; J02 e J04 a J10 em 2026-09-07;
-> P00 em 2026-09-07. Faltam **J03** (Ditado Mágico), **J11** a **J14** e **P01** a **P13**.
+> P00, P02 e P03 em 2026-09-07. Faltam **J03** (Ditado Mágico), **J11** a **J14**,
+> **P01**, **P04** a **P13**.
 > O estado atual do repositório está na seção [0.4](#04-progresso); a seção 1 é o diagnóstico
 > original, de antes da execução, e foi mantida para registrar o motivo de cada tarefa.
 >
 > **Planejamento ampliado em 2026-09-07:** Labirinto e Rimas detalhados na seção 3.1;
 > nova etapa de pré-alfabetização para um menino de 5 anos na seção 6 (revisada para essa idade
-> no mesmo dia). A **P00 foi implementada em 2026-09-07**: os Jogos do Rael estão de pé, com a
-> primeira brincadeira. As demais tarefas da seção 6 continuam pendentes.
+> no mesmo dia). **P00, P02 e P03 implementadas em 2026-09-07**: os Jogos do Rael estão no ar
+> com três brincadeiras. As demais tarefas da seção 6 continuam pendentes.
 
 ---
 
@@ -110,6 +111,8 @@ Tudo testado no navegador (Chrome headless) antes de cada commit.
 | J02, J04, J05, J06 — Tabuada, Caça-Palavras, Forme a Palavra, Horas | ✅ Concluídas em 2026-09-07 | `939c3c7` |
 | J07, J08, J09, J10 — Genius, Sudoku, Dinheirinho, Quiz | ✅ Concluídas em 2026-09-07 | `05378b0` |
 | P00 — Jogos do Rael: área, fala, figuras, álbum e configurações | ✅ Concluída em 2026-09-07, falta validar com a criança | branch `p00-jogos-do-rael` |
+| P02 — Encaixe as Figuras | ✅ Concluída em 2026-09-07, falta validar com a criança | branch `p02-p03-rael` |
+| P03 — Palmas nas Palavras | ✅ Concluída em 2026-09-07, falta validar com a criança | branch `p02-p03-rael` |
 
 **Inventário atual** (substitui o caminho da tabela 1.1):
 
@@ -125,6 +128,8 @@ Tudo testado no navegador (Chrome headless) antes de cada commit.
 | Jogo da Velha | `Games/velha/` (compilado para `_site/Games/velha/`) | React 19.2 + Vite 6.4 + Tailwind 4 compilado |
 | **Jogos do Rael** — casa | `rael/index.html` | HTML puro + `shared/`, tema `tema-rael.css` |
 | Jogos do Rael — Toque na Figura | `rael/toque-na-figura/` | HTML puro + `tela.js`, usa `fala.js` e `rodada.js` |
+| Jogos do Rael — Encaixe as Figuras | `rael/encaixe-as-figuras/` | HTML puro + `dados.js`/`jogo.js`/`tela.js` |
+| Jogos do Rael — Palmas nas Palavras | `rael/palmas-nas-palavras/` | HTML puro + `dados.js`/`jogo.js`/`tela.js` |
 | Jogos do Rael — configurações | `rael/configuracoes.html` | HTML puro + `shared/descobertas.js` |
 
 **O site não faz mais nenhuma requisição externa.** Fontes, ícones e CSS são todos locais.
@@ -1767,9 +1772,11 @@ na demonstração ou no retorno da resposta; rodadas sem repetição do alvo; so
 **Risco:** esta é a única atividade que não funciona sem arquivos gravados; se os sons atrasarem,
 entregar antes P09, P10 e P06.
 
-### P02 — Encaixe as Figuras
+### P02 — Encaixe as Figuras ✅
 
 **Prioridade:** Média · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** P00
+
+**✅ Concluída em 2026-09-07.** Especificação original abaixo; o entregue está em "Como ficou".
 
 **Foco:** discriminação visual, reconhecimento de formas e coordenação manual.
 
@@ -1784,12 +1791,37 @@ rotação. Três cenas por rodada.
 permanece no lugar; uma tentativa diferente só devolve a peça à origem. As silhuetas podem vir
 dos SVGs de `shared/figuras/` preenchidos em cinza; as cenas de peças precisam de ilustração própria.
 
-**Aceite:** funciona integralmente sem arrastar; encaixes não se sobrepõem; todas as peças e
-destinos cabem em 360 px e a criança pode repetir a demonstração.
+**Aceite**
+- [x] Funciona integralmente sem arrastar: tocar na peça e depois no lugar resolve tudo.
+- [x] Encaixes não se sobrepõem: um destino aceita uma peça só, e peça encaixada não sai.
+- [x] Todas as peças e destinos cabem em 360 px, inclusive a grade de seis pedaços.
+- [x] A demonstração pode ser repetida quantas vezes quiser, pelo botão "Me mostra".
 
-### P03 — Palmas nas Palavras
+**Como ficou**
+
+1. **Sem ilustração nova.** As doze cenas saem dos mesmos SVGs do catálogo. A sombra é a figura
+   com `filter: brightness(0)` e opacidade baixa; o pedaço é a figura recortada por
+   `background-position`, como um sprite. A cena de peças da especificação (foguete em bico,
+   corpo, asas e fogo) virou um quebra-cabeça de recortes iguais, que é a mesma brincadeira sem
+   depender de desenho à mão.
+2. **Toque e arraste, os dois.** O arraste usa eventos de ponteiro, então dedo e mouse seguem o
+   mesmo caminho. O toque em dois passos continua sendo o modo garantido, e é o que a aceitação exige.
+3. **Níveis pelo mesmo botão da etapa.** O número de alternativas das configurações vira nível:
+   duas = três silhuetas; três = duas silhuetas e um de quatro pedaços; quatro = silhueta, quatro
+   e seis pedaços. Nenhum desbloqueio.
+4. **Uma descoberta no meio do caminho:** recortar uma figura numa grade deixa células em branco
+   quando o desenho não preenche o quadro. Duas peças em branco seriam indistinguíveis para a
+   criança. Mediu-se a tinta de cada célula desenhando o SVG num canvas, e só entraram figuras
+   cuja célula mais vazia ainda tem desenho (a medida ficou registrada em `tintaMinima`, no
+   `dados.js`). Foi o que tirou dinossauro, trem e ônibus das cenas de pedaços.
+5. **Ajuda sem custo:** "Me mostra" encaixa a próxima peça e pode ser usado à vontade; a
+   comemoração do fim é a mesma.
+
+### P03 — Palmas nas Palavras ✅
 
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Sonnet · **Depende de:** P00
+
+**✅ Concluída em 2026-09-07.** Especificação original abaixo; o entregue está em "Como ficou".
 
 **Foco:** explorar oralmente as partes das palavras, sem ler sílabas escritas.
 
@@ -1806,9 +1838,26 @@ palmas, tocar no número (1 a 4), ligando com a contagem de P10. Exemplos: **SOL
 inteira, áudio segmentado e divisão revisada. Se a síntese das sílabas soar artificial, gravar só
 o áudio segmentado. Não interpretar o tempo entre toques como acerto ou erro.
 
-**Aceite:** contagem depende somente dos toques; exemplo e nova tentativa zeram os círculos;
-quantidade de partes no áudio corresponde à divisão cadastrada; o número escolhido em
-“Quantos pedaços?” é comparado com a divisão, não com os toques.
+**Aceite**
+- [x] A contagem depende somente dos toques; o tempo entre eles não entra na conta.
+- [x] O exemplo e o botão "Começar de novo" zeram os círculos.
+- [x] A quantidade de partes faladas é a divisão cadastrada: a fala percorre o mesmo vetor de sílabas.
+- [x] "Quantos pedaços?" compara com a divisão, e não com as palmas batidas.
+
+**Como ficou**
+
+1. **Trinta palavras** com a divisão revisada à mão, em `dados.js`, todas com figura no catálogo.
+   As regras de separação usadas estão escritas no cabeçalho do arquivo (CH/NH/LH/GU/QU não
+   separam, RR/SS separam, ditongo fica junto). Um teste confere que juntar as sílabas devolve a
+   palavra escrita e que toda sílaba tem vogal.
+2. **Círculo por sílaba, em sincronia com a fala.** `falarSequencia` ganhou um aviso por item
+   (`aoComecar`), e é ele que acende o círculo no instante em que a sílaba é dita.
+3. **Três níveis pelo botão da etapa:** duas alternativas = só palavras de dois pedaços, com o
+   modelo vindo sozinho e os círculos sempre à vista; três = de uma a três sílabas, modelo só se
+   pedirem; quatro = até quatro sílabas mais a pergunta "Quantos pedaços?".
+4. **Sem gravação por enquanto.** As sílabas são ditas pela voz do aparelho, uma por vez. Se
+   soarem artificiais no aparelho de casa, é só gravar os áudios segmentados e apontar `audio`
+   em cada sílaba: `fala.js` prefere a gravação sozinho.
 
 ### P04 — Rimas com Figuras
 
@@ -2021,10 +2070,10 @@ está; o progresso vai para `descobertas:memoria`.
 1. **Preparar e experimentar com pouco conteúdo:** ~~P00~~ (feita) → P09 → P10. Meu Nome e Conta Comigo
    não precisam de gravações nem de banco de dados, então validam navegação, voz sintetizada e
    toque com ele antes de produzir áudio e figuras.
-2. **Letras e sons:** P06 → P05 → P03. Aqui entram as primeiras gravações obrigatórias (sons
-   isolados e, se preciso, sílabas).
+2. **Letras e sons:** P06 → P05 → ~~P03~~ (feita). Aqui entram as primeiras gravações
+   obrigatórias (sons isolados e, se preciso, sílabas).
 3. **Escuta e figuras:** P01 → J14 + P04 → P11.
-4. **Ampliar conforme o interesse:** J13 + P07 → P08 → P02 → P12 → P13.
+4. **Ampliar conforme o interesse:** J13 + P07 → P08 → ~~P02~~ (feita) → P12 → P13.
 
 Essa é uma ordem de implementação, não uma trilha obrigatória para a criança. Labirinto e Rimas
 podem ser antecipados se forem os temas que mais despertarem interesse. Se uma atividade ainda
@@ -2036,8 +2085,8 @@ não fizer sentido para ele, manter as anteriores disponíveis e ajustar a demon
 |---|---|---|---|---|---|
 | P00 | Área, fala em camadas, figuras, álbum e configurações | ✅ Concluída em 2026-09-07 | M | Opus | T09, T13, T21, T23 |
 | P01 | Quem Faz Esse Som? | Alta | M | Sonnet | P00 |
-| P02 | Encaixe as Figuras | Média | P | Sonnet | P00 |
-| P03 | Palmas nas Palavras | Alta | M | Sonnet | P00 |
+| P02 | Encaixe as Figuras | ✅ Concluída em 2026-09-07 | P | Sonnet | P00 |
+| P03 | Palmas nas Palavras | ✅ Concluída em 2026-09-07 | M | Sonnet | P00 |
 | P04 | Rimas com Figuras | Média | P | Sonnet | P00, J14 |
 | P05 | Começa com o Mesmo Som | Alta | M | Opus | P00 |
 | P06 | Letras para Explorar | Alta | M | Sonnet | P00 |
@@ -2053,12 +2102,17 @@ não fizer sentido para ele, manter as anteriores disponíveis e ajustar a demon
 
 - **Áudio era o gargalo — resolvido na P00.** O rascunho anterior exigia gravação para toda
   fala; somadas, as atividades passariam de 300 arquivos antes de qualquer coisa rodar. Com a
-  fala em três camadas (gravação → síntese do aparelho → modo acompanhado), só P01, P05 e talvez
-  P03 dependem de gravação, e a etapa começou sem nenhuma. **Pendente:** a qualidade da voz
+  fala em três camadas (gravação → síntese do aparelho → modo acompanhado), só P01 e P05 dependem
+  de gravação, e a etapa começou sem nenhuma — a P03 saiu com as sílabas ditas pela voz do
+  aparelho, e trocar por gravação depois é só preencher o campo `audio`. **Pendente:** a qualidade da voz
   pt-BR varia por aparelho; usar o botão "Testar a voz" das configurações do Rael no iPad e no
   Android de casa e anotar aqui o nome da voz que aparecer.
 - **Figuras.** Emojis do sistema mudam de desenho entre aparelhos; SVGs copiados de um conjunto
-  livre resolvem isso sem ilustrar à mão. Só P02 e parte de P12 pedem desenho próprio.
+  livre resolvem isso sem ilustrar à mão. A P02 acabou não precisando de desenho próprio: silhueta
+  é a figura pintada de cinza e pedaço é a figura recortada. Só parte da P12 ainda pede ilustração.
+  **Cuidado herdado da P02:** recortar figura em grade deixa células em branco quando o desenho
+  não preenche o quadro, e duas peças em branco ficam indistinguíveis. Medir a tinta por célula
+  antes de escolher a figura.
 - **Dois perfis no mesmo aparelho — resolvido de outro jeito.** Em vez de um seletor
   “Quem vai brincar?”, a P00 fez dois sites irmãos com abas no alto de cada página inicial.
   Cada lado tem tema, ícone de instalação, configurações e progresso próprios, e nenhum precisa
