@@ -163,6 +163,56 @@
   }
 }
 
+/* --- Abas que trocam de site (Jogos da Elis / Jogos do Rael) -------------- */
+
+/* Ficam nas duas páginas iniciais. Como usam as variáveis de cor, cada lado
+   pinta as abas com o próprio tema sem uma regra a mais. */
+
+.trocador {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+
+.trocador__aba {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--toque);
+  padding: 10px 20px;
+  border: 3px solid var(--cor-secundaria);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--cor-texto-destaque);
+  font-family: var(--fonte-corpo);
+  font-size: 1.05rem;
+  text-decoration: none;
+}
+
+.trocador__aba:hover {
+  background: var(--cor-secundaria-clara);
+}
+
+@media (max-width: 420px) {
+  .trocador {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .trocador__aba {
+    padding: 8px 12px;
+    font-size: 0.95rem;
+  }
+}
+
+.trocador__aba[aria-current="page"] {
+  background: var(--cor-principal-escura);
+  border-color: var(--cor-principal-profunda);
+  color: #fff;
+}
+
 /* --- Botões -------------------------------------------------------------- */
 
 .botao {

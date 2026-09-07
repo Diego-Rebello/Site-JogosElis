@@ -1,0 +1,328 @@
+/* ==========================================================================
+   descobertas.css — as peças de tela repetidas nas atividades de Primeiras
+   Descobertas (Jogos do Rael): convite inicial, instrução falada, grade de
+   alternativas grandes, trilha de passos, roteiro do modo acompanhado e a
+   tela de conclusão com a figurinha.
+
+   Vale junto do base.css e do tema-rael.css, e usa as mesmas variáveis.
+   Toda medida de toque sai de --toque (64 px no tema do Rael).
+   ========================================================================== */
+
+/* Esconder de verdade. O atributo hidden do HTML só vale porque o navegador
+   traz [hidden] { display: none } na folha dele — e qualquer regra nossa com
+   display ganha dessa. Sem isto, um `.botao` com hidden continua na tela e
+   clicável: era o que deixava o "Continuar" aparecer no meio da pergunta. */
+[hidden] {
+  display: none !important;
+}
+
+.descobertas {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* --- convite inicial ("Vamos brincar") ----------------------------------- */
+
+.convite {
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+}
+
+.convite__figura {
+  width: 120px;
+  height: 120px;
+}
+
+.convite__texto {
+  font-family: var(--fonte-leitura);
+  font-size: 1.15rem;
+  color: var(--cor-suave);
+  margin: 0;
+  max-width: 34ch;
+}
+
+.botao--gigante {
+  font-size: 1.6rem;
+  padding: 20px 34px;
+  min-height: 76px;
+  border-radius: 22px;
+}
+
+/* --- instrução da vez ---------------------------------------------------- */
+
+.instrucao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.instrucao__texto {
+  margin: 0;
+  font-size: clamp(1.4rem, 6vw, 1.9rem);
+  line-height: 1.25;
+  color: var(--cor-texto-destaque);
+}
+
+.botao--repetir {
+  background: var(--cor-realce, #b3510a);
+  box-shadow: 0 4px 0 #7d3806;
+  font-size: 1.05rem;
+  padding: 12px 18px;
+}
+
+.botao--repetir:hover {
+  background: #96450a;
+}
+
+.botao--repetir:active {
+  box-shadow: 0 1px 0 #7d3806;
+}
+
+/* --- alternativas -------------------------------------------------------- */
+
+.opcoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 14px;
+  margin: 0 auto;
+  max-width: 640px;
+  padding: 0;
+  list-style: none;
+}
+
+/* Com duas alternativas elas ficam sempre lado a lado, mesmo em 360 px. */
+.opcoes--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 440px;
+}
+
+.opcao {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 150px;
+  padding: 14px 10px;
+  border: 4px solid var(--cor-secundaria);
+  border-radius: 22px;
+  background: #fff;
+  color: var(--cor-texto-destaque);
+  font-family: var(--fonte-corpo);
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.opcao:hover:not(:disabled) {
+  border-color: var(--cor-principal);
+  background: var(--cor-secundaria-clara);
+}
+
+.opcao:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.opcao__figura {
+  width: min(28vw, 104px);
+  height: min(28vw, 104px);
+  pointer-events: none;
+}
+
+/* A palavra embaixo da figura é exposição à escrita, nunca condição para
+   responder: quem não lê resolve tudo pela figura e pela fala. */
+.opcao__palavra {
+  font-family: var(--fonte-leitura);
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 1rem;
+  color: var(--cor-suave);
+}
+
+.opcao--certa {
+  border-color: var(--cor-certo);
+  background: #eafaf0;
+}
+
+.opcao--mostrada {
+  border-color: var(--cor-realce, #b3510a);
+  background: var(--cor-realce-clara, #ffe6cc);
+  animation: descobertas-piscar 1.2s ease-in-out 2;
+}
+
+.opcao--apagada {
+  opacity: 0.45;
+}
+
+@keyframes descobertas-piscar {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+/* --- trilha de passos da rodada ------------------------------------------ */
+
+.passos {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.passos__item {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--cor-secundaria);
+  background: #fff;
+}
+
+.passos__item--feito {
+  background: var(--cor-principal);
+  border-color: var(--cor-principal-profunda);
+}
+
+.passos__item--agora {
+  border-color: var(--cor-principal-profunda);
+  transform: scale(1.25);
+}
+
+/* --- retorno e roteiro do adulto ----------------------------------------- */
+
+.retorno {
+  min-height: 2.4em;
+  margin: 16px 0 0;
+  font-size: clamp(1.1rem, 4.5vw, 1.35rem);
+}
+
+.roteiro {
+  display: grid;
+  gap: 6px;
+  margin: 16px auto 0;
+  max-width: 480px;
+  padding: 12px 16px;
+  border: 3px dashed var(--cor-secundaria);
+  border-radius: 16px;
+  background: var(--cor-secundaria-clara);
+  font-family: var(--fonte-leitura);
+  color: var(--cor-suave);
+  text-align: left;
+}
+
+.roteiro__titulo {
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.roteiro__fala {
+  font-size: 1.15rem;
+  color: var(--cor-texto);
+}
+
+/* --- conclusão da rodada -------------------------------------------------- */
+
+.conclusao {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.conclusao__figurinha {
+  width: 150px;
+  height: 150px;
+  padding: 14px;
+  border-radius: 26px;
+  background: var(--cor-realce-clara, #ffe6cc);
+  border: 4px solid var(--cor-realce, #b3510a);
+  animation: descobertas-chegar 0.6s ease-out;
+}
+
+@keyframes descobertas-chegar {
+  from { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+  to { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.conclusao__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* --- álbum de figurinhas -------------------------------------------------- */
+
+.album {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.album__item {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  border: 3px solid var(--cor-secundaria);
+  background: #fff;
+}
+
+.album__item--vazio {
+  border-style: dashed;
+  background: var(--cor-secundaria-clara);
+  color: var(--cor-suave);
+  font-size: 1.6rem;
+}
+
+.album__figura {
+  width: 76%;
+  height: 76%;
+}
+
+/* --- cartões de atividade da página inicial da etapa ---------------------- */
+
+.atividades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.atividade {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px 18px;
+  text-decoration: none;
+  color: var(--cor-texto-destaque);
+  transition: transform 0.2s ease;
+}
+
+.atividade:hover {
+  transform: translateY(-6px);
+}
+
+.atividade__figura {
+  width: 92px;
+  height: 92px;
+}
+
+.atividade__nome {
+  font-size: 1.35rem;
+}
+
+.atividade__conta {
+  font-family: var(--fonte-leitura);
+  font-size: 1rem;
+  color: var(--cor-suave);
+}

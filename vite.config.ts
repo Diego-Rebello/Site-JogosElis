@@ -31,6 +31,10 @@ const paginas = {
   memoria: 'Games/memoria/index.html',
   velha: 'Games/velha/index.html',
   demo: 'shared/demo.html',
+  // Jogos do Rael: o site irmão de pré-alfabetização (seção 6 do MELHORIAS).
+  rael: 'rael/index.html',
+  'rael-configuracoes': 'rael/configuracoes.html',
+  'rael-toque-na-figura': 'rael/toque-na-figura/index.html',
 };
 
 export default defineConfig({

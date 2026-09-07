@@ -1,0 +1,80 @@
+/* ==========================================================================
+   tema-rael.css — o mesmo visual do base.css pintado de outra cor, para os
+   Jogos do Rael (área Primeiras Descobertas).
+
+   Como funciona: as cores do base.css são propriedades personalizadas
+   declaradas em :root. Este arquivo redeclara as mesmas propriedades na
+   classe `.tema-rael`, posta no <html>. Como propriedade personalizada
+   herda e a declaração mais próxima vence, tudo que já usa var(--cor-...)
+   muda de cor sem precisar de uma segunda folha de estilos inteira.
+
+   A classe vai no <html> (e não no <body>): assim o confete de confete.js,
+   que lê os tokens de document.documentElement, também sai azul. Por isso o
+   seletor é `:root.tema-rael` — com dois nomes ele vence o `:root` do
+   base.css qualquer que seja a ordem em que as folhas forem juntadas.
+
+   `--toque` também muda: 44 px é o mínimo dos jogos da Elis, mas a seção 6.0
+   do MELHORIAS pede 64 px para a mão de uma criança de 5 anos. Como os
+   botões do base.css usam min-height: var(--toque), eles crescem sozinhos.
+
+   Contraste conferido (WCAG AA pede 4.5:1 para texto):
+     branco sobre --cor-principal-escura ....... 6,89:1
+     branco sobre --cor-principal-profunda ..... 8,77:1
+     --cor-texto-destaque no cartão ............ 7,74:1
+     --cor-texto-destaque no fundo mais escuro . 5,67:1
+     --cor-texto no cartão ..................... 11,62:1
+     --cor-suave no fundo mais escuro .......... 5,06:1
+     texto do botão secundário sobre ele ....... 7,43:1
+   ========================================================================== */
+
+:root.tema-rael {
+  --cor-principal: #2f80ed;          /* enfeite: bordas, realces, trilhas */
+  --cor-principal-escura: #0f5aa8;   /* fundo de botão, com texto branco */
+  --cor-principal-profunda: #0d4a8f; /* sombra e hover do botão */
+  --cor-texto-destaque: #17518f;     /* azul para TEXTO */
+  --cor-secundaria: #a9d6f5;         /* azul claro: bordas e cartões */
+  --cor-secundaria-clara: #e8f4fd;
+  --cor-destaque: #f7fbff;           /* branco levemente azulado dos cartões */
+  --cor-texto: #21384d;
+  --cor-suave: #445a6c;
+  --cor-certo: #1b7a45;
+  --cor-errado: #c62828;
+  --cor-sombra: rgba(13, 74, 143, 0.18);
+  --cor-foco: #0b6e83;
+  --cor-fundo: linear-gradient(135deg, #dff0fb, #b8def5);
+
+  /* Laranja de destaque: figurinha nova, botão de repetir a fala. */
+  --cor-realce: #b3510a;
+  --cor-realce-clara: #ffe6cc;
+
+  /* Sem letra cursiva aqui: nesta idade a leitura começa pela forma bastão. */
+  --fonte-titulo: 'Fredoka One', 'Trebuchet MS', system-ui, sans-serif;
+
+  --toque: 64px;
+}
+
+/* O base.css tem alguns rosas escritos à mão, fora das variáveis. Só eles
+   precisam ser repintados um a um. */
+
+.tema-rael .botao--secundario {
+  color: #0d3b66;
+  box-shadow: 0 4px 0 #6aa9d6;
+}
+
+.tema-rael .botao--secundario:hover {
+  background: #8ec7ee;
+}
+
+.tema-rael .botao--secundario:active {
+  box-shadow: 0 1px 0 #6aa9d6;
+}
+
+.tema-rael .botao:disabled {
+  background: #c6cfd6;
+  box-shadow: 0 4px 0 #aab6bf;
+  color: #3f4a52;
+}
+
+.tema-rael .campo::placeholder {
+  color: #5d7182;
+}
