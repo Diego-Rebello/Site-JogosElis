@@ -26,6 +26,7 @@ export interface Configuracoes {
     forca: string;
     matematica: string;
     'm-ou-n': string;
+    ortografia: string;
     memoria: string;
     velha: string;
     [jogoId: string]: string;

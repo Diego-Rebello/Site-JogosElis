@@ -19,6 +19,7 @@ const paginas = {
   forca: 'Games/forca/index.html',
   matematica: 'Games/matematica/index.html',
   'm-ou-n': 'Games/m-ou-n/index.html',
+  ortografia: 'Games/ortografia/index.html',
   memoria: 'Games/memoria/index.html',
   velha: 'Games/velha/index.html',
   demo: 'shared/demo.html',

@@ -23,6 +23,7 @@ const CONFIGURACOES_PADRAO = Object.freeze({
     forca: 'normal',
     matematica: '3',
     'm-ou-n': 'normal',
+    ortografia: 'g-j',
     memoria: '16',
     velha: 'PVC',
   }),
