@@ -317,7 +317,7 @@ Os testes cobrem texto e embaralhamento, M ou N, Ortografia, Matemática, Tabuad
 Forme a Palavra, Horas, Genius, Sudoku, Dinheirinho, Quiz, Forca, Memória, progresso, as duas
 inteligências do Jogo da Velha e, das Primeiras Descobertas, a fala em camadas, o motor de
 rodada, o álbum, a correspondência entre o catálogo e os arquivos de figura, as cenas de encaixe
-e a divisão silábica das trinta palavras, além de rimas, sons iniciais e exploração de letras.
+e a divisão silábica das cinquenta palavras, além de rimas, sons iniciais e exploração de letras.
 Eles importam o código-fonte direto (`Games/*/lib/…`,
 `Games/*/jogo.js`, `shared/…`), sem passar pelo build.
 

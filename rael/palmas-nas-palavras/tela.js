@@ -28,7 +28,12 @@ const ATIVIDADE = 'palmas-nas-palavras';
 montarCabecalho('Palmas nas Palavras');
 
 const $ = id => document.getElementById(id);
-const telas = { convite: $('tela-convite'), brincadeira: $('tela-brincadeira'), fim: $('tela-fim') };
+const telas = {
+  convite: $('tela-convite'),
+  demonstracao: $('tela-demonstracao'),
+  brincadeira: $('tela-brincadeira'),
+  fim: $('tela-fim'),
+};
 
 const configuracoes = obterConfiguracoes();
 definirPreferencia(configuracoes.voz);
@@ -40,6 +45,7 @@ let indice = 0;
 let palmas = null;
 let resolvida = false;         // a palavra já foi conferida: os botões descansam
 let pistaAtual = [];
+let modeloVisivel = false;
 
 function mostrarTela(nome) {
   Object.entries(telas).forEach(([chave, elemento]) => { elemento.hidden = chave !== nome; });
@@ -67,15 +73,28 @@ function pintarPassos() {
  */
 function pintarCirculos({ modelo = 0, acesos = 0 } = {}) {
   const total = Math.max(modelo, acesos);
+  $('quantidade-palmas').textContent = String(acesos);
+  $('circulos').setAttribute('aria-label', `${acesos} ${acesos === 1 ? 'palma batida' : 'palmas batidas'}`);
   $('circulos').innerHTML = Array.from({ length: total }, (_, i) => {
     const classes = ['circulo', i < modelo && i >= acesos ? 'circulo--modelo' : '', i < acesos ? 'circulo--aceso' : ''];
-    return `<span class="${classes.filter(Boolean).join(' ')}"></span>`;
+    return `<span class="${classes.filter(Boolean).join(' ')}">
+      <span class="circulo__numero">${i + 1}</span>
+      <span class="circulo__palma" aria-hidden="true">${i < acesos ? '👏' : ''}</span>
+    </span>`;
   }).join('');
+}
+
+/** Liga visualmente cada pedaço falado à palma correspondente. */
+function pintarPedacos(silabas, { acesos = 0 } = {}) {
+  $('pedacos-palavra').hidden = false;
+  $('pedacos-palavra').innerHTML = silabas.map((silaba, i) => `<span class="pedaco-visual${i < acesos ? ' pedaco-visual--aceso' : ''}">
+    <span>${silaba}</span><small>palma ${i + 1}</small>
+  </span>`).join('');
 }
 
 function pintarPalmas() {
   const { palmas: batidas } = palmas.estado();
-  const modelo = regras.modelo === 'antes' ? palmas.esperado : 0;
+  const modelo = regras.modelo === 'antes' || modeloVisivel ? palmas.esperado : 0;
   pintarCirculos({ modelo, acesos: batidas });
 }
 
@@ -86,14 +105,46 @@ function pintarPalmas() {
  */
 async function mostrarModelo() {
   palmas.limpar();
+  modeloVisivel = true;
   const desta = palmas;
   const { silabas } = palmas.palavra;
+  pintarPedacos(silabas, { acesos: 0 });
   pintarCirculos({ modelo: silabas.length, acesos: 0 });
   await dizerPista(silabasParaFala(silabas), {
-    aoComecar: posicao => pintarCirculos({ modelo: silabas.length, acesos: posicao + 1 }),
+    aoComecar: posicao => {
+      pintarPedacos(silabas, { acesos: posicao + 1 });
+      pintarCirculos({ modelo: silabas.length, acesos: posicao + 1 });
+    },
   });
-  // Deixa o último círculo à vista um instante antes de voltar ao estado real.
+  pintarPedacos(silabas, { acesos: silabas.length });
+  // Volta às palmas realmente batidas, mas deixa o modelo numerado à vista.
   setTimeout(() => { if (palmas === desta) pintarPalmas(); }, 700);
+}
+
+// --- demonstração antes da primeira rodada -------------------------------
+
+async function reproduzirDemonstracao() {
+  parar();
+  $('mapa-demo').querySelectorAll('[data-demo-pedaco]').forEach(item => item.classList.remove('mapa-pedacos__item--aceso'));
+  const itens = [
+    { texto: 'Pato.' },
+    { texto: 'Pato tem dois pedaços.' },
+    ...silabasParaFala(['PA', 'TO']),
+    { texto: 'Uma palma para cada pedaço. Duas palmas!' },
+  ];
+  $('roteiro-demo').hidden = !modoAcompanhado();
+  const resultados = await falarSequencia(itens, {
+    aoComecar: posicao => {
+      if (posicao < 2 || posicao > 3) return;
+      $('mapa-demo').querySelector(`[data-demo-pedaco="${posicao - 2}"]`)?.classList.add('mapa-pedacos__item--aceso');
+    },
+  });
+  if (resultados.includes('sem-fala')) $('roteiro-demo').hidden = false;
+}
+
+function abrirDemonstracao() {
+  mostrarTela('demonstracao');
+  reproduzirDemonstracao();
 }
 
 // --- uma palavra -----------------------------------------------------------
@@ -102,6 +153,7 @@ async function abrirPalavra() {
   const palavra = palavras[indice];
   palmas = criarPalmas(palavra);
   resolvida = false;
+  modeloVisivel = false;
 
   $('figura-palavra').src = caminhoDaFigura(palavra.id);
   $('figura-palavra').alt = figura(palavra.id)?.nome || palavra.palavra;
@@ -111,6 +163,8 @@ async function abrirPalavra() {
   $('retorno').className = 'feedback retorno';
   $('continuar').hidden = true;
   $('area-pergunta').hidden = true;
+  $('pedacos-palavra').hidden = true;
+  $('pedacos-palavra').innerHTML = '';
   $('palma').disabled = false;
   $('pronto').disabled = false;
   pintarPalmas();
@@ -134,6 +188,9 @@ async function conferir() {
   if (resultado.certo) {
     tocar('acerto');
     travarPalavra();
+    modeloVisivel = true;
+    pintarPedacos(palmas.palavra.silabas, { acesos: palmas.esperado });
+    pintarPalmas();
     const frase = `Isso! ${palmas.palavra.palavra} tem ${resultado.esperado} ${resultado.esperado === 1 ? 'pedaço' : 'pedaços'}.`;
     $('retorno').textContent = frase;
     $('retorno').className = 'feedback retorno feedback--certo';
@@ -150,9 +207,14 @@ async function conferir() {
     $('retorno').className = 'feedback retorno';
     await dizerPista([{ texto: 'Vamos juntos.' }]);
     const { silabas } = palmas.palavra;
+    modeloVisivel = true;
+    pintarPedacos(silabas, { acesos: 0 });
     pintarCirculos({ modelo: silabas.length, acesos: 0 });
     await dizerPista(silabasParaFala(silabas), {
-      aoComecar: posicao => pintarCirculos({ modelo: silabas.length, acesos: posicao + 1 }),
+      aoComecar: posicao => {
+        pintarPedacos(silabas, { acesos: posicao + 1 });
+        pintarCirculos({ modelo: silabas.length, acesos: posicao + 1 });
+      },
     });
     if (regras.pergunta) abrirPergunta();
     else liberarContinuar();
@@ -228,6 +290,17 @@ $('comecar').addEventListener('click', async () => {
     aviso.hidden = false;
   }
   $('comecar').disabled = false;
+  abrirDemonstracao();
+});
+
+$('repetir-demo').addEventListener('click', () => {
+  tocar('clique');
+  reproduzirDemonstracao();
+});
+
+$('jogar').addEventListener('click', () => {
+  tocar('clique');
+  parar();
   abrirRodada();
 });
 

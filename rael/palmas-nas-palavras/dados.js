@@ -1,5 +1,5 @@
 /**
- * dados.js — as trinta palavras de Palmas nas Palavras (P03).
+ * dados.js — as cinquenta palavras de Palmas nas Palavras (P03).
  *
  * `silabas` é a divisão falada, em caixa alta, do jeito que a criança vai
  * ouvir e ver nos círculos. Regras de separação usadas na revisão:
@@ -33,6 +33,18 @@ export const PALAVRAS = [
   { id: 'chave', palavra: 'CHAVE', silabas: ['CHA', 'VE'] },
   { id: 'livro', palavra: 'LIVRO', silabas: ['LI', 'VRO'] },
   { id: 'bolo', palavra: 'BOLO', silabas: ['BO', 'LO'] },
+  { id: 'vaca', palavra: 'VACA', silabas: ['VA', 'CA'] },
+  { id: 'porco', palavra: 'PORCO', silabas: ['POR', 'CO'] },
+  { id: 'leao', palavra: 'LEÃO', silabas: ['LE', 'ÃO'] },
+  { id: 'peixe', palavra: 'PEIXE', silabas: ['PEI', 'XE'] },
+  { id: 'pinguim', palavra: 'PINGUIM', silabas: ['PIN', 'GUIM'] },
+  { id: 'rato', palavra: 'RATO', silabas: ['RA', 'TO'] },
+  { id: 'barco', palavra: 'BARCO', silabas: ['BAR', 'CO'] },
+  { id: 'trator', palavra: 'TRATOR', silabas: ['TRA', 'TOR'] },
+  { id: 'lua', palavra: 'LUA', silabas: ['LU', 'A'] },
+  { id: 'nuvem', palavra: 'NUVEM', silabas: ['NU', 'VEM'] },
+  { id: 'porta', palavra: 'PORTA', silabas: ['POR', 'TA'] },
+  { id: 'sino', palavra: 'SINO', silabas: ['SI', 'NO'] },
 
   // --- três sílabas ---
   { id: 'banana', palavra: 'BANANA', silabas: ['BA', 'NA', 'NA'] },
@@ -44,6 +56,13 @@ export const PALAVRAS = [
   { id: 'sapato', palavra: 'SAPATO', silabas: ['SA', 'PA', 'TO'] },
   { id: 'cenoura', palavra: 'CENOURA', silabas: ['CE', 'NOU', 'RA'] },
   { id: 'arvore', palavra: 'ÁRVORE', silabas: ['ÁR', 'VO', 'RE'] },
+  { id: 'cachorro', palavra: 'CACHORRO', silabas: ['CA', 'CHOR', 'RO'] },
+  { id: 'ovelha', palavra: 'OVELHA', silabas: ['O', 'VE', 'LHA'] },
+  { id: 'coelho', palavra: 'COELHO', silabas: ['CO', 'E', 'LHO'] },
+  { id: 'onibus', palavra: 'ÔNIBUS', silabas: ['Ô', 'NI', 'BUS'] },
+  { id: 'aviao', palavra: 'AVIÃO', silabas: ['A', 'VI', 'ÃO'] },
+  { id: 'caminhao', palavra: 'CAMINHÃO', silabas: ['CA', 'MI', 'NHÃO'] },
+  { id: 'estrela', palavra: 'ESTRELA', silabas: ['ES', 'TRE', 'LA'] },
 
   // --- quatro sílabas ---
   { id: 'borboleta', palavra: 'BORBOLETA', silabas: ['BOR', 'BO', 'LE', 'TA'] },
@@ -51,6 +70,7 @@ export const PALAVRAS = [
   { id: 'dinossauro', palavra: 'DINOSSAURO', silabas: ['DI', 'NOS', 'SAU', 'RO'] },
   { id: 'bicicleta', palavra: 'BICICLETA', silabas: ['BI', 'CI', 'CLE', 'TA'] },
   { id: 'telefone', palavra: 'TELEFONE', silabas: ['TE', 'LE', 'FO', 'NE'] },
+  { id: 'tartaruga', palavra: 'TARTARUGA', silabas: ['TAR', 'TA', 'RU', 'GA'] },
 ];
 
 /** O maior número de pedaços que aparece: são os botões de "Quantos pedaços?". */

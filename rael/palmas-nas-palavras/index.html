@@ -28,11 +28,45 @@
         <section class="cartao descobertas descobertas__cartao">
 
             <div class="tela convite" id="tela-convite">
-                <img class="convite__figura" src="/figuras/banana.svg" alt="" aria-hidden="true" width="120" height="120">
+                <img class="convite__figura" src="/figuras/pato.svg" alt="" aria-hidden="true" width="120" height="120">
                 <h2 class="instrucao__texto">Palmas nas Palavras</h2>
-                <p class="convite__texto">Toda palavra tem pedaços. Bata uma palma para cada pedaço!</p>
-                <button class="botao botao--gigante" id="comecar" type="button">▶ Vamos brincar</button>
+                <p class="convite__texto">Cada pedaço falado ganha uma palma. Veja:</p>
+                <div class="resumo-como-jogar" aria-label="Pato tem dois pedaços e recebe duas palmas">
+                    <span class="resumo-como-jogar__palavra">PATO</span>
+                    <span aria-hidden="true">→</span>
+                    <span class="resumo-como-jogar__silaba">PA</span>
+                    <span class="resumo-como-jogar__silaba">TO</span>
+                    <span aria-hidden="true">→</span>
+                    <span class="resumo-como-jogar__palmas">👏 👏</span>
+                </div>
+                <button class="botao botao--gigante" id="comecar" type="button">▶ Ver como brincar</button>
                 <p class="convite__texto" id="aviso-voz" hidden></p>
+            </div>
+
+            <div class="tela demonstracao-palmas" id="tela-demonstracao" hidden>
+                <p class="etiqueta-demo">EXEMPLO</p>
+                <div class="palavra">
+                    <img class="palavra__figura" src="/figuras/pato.svg" alt="Pato" width="140" height="140">
+                    <span class="palavra__escrita">PATO</span>
+                </div>
+                <h2 class="instrucao__texto">Escute cada pedaço</h2>
+                <div class="mapa-pedacos" id="mapa-demo" aria-label="PA, uma palma. TO, uma palma.">
+                    <div class="mapa-pedacos__item" data-demo-pedaco="0">
+                        <span class="mapa-pedacos__silaba">PA</span><span aria-hidden="true">→</span><span class="mapa-pedacos__palma">👏</span>
+                    </div>
+                    <div class="mapa-pedacos__item" data-demo-pedaco="1">
+                        <span class="mapa-pedacos__silaba">TO</span><span aria-hidden="true">→</span><span class="mapa-pedacos__palma">👏</span>
+                    </div>
+                </div>
+                <p class="equacao-palmas"><strong>2</strong> pedaços = <strong>2</strong> palmas</p>
+                <div class="conclusao__acoes">
+                    <button class="botao botao--repetir" id="repetir-demo" type="button">🔊 Ver e ouvir de novo</button>
+                    <button class="botao botao--gigante" id="jogar" type="button">👏 Agora eu tento!</button>
+                </div>
+                <div class="roteiro" id="roteiro-demo" hidden>
+                    <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
+                    <span class="roteiro__fala">Pato tem dois pedaços: PA, TO. Uma palma para cada pedaço. Duas palmas!</span>
+                </div>
             </div>
 
             <div class="tela" id="tela-brincadeira" hidden>
@@ -48,6 +82,12 @@
                     <button class="botao botao--repetir" id="repetir" type="button">🔊 Ouvir de novo</button>
                 </div>
 
+                <div class="pedacos-palavra" id="pedacos-palavra" hidden></div>
+
+                <div class="contador-palmas" aria-live="polite">
+                    <span class="contador-palmas__numero" id="quantidade-palmas">0</span>
+                    <span class="contador-palmas__texto">palmas batidas</span>
+                </div>
                 <div class="circulos" id="circulos" aria-live="polite" aria-label="Palmas batidas"></div>
 
                 <div class="conclusao__acoes">

@@ -6,10 +6,10 @@ import { figura } from '../shared/catalogo-figuras.js';
 const semEmbaralhar = lista => [...lista];
 const semAcento = texto => texto.normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-describe('as trinta palavras', () => {
-  it('são trinta, sem id repetido', () => {
-    expect(PALAVRAS).toHaveLength(30);
-    expect(new Set(PALAVRAS.map(item => item.id)).size).toBe(30);
+describe('as cinquenta palavras', () => {
+  it('são cinquenta, sem id repetido', () => {
+    expect(PALAVRAS).toHaveLength(50);
+    expect(new Set(PALAVRAS.map(item => item.id)).size).toBe(50);
   });
 
   it('todas têm figura no catálogo', () => {
@@ -54,6 +54,13 @@ describe('montarRodada', () => {
     });
   });
 
+  it('sorteia o banco antes de separar as seis palavras da rodada', () => {
+    const invertida = lista => [...lista].reverse();
+    const rodada = montarRodada(PALAVRAS, { nivel: 'esperto', embaralharLista: invertida });
+    const elegiveis = PALAVRAS.filter(item => item.silabas.length <= 4);
+    expect(rodada.map(item => item.id)).toEqual(elegiveis.slice(-6).reverse().map(item => item.id));
+  });
+
   it('no fácil só entram palavras de dois pedaços', () => {
     const rodada = montarRodada(PALAVRAS, { nivel: 'facil' });
     rodada.forEach(item => expect(item.silabas).toHaveLength(2));
@@ -62,7 +69,7 @@ describe('montarRodada', () => {
   it('no normal vai até três pedaços, e no esperto até quatro', () => {
     montarRodada(PALAVRAS, { nivel: 'normal' })
       .forEach(item => expect(item.silabas.length).toBeLessThanOrEqual(3));
-    const maiores = montarRodada(PALAVRAS, { nivel: 'esperto', quantidade: 30, embaralharLista: semEmbaralhar });
+    const maiores = montarRodada(PALAVRAS, { nivel: 'esperto', quantidade: PALAVRAS.length, embaralharLista: semEmbaralhar });
     expect(Math.max(...maiores.map(item => item.silabas.length))).toBe(4);
   });
 

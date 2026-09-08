@@ -504,6 +504,83 @@
   border-radius: 20px;
 }
 
+/* A explicação de Palmas nas Palavras mostra a relação 1 pedaço = 1 palma
+   antes da rodada, sem depender de a criança ler a instrução. */
+.resumo-como-jogar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 3px solid var(--cor-secundaria);
+  border-radius: 18px;
+  background: var(--cor-secundaria-clara);
+  font-family: var(--fonte-leitura);
+  font-weight: 700;
+  color: var(--cor-texto-destaque);
+}
+.resumo-como-jogar__palavra { width: 100%; font-size: 1.35rem; letter-spacing: 3px; }
+.resumo-como-jogar__silaba { padding: 7px 10px; border-radius: 10px; background: #fff; border: 2px solid var(--cor-principal); }
+.resumo-como-jogar__palmas { font-size: 1.7rem; letter-spacing: 5px; }
+
+.demonstracao-palmas { display: grid; justify-items: center; gap: 14px; }
+.etiqueta-demo {
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--cor-principal-profunda);
+  color: #fff;
+  font-family: var(--fonte-leitura);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.mapa-pedacos { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.mapa-pedacos__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 132px;
+  padding: 10px 14px;
+  border: 4px solid var(--cor-secundaria);
+  border-radius: 18px;
+  background: #fff;
+  opacity: 0.62;
+  transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+.mapa-pedacos__item--aceso { border-color: var(--cor-principal-profunda); opacity: 1; transform: scale(1.06); }
+.mapa-pedacos__silaba { font-family: var(--fonte-leitura); font-size: 1.65rem; font-weight: 700; color: var(--cor-texto-destaque); }
+.mapa-pedacos__palma { font-size: 1.8rem; }
+.equacao-palmas { margin: 0; font-family: var(--fonte-leitura); font-size: 1.25rem; }
+.equacao-palmas strong { font-size: 1.65rem; color: var(--cor-texto-destaque); }
+
+.pedacos-palavra { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 2px 0 12px; }
+.pedaco-visual {
+  display: grid;
+  gap: 2px;
+  min-width: 72px;
+  padding: 8px 12px;
+  border: 3px solid var(--cor-secundaria);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--cor-texto-destaque);
+  font-family: var(--fonte-leitura);
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+.pedaco-visual small { color: var(--cor-suave); font-size: 0.72rem; font-weight: 600; }
+.pedaco-visual--aceso { border-color: var(--cor-principal-profunda); background: var(--cor-secundaria-clara); transform: scale(1.04); }
+
+.contador-palmas { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-top: 2px; font-family: var(--fonte-leitura); }
+.contador-palmas__numero { font-size: 2.2rem; font-weight: 700; color: var(--cor-texto-destaque); }
+.contador-palmas__texto { color: var(--cor-suave); font-weight: 700; }
+
+.circulo { position: relative; display: grid; place-items: center; width: 58px; height: 58px; }
+.circulo__numero { font-family: var(--fonte-leitura); font-weight: 700; color: var(--cor-suave); }
+.circulo__palma { position: absolute; font-size: 1.55rem; }
+.circulo--aceso .circulo__numero { visibility: hidden; }
+
 /* --- Rimas, sons iniciais e letras (P04–P06) ----------------------------- */
 
 .figuras-convite, .alvo-falado {

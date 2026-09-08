@@ -1846,16 +1846,19 @@ o áudio segmentado. Não interpretar o tempo entre toques como acerto ou erro.
 
 **Como ficou**
 
-1. **Trinta palavras** com a divisão revisada à mão, em `dados.js`, todas com figura no catálogo.
+1. **Cinquenta palavras sorteadas** com a divisão revisada à mão, em `dados.js`, todas com figura no catálogo.
    As regras de separação usadas estão escritas no cabeçalho do arquivo (CH/NH/LH/GU/QU não
    separam, RR/SS separam, ditongo fica junto). Um teste confere que juntar as sílabas devolve a
    palavra escrita e que toda sílaba tem vogal.
-2. **Círculo por sílaba, em sincronia com a fala.** `falarSequencia` ganhou um aviso por item
+2. **Demonstração antes da rodada.** A tela mostra `PATO`, liga `PA` e `TO` a uma palma cada e
+   conclui visualmente que dois pedaços são duas palmas. Durante a tentativa, um contador mostra
+   quantas palmas já foram batidas; a divisão escrita aparece somente no modelo ou na resposta.
+3. **Círculo por sílaba, em sincronia com a fala.** `falarSequencia` ganhou um aviso por item
    (`aoComecar`), e é ele que acende o círculo no instante em que a sílaba é dita.
-3. **Três níveis pelo botão da etapa:** duas alternativas = só palavras de dois pedaços, com o
+4. **Três níveis pelo botão da etapa:** duas alternativas = só palavras de dois pedaços, com o
    modelo vindo sozinho e os círculos sempre à vista; três = de uma a três sílabas, modelo só se
    pedirem; quatro = até quatro sílabas mais a pergunta "Quantos pedaços?".
-4. **Sem gravação por enquanto.** As sílabas são ditas pela voz do aparelho, uma por vez. Se
+5. **Sem gravação por enquanto.** As sílabas são ditas pela voz do aparelho, uma por vez. Se
    soarem artificiais no aparelho de casa, é só gravar os áudios segmentados e apontar `audio`
    em cada sílaba: `fala.js` prefere a gravação sozinho.
 
