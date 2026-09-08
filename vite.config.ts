@@ -28,6 +28,7 @@ const paginas = {
   sudoku: 'Games/sudoku/index.html',
   dinheirinho: 'Games/dinheirinho/index.html',
   quiz: 'Games/quiz/index.html',
+  labirinto: 'Games/labirinto/index.html',
   memoria: 'Games/memoria/index.html',
   velha: 'Games/velha/index.html',
   demo: 'shared/demo.html',
@@ -40,6 +41,7 @@ const paginas = {
   'rael-rimas-com-figuras': 'rael/rimas-com-figuras/index.html',
   'rael-comeca-com-o-mesmo-som': 'rael/comeca-com-o-mesmo-som/index.html',
   'rael-letras-para-explorar': 'rael/letras-para-explorar/index.html',
+  'rael-meu-primeiro-labirinto': 'rael/meu-primeiro-labirinto/index.html',
 };
 
 export default defineConfig({

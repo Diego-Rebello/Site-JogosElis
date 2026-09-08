@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Leve o carrinho até a garagem em caminhos curtos e sem cronômetro. Brincadeira dos Jogos do Rael.">
+  <meta name="theme-color" content="#0f5aa8">
+  <title>Meu Primeiro Labirinto — Jogos do Rael</title>
+  <link rel="manifest" href="/rael.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/rael-192.png">
+  <link rel="icon" href="/icones/rael.svg">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="../../shared/tema-rael.css">
+  <link rel="stylesheet" href="../../shared/descobertas.css">
+  <link rel="stylesheet" href="./labirinto.css">
+  <script type="module" src="../../shared/pwa.js"></script>
+</head>
+<body class="pagina">
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao descobertas labirinto-jogo">
+      <div class="tela convite" id="tela-convite">
+        <div class="figuras-convite" aria-hidden="true">
+          <img class="convite__figura" src="/figuras/carro.svg" alt="" width="110" height="110">
+          <span class="sinal-grande">➜</span>
+          <img class="convite__figura" src="/figuras/casa.svg" alt="" width="110" height="110">
+        </div>
+        <h2 class="instrucao__texto">Meu Primeiro Labirinto</h2>
+        <p class="convite__texto">Use as setas para levar o carrinho até a garagem.</p>
+        <button class="botao botao--gigante" id="comecar" type="button">▶ Vamos brincar</button>
+        <p class="convite__texto" id="aviso-voz" hidden></p>
+      </div>
+
+      <div class="tela" id="tela-brincadeira" hidden>
+        <div class="instrucao instrucao--labirinto">
+          <p class="instrucao__texto" id="instrucao">Leve o carrinho até a garagem!</p>
+          <button class="botao botao--repetir" id="repetir" type="button">🔊 Ouvir</button>
+        </div>
+        <div class="status-labirinto" aria-live="polite">
+          <span id="nivel"></span>
+          <span id="status-estrela" hidden>⭐ Falta pegar a estrela</span>
+        </div>
+        <div class="tabuleiro" id="tabuleiro" role="grid" aria-label="Labirinto"></div>
+        <p class="feedback retorno retorno--labirinto" id="retorno" aria-live="polite"></p>
+        <div class="controles" aria-label="Setas para mover o carrinho">
+          <button class="controle controle--cima" type="button" data-direcao="cima" aria-label="Mover para cima">▲</button>
+          <button class="controle controle--esquerda" type="button" data-direcao="esquerda" aria-label="Mover para a esquerda">◀</button>
+          <button class="controle controle--baixo" type="button" data-direcao="baixo" aria-label="Mover para baixo">▼</button>
+          <button class="controle controle--direita" type="button" data-direcao="direita" aria-label="Mover para a direita">▶</button>
+        </div>
+        <div class="acoes-labirinto">
+          <button class="botao botao--secundario" id="dica" type="button">💡 Mostre o caminho</button>
+          <button class="botao botao--neutro" id="recomecar" type="button">↩ Recomeçar</button>
+          <button class="botao botao--neutro" id="outro-mapa" type="button">🔄 Outro mapa</button>
+        </div>
+        <div class="roteiro" id="roteiro" hidden>
+          <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
+          <span class="roteiro__fala" id="roteiro-fala"></span>
+        </div>
+      </div>
+
+      <div class="tela conclusao" id="tela-fim" hidden>
+        <h2 class="instrucao__texto">Chegou à garagem!</h2>
+        <img class="conclusao__figurinha" id="figurinha" src="" alt="" width="150" height="150">
+        <p class="convite__texto" id="texto-fim"></p>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="de-novo" type="button">🔁 Outro caminho</button>
+          <a class="botao botao--secundario" href="../index.html">🏠 Voltar</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./tela.js"></script>
+</body>
+</html>

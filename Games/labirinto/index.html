@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Atravesse labirintos, encontre itens e chegue ao destino. Jogo educativo de orientação espacial para crianças.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Labirinto de Aventuras — Jogos da Elis">
+  <meta property="og:description" content="Atravesse labirintos, encontre itens e chegue ao destino.">
+  <meta name="theme-color" content="#d81b7f">
+  <title>Labirinto de Aventuras — Jogos da Elis</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/icone-192.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%220.9em%22%20font-size%3D%2290%22%3E%F0%9F%A7%AD%3C%2Ftext%3E%3C%2Fsvg%3E">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="./labirinto.css">
+  <script type="module" src="../../shared/pwa.js"></script>
+</head>
+<body class="pagina">
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao jogo-labirinto">
+      <div id="tela-inicio" class="tela inicio-labirinto">
+        <div class="icone-titulo" aria-hidden="true">🧭</div>
+        <h2>Labirinto de Aventuras</h2>
+        <p>Encontre o caminho e leve o personagem até o destino!</p>
+
+        <fieldset class="escolhas">
+          <legend>Escolha uma aventura</legend>
+          <div class="escolhas__grade escolhas__grade--temas" id="temas">
+            <button class="escolha" type="button" data-tema="dinossauro" aria-pressed="true">🦖 Dinossauro</button>
+            <button class="escolha" type="button" data-tema="carrinho" aria-pressed="false">🚗 Carrinho</button>
+            <button class="escolha" type="button" data-tema="cachorro" aria-pressed="false">🐶 Cachorro</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="escolhas">
+          <legend>Escolha o modo</legend>
+          <div class="escolhas__grade" id="modos">
+            <button class="escolha" type="button" data-modo="explorador" aria-pressed="false"><strong>Explorador</strong><small>5×5 · encontre a saída</small></button>
+            <button class="escolha" type="button" data-modo="aventureiro" aria-pressed="true"><strong>Aventureiro</strong><small>7×7 · pegue a chave</small></button>
+            <button class="escolha" type="button" data-modo="desafio" aria-pressed="false"><strong>Desafio</strong><small>9×9 · pegue dois itens</small></button>
+          </div>
+        </fieldset>
+        <button class="botao botao--sucesso botao--grande" id="comecar" type="button">Começar aventura!</button>
+      </div>
+
+      <div id="tela-demo" class="tela demonstracao" hidden>
+        <h2>Veja como andar</h2>
+        <p>O personagem anda uma casa de cada vez.</p>
+        <div class="mini-mapa" aria-label="Demonstração de dois movimentos">
+          <span class="mini-personagem" id="mini-personagem">🚗</span>
+          <span class="mini-destino">🏠</span>
+        </div>
+        <p class="feedback" id="texto-demo" aria-live="polite">Primeiro, vá para a direita...</p>
+        <button class="botao botao--sucesso" id="experimentar" type="button" hidden>Agora é sua vez!</button>
+        <button class="botao botao--secundario" id="pular-demo" type="button">Pular demonstração</button>
+      </div>
+
+      <div id="tela-jogo" class="tela" hidden>
+        <div class="barra-rodada">
+          <span id="mapa-atual">Mapa 1 de 3</span>
+          <span>👣 <strong id="movimentos">0</strong></span>
+          <span>💡 <strong id="dicas-usadas">0</strong></span>
+        </div>
+        <div class="missao" id="missao" aria-live="polite"></div>
+        <div class="tabuleiro" id="tabuleiro" role="grid" aria-label="Labirinto"></div>
+        <p class="feedback retorno-labirinto" id="retorno" aria-live="polite"></p>
+
+        <div class="controles" aria-label="Setas para mover">
+          <button class="controle controle--cima" type="button" data-direcao="cima" aria-label="Mover para cima">▲</button>
+          <button class="controle controle--esquerda" type="button" data-direcao="esquerda" aria-label="Mover para a esquerda">◀</button>
+          <button class="controle controle--baixo" type="button" data-direcao="baixo" aria-label="Mover para baixo">▼</button>
+          <button class="controle controle--direita" type="button" data-direcao="direita" aria-label="Mover para a direita">▶</button>
+        </div>
+        <div class="acoes-labirinto">
+          <button class="botao botao--secundario" id="dica" type="button">💡 Dica</button>
+          <button class="botao botao--neutro" id="recomecar" type="button">↩ Recomeçar</button>
+          <button class="botao botao--neutro" id="trocar" type="button">🔄 Trocar mapa</button>
+        </div>
+        <button class="botao botao--sucesso proximo" id="proximo" type="button" hidden>Próximo mapa ▶</button>
+      </div>
+
+      <div id="tela-fim" class="tela fim-labirinto" hidden>
+        <div class="icone-titulo" aria-hidden="true">🏆</div>
+        <h2>Aventura completa!</h2>
+        <p>Você venceu os três labirintos!</p>
+        <p class="estrelas" id="estrelas" aria-label="Estrelas conquistadas"></p>
+        <div class="resumo-final">
+          <span>👣 <strong id="total-movimentos">0</strong> movimentos</span>
+          <span>💡 <strong id="total-dicas">0</strong> dicas</span>
+        </div>
+        <div class="acoes-labirinto">
+          <button class="botao botao--sucesso" id="jogar-novamente" type="button">Jogar de novo</button>
+          <button class="botao botao--secundario" id="configurar" type="button">Trocar modo</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./tela.js"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@ São **dois sites irmãos no mesmo endereço**, com abas para trocar de um para 
 
 | Site | Entrada | Público |
 |---|---|---|
-| **Jogos da Elis** | `index.html` | 9 anos (4.º ano): quatorze jogos de palavras, contas, lógica e memória |
+| **Jogos da Elis** | `index.html` | 9 anos (4.º ano): quinze jogos de palavras, contas, lógica e memória |
 | **Jogos do Rael** | `rael/index.html` | 5 anos, pré-alfabetização: brincadeiras faladas, sem exigir leitura |
 
 **No ar em:** https://jogosdaelis.netlify.app/
@@ -19,7 +19,7 @@ São **dois sites irmãos no mesmo endereço**, com abas para trocar de um para 
 | Jogo | Arquivo de entrada | Tecnologia |
 |---|---|---|
 | Jogo da Forca | `Games/forca/index.html` | HTML/CSS/JS puro |
-| Jogo da Memória | `Games/memoria/` | React 19 + Vite 6 |
+| Jogo da Memória — emojis ou contas | `Games/memoria/` | React 19 + Vite 7 |
 | Matemática | `Games/matematica/index.html` | HTML/CSS/JS puro |
 | Jogo do M ou N (toque ou digitar) | `Games/m-ou-n/index.html` | HTML/CSS/JS puro |
 | Ortografia Divertida (7 regras) | `Games/ortografia/index.html` | HTML/CSS/JS puro |
@@ -31,6 +31,7 @@ São **dois sites irmãos no mesmo endereço**, com abas para trocar de um para 
 | Sudoku de Emojis | `Games/sudoku/index.html` | HTML/CSS/JS puro |
 | Dinheirinho | `Games/dinheirinho/index.html` | HTML/CSS/JS puro |
 | Quiz Sabe-Tudo | `Games/quiz/index.html` | HTML/CSS/JS puro |
+| Labirinto de Aventuras | `Games/labirinto/index.html` | HTML/CSS/JS puro |
 | Jogo da Velha | `Games/velha/` | React 19 + Vite 6 |
 
 A página inicial (`index.html`) é o índice: ela lista os jogos em cartões e aponta para os
@@ -50,6 +51,7 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Rimas com Figuras | `rael/rimas-com-figuras/index.html` | Ouça e encontre palavras que terminam com sons parecidos |
 | Começa com o Mesmo Som | `rael/comeca-com-o-mesmo-som/index.html` | Compare o começo de palavras faladas |
 | Letras para Explorar | `rael/letras-para-explorar/index.html` | Pareie, ouça e explore letras em caixa alta |
+| Meu Primeiro Labirinto | `rael/meu-primeiro-labirinto/index.html` | Leve o carrinho à garagem em caminhos 3×3, 4×4 ou 5×5 |
 | Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras
@@ -58,7 +60,7 @@ como nível (2 = fácil, 3 = normal, 4 = esperto).
 
 O progresso dele fica numa chave própria (`localStorage['jogos-elis:descobertas']`), então não
 entra no Mural de Conquistas da Elis e não é apagado pelo "Zerar progresso" das configurações
-dela. As próximas brincadeiras estão especificadas na seção 6 do [MELHORIAS.md](MELHORIAS.md).
+dela. As próximas brincadeiras estão especificadas na seção 5 do [MELHORIAS.md](MELHORIAS.md).
 
 ---
 
@@ -107,7 +109,8 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── configuracoes.html           Preferências do adulto para a etapa
 │   ├── toque-na-figura/             index.html + tela.js
 │   ├── encaixe-as-figuras/          index.html + dados.js + jogo.js + tela.js
-│   └── palmas-nas-palavras/         index.html + dados.js + jogo.js + tela.js
+│   ├── palmas-nas-palavras/         index.html + dados.js + jogo.js + tela.js
+│   └── meu-primeiro-labirinto/      Tela infantil; reutiliza Games/labirinto/jogo.js
 └── Games/
     ├── forca/                       index.html + jogo.js
     ├── m-ou-n/                      index.html + jogo.js
@@ -121,6 +124,7 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
     ├── sudoku/                      index.html + jogo.js + tela.js
     ├── dinheirinho/                 index.html + jogo.js + tela.js + dados.js
     ├── quiz/                         index.html + jogo.js + tela.js + dados.js
+    ├── labirinto/                    index.html + jogo.js + tela.js + CSS; motor compartilhado com P07
     ├── memoria/                     index.html + main.tsx + App.tsx + components/ + lib/
     └── velha/                       index.html + main.tsx + App.tsx + components/ + lib/
 ```

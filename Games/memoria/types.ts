@@ -1,9 +1,13 @@
 export interface CardData {
   id: number;
-  emoji: string;
+  face: string;
+  chavePar: string;
+  tipoFace: 'figura' | 'conta' | 'resultado';
   isFlipped: boolean;
   isMatched: boolean;
 }
+
+export type ModoDasCartas = 'emojis' | 'soma' | 'multiplicacao' | 'mistas';
 
 export interface Player {
   id: number;
