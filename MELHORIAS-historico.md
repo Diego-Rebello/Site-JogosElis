@@ -500,7 +500,7 @@ resposta correta, além de validar rodadas sem repetição.
 
 ### P00 — Preparar a área Primeiras Descobertas
 
-> ✅ Concluída em 2026-09-07.
+> ✅ Concluída em 2026-09-07 e ampliada em 2026-09-08.
 
 **Prioridade:** Alta · **Esforço:** M · **Modelo:** Opus · **Depende de:** T09, T13, T21, T23
 
@@ -633,14 +633,16 @@ worker. **Falta a validação com o Rael e nos aparelhos de casa.**
 
 **Como ficou**
 
-1. Dez aventuras manuais com versões 3×3, 4×4 e 5×5. O nível normal abre direto no 4×4; o modo
-   esperto pede uma estrela antes da garagem.
-2. Lógica canônica em `Games/labirinto/jogo.js`: movimento, paredes, reinício e a busca que
-   resolve os mapas e indica o próximo passo — compartilhável com J13, sem segundo gerador.
-3. Tela aceita setas grandes, teclado e toque numa casa vizinha. Sem cronômetro, vidas ou
-   avaliação por movimentos; usar dica não muda a festa nem a figurinha.
-4. Testes percorrem todos os mapas, seguem cada dica até o fim, verificam paredes, limites,
-   estrela obrigatória e reinício limpo.
+1. Dez labirintos reproduzíveis por nível, agora com grades 9×9, 12×12 e 15×15. O destino fica
+   no ponto mais distante da entrada e as rotas testadas têm de 38 a 182 movimentos; o modo
+   esperto também pede uma estrela antes da garagem.
+2. Lógica canônica em `Games/labirinto/jogo.js`: geração por busca em profundidade, movimento,
+   paredes, reinício e busca do próximo passo — compartilhada com J13, sem segundo motor.
+3. Tela ampliada para tablet e computador, com paredes entre as casas, setas grandes, teclado e
+   toque somente nas casas vizinhas acessíveis. Sem cronômetro, vidas ou avaliação por movimentos;
+   usar dica não muda a festa nem a figurinha.
+4. Testes percorrem todos os mapas, exigem rotas longas, seguem cada dica até o fim e verificam
+   paredes, limites, estrela obrigatória e reinício limpo.
 
 ---
 

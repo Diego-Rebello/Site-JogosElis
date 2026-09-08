@@ -1,9 +1,8 @@
 /**
  * Núcleo compartilhado do Labirinto de Aventuras (J13) e do Meu Primeiro
- * Labirinto (P07). Os mapas desta primeira etapa são desenhados à mão: isso
- * mantém os caminhos curtos e as bifurcações sob controle para uma criança
- * de 5 anos. A tela do Rael importa este arquivo; não existe um segundo
- * gerador ou uma segunda regra de movimento.
+ * Labirinto (P07). Os dois jogos usam o mesmo gerador, solucionador e regras
+ * de movimento; a tela do Rael escolhe tamanhos maiores e sementes estáveis
+ * para oferecer dez desafios diferentes em cada nível.
  *
  * Legenda: C = carrinho, G = garagem, * = estrela, . = caminho e # = parede.
  */
@@ -16,6 +15,12 @@ export const DIRECOES = Object.freeze({
 });
 
 export const NIVEL_POR_ETAPA = Object.freeze({ facil: 'facil', normal: 'normal', esperto: 'esperto' });
+
+export const NIVEIS_LABIRINTO_RAEL = Object.freeze({
+  facil: Object.freeze({ tamanho: 9, itensObrigatorios: 0, nome: 'Caminho grande' }),
+  normal: Object.freeze({ tamanho: 12, itensObrigatorios: 0, nome: 'Superlabirinto' }),
+  esperto: Object.freeze({ tamanho: 15, itensObrigatorios: 1, nome: 'Desafio gigante' }),
+});
 
 export const MODOS_LABIRINTO = Object.freeze({
   explorador: Object.freeze({ tamanho: 5, itensObrigatorios: 0, nome: 'Explorador' }),
@@ -30,19 +35,6 @@ const ITEM_POR_SIMBOLO = Object.freeze({
   2: 'item-2',
 });
 
-const AVENTURAS = [
-  { id: 'volta-do-jardim', facil: ['C..', '##.', '..G'], normal: ['C...', '###.', '...G', '.###'], esperto: ['C....', '####.', '..*..', '.####', '....G'] },
-  { id: 'rua-comprida', facil: ['C#.', '.#.', '..G'], normal: ['C##.', '.##.', '.##.', '...G'], esperto: ['C####', '.####', '.*...', '####.', '....G'] },
-  { id: 'caminho-do-alto', facil: ['..C', '.##', 'G..'], normal: ['...C', '.###', '..G.', '.###'], esperto: ['....C', '.####', '..*..', '####.', 'G....'] },
-  { id: 'grande-volta', facil: ['..G', '##.', 'C..'], normal: ['G...', '###.', '....', 'C###'], esperto: ['G....', '####.', '..*..', '.####', '....C'] },
-  { id: 'curva-da-garagem', facil: ['G..', '.#.', '..C'], normal: ['...G', '.##.', '....', 'C###'], esperto: ['C...#', '###.#', '.*...', '.####', '....G'] },
-  { id: 'duas-esquinas', facil: ['C#.', '...', '#.G'], normal: ['C...', '.##.', '....', '###G'], esperto: ['#...G', '#.#.#', '..*..', '.###.', 'C....'] },
-  { id: 'curva-do-meio', facil: ['.#G', '...', 'C#.'], normal: ['G##.', '....', '.##.', '...C'], esperto: ['G...#', '.##.#', '..*..', '###..', '....C'] },
-  { id: 'ponte-azul', facil: ['.C.', '.#.', '.G.'], normal: ['.G..', '.#.#', '....', 'C###'], esperto: ['#...C', '#.#..', '..*#.', '.###.', 'G....'] },
-  { id: 'zigue-zague', facil: ['G#.', '...', '.#C'], normal: ['###C', '....', '.##.', 'G...'], esperto: ['C#...', '.#.#.', '.*.#.', '.###.', '....G'] },
-  { id: 'atalho-da-estrela', facil: ['.G.', '.#.', '.C.'], normal: ['..G.', '.#..', '...#', 'C###'], esperto: ['...#G', '.#.#.', '.*...', '.###.', 'C....'] },
-];
-
 const chave = posicao => `${posicao.linha},${posicao.coluna}`;
 const copiar = posicao => ({ linha: posicao.linha, coluna: posicao.coluna });
 
@@ -54,10 +46,20 @@ function encontrar(layout, simbolo) {
   return null;
 }
 
-/** Devolve os dez mapas revisados do nível, sem expor o objeto interno. */
+/** Devolve dez mapas grandes, reproduzíveis e diferentes para o Rael. */
 export function mapasDoNivel(nivel = 'normal') {
   const escolhido = NIVEL_POR_ETAPA[nivel] || 'normal';
-  return AVENTURAS.map(aventura => ({ id: aventura.id, nivel: escolhido, layout: [...aventura[escolhido]] }));
+  const configuracao = NIVEIS_LABIRINTO_RAEL[escolhido];
+  return Array.from({ length: 10 }, (_, indice) => {
+    const id = `rael-${escolhido}-${indice + 1}`;
+    const mapa = gerarLabirinto({ ...configuracao, semente: id });
+    return {
+      ...mapa,
+      id,
+      nivel: escolhido,
+      layout: mapa.layout.map(linha => linha.replace('K', '*')),
+    };
+  });
 }
 
 /** Lê e valida a representação compacta usada pelo banco de mapas. */

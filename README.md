@@ -51,7 +51,7 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Rimas com Figuras | `rael/rimas-com-figuras/index.html` | Ouça e encontre palavras que terminam com sons parecidos |
 | Começa com o Mesmo Som | `rael/comeca-com-o-mesmo-som/index.html` | Compare o começo de palavras faladas |
 | Letras para Explorar | `rael/letras-para-explorar/index.html` | Pareie, ouça e explore letras em caixa alta |
-| Meu Primeiro Labirinto | `rael/meu-primeiro-labirinto/index.html` | Leve o carrinho à garagem em caminhos 3×3, 4×4 ou 5×5 |
+| Meu Primeiro Labirinto | `rael/meu-primeiro-labirinto/index.html` | Explore labirintos grandes de 9×9, 12×12 ou 15×15 no tablet e computador |
 | Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras

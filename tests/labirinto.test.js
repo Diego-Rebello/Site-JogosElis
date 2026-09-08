@@ -5,21 +5,24 @@ import {
 } from '../Games/labirinto/jogo.js';
 
 describe('Meu Primeiro Labirinto (P07)', () => {
-  it('tem dez mapas manuais e solucionáveis em cada nível', () => {
+  it('tem dez labirintos grandes e solucionáveis em cada nível', () => {
     ['facil', 'normal', 'esperto'].forEach(nivel => {
       const mapas = mapasDoNivel(nivel);
       expect(mapas).toHaveLength(10);
       expect(new Set(mapas.map(mapa => mapa.id)).size).toBe(10);
       mapas.forEach(mapa => {
         const analisado = analisarMapa(mapa);
-        expect(analisado.tamanho).toBe(nivel === 'facil' ? 3 : nivel === 'normal' ? 4 : 5);
-        expect(resolverMapa(analisado)).not.toBeNull();
+        const tamanho = nivel === 'facil' ? 9 : nivel === 'normal' ? 12 : 15;
+        const rota = resolverMapa(analisado);
+        expect(analisado.tamanho).toBe(tamanho);
+        expect(rota).not.toBeNull();
+        expect(rota.length).toBeGreaterThanOrEqual(tamanho * 4);
       });
     });
   });
 
-  it('abre no 4 por 4 e só o modo esperto exige uma estrela', () => {
-    mapasDoNivel().forEach(mapa => expect(analisarMapa(mapa).tamanho).toBe(4));
+  it('abre no 12 por 12 e só o modo esperto exige uma estrela', () => {
+    mapasDoNivel().forEach(mapa => expect(analisarMapa(mapa).tamanho).toBe(12));
     mapasDoNivel('facil').forEach(mapa => expect(analisarMapa(mapa).estrela).toBeNull());
     mapasDoNivel('normal').forEach(mapa => expect(analisarMapa(mapa).estrela).toBeNull());
     mapasDoNivel('esperto').forEach(mapa => expect(analisarMapa(mapa).estrela).not.toBeNull());
@@ -29,14 +32,14 @@ describe('Meu Primeiro Labirinto (P07)', () => {
     ['facil', 'normal', 'esperto'].forEach(nivel => mapasDoNivel(nivel).forEach(mapa => {
       const partida = criarPartida(mapa);
       let seguranca = 0;
-      while (!partida.estado().concluida && seguranca < 100) {
+      while (!partida.estado().concluida && seguranca < 500) {
         const dica = partida.dica();
         expect(dica).not.toBeNull();
         expect(partida.mover(dica.direcao)).toMatchObject({ valido: true });
         seguranca += 1;
       }
       expect(partida.estado().concluida).toBe(true);
-      expect(seguranca).toBeLessThan(100);
+      expect(seguranca).toBeLessThan(500);
     }));
   });
 

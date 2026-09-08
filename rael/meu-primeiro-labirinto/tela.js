@@ -4,7 +4,9 @@ import { lancarConfete, animar } from '../../shared/confete.js';
 import { definirPreferencia, falarSequencia, limpar, modoAcompanhado, parar, preparar } from '../../shared/fala.js';
 import { nivelDaEtapa, obterConfiguracoes, registrarRodada, rodadasDe } from '../../shared/descobertas.js';
 import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
-import { DIRECOES, criarPartida, direcaoEntre, mapasDoNivel } from '../../Games/labirinto/jogo.js';
+import {
+  DIRECOES, criarPartida, direcaoEntre, haParedeEntre, mapasDoNivel, podeMover,
+} from '../../Games/labirinto/jogo.js';
 
 const ATIVIDADE = 'meu-primeiro-labirinto';
 const $ = id => document.getElementById(id);
@@ -12,7 +14,11 @@ const telas = { convite: $('tela-convite'), brincadeira: $('tela-brincadeira'), 
 const configuracoes = obterConfiguracoes();
 const nivel = nivelDaEtapa();
 const mapas = mapasDoNivel(nivel);
-const NOMES_NIVEL = { facil: 'Caminho fácil · 3 por 3', normal: 'Primeiros caminhos · 4 por 4', esperto: 'Modo esperto · 5 por 5' };
+const NOMES_NIVEL = {
+  facil: 'Caminho grande · 9 por 9',
+  normal: 'Superlabirinto · 12 por 12',
+  esperto: 'Desafio gigante · 15 por 15',
+};
 const TECLA_PARA_DIRECAO = Object.fromEntries(Object.entries(DIRECOES).map(([id, dados]) => [dados.tecla, id]));
 
 definirPreferencia(configuracoes.voz);
@@ -45,6 +51,13 @@ function conteudoDaCasa(simbolo, estado) {
   return '';
 }
 
+function classesDasParedes(mapa, casa) {
+  return Object.entries(DIRECOES).filter(([, delta]) => haParedeEntre(mapa, casa, {
+    linha: casa.linha + delta.linha,
+    coluna: casa.coluna + delta.coluna,
+  })).map(([direcao]) => `casa-labirinto--parede-${direcao}`);
+}
+
 function pintarTabuleiro() {
   const estado = partida.estado();
   const { mapa, posicao } = estado;
@@ -55,12 +68,20 @@ function pintarTabuleiro() {
     if (simbolo === '#') return '<div class="casa-labirinto casa-labirinto--parede" role="gridcell" aria-label="Parede"></div>';
     const casa = { linha: numeroLinha, coluna };
     const temCarrinho = mesmaCasa(casa, posicao);
-    const classes = ['casa-labirinto', naTrilha.has(`${numeroLinha},${coluna}`) && !temCarrinho ? 'casa-labirinto--trilha' : '', mesmaCasa(casa, dicaVisual) ? 'casa-labirinto--dica' : ''].filter(Boolean).join(' ');
+    const classes = [
+      'casa-labirinto',
+      ...classesDasParedes(mapa, casa),
+      naTrilha.has(`${numeroLinha},${coluna}`) && !temCarrinho ? 'casa-labirinto--trilha' : '',
+      mesmaCasa(casa, dicaVisual) ? 'casa-labirinto--dica' : '',
+    ].filter(Boolean).join(' ');
     const nome = temCarrinho ? 'Carrinho' : simbolo === 'G' ? 'Garagem' : simbolo === '*' && !estado.coletouEstrela ? 'Estrela' : 'Caminho';
-    return `<button class="${classes}" type="button" role="gridcell" data-linha="${numeroLinha}" data-coluna="${coluna}" aria-label="${nome}">
+    const interativa = podeMover(mapa, posicao, casa);
+    const tag = interativa ? 'button' : 'div';
+    const atributos = interativa ? `type="button" data-linha="${numeroLinha}" data-coluna="${coluna}"` : '';
+    return `<${tag} class="${classes}" ${atributos} role="gridcell" aria-label="${nome}">
       ${conteudoDaCasa(simbolo, estado)}
       ${temCarrinho ? '<img class="casa-labirinto__figura" src="/figuras/carro.svg" alt="" aria-hidden="true">' : ''}
-    </button>`;
+    </${tag}>`;
   })).join('');
   $('status-estrela').hidden = !mapa.estrela || estado.coletouEstrela;
 }
@@ -74,7 +95,7 @@ function abrirMapa({ falarInstrucao = true } = {}) {
   parar();
   limparDica();
   partida = criarPartida(mapas[indiceMapa]);
-  $('nivel').textContent = NOMES_NIVEL[nivel];
+  $('nivel').textContent = `${NOMES_NIVEL[nivel]} · mapa ${indiceMapa + 1} de ${mapas.length}`;
   $('retorno').textContent = '';
   $('retorno').className = 'feedback retorno retorno--labirinto';
   mostrarTela('brincadeira');

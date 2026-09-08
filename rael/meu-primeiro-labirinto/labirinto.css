@@ -1,4 +1,4 @@
-.labirinto-jogo { max-width: 760px; }
+.descobertas.labirinto-jogo { width: min(100%, 1120px); max-width: 1120px; }
 .instrucao--labirinto { margin-bottom: 8px; }
 .status-labirinto {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
@@ -6,37 +6,48 @@
   font-family: var(--fonte-leitura); font-weight: 700;
 }
 .tabuleiro {
-  --tamanho: 4;
-  display: grid; grid-template-columns: repeat(var(--tamanho), minmax(0, 1fr)); gap: 4px;
-  width: min(100%, 430px); aspect-ratio: 1; margin: 0 auto; padding: 6px; overflow: hidden;
-  border: 5px solid var(--cor-principal-profunda); border-radius: 20px; background: #7bc86c;
-  box-shadow: 0 5px 0 rgba(13, 74, 143, 0.25);
+  --tamanho: 12;
+  display: grid; grid-template-columns: repeat(var(--tamanho), minmax(0, 1fr)); gap: 0;
+  width: 100%; max-width: 760px; aspect-ratio: 1; margin: 0 auto; padding: 0; overflow: hidden;
+  border: 8px solid #17663a; border-radius: 18px; background: #fff8d8;
+  box-shadow: 0 7px 0 rgba(13, 74, 143, 0.25), 0 14px 30px rgba(13, 74, 143, 0.16);
 }
 .casa-labirinto {
-  position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: 3px;
-  border: 0; border-radius: 9px; background: #fff5c9; cursor: pointer;
+  position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: 1px;
+  border: 2px solid transparent; border-radius: 0; background: #fff8d8; cursor: default;
 }
-.casa-labirinto:disabled { cursor: default; }
+.casa-labirinto:is(button) { cursor: pointer; }
+.casa-labirinto:is(button):hover { background: #fff0ac; }
+.casa-labirinto--parede-cima { border-top-color: #23804a; }
+.casa-labirinto--parede-direita { border-right-color: #23804a; }
+.casa-labirinto--parede-baixo { border-bottom-color: #23804a; }
+.casa-labirinto--parede-esquerda { border-left-color: #23804a; }
 .casa-labirinto--parede {
   background: #3b8f4d;
   background-image: radial-gradient(circle at 30% 30%, #75c76f 0 16%, transparent 17%), radial-gradient(circle at 70% 70%, #216d39 0 17%, transparent 18%);
   border: 3px solid #236f3b;
 }
 .casa-labirinto--trilha::after {
-  content: ''; width: 19%; aspect-ratio: 1; border-radius: 50%; background: #8eb7ce; opacity: 0.65;
+  content: ''; width: 18%; aspect-ratio: 1; border-radius: 50%; background: #8eb7ce; opacity: 0.7;
 }
-.casa-labirinto--dica { outline: 5px solid #f0a31a; outline-offset: -5px; animation: dica-casa 0.75s ease-in-out 2; }
+.casa-labirinto--dica { background: #ffd76b; animation: dica-casa 0.75s ease-in-out 2; }
 .casa-labirinto__figura {
-  position: absolute; z-index: 2; width: 78%; height: 78%; object-fit: contain; pointer-events: none;
+  position: absolute; z-index: 2; width: 82%; height: 82%; object-fit: contain; pointer-events: none;
 }
 .casa-labirinto__figura--estrela { width: 64%; height: 64%; }
-.retorno--labirinto { margin: 8px 0 4px; min-height: 1.5em; }
+.area-labirinto {
+  display: grid; grid-template-columns: minmax(0, 760px) minmax(220px, 260px);
+  align-items: center; justify-content: center; gap: 24px;
+}
+.painel-labirinto { display: grid; align-content: center; gap: 16px; }
+.retorno--labirinto { margin: 0; min-height: 3em; }
+.atalho-teclado { margin: 0; color: var(--cor-suave); font-family: var(--fonte-leitura); font-weight: 700; }
 .controles {
-  display: grid; grid-template: repeat(2, 68px) / repeat(3, 68px); justify-content: center;
-  gap: 8px; margin-top: 4px;
+  display: grid; grid-template: repeat(2, 74px) / repeat(3, 74px); justify-content: center;
+  gap: 9px; margin-top: 2px;
 }
 .controle {
-  display: grid; place-items: center; width: 68px; min-width: 64px; height: 68px; min-height: 64px;
+  display: grid; place-items: center; width: 74px; min-width: 64px; height: 74px; min-height: 64px;
   padding: 0; border: 0; border-radius: 18px; background: var(--cor-principal-escura); color: #fff;
   font: 2rem/1 var(--fonte-corpo); cursor: pointer; box-shadow: 0 5px 0 var(--cor-principal-profunda);
 }
@@ -46,15 +57,25 @@
 .controle--baixo { grid-area: 2 / 2; }
 .controle--direita { grid-area: 2 / 3; }
 .controle--dica { background: #b3510a; box-shadow: 0 5px 0 #7d3806; animation: dica-seta 0.75s ease-in-out 2; }
-.acoes-labirinto { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
-.acoes-labirinto .botao { padding-inline: 15px; }
+.acoes-labirinto { display: grid; gap: 10px; margin-top: 4px; }
+.acoes-labirinto .botao { width: 100%; padding-inline: 14px; }
 @keyframes dica-casa { 50% { transform: scale(0.9); } }
 @keyframes dica-seta { 50% { transform: scale(1.12); } }
-@media (max-width: 430px) {
+@media (min-width: 961px) {
+  .tabuleiro { width: min(100%, calc(100vh - 220px)); }
+}
+@media (max-width: 960px) {
+  .area-labirinto { grid-template-columns: minmax(0, 720px); }
+  .painel-labirinto { justify-items: center; gap: 10px; }
+  .retorno--labirinto { min-height: 1.5em; }
+  .acoes-labirinto { grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(100%, 720px); }
+}
+@media (max-width: 650px) {
   .labirinto-jogo { padding: 14px 9px; }
-  .tabuleiro { gap: 3px; padding: 4px; border-width: 4px; }
-  .acoes-labirinto { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .acoes-labirinto .botao:first-child { grid-column: 1 / -1; }
+  .tabuleiro { border-width: 5px; border-radius: 12px; }
+  .casa-labirinto { border-width: 1px; }
+  .atalho-teclado { display: none; }
+  .acoes-labirinto { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   .casa-labirinto--dica, .controle--dica { animation: none; }

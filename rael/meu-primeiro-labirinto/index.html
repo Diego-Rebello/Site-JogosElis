@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Leve o carrinho até a garagem em caminhos curtos e sem cronômetro. Brincadeira dos Jogos do Rael.">
+  <meta name="description" content="Explore labirintos grandes, encontre o caminho e leve o carrinho até a garagem. Brincadeira dos Jogos do Rael para tablet e computador.">
   <meta name="theme-color" content="#0f5aa8">
   <title>Meu Primeiro Labirinto — Jogos do Rael</title>
   <link rel="manifest" href="/rael.webmanifest">
@@ -25,7 +25,7 @@
           <img class="convite__figura" src="/figuras/casa.svg" alt="" width="110" height="110">
         </div>
         <h2 class="instrucao__texto">Meu Primeiro Labirinto</h2>
-        <p class="convite__texto">Use as setas para levar o carrinho até a garagem.</p>
+        <p class="convite__texto">Explore um labirinto gigante e descubra o caminho até a garagem.</p>
         <button class="botao botao--gigante" id="comecar" type="button">▶ Vamos brincar</button>
         <p class="convite__texto" id="aviso-voz" hidden></p>
       </div>
@@ -39,18 +39,23 @@
           <span id="nivel"></span>
           <span id="status-estrela" hidden>⭐ Falta pegar a estrela</span>
         </div>
-        <div class="tabuleiro" id="tabuleiro" role="grid" aria-label="Labirinto"></div>
-        <p class="feedback retorno retorno--labirinto" id="retorno" aria-live="polite"></p>
-        <div class="controles" aria-label="Setas para mover o carrinho">
-          <button class="controle controle--cima" type="button" data-direcao="cima" aria-label="Mover para cima">▲</button>
-          <button class="controle controle--esquerda" type="button" data-direcao="esquerda" aria-label="Mover para a esquerda">◀</button>
-          <button class="controle controle--baixo" type="button" data-direcao="baixo" aria-label="Mover para baixo">▼</button>
-          <button class="controle controle--direita" type="button" data-direcao="direita" aria-label="Mover para a direita">▶</button>
-        </div>
-        <div class="acoes-labirinto">
-          <button class="botao botao--secundario" id="dica" type="button">💡 Mostre o caminho</button>
-          <button class="botao botao--neutro" id="recomecar" type="button">↩ Recomeçar</button>
-          <button class="botao botao--neutro" id="outro-mapa" type="button">🔄 Outro mapa</button>
+        <div class="area-labirinto">
+          <div class="tabuleiro" id="tabuleiro" role="grid" aria-label="Labirinto"></div>
+          <aside class="painel-labirinto" aria-label="Controles do labirinto">
+            <p class="feedback retorno retorno--labirinto" id="retorno" aria-live="polite"></p>
+            <p class="atalho-teclado">Use as setas do teclado ou os botões.</p>
+            <div class="controles" aria-label="Setas para mover o carrinho">
+              <button class="controle controle--cima" type="button" data-direcao="cima" aria-label="Mover para cima">▲</button>
+              <button class="controle controle--esquerda" type="button" data-direcao="esquerda" aria-label="Mover para a esquerda">◀</button>
+              <button class="controle controle--baixo" type="button" data-direcao="baixo" aria-label="Mover para baixo">▼</button>
+              <button class="controle controle--direita" type="button" data-direcao="direita" aria-label="Mover para a direita">▶</button>
+            </div>
+            <div class="acoes-labirinto">
+              <button class="botao botao--secundario" id="dica" type="button">💡 Mostre o próximo passo</button>
+              <button class="botao botao--neutro" id="recomecar" type="button">↩ Recomeçar</button>
+              <button class="botao botao--neutro" id="outro-mapa" type="button">🔄 Outro mapa</button>
+            </div>
+          </aside>
         </div>
         <div class="roteiro" id="roteiro" hidden>
           <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
