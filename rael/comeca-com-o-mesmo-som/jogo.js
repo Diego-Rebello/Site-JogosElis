@@ -15,18 +15,57 @@ export function montarRodadaSons(palavras, {
   embaralharLista = embaralhar,
 } = {}) {
   const bolsa = palavrasDoNivel(palavras, { nivel, primeiraRodada });
-  const alvos = embaralharLista(bolsa.filter(item =>
-    bolsa.some(outro => outro.id !== item.id && outro.som === item.som)))
-    .slice(0, Math.min(quantidade, bolsa.length));
+  const porSom = bolsa.reduce((grupos, item) => {
+    if (!grupos.has(item.som)) grupos.set(item.som, []);
+    grupos.get(item.som).push(item);
+    return grupos;
+  }, new Map());
+  const grupos = embaralharLista([...porSom.entries()]
+    .filter(([, itens]) => itens.length > 1))
+    .map(([som, itens]) => ({
+      som,
+      alvos: embaralharLista(itens).map(alvo => ({
+        alvo,
+        resposta: embaralharLista(itens.filter(item => item.id !== alvo.id))[0],
+      })),
+    }));
 
-  return alvos.map(alvo => {
-    const resposta = embaralharLista(bolsa.filter(item => item.id !== alvo.id && item.som === alvo.som))[0];
-    const distratores = embaralharLista(bolsa.filter(item => item.som !== alvo.som));
+  // Espalha os sons pela rodada antes de repetir um grupo. Assim, seis
+  // perguntas não ficam presas nas mesmas duas ou três letras.
+  const pares = [];
+  while (pares.length < quantidade && grupos.some(grupo => grupo.alvos.length)) {
+    for (const grupo of grupos) {
+      const par = grupo.alvos.shift();
+      if (par) pares.push(par);
+      if (pares.length === quantidade) break;
+    }
+  }
+
+  // A posição correta também é balanceada: numa rodada de seis com três
+  // opções, cada coluna recebe exatamente duas respostas.
+  const posicoesCorretas = embaralharLista(Array.from(
+    { length: pares.length },
+    (_, indice) => indice % alternativas,
+  ));
+
+  return pares.map(({ alvo, resposta }, indice) => {
+    const sonsDistratores = embaralharLista([...porSom.keys()].filter(som => som !== alvo.som));
+    const distratores = sonsDistratores
+      .slice(0, alternativas - 1)
+      .map(som => embaralharLista(porSom.get(som))[0]);
+    if (distratores.length < alternativas - 1) {
+      const idsUsados = new Set(distratores.map(item => item.id));
+      const reserva = embaralharLista(bolsa.filter(item =>
+        item.som !== alvo.som && !idsUsados.has(item.id)));
+      distratores.push(...reserva.slice(0, alternativas - 1 - distratores.length));
+    }
+    const opcoes = [...distratores];
+    opcoes.splice(posicoesCorretas[indice], 0, resposta);
     return {
       id: `${alvo.id}-${resposta.id}`,
       alvo,
       respostaId: resposta.id,
-      opcoes: embaralharLista([resposta, ...distratores.slice(0, alternativas - 1)]),
+      opcoes,
     };
   });
 }

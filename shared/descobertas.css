@@ -405,6 +405,9 @@
   background: #fff;
   cursor: pointer;
   touch-action: none;          /* deixa o arraste por ponteiro funcionar no toque */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
@@ -421,6 +424,7 @@
   position: fixed;
   z-index: 60;
   pointer-events: none;
+  cursor: grabbing;
   margin: 0;
   box-shadow: 0 10px 24px var(--cor-sombra);
 }

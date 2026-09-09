@@ -206,7 +206,13 @@ async function tentarEncaixe(destinoId, pecaId) {
 let voando = null;
 /* Depois de um arraste o navegador ainda dispara um clique na peça. Sem esta
    marca, esse clique selecionaria de novo a peça que acabou de ser encaixada. */
-let acabouDeArrastar = false;
+let ignorarCliqueAte = 0;
+
+function cancelarArraste(evento) {
+  if (evento?.pointerId !== undefined && evento.pointerId !== voando?.pointerId) return;
+  voando?.clone.remove();
+  voando = null;
+}
 
 function comecarArraste(botao, evento) {
   const caixa = botao.getBoundingClientRect();
@@ -218,6 +224,9 @@ function comecarArraste(botao, evento) {
   voando = {
     clone,
     pecaId: botao.dataset.peca,
+    pointerId: evento.pointerId,
+    inicioX: evento.clientX,
+    inicioY: evento.clientY,
     deslocamentoX: evento.clientX - caixa.left,
     deslocamentoY: evento.clientY - caixa.top,
     moveu: false,
@@ -226,19 +235,21 @@ function comecarArraste(botao, evento) {
 }
 
 function mover(evento) {
-  if (!voando) return;
+  if (!voando || evento.pointerId !== voando.pointerId) return;
+  if (Math.hypot(evento.clientX - voando.inicioX, evento.clientY - voando.inicioY) > 6) {
+    voando.moveu = true;
+  }
   voando.clone.style.left = `${evento.clientX - voando.deslocamentoX}px`;
   voando.clone.style.top = `${evento.clientY - voando.deslocamentoY}px`;
 }
 
 function soltar(evento) {
-  if (!voando) return;
+  if (!voando || evento.pointerId !== voando.pointerId) return;
   const { clone, pecaId, moveu } = voando;
   clone.remove();
   voando = null;
   if (!moveu) return;                      // foi um toque, não um arraste
-  acabouDeArrastar = true;
-  setTimeout(() => { acabouDeArrastar = false; }, 0);
+  ignorarCliqueAte = performance.now() + 400;
   const embaixo = document.elementFromPoint(evento.clientX, evento.clientY);
   const destino = embaixo?.closest('[data-destino]');
   if (destino) tentarEncaixe(destino.dataset.destino, pecaId);
@@ -247,28 +258,27 @@ function soltar(evento) {
 
 $('pecas').addEventListener('pointerdown', evento => {
   const botao = evento.target.closest('.peca');
-  if (!botao || botao.classList.contains('peca--guardada') || ensinando) return;
-  botao.setPointerCapture?.(evento.pointerId);
+  if (!evento.isPrimary || voando || !botao || botao.classList.contains('peca--guardada') || ensinando) return;
   comecarArraste(botao, evento);
 });
 
-$('pecas').addEventListener('pointermove', evento => {
-  if (!voando) return;
-  voando.moveu = true;
+// Escuta no documento inteiro: o gesto continua chegando mesmo depois que o
+// dedo ou mouse sai da bandeja de peças. Isso também evita clones presos na
+// tela quando o navegador não mantém a captura de ponteiro no botão original.
+document.addEventListener('pointermove', evento => {
+  if (voando?.pointerId === evento.pointerId) evento.preventDefault();
   mover(evento);
-});
+}, { passive: false });
 
-$('pecas').addEventListener('pointerup', soltar);
-$('pecas').addEventListener('pointercancel', () => {
-  voando?.clone.remove();
-  voando = null;
-});
+document.addEventListener('pointerup', soltar);
+document.addEventListener('pointercancel', cancelarArraste);
+window.addEventListener('blur', cancelarArraste);
 
 // --- tocar na peça e depois no lugar ---------------------------------------
 
 $('pecas').addEventListener('click', evento => {
   const botao = evento.target.closest('.peca');
-  if (!botao || botao.classList.contains('peca--guardada') || ensinando || acabouDeArrastar) return;
+  if (!botao || botao.classList.contains('peca--guardada') || ensinando || performance.now() < ignorarCliqueAte) return;
   tocar('clique');
   montagem.selecionar(botao.dataset.peca);
   desenhar();
