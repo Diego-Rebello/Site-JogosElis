@@ -25,8 +25,10 @@
           <img class="convite__figura" src="/figuras/casa.svg" alt="" width="110" height="110">
         </div>
         <h2 class="instrucao__texto">Meu Primeiro Labirinto</h2>
-        <p class="convite__texto">Explore um labirinto gigante e descubra o caminho até a garagem.</p>
-        <button class="botao botao--gigante" id="comecar" type="button">▶ Vamos brincar</button>
+        <p class="convite__texto">Explore caminhos, use as figuras e leve o carrinho até a garagem.</p>
+        <button class="botao botao--gigante botao--comecar" id="comecar" type="button" aria-label="Começar o labirinto">
+          <img src="/figuras/carro.svg" alt="" aria-hidden="true"> ▶
+        </button>
         <p class="convite__texto" id="aviso-voz" hidden></p>
       </div>
 
@@ -37,10 +39,21 @@
         </div>
         <div class="status-labirinto" aria-live="polite">
           <span id="nivel"></span>
-          <span id="status-estrela" hidden>⭐ Falta pegar a estrela</span>
         </div>
+        <div class="objetivos" id="objetivos" aria-label="Objetivos do caminho"></div>
         <div class="area-labirinto">
-          <div class="tabuleiro" id="tabuleiro" role="grid" aria-label="Labirinto"></div>
+          <div class="mapa-jogavel">
+            <div class="barra-mapa" aria-label="Controles de visualização do mapa">
+              <button class="botao-mapa" id="diminuir" type="button" aria-label="Ver mais casas">−</button>
+              <button class="botao-mapa botao-mapa--visao" id="ver-mapa" type="button" aria-label="Ver o mapa inteiro">🗺️</button>
+              <button class="botao-mapa" id="ampliar" type="button" aria-label="Ampliar as casas">＋</button>
+              <button class="botao-mapa" id="voltar-carrinho" type="button" aria-label="Voltar a visão para o carrinho">🚗</button>
+              <button class="botao-mapa" id="ajuda" type="button" aria-label="Ver como usar os obstáculos">❓</button>
+            </div>
+            <div class="janela-tabuleiro" id="janela-tabuleiro">
+              <div class="tabuleiro" id="tabuleiro" role="grid" aria-label="Labirinto"></div>
+            </div>
+          </div>
           <aside class="painel-labirinto" aria-label="Controles do labirinto">
             <p class="feedback retorno retorno--labirinto" id="retorno" aria-live="polite"></p>
             <p class="atalho-teclado">Use as setas do teclado ou os botões.</p>
@@ -50,10 +63,11 @@
               <button class="controle controle--baixo" type="button" data-direcao="baixo" aria-label="Mover para baixo">▼</button>
               <button class="controle controle--direita" type="button" data-direcao="direita" aria-label="Mover para a direita">▶</button>
             </div>
+            <button class="acao-contextual" id="acao-contextual" type="button" hidden></button>
             <div class="acoes-labirinto">
-              <button class="botao botao--secundario" id="dica" type="button">💡 Mostre o próximo passo</button>
-              <button class="botao botao--neutro" id="recomecar" type="button">↩ Recomeçar</button>
-              <button class="botao botao--neutro" id="outro-mapa" type="button">🔄 Outro mapa</button>
+              <button class="botao botao--secundario" id="dica" type="button" aria-label="Pedir uma dica">💡 <span>Dica</span></button>
+              <button class="botao botao--neutro" id="recomecar" type="button" aria-label="Recomeçar este mapa">↩ <span>Recomeçar</span></button>
+              <button class="botao botao--neutro" id="outro-mapa" type="button" aria-label="Trocar de mapa">🔄 <span>Outro mapa</span></button>
             </div>
           </aside>
         </div>
@@ -73,6 +87,25 @@
         </div>
       </div>
     </section>
+
+    <dialog class="dialogo-mapa" id="mapa-geral" aria-labelledby="titulo-mapa-geral">
+      <div class="dialogo__topo">
+        <strong id="titulo-mapa-geral">🗺️ Mapa inteiro</strong>
+        <button class="fechar-dialogo" id="fechar-mapa" type="button" aria-label="Fechar o mapa e voltar ao carrinho">🚗</button>
+      </div>
+      <div class="tabuleiro-geral" id="tabuleiro-geral" role="img" aria-label="Visão geral do labirinto"></div>
+    </dialog>
+
+    <dialog class="dialogo-ajuda" id="demonstracao" aria-labelledby="titulo-demonstracao">
+      <h2 id="titulo-demonstracao">Veja e experimente</h2>
+      <div class="demonstracao-visual" id="demonstracao-visual" aria-live="polite"></div>
+      <div class="dialogo__acoes">
+        <button class="botao botao--repetir" id="ouvir-demo" type="button" aria-label="Ouvir a explicação de novo">🔊</button>
+        <button class="botao botao--gigante botao--seguir" id="fechar-demo" type="button" aria-label="Entendi, começar a jogar">
+          <img src="/figuras/carro.svg" alt="" aria-hidden="true"> ▶
+        </button>
+      </div>
+    </dialog>
   </main>
   <script type="module" src="./tela.js"></script>
 </body>

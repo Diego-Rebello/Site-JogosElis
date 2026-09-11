@@ -1,82 +1,129 @@
-.descobertas.labirinto-jogo { width: min(100%, 1120px); max-width: 1120px; }
+.descobertas.labirinto-jogo { width: min(100%, 1180px); max-width: 1180px; }
 .instrucao--labirinto { margin-bottom: 8px; }
+.botao--comecar, .botao--seguir { display: inline-flex; align-items: center; justify-content: center; gap: 18px; }
+.botao--comecar img, .botao--seguir img { width: 64px; height: 52px; }
 .status-labirinto {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
-  min-height: 1.6em; margin-bottom: 10px; color: var(--cor-suave);
+  min-height: 1.6em; margin-bottom: 8px; color: var(--cor-suave);
   font-family: var(--fonte-leitura); font-weight: 700;
 }
+.objetivos {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  min-height: 58px; margin: 0 auto 10px; overflow-x: auto;
+}
+.objetivo { position: relative; display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.objetivo:not(:last-child)::after { content: '›'; color: #667985; font-size: 1.7rem; font-weight: 900; }
+.objetivo__figura {
+  display: grid; place-items: center; width: 50px; height: 50px; padding: 4px;
+  border: 3px solid #9ab5c4; border-radius: 14px; background: #fff;
+}
+.objetivo__figura img { width: 100%; height: 100%; object-fit: contain; }
+.objetivo--feito .objetivo__figura { border-color: #23804a; background: #ddf7df; }
+.objetivo--feito .objetivo__figura::after {
+  content: '✓'; position: absolute; right: 4px; bottom: 1px; display: grid; place-items: center;
+  width: 22px; height: 22px; border-radius: 50%; background: #17663a; color: #fff; font-weight: 900;
+}
+.objetivo--dica .objetivo__figura { border-color: #e77b00; background: #fff0b8; animation: dica-casa .75s ease-in-out 2; }
+.area-labirinto {
+  display: grid; grid-template-columns: minmax(0, auto) minmax(230px, 270px);
+  align-items: center; justify-content: center; gap: 24px;
+}
+.mapa-jogavel { display: grid; justify-items: center; gap: 8px; min-width: 0; }
+.barra-mapa { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.botao-mapa, .fechar-dialogo {
+  display: grid; place-items: center; width: 64px; min-width: 64px; height: 64px; padding: 0;
+  border: 3px solid #0f5aa8; border-radius: 16px; background: #fff; color: #0f5aa8;
+  font: 900 1.7rem/1 var(--fonte-corpo); cursor: pointer;
+}
+.botao-mapa--visao { background: #e5f2ff; }
+.botao-mapa:disabled { opacity: .38; cursor: default; }
+.janela-tabuleiro {
+  max-width: 100%; overflow: hidden; border: 8px solid #17663a; border-radius: 18px;
+  background: #fff8d8; box-shadow: 0 7px 0 rgba(13, 74, 143, .25), 0 14px 30px rgba(13, 74, 143, .16);
+}
 .tabuleiro {
-  --tamanho: 12;
-  display: grid; grid-template-columns: repeat(var(--tamanho), minmax(0, 1fr)); gap: 0;
-  width: 100%; max-width: 760px; aspect-ratio: 1; margin: 0 auto; padding: 0; overflow: hidden;
-  border: 8px solid #17663a; border-radius: 18px; background: #fff8d8;
-  box-shadow: 0 7px 0 rgba(13, 74, 143, 0.25), 0 14px 30px rgba(13, 74, 143, 0.16);
+  --visiveis: 7; display: grid; grid-template-columns: repeat(var(--visiveis), 68px);
+  grid-auto-rows: 68px; width: max-content; background: #fff8d8;
 }
 .casa-labirinto {
   position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: 1px;
   border: 2px solid transparent; border-radius: 0; background: #fff8d8; cursor: default;
 }
+.casa-labirinto--lago { background: #d9f2ff; }
+.casa-labirinto--praca { background: #ffecc1; }
+.casa-labirinto--jardim { background: #e4f6d8; }
 .casa-labirinto:is(button) { cursor: pointer; }
-.casa-labirinto:is(button):hover { background: #fff0ac; }
+.casa-labirinto:is(button):hover { background-color: #fff0ac; }
 .casa-labirinto--parede-cima { border-top-color: #23804a; }
 .casa-labirinto--parede-direita { border-right-color: #23804a; }
 .casa-labirinto--parede-baixo { border-bottom-color: #23804a; }
 .casa-labirinto--parede-esquerda { border-left-color: #23804a; }
-.casa-labirinto--parede {
-  background: #3b8f4d;
-  background-image: radial-gradient(circle at 30% 30%, #75c76f 0 16%, transparent 17%), radial-gradient(circle at 70% 70%, #216d39 0 17%, transparent 18%);
-  border: 3px solid #236f3b;
-}
-.casa-labirinto--trilha::after {
-  content: ''; width: 18%; aspect-ratio: 1; border-radius: 50%; background: #8eb7ce; opacity: 0.7;
-}
-.casa-labirinto--dica { background: #ffd76b; animation: dica-casa 0.75s ease-in-out 2; }
-.casa-labirinto__figura {
-  position: absolute; z-index: 2; width: 82%; height: 82%; object-fit: contain; pointer-events: none;
-}
-.casa-labirinto__figura--estrela { width: 64%; height: 64%; }
-.area-labirinto {
-  display: grid; grid-template-columns: minmax(0, 760px) minmax(220px, 260px);
-  align-items: center; justify-content: center; gap: 24px;
-}
-.painel-labirinto { display: grid; align-content: center; gap: 16px; }
+.casa-labirinto--obras { background: #f6d6b0; }
+.casa-labirinto--trilha::after { content: ''; width: 18%; aspect-ratio: 1; border-radius: 50%; background: #7aa9c4; opacity: .75; }
+.casa-labirinto--dica { background: #ffd76b; animation: dica-casa .75s ease-in-out 2; }
+.casa-labirinto__figura { position: absolute; z-index: 2; width: 82%; height: 82%; object-fit: contain; pointer-events: none; }
+.casa-labirinto__figura--item { width: 64%; height: 64%; }
+.casa-labirinto__figura--aberto { opacity: .45; transform: rotate(10deg); }
+.painel-labirinto { display: grid; align-content: center; gap: 12px; }
 .retorno--labirinto { margin: 0; min-height: 3em; }
 .atalho-teclado { margin: 0; color: var(--cor-suave); font-family: var(--fonte-leitura); font-weight: 700; }
-.controles {
-  display: grid; grid-template: repeat(2, 74px) / repeat(3, 74px); justify-content: center;
-  gap: 9px; margin-top: 2px;
-}
+.controles { display: grid; grid-template: repeat(2, 74px) / repeat(3, 74px); justify-content: center; gap: 9px; margin-top: 2px; }
 .controle {
   display: grid; place-items: center; width: 74px; min-width: 64px; height: 74px; min-height: 64px;
   padding: 0; border: 0; border-radius: 18px; background: var(--cor-principal-escura); color: #fff;
   font: 2rem/1 var(--fonte-corpo); cursor: pointer; box-shadow: 0 5px 0 var(--cor-principal-profunda);
 }
 .controle:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--cor-principal-profunda); }
-.controle--cima { grid-area: 1 / 2; }
-.controle--esquerda { grid-area: 2 / 1; }
-.controle--baixo { grid-area: 2 / 2; }
-.controle--direita { grid-area: 2 / 3; }
-.controle--dica { background: #b3510a; box-shadow: 0 5px 0 #7d3806; animation: dica-seta 0.75s ease-in-out 2; }
-.acoes-labirinto { display: grid; gap: 10px; margin-top: 4px; }
-.acoes-labirinto .botao { width: 100%; padding-inline: 14px; }
-@keyframes dica-casa { 50% { transform: scale(0.9); } }
-@keyframes dica-seta { 50% { transform: scale(1.12); } }
-@media (min-width: 961px) {
-  .tabuleiro { width: min(100%, calc(100vh - 220px)); }
+.controle--cima { grid-area: 1 / 2; }.controle--esquerda { grid-area: 2 / 1; }
+.controle--baixo { grid-area: 2 / 2; }.controle--direita { grid-area: 2 / 3; }
+.controle--dica { background: #b3510a; box-shadow: 0 5px 0 #7d3806; animation: dica-seta .75s ease-in-out 2; }
+.acao-contextual {
+  display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 72px;
+  padding: 6px 18px; border: 4px solid #b45309; border-radius: 20px; background: #fff0b8;
+  color: #713f12; font: 900 1.15rem var(--fonte-corpo); cursor: pointer; animation: acao-pronta 1s ease-in-out infinite;
 }
+.acao-contextual[hidden] { display: none; }.acao-contextual img { width: 58px; height: 58px; object-fit: contain; }
+.acoes-labirinto { display: grid; gap: 9px; margin-top: 2px; }
+.acoes-labirinto .botao { width: 100%; min-height: 64px; padding-inline: 12px; }
+.dialogo-mapa, .dialogo-ajuda {
+  width: min(94vw, 920px); max-height: 92vh; padding: 18px; border: 5px solid #0f5aa8;
+  border-radius: 24px; background: #fffdf4; color: var(--cor-texto);
+}
+.dialogo-mapa::backdrop, .dialogo-ajuda::backdrop { background: rgba(4, 25, 45, .72); }
+.dialogo__topo { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; font-size: 1.3rem; }
+.tabuleiro-geral {
+  --tamanho: 20; display: grid; grid-template-columns: repeat(var(--tamanho), minmax(0, 1fr));
+  width: min(82vh, 100%); aspect-ratio: 1; margin: auto; border: 5px solid #17663a; background: #fff8d8;
+}
+.casa-geral { position: relative; min-width: 0; border: 1px solid transparent; background: #fff8d8; }
+.casa-geral--parede-cima { border-top-color: #23804a; }.casa-geral--parede-direita { border-right-color: #23804a; }
+.casa-geral--parede-baixo { border-bottom-color: #23804a; }.casa-geral--parede-esquerda { border-left-color: #23804a; }
+.casa-geral--visitada { background: #d9eaf4; }.casa-geral--atual { background: #ffcc4d; box-shadow: inset 0 0 0 2px #9a5500; }
+.casa-geral--objetivo::after { content: ''; position: absolute; inset: 22%; border-radius: 50%; background: #e66b00; }
+.casa-geral--obras { background: #7a4b24; }
+.dialogo-ajuda { width: min(92vw, 620px); text-align: center; }
+.dialogo-ajuda h2 { margin-top: 0; }
+.demonstracao-visual { display: flex; align-items: center; justify-content: center; min-height: 190px; gap: 14px; }
+.passo-demo { display: grid; place-items: center; gap: 8px; min-width: 100px; font-family: var(--fonte-leitura); font-weight: 900; }
+.passo-demo img { width: 92px; height: 92px; object-fit: contain; }.seta-demo { font-size: 3rem; color: #0f5aa8; }
+.dialogo__acoes { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+@keyframes dica-casa { 50% { transform: scale(.88); } }@keyframes dica-seta { 50% { transform: scale(1.12); } }
+@keyframes acao-pronta { 50% { transform: scale(1.035); } }
 @media (max-width: 960px) {
   .area-labirinto { grid-template-columns: minmax(0, 720px); }
-  .painel-labirinto { justify-items: center; gap: 10px; }
-  .retorno--labirinto { min-height: 1.5em; }
+  .painel-labirinto { justify-items: center; gap: 10px; }.retorno--labirinto { min-height: 1.5em; }
   .acoes-labirinto { grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(100%, 720px); }
 }
 @media (max-width: 650px) {
-  .labirinto-jogo { padding: 14px 9px; }
-  .tabuleiro { border-width: 5px; border-radius: 12px; }
-  .casa-labirinto { border-width: 1px; }
-  .atalho-teclado { display: none; }
-  .acoes-labirinto { grid-template-columns: 1fr; }
+  .labirinto-jogo { padding: 12px 7px; }.instrucao--labirinto .instrucao__texto, .status-labirinto { font-size: .95rem; }
+  .objetivos { justify-content: flex-start; }.objetivo__figura { width: 44px; height: 44px; }
+  .barra-mapa { width: 100%; justify-content: space-between; }.botao-mapa { width: 64px; min-width: 64px; height: 64px; }
+  .janela-tabuleiro { border-width: 5px; border-radius: 12px; }
+  .tabuleiro { grid-template-columns: repeat(var(--visiveis), min(68px, calc((100vw - 24px) / var(--visiveis)))); grid-auto-rows: min(68px, calc((100vw - 24px) / var(--visiveis))); }
+  .casa-labirinto { border-width: 1px; }.atalho-teclado { display: none; }
+  .acoes-labirinto { grid-template-columns: repeat(3, 1fr); }.acoes-labirinto .botao span { display: none; }
+  .demonstracao-visual { gap: 5px; }.passo-demo { min-width: 72px; }.passo-demo img { width: 72px; height: 72px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .casa-labirinto--dica, .controle--dica { animation: none; }
+  .casa-labirinto--dica, .controle--dica, .objetivo--dica, .acao-contextual { animation: none; }
 }

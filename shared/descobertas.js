@@ -15,6 +15,7 @@ const CHAVE = 'jogos-elis:descobertas';
 
 export const ALTERNATIVAS_VALIDAS = [2, 3, 4];
 export const VOZES_VALIDAS = ['auto', 'gravada', 'sintetizada', 'sem-fala'];
+export const LABIRINTOS_VALIDOS = ['aventura', 'classico'];
 export const ALFABETO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 const PADRAO = Object.freeze({
@@ -23,6 +24,7 @@ const PADRAO = Object.freeze({
   alternativas: 3,
   tema: 'tudo',
   voz: 'auto',
+  labirinto: 'aventura',
 });
 
 /** Vogais, letras do primeiro nome e um pequeno conjunto frequente. */
@@ -98,6 +100,7 @@ export function obterEstado(armazenamento = armazenamentoPadrao()) {
     alternativas: ALTERNATIVAS_VALIDAS.includes(alternativas) ? alternativas : PADRAO.alternativas,
     tema: typeof salvo.tema === 'string' && salvo.tema ? salvo.tema : PADRAO.tema,
     voz: VOZES_VALIDAS.includes(salvo.voz) ? salvo.voz : PADRAO.voz,
+    labirinto: LABIRINTOS_VALIDOS.includes(salvo.labirinto) ? salvo.labirinto : PADRAO.labirinto,
     letras: normalizarLetras(salvo.letras, nome),
     atividades: salvo.atividades && typeof salvo.atividades === 'object' ? salvo.atividades : {},
     figurinhas: Array.isArray(salvo.figurinhas) ? salvo.figurinhas.filter(id => typeof id === 'string') : [],
@@ -106,8 +109,8 @@ export function obterEstado(armazenamento = armazenamentoPadrao()) {
 
 /** As preferências do adulto, sem o progresso junto. */
 export function obterConfiguracoes(armazenamento = armazenamentoPadrao()) {
-  const { nome, alternativas, tema, voz, letras } = obterEstado(armazenamento);
-  return { nome, alternativas, tema, voz, letras };
+  const { nome, alternativas, tema, voz, labirinto, letras } = obterEstado(armazenamento);
+  return { nome, alternativas, tema, voz, labirinto, letras };
 }
 
 /** Salva o que veio, mantém o resto e devolve as preferências que ficaram valendo. */
@@ -120,13 +123,14 @@ export function salvarConfiguracoes(novas = {}, armazenamento = armazenamentoPad
     alternativas: ALTERNATIVAS_VALIDAS.includes(alternativas) ? alternativas : estado.alternativas,
     tema: typeof novas.tema === 'string' && novas.tema ? novas.tema : estado.tema,
     voz: VOZES_VALIDAS.includes(novas.voz) ? novas.voz : estado.voz,
+    labirinto: LABIRINTOS_VALIDOS.includes(novas.labirinto) ? novas.labirinto : estado.labirinto,
   };
   if (Object.hasOwn(novas, 'letras')) {
     atualizado.letras = normalizarLetras(novas.letras, atualizado.nome);
   }
   gravar(atualizado, armazenamento);
-  const { nome, tema, voz, letras } = atualizado;
-  return { nome, alternativas: atualizado.alternativas, tema, voz, letras };
+  const { nome, tema, voz, labirinto, letras } = atualizado;
+  return { nome, alternativas: atualizado.alternativas, tema, voz, labirinto, letras };
 }
 
 /**

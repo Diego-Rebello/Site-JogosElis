@@ -56,13 +56,22 @@
         <div class="grupo">
           <label for="alternativas">Nível das brincadeiras</label>
           <select id="alternativas" class="campo">
-            <option value="2">Fácil — 2 opções / labirinto 9×9</option>
-            <option value="3">Normal — 3 opções / labirinto 12×12</option>
-            <option value="4">Esperto — 4 opções / labirinto 15×15</option>
+            <option value="2">Fácil — 2 opções / labirinto 15×15</option>
+            <option value="3">Normal — 3 opções / labirinto 20×20</option>
+            <option value="4">Esperto — 4 opções / labirinto 25×25</option>
           </select>
-          <p class="grupo__ajuda">Comece no normal. No labirinto, o fácil usa 9×9, o normal usa
-            12×12 e o modo esperto usa 15×15 com uma estrela no caminho. Os mapas maiores foram
-            pensados para tablet e computador.</p>
+          <p class="grupo__ajuda">Comece no normal. Os novos mapas do labirinto usam 15×15,
+            20×20 e 25×25 e foram pensados para tablet e computador.</p>
+        </div>
+
+        <div class="grupo">
+          <label for="labirinto">Formato do labirinto</label>
+          <select id="labirinto" class="campo">
+            <option value="aventura">Aventura — mapas maiores e obstáculos</option>
+            <option value="classico">Clássico — mapas antigos menores</option>
+          </select>
+          <p class="grupo__ajuda">Use o clássico se o percurso novo ficar cansativo. Essa escolha
+            não muda as outras brincadeiras.</p>
         </div>
 
         <div class="grupo">
@@ -130,6 +139,7 @@
     document.getElementById('alternativas').value = String(configuracoes.alternativas);
     document.getElementById('tema').value = configuracoes.tema;
     document.getElementById('voz').value = configuracoes.voz;
+    document.getElementById('labirinto').value = configuracoes.labirinto;
     document.getElementById('mudo').checked = estaMudo();
 
     const areaLetras = document.getElementById('letras');
@@ -152,6 +162,7 @@
         alternativas: Number(document.getElementById('alternativas').value),
         tema: document.getElementById('tema').value,
         voz: document.getElementById('voz').value,
+        labirinto: document.getElementById('labirinto').value,
         letras: [...areaLetras.querySelectorAll('input:checked')].map(input => input.value),
       });
       document.getElementById('nome').value = salvas.nome;

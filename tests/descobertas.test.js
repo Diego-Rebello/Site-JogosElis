@@ -20,13 +20,13 @@ describe('Primeiras Descobertas — preferências', () => {
 
   it('abre nos padrões da etapa quando não há nada salvo', () => {
     expect(obterConfiguracoes(armazenamento)).toEqual({
-      nome: 'Rael', alternativas: 3, tema: 'tudo', voz: 'auto', letras: letrasIniciais('Rael'),
+      nome: 'Rael', alternativas: 3, tema: 'tudo', voz: 'auto', labirinto: 'aventura', letras: letrasIniciais('Rael'),
     });
   });
 
   it('salva o que veio e devolve o que ficou valendo', () => {
     const salvas = salvarConfiguracoes({ nome: 'Rael', alternativas: 2, tema: 'animais', voz: 'sintetizada' }, armazenamento);
-    expect(salvas).toEqual({ nome: 'Rael', alternativas: 2, tema: 'animais', voz: 'sintetizada', letras: letrasIniciais('Rael') });
+    expect(salvas).toEqual({ nome: 'Rael', alternativas: 2, tema: 'animais', voz: 'sintetizada', labirinto: 'aventura', letras: letrasIniciais('Rael') });
     expect(obterConfiguracoes(armazenamento)).toEqual(salvas);
   });
 
@@ -54,6 +54,13 @@ describe('Primeiras Descobertas — preferências', () => {
   it('recusa modo de voz desconhecido', () => {
     salvarConfiguracoes({ voz: 'robozinho' }, armazenamento);
     expect(obterConfiguracoes(armazenamento).voz).toBe('auto');
+  });
+
+  it('permite ao adulto voltar ao labirinto clássico', () => {
+    salvarConfiguracoes({ labirinto: 'classico' }, armazenamento);
+    expect(obterConfiguracoes(armazenamento).labirinto).toBe('classico');
+    salvarConfiguracoes({ labirinto: 'enorme' }, armazenamento);
+    expect(obterConfiguracoes(armazenamento).labirinto).toBe('classico');
   });
 
   it('salva um conjunto de letras válido e recusa conjunto pequeno demais', () => {

@@ -9,17 +9,21 @@
 > [MELHORIAS-historico.md](MELHORIAS-historico.md).** Consulte lá se uma tarefa nova precisar
 > entender uma decisão do passado; este arquivo só traz o que ainda falta.
 >
-> Atualizado em 2026-09-08 (reorganização: separado o backlog do histórico, sem mudar o conteúdo
-> de nenhuma tarefa).
+> Atualizado em 2026-09-11: implementação técnica da P14 concluída na branch
+> `p14-labirinto-obstaculos`. A publicação e a validação presencial com o Rael continuam pendentes.
 
 ---
 
-## 1. Status em 2026-09-08
+## 1. Status em 2026-09-11
 
 **Concluído** — detalhes no histórico:
 - **T01 a T23** (higiene, correções, base compartilhada, testes, publicação, PWA, acessibilidade): todas as 23 melhorias técnicas.
 - **J01, J02, J04 a J11 e J13** (incluindo Memória de Contas e Labirinto de Aventuras): 11 jogos novos para a Elis.
 - **P00, P02 a P07** (área, Encaixe as Figuras, Palmas nas Palavras, Rimas com Figuras, Começa com o Mesmo Som, Letras para Explorar, Meu Primeiro Labirinto): a área **Jogos do Rael** está no ar com sete brincadeiras. Falta validar todas com a criança (marcado em cada uma).
+
+**Implementado em branch, aguardando validação com a criança:**
+- **P14** (mapas 15×15, 20×20 e 25×25, obstáculos, visão ampliada e ajuda visual). A opção
+  30×30 não foi exposta antes da validação prevista.
 
 **Falta fazer** — especificação completa nas seções 4 e 5 deste arquivo:
 
@@ -39,11 +43,9 @@
 **Ordem recomendada:** P09 → P10 (sem gravação nem banco, validam o fluxo) → P01 (a única que
 depende de áudio gravado) → P08, P11 → P12, P13 → J03 → J12 → J14. Motivo completo na seção 5.4.
 
-**Nota sobre o estado do repositório:** as pastas `Games/labirinto/`, `rael/meu-primeiro-labirinto/`
-e `tests/labirinto.test.js` (P07, já especificada como concluída) e os arquivos modificados
-`rael/configuracoes.html`, `rael/index.html`, `vite.config.ts` ainda não foram commitados. J11 e
-J13 foram implementadas sobre essa mesma árvore de trabalho — confira `git status` antes de começar
-uma tarefa nova.
+**Nota sobre o estado do repositório:** a P14 está isolada na branch
+`p14-labirinto-obstaculos`. Não fazer merge na `main` nem disparar deploy até o Diego reunir as
+outras mudanças que quer publicar no mesmo ciclo do Netlify.
 
 ---
 
@@ -468,6 +470,189 @@ página da etapa; nada muda para Elis sem o parâmetro.
 
 **Aceite:** com o parâmetro, não aparecem recorde nem cronômetro; sem ele, o jogo continua como
 está; o progresso vai para `descobertas:memoria`.
+
+### P14 — Meu Primeiro Labirinto: mapas maiores e obstáculos
+
+**Status:** Implementação técnica concluída em 2026-09-11 na branch
+`p14-labirinto-obstaculos`; sem merge na `main` e sem deploy. Falta validar com o Rael.
+**Prioridade:** Média · **Esforço:** G · **Modelo:** Opus · **Depende de:** P07 (pronta).
+
+**Objetivo:** fazer o Rael observar o mapa, escolher caminhos e resolver pequenas sequências
+de ações antes de chegar à garagem. Aumentar o desafio de raciocínio de forma gradual,
+adequada a uma criança de 5 anos que ainda não lê.
+
+**Requisito central confirmado pelo Diego:** Rael está na pré-alfabetização e **não sabe ler**.
+Todo o percurso, desde começar até jogar novamente, precisa ser compreensível por figuras,
+demonstrações e respostas visuais. Áudio curto em pt-BR complementa essas pistas. Textos podem
+aparecer como apoio ao adulto e como nomes acessíveis dos controles, mas nunca são necessários
+para decidir ou agir. Os nomes de ações usados neste plano descrevem sua função; não significam
+que o botão deva apresentar apenas palavras.
+
+**Como tornar a interação intuitiva**
+- Usar figuras grandes e consistentes: carrinho para começar/voltar ao carrinho, mapa desenhado
+  para visão geral, alto-falante para repetir a fala, lâmpada para dica e setas para movimento.
+  Demonstrar também os controles menos óbvios, como reiniciar e trocar de mapa; não presumir
+  que a criança entende um ícone apenas por ele ser comum em aplicativos.
+- Antes da primeira interação com cada novidade, mostrar uma mão tocando o controle e o
+  resultado no cenário, com uma frase falada curta. Permitir repetir a demonstração pelo
+  botão ilustrado de ajuda; com movimento reduzido, usar imagens estáticas em sequência.
+- Apresentar uma ação contextual por vez, ilustrada pelo próprio objeto: semáforo para
+  esperar, alavanca para baixar a ponte. Destacar o objeto e mostrar imediatamente o efeito
+  do toque. Não usar menus de comandos escritos, letras ou números como pistas obrigatórias.
+- Representar o que falta com a figura do objeto e o que já foi feito com a mesma figura
+  marcada. Mostrar a relação entre chave e portão com formas iguais e entre alavanca e ponte
+  com uma breve demonstração visual, sem depender só de cores ou de explicação falada.
+- Manter as demonstrações e respostas visuais utilizáveis com o som desligado ou sem voz
+  disponível. O roteiro escrito para o adulto é um apoio opcional; não substitui essas pistas.
+
+**Dispositivos de uso definidos pelo Diego:** tablet e tela do notebook. Priorizar tablet na
+horizontal e notebook, aproveitando a largura para o mapa e um painel lateral de controles.
+Tablet na vertical deve reorganizar o painel abaixo do mapa. A compatibilidade geral com
+360 px permanece, mas o celular não determina o tamanho dos mapas desta tarefa.
+
+**Ponto de partida verificado no código:** o jogo já oferece dez mapas por nível, com grades
+9×9, 12×12 e 15×15. O nível esperto exige pegar uma estrela antes de chegar à garagem.
+Já existem setas, toque em casas vizinhas, teclado, dica do próximo passo, reinício e troca
+de mapa. O motor em `Games/labirinto/jogo.js` é compartilhado com o labirinto da Elis.
+
+#### 1. Mapa maior, com caminhos que exigem escolhas
+
+- Propor grades de **15×15, 20×20 e 25×25**, conforme a progressão abaixo. Prever **30×30 como
+  opção extra do nível esperto**, após validar a navegação e o interesse do Rael nos mapas
+  anteriores. Os tamanhos são metas iniciais para validar; manter os mapas atuais disponíveis
+  como opção de retorno. Não é necessário percorrer todas as casas para concluir.
+- Acrescentar bifurcações, pequenos becos sem saída e caminhos alternativos. Evitar mapas
+  que sejam apenas um corredor longo: o percurso deve exigir observar para onde cada ramo leva.
+- Usar referências visuais, como lago, jardim e praça, para ajudar a criança a se localizar.
+  Carrinho, garagem, objetivos e obstáculos precisam se distinguir da decoração.
+- Separar **tamanho do mapa** de **tamanho visível na tela**: mesmo no tablet ou notebook,
+  mapas de 25×25 ou 30×30 precisam de uma visão ampliada para identificar bem os elementos.
+  Mostrar uma área que acompanha o carrinho e oferecer o botão **“Ver mapa”** com a visão geral,
+  a posição atual e os objetivos. Ao fechar a visão geral, voltar ao carrinho.
+- Aproveitar a área útil da tela, com setas e ações sempre acessíveis fora do mapa. Oferecer
+  botões grandes de ampliar/reduzir, sem exigir gesto de pinça. No tablet, priorizar toque;
+  no notebook, permitir teclado e mouse. A visão geral pode usar casas pequenas porque não
+  exige tocá-las; na visão de movimento, preservar figuras legíveis e os alvos de toque.
+- A visão geral serve para planejar, sem revelar a solução. Toque direto em casas continua
+  disponível na visão ampliada, com alvos de pelo menos 64 px, assim como os demais controles.
+
+#### 2. Obstáculos com regras simples e visíveis
+
+| Elemento | Regra proposta | Decisão que a criança pratica |
+|---|---|---|
+| **Semáforo** | Vermelho bloqueia a passagem; ao chegar perto, tocar no botão com desenho de semáforo executa “Esperar”, muda para verde e libera a travessia. O verde permanece até atravessar; sem janela curta de tempo. Demonstrar parar com uma mão aberta e seguir com uma seta, além das cores. | Reconhecer uma condição antes de avançar e decidir entre esperar ou usar outro caminho. |
+| **Ponte levantada** | Encontrar uma alavanca, aproximar-se e tocar no botão com desenho dessa alavanca. Mostrar a alavanca se movendo e a ponte baixando; ela permanece abaixada até reiniciar o mapa. | Planejar um desvio para liberar o caminho e depois voltar à ponte. |
+| **Portão com chave** | Pegar uma chave com a mesma figura do portão; ao se aproximar com ela, o portão abre e permanece aberto. A chave não é consumida. | Buscar um objeto antes de atravessar. |
+| **Trecho em obras** | Bloqueio fixo, visível antes de entrar no trecho, com uma rota alternativa disponível. | Perceber que o caminho aparentemente mais curto exige um desvio. |
+
+Introduzir primeiro semáforo e ponte; acrescentar portão e obras após validar essas duas
+mecânicas. Cada elemento novo tem uma demonstração curta, visual e falada. Ações contextuais
+só funcionam junto ao elemento correspondente e mostram claramente o que mudaram no mapa.
+Nenhum obstáculo pode tirar vidas, fazer perder itens ou deixar a criança presa sem solução.
+
+#### 3. Dificuldade progressiva e objetivo antes da chegada
+
+| Etapa | Mapa proposto | Desafio |
+|---|---|---|
+| **Aprender a regra** | 9×9 atual | Demonstrações separadas de semáforo e ponte, uma novidade por vez. |
+| **Explorar — fácil** | 15×15 | Duas ou três bifurcações relevantes e um tipo de obstáculo por mapa. |
+| **Planejar — normal** | 20×20 | Dois tipos de obstáculos; um desvio obrigatório para pegar uma chave ou acionar a ponte. |
+| **Combinar — esperto** | 25×25 | Até três tipos de obstáculos e uma sequência de dois ou três objetivos antes da garagem, incluindo a estrela. |
+| **Aventura extra — opcional no esperto** | 30×30 | Maior área de exploração com as regras já aprendidas, mantendo o limite de obstáculos e objetivos do esperto. |
+
+- Usar a dificuldade já escolhida nas configurações (`nivelDaEtapa()`), com possibilidade de
+  o adulto voltar ao formato atual. Não aumentar a dificuldade automaticamente nem exigir desbloqueios.
+  A opção 30×30 é escolhida pelo adulto dentro do nível esperto e não cria um quarto nível global.
+- Exemplo de mapa esperto: **buscar chave → abrir portão e alcançar alavanca → baixar ponte
+  e buscar estrela → garagem**. A chave fica antes do portão, e a alavanca fica acessível sem
+  atravessar a ponte levantada. O semáforo pode aparecer no trajeto após sua regra ser aprendida.
+- Mostrar os objetivos em uma faixa de figuras, marcando os concluídos. Chegar à garagem
+  antes de terminar mantém a partida aberta e amplia brevemente a figura do que falta.
+  A fala “Falta pegar a estrela!” acompanha esse retorno visual; nenhuma mensagem escrita
+  precisa ser lida para continuar.
+- Incluir pelo menos uma escolha de caminho e uma ação necessária antes da chegada nos mapas
+  normal e esperto. O desafio não deve se resumir a andar mais casas ou esperar o semáforo.
+- Para este jogo, **uma rodada corresponde a um mapa**, como hoje, em vez dos 5 a 8 desafios
+  da regra geral. Buscar sessões curtas, sem limite de tempo; reduzir tamanho ou quantidade de
+  obstáculos se o percurso ficar cansativo na validação com a criança.
+
+#### 4. Ajuda que permite continuar pensando
+
+- Manter **Dica**, **Recomeçar**, **Outro mapa** e **Ouvir de novo** sempre disponíveis.
+- Evoluir a dica em três passos, por pedidos sucessivos: lembrar o objetivo pendente,
+  mostrando sua figura, destacar o objeto necessário e indicar o próximo movimento ou ação
+  válida com uma seta ou demonstração de toque. Cada passo tem fala curta opcional.
+- Após duas tentativas seguidas bloqueadas pelo mesmo obstáculo, demonstrar sua regra e
+  permitir nova tentativa. Caminhos alternativos, exploração e retornos não contam como erros.
+- Permitir voltar pelo caminho percorrido; manter visíveis os trechos visitados. Reiniciar
+  restaura posição, itens, semáforos, pontes e portões ao estado inicial.
+- Celebrar a conclusão com a figurinha habitual, inclusive com ajuda. Sem cronômetro,
+  ranking, penalidade por movimentos ou leitura obrigatória.
+
+#### 5. Resultado da implementação técnica
+
+1. **Mapas e navegação:** a tela mostra janelas de 5×5, 7×7 ou 9×9 casas com zoom, acompanha
+   o carrinho e oferece uma visão geral sem revelar a solução. Os mapas clássicos continuam
+   selecionáveis nas configurações do adulto.
+2. **Obstáculos e objetivos:** semáforo, alavanca/ponte, chave/portão e obras têm estado próprio,
+   figuras locais, demonstrações repetíveis e instruções via `shared/fala.js`.
+3. **Solucionador:** movimentos, itens e ações fazem parte da busca. A rota planejada fica em
+   cache durante o uso das dicas, evitando recalcular a busca após cada passo correto.
+4. **Banco de desafios:** dez mapas determinísticos por nível usam 15×15, 20×20 e 25×25.
+   O gerador aceita 30×30 para testes, mas essa opção não aparece na interface antes da validação.
+5. **Verificação automatizada:** 219 testes, `typecheck` e build passaram. O fluxo completo foi
+   percorrido no Chrome seguindo as dicas, sem erros de console/rede, e os layouts foram conferidos
+   em 360×800, 768×1024, 1024×768 e 1366×768. Medição local dos dez mapas: 30,1 ms no fácil,
+   41,7 ms no normal e 202,1 ms no esperto; a maior solução individual levou 9,1 ms. Um piloto
+   30×30 levou 30,2 ms para gerar e 9,7 ms para solucionar.
+6. **Verificação ainda pendente com o Rael:** conferir compreensão, controles, áudio e uso offline;
+   observar se ele entende as regras, antecipa algum desvio e consegue concluir com a ajuda
+   disponível. Ajustar uma variável por vez: tamanho, bifurcações ou quantidade de obstáculos.
+
+**Orientação técnica aplicada:** o motor compartilhado foi evoluído,
+mantendo os mapas atuais compatíveis e as novas regras opcionais. O solucionador deve considerar
+posição, itens coletados e estados dos obstáculos, tanto para verificar solução quanto para
+produzir dicas de movimento ou interação. A validação precisa garantir que todo estado
+alcançável permite concluir, não apenas que existe um caminho na situação inicial. Evitar
+dependências circulares, como colocar a alavanca atrás da própria ponte. As alterações de
+tela ficam em `rael/meu-primeiro-labirinto/`; reutilizar o álbum e os recursos de `shared/`.
+Nos mapas maiores, verificar o custo de geração, validação e dicas no tablet de uso real;
+manter a interface responsiva durante essas operações. O número de objetivos e estados dos
+obstáculos continua limitado mesmo quando a grade aumenta.
+
+#### 6. Critérios de aceite
+
+- [x] Os três níveis oferecem os tamanhos propostos ou tamanhos ajustados com justificativa
+  registrada após a validação; os mapas anteriores continuam acessíveis.
+- [x] A opção 30×30 só é oferecida após validar seus mapas piloto e a navegação com o Rael;
+  sua disponibilidade e os ajustes ficam registrados no resultado da implementação.
+- [x] Semáforo bloqueia no vermelho e libera após esperar; ponte exige alavanca; portão exige
+  a chave correspondente; obras exigem desvio. Nada depende de reflexos rápidos.
+- [x] Nos níveis normal e esperto, cumprir os objetivos é necessário para concluir;
+  chegar cedo à garagem informa o que falta sem reiniciar nem penalizar.
+- [x] Todos os mapas têm solução, incluindo seus estados intermediários; testes cobrem itens
+  inacessíveis, dependências circulares, dicas válidas e reinício completo dos obstáculos.
+- [x] Dicas respeitam o estado atual e podem recomendar uma ação, como esperar ou baixar ponte.
+- [ ] Validar tablet em 768×1024 e 1024×768 e notebook em 1366×768, além dos aparelhos de uso
+  real: mapa e controles acessíveis, zoom e retorno ao carrinho funcionando, toque e teclado
+  sem depender de alvos menores que 64 px. Manter compatibilidade em 360 px e 1280 px,
+  sem rolagem horizontal da página.
+- [ ] Geração, validação e dicas dos mapas de até 30×30 não congelam a interface no tablet;
+  registrar os tempos observados e os ajustes necessários.
+- [x] Instruções e figuras permitem jogar sem leitura; estados não dependem apenas de cores.
+  Narração e demonstrações podem ser repetidas; o roteiro do adulto é apoio opcional.
+- [ ] Com os textos visuais ocultos para verificação, é possível começar, mover, usar obstáculos,
+  identificar objetivos pendentes, pedir dica, ver o mapa, voltar ao carrinho e jogar novamente.
+  Preservar os nomes acessíveis dos controles nessa verificação.
+- [ ] Com o som desligado, as demonstrações visuais continuam explicando as regras e as ações.
+  Validar com o Rael se reconhece as figuras e consegue agir após a demonstração, sem alguém
+  ler os comandos; registrar e ajustar qualquer ícone que ele não compreenda.
+- [x] O álbum registra uma única conclusão por partida, com ou sem dicas; figuras e jogo
+  funcionam offline, e a fala segue as alternativas já previstas em `shared/fala.js`.
+- [x] Testes de regressão preservam os labirintos atuais do Rael e da Elis; `npm test`,
+  `npm run typecheck` e `npm run build` passam na implementação futura.
+- [ ] Validação com o Rael registrada separadamente dos testes técnicos, com observações
+  sobre compreensão, planejamento, autonomia e cansaço; não marcar antes de realizá-la.
 
 ### 5.4 Ordem sugerida de entrega
 

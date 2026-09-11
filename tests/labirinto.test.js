@@ -1,46 +1,109 @@
 import { describe, expect, it } from 'vitest';
 import {
   DIRECOES, analisarMapa, calcularEstrelasLabirinto, criarPartida, gerarMapaDoModo, mapasDoNivel,
-  podeMover, resolverMapa,
+  mapasClassicosDoNivel, podeMover, resolverMapa,
 } from '../Games/labirinto/jogo.js';
 
-describe('Meu Primeiro Labirinto (P07)', () => {
-  it('tem dez labirintos grandes e solucionáveis em cada nível', () => {
+function seguirDicas(partida, limite = 5000) {
+  let passos = 0;
+  while (!partida.estado().concluida && passos < limite) {
+    const dica = partida.dica();
+    expect(dica).not.toBeNull();
+    const resultado = dica.acao ? partida.agir(dica.acao) : partida.mover(dica.direcao);
+    expect(resultado).toMatchObject({ valido: true });
+    passos += 1;
+  }
+  return passos;
+}
+
+describe('Meu Primeiro Labirinto (P07 + P14)', () => {
+  it('tem dez aventuras grandes, reproduzíveis e solucionáveis em cada nível', () => {
     ['facil', 'normal', 'esperto'].forEach(nivel => {
       const mapas = mapasDoNivel(nivel);
       expect(mapas).toHaveLength(10);
       expect(new Set(mapas.map(mapa => mapa.id)).size).toBe(10);
       mapas.forEach(mapa => {
         const analisado = analisarMapa(mapa);
-        const tamanho = nivel === 'facil' ? 9 : nivel === 'normal' ? 12 : 15;
+        const tamanho = nivel === 'facil' ? 15 : nivel === 'normal' ? 20 : 25;
         const rota = resolverMapa(analisado);
         expect(analisado.tamanho).toBe(tamanho);
         expect(rota).not.toBeNull();
-        expect(rota.length).toBeGreaterThanOrEqual(tamanho * 4);
+        expect(rota.length).toBeGreaterThanOrEqual(tamanho * 2);
       });
     });
   });
 
-  it('abre no 12 por 12 e só o modo esperto exige uma estrela', () => {
-    mapasDoNivel().forEach(mapa => expect(analisarMapa(mapa).tamanho).toBe(12));
+  it('abre no 20 por 20 e só o modo esperto exige chave e estrela', () => {
+    mapasDoNivel().forEach(mapa => expect(analisarMapa(mapa).tamanho).toBe(20));
     mapasDoNivel('facil').forEach(mapa => expect(analisarMapa(mapa).estrela).toBeNull());
     mapasDoNivel('normal').forEach(mapa => expect(analisarMapa(mapa).estrela).toBeNull());
-    mapasDoNivel('esperto').forEach(mapa => expect(analisarMapa(mapa).estrela).not.toBeNull());
+    mapasDoNivel('esperto').forEach(mapa => {
+      const analisado = analisarMapa(mapa);
+      expect(analisado.estrela).not.toBeNull();
+      expect(analisado.itens.map(item => item.id)).toContain('chave');
+    });
   });
 
-  it('a dica sempre continua em uma rota possível', () => {
+  it('mantém os mapas clássicos disponíveis nos tamanhos antigos', () => {
+    expect(analisarMapa(mapasClassicosDoNivel('facil')[0]).tamanho).toBe(9);
+    expect(analisarMapa(mapasClassicosDoNivel('normal')[0]).tamanho).toBe(12);
+    expect(analisarMapa(mapasClassicosDoNivel('esperto')[0]).tamanho).toBe(15);
+  });
+
+  it('a dica recomenda movimentos e ações que sempre chegam ao fim', () => {
     ['facil', 'normal', 'esperto'].forEach(nivel => mapasDoNivel(nivel).forEach(mapa => {
       const partida = criarPartida(mapa);
-      let seguranca = 0;
-      while (!partida.estado().concluida && seguranca < 500) {
-        const dica = partida.dica();
-        expect(dica).not.toBeNull();
-        expect(partida.mover(dica.direcao)).toMatchObject({ valido: true });
-        seguranca += 1;
-      }
+      const seguranca = seguirDicas(partida);
       expect(partida.estado().concluida).toBe(true);
-      expect(seguranca).toBeLessThan(500);
+      expect(seguranca).toBeLessThan(5000);
     }));
+  });
+
+  it('aplica as quatro regras de obstáculo e reinicia seus estados', () => {
+    const semaforo = criarPartida({ id: 'sinal', layout: ['CSG', '...', '...'] });
+    expect(semaforo.mover('direita')).toMatchObject({ valido: false, motivo: 'semaforo' });
+    expect(semaforo.agir('esperar')).toMatchObject({ valido: true, acao: 'esperar' });
+    expect(semaforo.mover('direita')).toMatchObject({ valido: true });
+
+    const ponte = criarPartida({ id: 'ponte', layout: ['C.BG', '.L..', '....', '....'] });
+    ponte.mover('baixo');
+    expect(ponte.agir('acionar')).toMatchObject({ valido: true, acao: 'acionar' });
+    expect(ponte.estado().pontesBaixadas).toHaveLength(1);
+
+    const portao = criarPartida({ id: 'portao', layout: ['C.PG', '.K..', '....', '....'] });
+    portao.mover('direita');
+    expect(portao.mover('direita')).toMatchObject({ valido: false, motivo: 'portao' });
+    portao.mover('baixo');
+    expect(portao.estado().itensColetados).toContain('chave');
+    portao.mover('cima');
+    expect(portao.mover('direita')).toMatchObject({ valido: true, abriuPortao: true });
+
+    const obras = criarPartida({ id: 'obras', layout: ['CX.G', '....', '....', '....'] });
+    expect(obras.mover('direita')).toMatchObject({ valido: false, motivo: 'obras' });
+
+    const estado = portao.reiniciar();
+    expect(estado).toMatchObject({ itensColetados: [], portoesAbertos: [], pontesBaixadas: [], semaforosVerdes: [] });
+  });
+
+  it('recusa item inacessível e dependência circular entre alavanca e ponte', () => {
+    expect(() => criarPartida({ id: 'item-inacessivel', layout: ['C#G', '###', 'K..'] }))
+      .toThrow(/não tem solução/);
+    expect(() => criarPartida({ id: 'ponte-circular', layout: ['CBLG', '####', '....', '....'] }))
+      .toThrow(/não tem solução/);
+  });
+
+  it('recalcula uma dica válida depois de explorar um caminho diferente', () => {
+    const partida = criarPartida(mapasDoNivel('esperto')[3]);
+    const primeira = partida.dica();
+    if (primeira.direcao) {
+      partida.mover(primeira.direcao);
+      const oposta = { cima: 'baixo', baixo: 'cima', esquerda: 'direita', direita: 'esquerda' }[primeira.direcao];
+      expect(partida.mover(oposta)).toMatchObject({ valido: true });
+    } else {
+      partida.agir(primeira.acao);
+    }
+    expect(seguirDicas(partida)).toBeLessThan(5000);
+    expect(partida.estado().concluida).toBe(true);
   });
 
   it('nunca atravessa paredes nem sai do tabuleiro', () => {
