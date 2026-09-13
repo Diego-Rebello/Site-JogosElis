@@ -49,6 +49,13 @@ export default defineConfig({
   // for preciso, então o site funciona em qualquer subpasta.
   base: './',
   plugins: [tailwindcss()],
+  // O caminho local deste projeto contém dois-pontos ("Programas : Jogos").
+  // O Vite 7 confunde esse caractere com um caminho externo ao aplicar a
+  // allow list padrão. O servidor continua acessível só no host informado
+  // pelo comando de desenvolvimento; esta opção não participa do build.
+  server: {
+    fs: { strict: false },
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

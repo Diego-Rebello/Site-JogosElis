@@ -44,6 +44,8 @@ let centroVisual = null;
 let indiceVisao = VISIVEIS.length - 1;
 let bloqueiosSeguidos = { motivo: '', quantidade: 0 };
 let tipoDemo = null;
+let cicloSemaforo = 0;
+let semaforoEmContagem = false;
 
 function mostrarTela(nome) {
   Object.entries(telas).forEach(([chave, elemento]) => { elemento.hidden = chave !== nome; });
@@ -146,11 +148,9 @@ function pintarObjetivos(estado) {
 function atualizarAcao() {
   const botao = $('acao-contextual');
   const acao = partida?.acaoDisponivel();
-  botao.hidden = !acao;
-  if (!acao) return;
-  const dados = acao.tipo === 'esperar'
-    ? { src: FIGURAS.S.src, texto: 'Esperar o verde', icone: '✋' }
-    : { src: FIGURAS.L.src, texto: 'Baixar a ponte', icone: '👇' };
+  botao.hidden = !acao || acao.tipo === 'esperar';
+  if (!acao || acao.tipo === 'esperar') return;
+  const dados = { src: FIGURAS.L.src, texto: 'Baixar a ponte', icone: '👇' };
   botao.dataset.acao = acao.tipo;
   botao.setAttribute('aria-label', dados.texto);
   botao.innerHTML = `<span aria-hidden="true">${dados.icone}</span><img src="${dados.src}" alt=""><span>${dados.texto}</span>`;
@@ -228,6 +228,78 @@ function limparDica() {
   document.querySelectorAll('.controle--dica, .objetivo--dica').forEach(item => item.classList.remove('controle--dica', 'objetivo--dica'));
 }
 
+const esperar = duracao => new Promise(resolve => setTimeout(resolve, duracao));
+
+function bloquearControlesDuranteSemaforo(bloquear) {
+  document.querySelectorAll('.controle, .barra-mapa button, .acoes-labirinto button, #acao-contextual')
+    .forEach(botao => { botao.disabled = bloquear; });
+  if (!bloquear && partida) pintarTabuleiro();
+}
+
+function cancelarContagemSemaforo() {
+  cicloSemaforo += 1;
+  semaforoEmContagem = false;
+  $('espera-semaforo').hidden = true;
+  $('espera-semaforo').classList.remove('espera-semaforo--aberto');
+  bloquearControlesDuranteSemaforo(false);
+}
+
+async function iniciarContagemSemaforo() {
+  const acao = partida?.acaoDisponivel();
+  if (semaforoEmContagem || acao?.tipo !== 'esperar') return false;
+  semaforoEmContagem = true;
+  const ciclo = ++cicloSemaforo;
+  const painel = $('espera-semaforo');
+  const numero = $('contagem-semaforo');
+  const progresso = $('progresso-semaforo');
+  const figura = $('figura-espera-semaforo');
+  painel.classList.remove('espera-semaforo--aberto');
+  painel.hidden = false;
+  figura.src = FIGURAS.S.src;
+  figura.alt = 'Semáforo vermelho';
+  $('titulo-espera-semaforo').textContent = 'Sinal vermelho! Espere.';
+  $('texto-espera-semaforo').textContent = 'Vamos contar até abrir.';
+  progresso.style.width = '0%';
+  bloquearControlesDuranteSemaforo(true);
+  dizerPista([{ texto: 'Sinal vermelho. Vamos esperar cinco segundos.' }]);
+
+  for (let restante = 5; restante >= 1; restante -= 1) {
+    if (ciclo !== cicloSemaforo) return false;
+    numero.textContent = String(restante);
+    numero.classList.remove('espera-semaforo__numero--pulso');
+    void numero.offsetWidth;
+    numero.classList.add('espera-semaforo__numero--pulso');
+    progresso.style.width = `${(5 - restante) * 20}%`;
+    await esperar(1000);
+  }
+  if (ciclo !== cicloSemaforo) return false;
+
+  const resultado = partida?.agir('esperar');
+  if (!resultado?.valido) {
+    cancelarContagemSemaforo();
+    return false;
+  }
+  progresso.style.width = '100%';
+  numero.textContent = '✓';
+  numero.classList.remove('espera-semaforo__numero--pulso');
+  figura.src = '/figuras/labirinto/semaforo-verde.svg';
+  figura.alt = 'Semáforo verde';
+  $('titulo-espera-semaforo').textContent = 'Abriu! Pode passar!';
+  $('texto-espera-semaforo').textContent = 'O sinal ficou verde.';
+  painel.classList.add('espera-semaforo--aberto');
+  tocar('acerto');
+  $('retorno').textContent = 'O sinal abriu! Agora pode passar.';
+  pintarTabuleiro();
+  dizerPista([{ texto: 'O sinal abriu! Agora pode passar.' }]);
+  await esperar(900);
+  if (ciclo !== cicloSemaforo) return false;
+  painel.hidden = true;
+  painel.classList.remove('espera-semaforo--aberto');
+  semaforoEmContagem = false;
+  bloquearControlesDuranteSemaforo(false);
+  return true;
+}
+
 function tiposDeDemonstracao() {
   if (!partida) return [];
   const mapa = partida.estado().mapa;
@@ -236,7 +308,7 @@ function tiposDeDemonstracao() {
 
 function dadosDaDemo(tipo) {
   return {
-    semaforo: { antes: FIGURAS.S.src, gesto: '✋', depois: '/figuras/labirinto/semaforo-verde.svg', texto: 'Pare no vermelho. Toque no semáforo para esperar o verde.' },
+    semaforo: { antes: FIGURAS.S.src, gesto: '5', depois: '/figuras/labirinto/semaforo-verde.svg', texto: 'Pare no vermelho. Ao chegar, conte cinco segundos e espere o sinal ficar verde.' },
     ponte: { antes: FIGURAS.L.src, gesto: '👇', depois: FIGURAS.B.src, texto: 'Encontre a alavanca. Toque nela para baixar a ponte.' },
     portao: { antes: FIGURAS.K.src, gesto: '➜', depois: FIGURAS.P.src, texto: 'Pegue a chave com a mesma figura. Depois o portão abre.' },
     obras: { antes: FIGURAS.X.src, gesto: '↶', depois: '/figuras/carro.svg', texto: 'A rua está em obras. Procure o caminho que passa ao lado.' },
@@ -267,6 +339,7 @@ function abrirDemonstracao(tipo = tiposDeDemonstracao()[0]) {
 
 function abrirMapa({ falarInstrucao = true, demonstrar = false } = {}) {
   parar();
+  cancelarContagemSemaforo();
   limparDica();
   bloqueiosSeguidos = { motivo: '', quantidade: 0 };
   partida = criarPartida(mapas[indiceMapa]);
@@ -304,14 +377,14 @@ function registrarBloqueio(motivo) {
 }
 
 async function mover(direcao) {
-  if (!partida || partida.estado().concluida) return;
+  if (!partida || partida.estado().concluida || semaforoEmContagem) return;
   limparDica();
   const resultado = partida.mover(direcao);
   if (!resultado.valido) {
     tocar('clique');
     const mensagens = {
       parede: 'Tem um jardim aí. Tente outra seta!', limite: 'O caminho continua para outro lado!',
-      semaforo: 'O sinal está vermelho. Pare e toque no semáforo!', ponte: 'A ponte está levantada. Procure a alavanca!',
+      semaforo: 'O sinal está vermelho. Espere a contagem para ele abrir!', ponte: 'A ponte está levantada. Procure a alavanca!',
       portao: 'O portão precisa da chave!', obras: 'A rua está em obras. Faça o desvio!',
     };
     $('retorno').textContent = mensagens[resultado.motivo] || 'Tente outro caminho!';
@@ -319,11 +392,13 @@ async function mover(direcao) {
     registrarBloqueio(resultado.motivo);
     animar($('janela-tabuleiro'), 'tremer');
     pintarTabuleiro();
+    if (resultado.motivo === 'semaforo') iniciarContagemSemaforo();
     return;
   }
   bloqueiosSeguidos = { motivo: '', quantidade: 0 };
   tocar(resultado.itemColetado || resultado.abriuPortao ? 'acerto' : 'clique');
   pintarTabuleiro();
+  iniciarContagemSemaforo();
   if (resultado.itemColetado === 'chave') {
     $('retorno').textContent = 'Você pegou a chave! Agora encontre o portão.';
     await dizerPista([{ texto: 'Você pegou a chave! Agora encontre o portão.' }]);
@@ -356,12 +431,30 @@ async function agir() {
 }
 
 function objetivoPendente(estado) {
-  return objetivosDoMapa(estado).find(item => !item.feito && item.simbolo !== 'G')
-    || objetivosDoMapa(estado).find(item => !item.feito);
+  const pendentes = objetivosDoMapa(estado).filter(item => !item.feito);
+  const passos = resolverMapa(estado.mapa, estado.posicao, estado.itensColetados, estado) || [];
+  let posicao = { ...estado.posicao };
+  for (const passo of passos) {
+    let alvo;
+    if (DIRECOES[passo]) {
+      posicao = {
+        linha: posicao.linha + DIRECOES[passo].linha,
+        coluna: posicao.coluna + DIRECOES[passo].coluna,
+      };
+      alvo = posicao;
+    } else {
+      const [, id] = passo.split(':');
+      const [linha, coluna] = id.split(',').map(Number);
+      alvo = { linha, coluna };
+    }
+    const objetivo = pendentes.find(item => mesmaCasa(item.posicao, alvo));
+    if (objetivo) return objetivo;
+  }
+  return pendentes[0];
 }
 
 function mostrarDica() {
-  if (!partida) return;
+  if (!partida || semaforoEmContagem) return;
   dicaVisual = null;
   centroVisual = null;
   document.querySelectorAll('.controle--dica, .objetivo--dica').forEach(item => item.classList.remove('controle--dica', 'objetivo--dica'));
@@ -372,11 +465,12 @@ function mostrarDica() {
   pintarTabuleiro();
   if (pendente) document.querySelector(`[data-objetivo="${pendente.simbolo}"]`)?.classList.add('objetivo--dica');
   if (dica.direcao) document.querySelector(`[data-direcao="${dica.direcao}"]`)?.classList.add('controle--dica');
-  const frase = dica.acao === 'esperar' ? 'Toque no semáforo e espere o verde.'
+  const frase = dica.acao === 'esperar' ? 'Espere a contagem: o sinal vai abrir.'
     : dica.acao === 'acionar' ? 'Toque na alavanca para baixar a ponte.'
       : `Tente ir ${DIRECOES[dica.direcao].nome}.`;
   $('retorno').textContent = frase;
   dizerPista([{ texto: frase }]);
+  if (dica.acao === 'esperar') iniciarContagemSemaforo();
 }
 
 $('comecar').addEventListener('click', async () => {
@@ -424,8 +518,8 @@ $('fechar-demo').addEventListener('click', () => fecharDialogo($('demonstracao')
 $('ouvir-demo').addEventListener('click', () => tipoDemo && dizerPista([{ texto: dadosDaDemo(tipoDemo).texto }]));
 window.addEventListener('keydown', evento => {
   const direcao = TECLA_PARA_DIRECAO[evento.key];
-  if (!direcao || telas.brincadeira.hidden || $('demonstracao').open || $('mapa-geral').open) return;
+  if (!direcao || semaforoEmContagem || telas.brincadeira.hidden || $('demonstracao').open || $('mapa-geral').open) return;
   evento.preventDefault(); mover(direcao);
 });
-window.addEventListener('pagehide', limpar);
-window.addEventListener('beforeunload', limpar);
+window.addEventListener('pagehide', () => { cancelarContagemSemaforo(); limpar(); });
+window.addEventListener('beforeunload', () => { cancelarContagemSemaforo(); limpar(); });

@@ -12,7 +12,6 @@
   min-height: 74px; margin: 0 auto 4px; overflow-x: auto;
 }
 .objetivo { position: relative; display: grid; justify-items: center; gap: 2px; min-width: 62px; flex: 0 0 auto; }
-.objetivo:not(:last-child)::after { content: '›'; position: absolute; top: 11px; right: -5px; color: #667985; font-size: 1.7rem; font-weight: 900; }
 .objetivo__figura {
   display: grid; place-items: center; width: 50px; height: 50px; padding: 4px;
   border: 3px solid #9ab5c4; border-radius: 14px; background: #fff;
@@ -41,7 +40,7 @@
 .botao-mapa--visao { background: #e5f2ff; }
 .botao-mapa:disabled { opacity: .38; cursor: default; }
 .janela-tabuleiro {
-  max-width: 100%; overflow: hidden; border: 8px solid #17663a; border-radius: 18px;
+  position: relative; max-width: 100%; overflow: hidden; border: 8px solid #17663a; border-radius: 18px;
   background: #fff8d8; box-shadow: 0 7px 0 rgba(13, 74, 143, .25), 0 14px 30px rgba(13, 74, 143, .16);
 }
 .tabuleiro {
@@ -72,6 +71,32 @@
 .tabuleiro--inteiro .casa-labirinto { border-width: 1px; }
 .tabuleiro--inteiro .casa-labirinto__figura { z-index: 4; width: 118%; height: 118%; filter: drop-shadow(0 1px 1px #fff) drop-shadow(0 0 2px #fff); }
 .tabuleiro--inteiro .casa-labirinto__figura--item { width: 95%; height: 95%; }
+.espera-semaforo {
+  position: absolute; z-index: 20; inset: 0; display: grid; place-items: center; padding: 18px;
+  background: rgba(7, 31, 52, .72); backdrop-filter: blur(2px);
+}
+.espera-semaforo[hidden] { display: none; }
+.espera-semaforo__cartao {
+  display: grid; justify-items: center; gap: 14px; width: min(92%, 430px); padding: 24px;
+  border: 5px solid #e23b2f; border-radius: 28px; background: #fffdf4; text-align: center;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, .32); animation: aparecer-contagem .3s ease-out;
+}
+.espera-semaforo__titulo { color: #9f241b; font: 900 clamp(1.25rem, 3vw, 2rem)/1.15 var(--fonte-corpo); }
+.espera-semaforo__visual { display: flex; align-items: center; justify-content: center; gap: 24px; min-height: 150px; }
+.espera-semaforo__visual img { width: 96px; height: 142px; object-fit: contain; filter: drop-shadow(0 5px 4px rgba(0, 0, 0, .2)); }
+.espera-semaforo__numero {
+  display: grid; place-items: center; width: 122px; height: 122px; border-radius: 50%;
+  background: #e23b2f; color: #fff; font: 900 5rem/1 var(--fonte-corpo); box-shadow: 0 7px 0 #941f18;
+}
+.espera-semaforo__numero--pulso { animation: pulso-contagem .8s ease-out; }
+.espera-semaforo__barra { width: 100%; height: 18px; overflow: hidden; border: 3px solid #9f241b; border-radius: 999px; background: #ffe4df; }
+.espera-semaforo__barra span { display: block; width: 0; height: 100%; border-radius: inherit; background: #e23b2f; transition: width .9s linear; }
+.espera-semaforo__texto { color: var(--cor-suave); font: 800 1.05rem/1.2 var(--fonte-leitura); }
+.espera-semaforo--aberto .espera-semaforo__cartao { border-color: #23804a; animation: sinal-abriu .8s ease-in-out; }
+.espera-semaforo--aberto .espera-semaforo__titulo { color: #17663a; }
+.espera-semaforo--aberto .espera-semaforo__numero { background: #23804a; box-shadow: 0 7px 0 #14502f; font-size: 3.8rem; }
+.espera-semaforo--aberto .espera-semaforo__barra { border-color: #23804a; background: #ddf7df; }
+.espera-semaforo--aberto .espera-semaforo__barra span { background: #23804a; }
 .painel-labirinto { display: grid; align-content: center; gap: 12px; }
 .retorno--labirinto { margin: 0; min-height: 3em; }
 .atalho-teclado { margin: 0; color: var(--cor-suave); font-family: var(--fonte-leitura); font-weight: 700; }
@@ -121,6 +146,9 @@
 .dialogo__acoes { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
 @keyframes dica-casa { 50% { transform: scale(.88); } }@keyframes dica-seta { 50% { transform: scale(1.12); } }
 @keyframes acao-pronta { 50% { transform: scale(1.035); } }
+@keyframes aparecer-contagem { from { opacity: 0; transform: scale(.8); } }
+@keyframes pulso-contagem { 35% { transform: scale(1.14); } }
+@keyframes sinal-abriu { 30% { transform: scale(1.08) rotate(-2deg); } 60% { transform: scale(1.08) rotate(2deg); } }
 @media (max-width: 960px) {
   .area-labirinto { grid-template-columns: minmax(0, 720px); }
   .painel-labirinto { justify-items: center; gap: 10px; }.retorno--labirinto { min-height: 1.5em; }
@@ -135,7 +163,10 @@
   .casa-labirinto { border-width: 1px; }.atalho-teclado { display: none; }
   .acoes-labirinto { grid-template-columns: repeat(3, 1fr); }.acoes-labirinto .botao span { display: none; }
   .demonstracao-visual { gap: 5px; }.passo-demo { min-width: 72px; }.passo-demo img { width: 72px; height: 72px; }
+  .espera-semaforo__cartao { gap: 10px; padding: 18px 12px; }.espera-semaforo__visual { min-height: 120px; gap: 16px; }
+  .espera-semaforo__visual img { width: 78px; height: 116px; }.espera-semaforo__numero { width: 100px; height: 100px; font-size: 4rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .casa-labirinto--dica, .controle--dica, .objetivo--dica, .acao-contextual { animation: none; }
+  .casa-labirinto--dica, .controle--dica, .objetivo--dica, .acao-contextual,
+  .espera-semaforo__cartao, .espera-semaforo__numero { animation: none; }
 }

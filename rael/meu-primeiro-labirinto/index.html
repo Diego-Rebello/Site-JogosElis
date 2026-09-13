@@ -41,7 +41,7 @@
           <span id="nivel"></span>
         </div>
         <div class="objetivos" id="objetivos" aria-label="Objetivos do caminho"></div>
-        <p class="legenda-rota"><span aria-hidden="true"></span> Siga o caminho azul e passe pelas figuras na ordem.</p>
+        <p class="legenda-rota"><span aria-hidden="true"></span> Siga o caminho azul e passe por todas as figuras, na ordem que quiser.</p>
         <div class="area-labirinto">
           <div class="mapa-jogavel">
             <div class="barra-mapa" aria-label="Controles de visualização do mapa">
@@ -53,6 +53,17 @@
             </div>
             <div class="janela-tabuleiro" id="janela-tabuleiro">
               <div class="tabuleiro" id="tabuleiro" role="grid" aria-label="Labirinto"></div>
+              <div class="espera-semaforo" id="espera-semaforo" role="status" aria-live="assertive" hidden>
+                <div class="espera-semaforo__cartao">
+                  <strong class="espera-semaforo__titulo" id="titulo-espera-semaforo">Sinal vermelho! Espere.</strong>
+                  <div class="espera-semaforo__visual">
+                    <img id="figura-espera-semaforo" src="/figuras/labirinto/semaforo.svg" alt="Semáforo vermelho">
+                    <span class="espera-semaforo__numero" id="contagem-semaforo">5</span>
+                  </div>
+                  <div class="espera-semaforo__barra" aria-hidden="true"><span id="progresso-semaforo"></span></div>
+                  <span class="espera-semaforo__texto" id="texto-espera-semaforo">Vamos contar até abrir.</span>
+                </div>
+              </div>
             </div>
           </div>
           <aside class="painel-labirinto" aria-label="Controles do labirinto">
@@ -94,7 +105,7 @@
         <strong id="titulo-mapa-geral">🗺️ Mapa inteiro</strong>
         <button class="fechar-dialogo" id="fechar-mapa" type="button" aria-label="Fechar o mapa e voltar ao carrinho">🚗</button>
       </div>
-      <p class="legenda-rota legenda-rota--dialogo"><span aria-hidden="true"></span> O caminho azul mostra como chegar. As figuras aparecem no próprio mapa.</p>
+      <p class="legenda-rota legenda-rota--dialogo"><span aria-hidden="true"></span> O caminho azul mostra como chegar. Passe por todas as figuras, em qualquer ordem.</p>
       <div class="tabuleiro-geral" id="tabuleiro-geral" role="img" aria-label="Visão geral do labirinto"></div>
     </dialog>
 
