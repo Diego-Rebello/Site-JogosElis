@@ -9,21 +9,24 @@
 }
 .objetivos {
   display: flex; align-items: center; justify-content: center; gap: 4px;
-  min-height: 58px; margin: 0 auto 10px; overflow-x: auto;
+  min-height: 74px; margin: 0 auto 4px; overflow-x: auto;
 }
-.objetivo { position: relative; display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
-.objetivo:not(:last-child)::after { content: '›'; color: #667985; font-size: 1.7rem; font-weight: 900; }
+.objetivo { position: relative; display: grid; justify-items: center; gap: 2px; min-width: 62px; flex: 0 0 auto; }
+.objetivo:not(:last-child)::after { content: '›'; position: absolute; top: 11px; right: -5px; color: #667985; font-size: 1.7rem; font-weight: 900; }
 .objetivo__figura {
   display: grid; place-items: center; width: 50px; height: 50px; padding: 4px;
   border: 3px solid #9ab5c4; border-radius: 14px; background: #fff;
 }
 .objetivo__figura img { width: 100%; height: 100%; object-fit: contain; }
+.objetivo__nome { color: var(--cor-suave); font: 800 .72rem/1 var(--fonte-leitura); text-transform: capitalize; }
 .objetivo--feito .objetivo__figura { border-color: #23804a; background: #ddf7df; }
 .objetivo--feito .objetivo__figura::after {
   content: '✓'; position: absolute; right: 4px; bottom: 1px; display: grid; place-items: center;
   width: 22px; height: 22px; border-radius: 50%; background: #17663a; color: #fff; font-weight: 900;
 }
 .objetivo--dica .objetivo__figura { border-color: #e77b00; background: #fff0b8; animation: dica-casa .75s ease-in-out 2; }
+.legenda-rota { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 10px; color: #245172; font: 800 .92rem/1.25 var(--fonte-leitura); text-align: center; }
+.legenda-rota span { width: 30px; height: 12px; border-radius: 999px; background: #b9e2ff; box-shadow: inset 0 0 0 2px #3f93c5; }
 .area-labirinto {
   display: grid; grid-template-columns: minmax(0, auto) minmax(230px, 270px);
   align-items: center; justify-content: center; gap: 24px;
@@ -42,8 +45,8 @@
   background: #fff8d8; box-shadow: 0 7px 0 rgba(13, 74, 143, .25), 0 14px 30px rgba(13, 74, 143, .16);
 }
 .tabuleiro {
-  --visiveis: 7; display: grid; grid-template-columns: repeat(var(--visiveis), 68px);
-  grid-auto-rows: 68px; width: max-content; background: #fff8d8;
+  --visiveis: 9; display: grid; grid-template-columns: repeat(var(--visiveis), minmax(0, 1fr));
+  width: min(68vw, 680px, calc(var(--visiveis) * 68px)); aspect-ratio: 1; background: #fff8d8;
 }
 .casa-labirinto {
   position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: 1px;
@@ -59,11 +62,16 @@
 .casa-labirinto--parede-baixo { border-bottom-color: #23804a; }
 .casa-labirinto--parede-esquerda { border-left-color: #23804a; }
 .casa-labirinto--obras { background: #f6d6b0; }
+.casa-labirinto--rota { background: #d9efff; box-shadow: inset 0 0 0 1px rgba(49, 135, 186, .28); }
+.casa-labirinto--objetivo { background-color: #fff0b8; }
 .casa-labirinto--trilha::after { content: ''; width: 18%; aspect-ratio: 1; border-radius: 50%; background: #7aa9c4; opacity: .75; }
 .casa-labirinto--dica { background: #ffd76b; animation: dica-casa .75s ease-in-out 2; }
 .casa-labirinto__figura { position: absolute; z-index: 2; width: 82%; height: 82%; object-fit: contain; pointer-events: none; }
 .casa-labirinto__figura--item { width: 64%; height: 64%; }
 .casa-labirinto__figura--aberto { opacity: .45; transform: rotate(10deg); }
+.tabuleiro--inteiro .casa-labirinto { border-width: 1px; }
+.tabuleiro--inteiro .casa-labirinto__figura { z-index: 4; width: 118%; height: 118%; filter: drop-shadow(0 1px 1px #fff) drop-shadow(0 0 2px #fff); }
+.tabuleiro--inteiro .casa-labirinto__figura--item { width: 95%; height: 95%; }
 .painel-labirinto { display: grid; align-content: center; gap: 12px; }
 .retorno--labirinto { margin: 0; min-height: 3em; }
 .atalho-teclado { margin: 0; color: var(--cor-suave); font-family: var(--fonte-leitura); font-weight: 700; }
@@ -98,9 +106,13 @@
 .casa-geral { position: relative; min-width: 0; border: 1px solid transparent; background: #fff8d8; }
 .casa-geral--parede-cima { border-top-color: #23804a; }.casa-geral--parede-direita { border-right-color: #23804a; }
 .casa-geral--parede-baixo { border-bottom-color: #23804a; }.casa-geral--parede-esquerda { border-left-color: #23804a; }
-.casa-geral--visitada { background: #d9eaf4; }.casa-geral--atual { background: #ffcc4d; box-shadow: inset 0 0 0 2px #9a5500; }
-.casa-geral--objetivo::after { content: ''; position: absolute; inset: 22%; border-radius: 50%; background: #e66b00; }
+.casa-geral--visitada { background: #d9eaf4; }.casa-geral--rota { background: #b9e2ff; }
+.casa-geral--atual { z-index: 3; background: #ffcc4d; box-shadow: inset 0 0 0 2px #9a5500; }
+.casa-geral--objetivo { z-index: 2; background: #fff0b8; box-shadow: inset 0 0 0 1px #d28a00; }
 .casa-geral--obras { background: #7a4b24; }
+.casa-geral__figura { position: absolute; z-index: 4; inset: -12%; width: 124%; height: 124%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 1px 1px #fff) drop-shadow(0 0 2px #fff); }
+.casa-geral__figura--item { inset: 2%; width: 96%; height: 96%; }.casa-geral__figura--aberto { opacity: .5; transform: rotate(10deg); }
+.legenda-rota--dialogo { margin: 0 0 12px; }
 .dialogo-ajuda { width: min(92vw, 620px); text-align: center; }
 .dialogo-ajuda h2 { margin-top: 0; }
 .demonstracao-visual { display: flex; align-items: center; justify-content: center; min-height: 190px; gap: 14px; }
@@ -116,10 +128,10 @@
 }
 @media (max-width: 650px) {
   .labirinto-jogo { padding: 12px 7px; }.instrucao--labirinto .instrucao__texto, .status-labirinto { font-size: .95rem; }
-  .objetivos { justify-content: flex-start; }.objetivo__figura { width: 44px; height: 44px; }
+  .objetivos { justify-content: flex-start; }.objetivo { min-width: 56px; }.objetivo__figura { width: 44px; height: 44px; }.objetivo__nome { font-size: .66rem; }
   .barra-mapa { width: 100%; justify-content: space-between; }.botao-mapa { width: 64px; min-width: 64px; height: 64px; }
   .janela-tabuleiro { border-width: 5px; border-radius: 12px; }
-  .tabuleiro { grid-template-columns: repeat(var(--visiveis), min(68px, calc((100vw - 24px) / var(--visiveis)))); grid-auto-rows: min(68px, calc((100vw - 24px) / var(--visiveis))); }
+  .tabuleiro { width: min(calc(100vw - 24px), calc(var(--visiveis) * 68px)); }
   .casa-labirinto { border-width: 1px; }.atalho-teclado { display: none; }
   .acoes-labirinto { grid-template-columns: repeat(3, 1fr); }.acoes-labirinto .botao span { display: none; }
   .demonstracao-visual { gap: 5px; }.passo-demo { min-width: 72px; }.passo-demo img { width: 72px; height: 72px; }

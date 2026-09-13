@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DIRECOES, analisarMapa, calcularEstrelasLabirinto, criarPartida, gerarMapaDoModo, mapasDoNivel,
-  mapasClassicosDoNivel, podeMover, resolverMapa,
+  mapasClassicosDoNivel, podeMover, posicoesDaRota, resolverMapa,
 } from '../Games/labirinto/jogo.js';
 
 function seguirDicas(partida, limite = 5000) {
@@ -56,6 +56,17 @@ describe('Meu Primeiro Labirinto (P07 + P14)', () => {
       const seguranca = seguirDicas(partida);
       expect(partida.estado().concluida).toBe(true);
       expect(seguranca).toBeLessThan(5000);
+    }));
+  });
+
+  it('expõe o caminho visual completo, da posição atual até a garagem', () => {
+    ['facil', 'normal', 'esperto'].forEach(nivel => mapasDoNivel(nivel).forEach(mapaRecebido => {
+      const mapa = analisarMapa(mapaRecebido);
+      const rota = resolverMapa(mapa);
+      const posicoes = posicoesDaRota(mapa, rota);
+      expect(posicoes[0]).toEqual(mapa.inicio);
+      expect(posicoes.at(-1)).toEqual(mapa.destino);
+      mapa.itens.forEach(item => expect(posicoes).toContainEqual(item.posicao));
     }));
   });
 

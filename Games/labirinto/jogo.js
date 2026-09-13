@@ -513,8 +513,8 @@ export function gerarLabirinto({ tamanho = 7, itensObrigatorios = 1, semente = D
   };
 }
 
-function posicoesDaRota(mapa, rota) {
-  const posicoes = [copiar(mapa.inicio)];
+export function posicoesDaRota(mapa, rota, inicio = mapa.inicio) {
+  const posicoes = [copiar(inicio)];
   rota.forEach(direcao => {
     const anterior = posicoes[posicoes.length - 1];
     const delta = DIRECOES[direcao];

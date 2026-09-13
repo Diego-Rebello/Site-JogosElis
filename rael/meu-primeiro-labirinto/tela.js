@@ -5,7 +5,7 @@ import { definirPreferencia, falarSequencia, limpar, modoAcompanhado, parar, pre
 import { nivelDaEtapa, obterConfiguracoes, registrarRodada, rodadasDe } from '../../shared/descobertas.js';
 import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
 import {
-  DIRECOES, criarPartida, direcaoEntre, haParedeEntre, mapasDoNivel,
+  DIRECOES, criarPartida, direcaoEntre, haParedeEntre, mapasDoNivel, posicoesDaRota, resolverMapa,
 } from '../../Games/labirinto/jogo.js';
 
 const ATIVIDADE = 'meu-primeiro-labirinto';
@@ -31,7 +31,7 @@ const FIGURAS = {
   P: { src: '/figuras/labirinto/portao.svg', nome: 'portão' },
   X: { src: '/figuras/labirinto/obras.svg', nome: 'trecho em obras' },
 };
-const VISIVEIS = [5, 7, 9];
+const VISIVEIS = [5, 9, Number.POSITIVE_INFINITY];
 
 definirPreferencia(configuracoes.voz);
 montarCabecalho('Meu Primeiro Labirinto');
@@ -41,8 +41,7 @@ let partida = null;
 let pistaAtual = [];
 let dicaVisual = null;
 let centroVisual = null;
-let indiceVisao = window.innerWidth <= 650 ? 0 : window.innerWidth <= 960 ? 1 : 2;
-let passoDica = 0;
+let indiceVisao = VISIVEIS.length - 1;
 let bloqueiosSeguidos = { motivo: '', quantidade: 0 };
 let tipoDemo = null;
 
@@ -131,10 +130,16 @@ function objetivosDoMapa(estado) {
   return objetivos;
 }
 
+function rotaVisualDoEstado(estado) {
+  const passos = resolverMapa(estado.mapa, estado.posicao, estado.itensColetados, estado) || [];
+  return new Set(posicoesDaRota(estado.mapa, passos, estado.posicao).map(idDaCasa));
+}
+
 function pintarObjetivos(estado) {
   $('objetivos').innerHTML = objetivosDoMapa(estado).map(objetivo => `
     <div class="objetivo ${objetivo.feito ? 'objetivo--feito' : ''}" data-objetivo="${objetivo.simbolo}">
       <span class="objetivo__figura"><img src="${objetivo.src}" alt="${objetivo.nome}"></span>
+      <span class="objetivo__nome">${objetivo.nome}</span>
     </div>`).join('');
 }
 
@@ -157,8 +162,13 @@ function pintarTabuleiro() {
   const centro = centroVisual || posicao;
   const janela = limitesDaJanela(mapa, centro);
   const naTrilha = new Set(estado.trilha.map(idDaCasa));
+  const naRota = rotaVisualDoEstado(estado);
+  const mapaInteiro = janela.quantidade === mapa.tamanho;
   $('tabuleiro').style.setProperty('--visiveis', janela.quantidade);
-  $('tabuleiro').setAttribute('aria-label', `Parte visível do labirinto ${mapa.tamanho} por ${mapa.tamanho}.`);
+  $('tabuleiro').classList.toggle('tabuleiro--inteiro', mapaInteiro);
+  $('tabuleiro').setAttribute('aria-label', mapaInteiro
+    ? `Mapa inteiro do labirinto ${mapa.tamanho} por ${mapa.tamanho}. O caminho azul mostra como chegar às figuras.`
+    : `Parte visível do labirinto ${mapa.tamanho} por ${mapa.tamanho}.`);
   const casas = [];
   for (let linha = janela.linha; linha < janela.linha + janela.quantidade; linha += 1) {
     for (let coluna = janela.coluna; coluna < janela.coluna + janela.quantidade; coluna += 1) {
@@ -168,6 +178,8 @@ function pintarTabuleiro() {
       const classes = [
         'casa-labirinto', ...classesDasParedes(mapa, casa), decoracao(casa, simbolo),
         simbolo === 'X' ? 'casa-labirinto--obras' : '',
+        naRota.has(idDaCasa(casa)) ? 'casa-labirinto--rota' : '',
+        FIGURAS[simbolo] ? 'casa-labirinto--objetivo' : '',
         naTrilha.has(idDaCasa(casa)) && !temCarrinho ? 'casa-labirinto--trilha' : '',
         mesmaCasa(casa, dicaVisual) ? 'casa-labirinto--dica' : '',
       ].filter(Boolean).join(' ');
@@ -192,6 +204,7 @@ function pintarMapaGeral() {
   const estado = partida.estado();
   const { mapa, posicao } = estado;
   const trilha = new Set(estado.trilha.map(idDaCasa));
+  const rota = rotaVisualDoEstado(estado);
   const especiais = new Set([mapa.destino, ...mapa.itens.map(item => item.posicao), ...mapa.obstaculos.map(item => item.posicao)].map(idDaCasa));
   $('tabuleiro-geral').style.setProperty('--tamanho', mapa.tamanho);
   $('tabuleiro-geral').innerHTML = mapa.layout.flatMap((linha, numeroLinha) => [...linha].map((simbolo, coluna) => {
@@ -199,16 +212,19 @@ function pintarMapaGeral() {
     const classes = [
       'casa-geral', ...classesDasParedes(mapa, casa, 'casa-geral--parede-'),
       trilha.has(idDaCasa(casa)) ? 'casa-geral--visitada' : '', mesmaCasa(casa, posicao) ? 'casa-geral--atual' : '',
+      rota.has(idDaCasa(casa)) ? 'casa-geral--rota' : '',
       especiais.has(idDaCasa(casa)) && simbolo !== 'X' ? 'casa-geral--objetivo' : '', simbolo === 'X' ? 'casa-geral--obras' : '',
     ].filter(Boolean).join(' ');
-    return `<span class="${classes}"></span>`;
+    const estadoDaCasa = { ...estado, casaRenderizada: casa };
+    const figura = mesmaCasa(casa, posicao) ? imagem('/figuras/carro.svg') : conteudoDaCasa(simbolo, estadoDaCasa);
+    const conteudo = figura.replaceAll('casa-labirinto__figura', 'casa-geral__figura');
+    return `<span class="${classes}" title="${nomeDaCasa(simbolo, estado, mesmaCasa(casa, posicao))}">${conteudo}</span>`;
   })).join('');
 }
 
 function limparDica() {
   dicaVisual = null;
   centroVisual = null;
-  passoDica = 0;
   document.querySelectorAll('.controle--dica, .objetivo--dica').forEach(item => item.classList.remove('controle--dica', 'objetivo--dica'));
 }
 
@@ -347,31 +363,14 @@ function objetivoPendente(estado) {
 function mostrarDica() {
   if (!partida) return;
   dicaVisual = null;
+  centroVisual = null;
   document.querySelectorAll('.controle--dica, .objetivo--dica').forEach(item => item.classList.remove('controle--dica', 'objetivo--dica'));
   const dica = partida.dica();
   if (!dica) return;
   const pendente = objetivoPendente(partida.estado());
-  passoDica = (passoDica % 3) + 1;
-  if (passoDica === 1 && pendente) {
-    pintarTabuleiro();
-    document.querySelector(`[data-objetivo="${pendente.simbolo}"]`)?.classList.add('objetivo--dica');
-    const frase = `Procure ${pendente.nome}.`;
-    $('retorno').textContent = frase;
-    dizerPista([{ texto: frase }]);
-    return;
-  }
-  if (passoDica === 2 && pendente?.posicao) {
-    dicaVisual = pendente.posicao;
-    centroVisual = pendente.posicao;
-    pintarTabuleiro();
-    const frase = `Olhe onde está ${pendente.nome}.`;
-    $('retorno').textContent = frase;
-    dizerPista([{ texto: frase }]);
-    return;
-  }
-  centroVisual = null;
   dicaVisual = dica.destino;
   pintarTabuleiro();
+  if (pendente) document.querySelector(`[data-objetivo="${pendente.simbolo}"]`)?.classList.add('objetivo--dica');
   if (dica.direcao) document.querySelector(`[data-direcao="${dica.direcao}"]`)?.classList.add('controle--dica');
   const frase = dica.acao === 'esperar' ? 'Toque no semáforo e espere o verde.'
     : dica.acao === 'acionar' ? 'Toque na alavanca para baixar a ponte.'
