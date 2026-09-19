@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Chute a bola onde o goleiro não está ou na figura pedida. Brincadeira falada dos Jogos do Rael.">
+  <meta name="theme-color" content="#0f5aa8">
+  <title>Chute a Gol — Jogos do Rael</title>
+  <link rel="manifest" href="/rael.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/rael-192.png">
+  <link rel="icon" href="/icones/rael.svg">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="../../shared/tema-rael.css">
+  <link rel="stylesheet" href="../../shared/descobertas.css">
+  <link rel="stylesheet" href="./chute-a-gol.css">
+  <script type="module" src="../../shared/pwa.js"></script>
+</head>
+<body class="pagina">
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao descobertas">
+      <div class="tela convite" id="tela-convite">
+        <div class="figuras-convite" aria-hidden="true">
+          <img class="convite__figura" src="/figuras/bola.svg" alt="" width="110" height="110">
+        </div>
+        <h2 class="instrucao__texto">Chute a Gol</h2>
+        <p class="convite__texto">Chute a bola onde o goleiro não está ou na figura pedida!</p>
+        <button class="botao botao--gigante" id="comecar" type="button">▶ Vamos brincar</button>
+        <p class="convite__texto" id="aviso-voz" hidden></p>
+      </div>
+
+      <div class="tela" id="tela-brincadeira" hidden>
+        <div class="passos" id="passos" aria-hidden="true"></div>
+        <div class="instrucao">
+          <p class="instrucao__texto" id="instrucao">Chute a bola!</p>
+          <button class="botao botao--repetir" id="repetir" type="button">🔊 Ouvir de novo</button>
+        </div>
+        <div class="campo" id="campo">
+          <div class="gol" id="gol"></div>
+          <div class="zonas" id="zonas"></div>
+          <img class="goleiro" id="goleiro" src="" alt="" aria-hidden="true">
+          <img class="bola" id="bola" src="/figuras/bola.svg" alt="" aria-hidden="true" width="64" height="64">
+        </div>
+        <div class="placar" id="placar" aria-hidden="true"></div>
+        <p class="feedback retorno" id="retorno" aria-live="polite"></p>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="continuar" type="button" hidden>Continuar ▶</button>
+        </div>
+        <div class="roteiro" id="roteiro" hidden>
+          <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
+          <span class="roteiro__fala" id="roteiro-fala"></span>
+        </div>
+      </div>
+
+      <div class="tela conclusao" id="tela-fim" hidden>
+        <h2 class="instrucao__texto">Que golaço!</h2>
+        <div class="bolas-fim" id="bolas-fim" aria-hidden="true"></div>
+        <img class="conclusao__figurinha" id="figurinha" src="" alt="" width="150" height="150">
+        <p class="convite__texto" id="texto-fim"></p>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="de-novo" type="button">🔁 Brincar de novo</button>
+          <a class="botao botao--secundario" href="../index.html">🏠 Voltar</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./tela.js"></script>
+</body>
+</html>

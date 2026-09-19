@@ -42,6 +42,7 @@ const paginas = {
   'rael-comeca-com-o-mesmo-som': 'rael/comeca-com-o-mesmo-som/index.html',
   'rael-letras-para-explorar': 'rael/letras-para-explorar/index.html',
   'rael-meu-primeiro-labirinto': 'rael/meu-primeiro-labirinto/index.html',
+  'rael-chute-a-gol': 'rael/chute-a-gol/index.html',
 };
 
 export default defineConfig({
