@@ -150,10 +150,25 @@
                     </p>
                 </section>
 
-                <section class="cartao album-cartao" aria-labelledby="titulo-album">
+                <section class="cartao album-cartao" id="album-cartao" aria-labelledby="titulo-album">
                     <h2 id="titulo-album">🎁 Meu álbum de figurinhas</h2>
-                    <p class="secao__nota" id="resumo-album">Cada brincadeira até o fim ganha uma figurinha.</p>
-                    <ul class="album" id="album"></ul>
+                    <div class="abas-album" role="tablist" aria-label="Páginas do álbum">
+                        <button class="aba-album" id="aba-figurinhas" type="button" role="tab" aria-selected="true" aria-controls="painel-figurinhas">
+                            <img src="/figuras/dinossauro.svg" alt="" aria-hidden="true" width="40" height="40"> Figurinhas
+                        </button>
+                        <button class="aba-album" id="aba-conquistas" type="button" role="tab" aria-selected="false" aria-controls="painel-conquistas">
+                            <img src="/figuras/estrela.svg" alt="" aria-hidden="true" width="40" height="40"> Conquistas
+                        </button>
+                    </div>
+                    <div id="painel-figurinhas" role="tabpanel" aria-labelledby="aba-figurinhas">
+                        <p class="secao__nota" id="resumo-album">Cada brincadeira até o fim ganha uma figurinha.</p>
+                        <ul class="album" id="album"></ul>
+                    </div>
+                    <div id="painel-conquistas" role="tabpanel" aria-labelledby="aba-conquistas" hidden>
+                        <p class="secao__nota" id="resumo-conquistas">Toque numa conquista para ouvir como ganhar.</p>
+                        <p class="roteiro" id="fala-conquista" aria-live="polite" hidden></p>
+                        <div id="paginas-conquistas"></div>
+                    </div>
                 </section>
             </main>
 
@@ -168,8 +183,12 @@
 <script type="module">
     import { FIGURINHAS, obterAlbum, obterConfiguracoes } from '../shared/descobertas.js';
     import { caminhoDaFigura, figura } from '../shared/catalogo-figuras.js';
+    import { PAGINAS } from '../shared/conquistas-descobertas.js';
+    import { cartaoDaConquista, ligarFalaDasConquistas } from '../shared/conquistas-tela.js';
+    import { definirPreferencia, falarSequencia, preparar } from '../shared/fala.js';
 
-    const { nome } = obterConfiguracoes();
+    const { nome, voz } = obterConfiguracoes();
+    definirPreferencia(voz);
     const album = obterAlbum();
 
     document.getElementById('saudacao').textContent =
@@ -197,6 +216,53 @@
     document.getElementById('resumo-album').textContent = album.figurinhas.length === 0
         ? 'Cada brincadeira até o fim ganha uma figurinha.'
         : `${album.figurinhas.length} de ${album.total} figurinhas. Cada brincadeira até o fim ganha uma nova.`;
+
+    // Conquistas (P15): uma seção por página, ganhas em moldura dourada e as
+    // que faltam em silhueta. Tocar fala o nome ou como ganhar.
+    const paginas = document.getElementById('paginas-conquistas');
+    paginas.innerHTML = PAGINAS.map(pagina => {
+        const daPagina = album.conquistas.filter(conquista => conquista.pagina === pagina.id);
+        if (!daPagina.length) return '';
+        return `<section class="pagina-conquistas" aria-labelledby="pagina-${pagina.id}">
+            <h3 class="pagina-conquistas__titulo" id="pagina-${pagina.id}">
+                <img src="${pagina.figura}" alt="" aria-hidden="true" width="36" height="36"> ${pagina.nome}
+            </h3>
+            <ul class="conquistas">${daPagina.map(conquista => cartaoDaConquista(conquista)).join('')}</ul>
+        </section>`;
+    }).join('');
+    document.getElementById('resumo-conquistas').textContent = album.conquistasGanhas === 0
+        ? 'Toque numa conquista para ouvir como ganhar.'
+        : `${album.conquistasGanhas} ${album.conquistasGanhas === 1 ? 'conquista' : 'conquistas'} de ${album.totalConquistas}. Toque numa para ouvir.`;
+
+    // A voz do aparelho só é liberada dentro de um toque (regra do iOS).
+    let vozPronta = false;
+    ligarFalaDasConquistas(paginas, album.conquistas, async itens => {
+        const frase = document.getElementById('fala-conquista');
+        frase.textContent = itens.map(item => item.texto).join(' ');
+        frase.hidden = false;
+        if (!vozPronta) { await preparar(); vozPronta = true; }
+        falarSequencia(itens);
+    });
+
+    const abas = {
+        figurinhas: [document.getElementById('aba-figurinhas'), document.getElementById('painel-figurinhas')],
+        conquistas: [document.getElementById('aba-conquistas'), document.getElementById('painel-conquistas')],
+    };
+    function abrirAba(escolhida) {
+        Object.entries(abas).forEach(([id, [aba, painel]]) => {
+            aba.setAttribute('aria-selected', String(id === escolhida));
+            painel.hidden = id !== escolhida;
+        });
+    }
+    Object.entries(abas).forEach(([id, [aba]]) => aba.addEventListener('click', () => abrirAba(id)));
+    // As telas de fim levam direto para cá com "Ver meu álbum".
+    function seguirEndereco() {
+        if (location.hash !== '#conquistas') return;
+        abrirAba('conquistas');
+        document.getElementById('album-cartao').scrollIntoView({ block: 'start' });
+    }
+    seguirEndereco();
+    window.addEventListener('hashchange', seguirEndereco);
 </script>
 </body>
 </html>

@@ -2,7 +2,10 @@ import { montarCabecalho } from '../../shared/cabecalho.js';
 import { tocar } from '../../shared/sons.js';
 import { lancarConfete, animar } from '../../shared/confete.js';
 import { definirPreferencia, falarSequencia, limpar, modoAcompanhado, parar, preparar } from '../../shared/fala.js';
-import { nivelDaEtapa, obterConfiguracoes, registrarRodada, rodadasDe } from '../../shared/descobertas.js';
+import {
+  conquistasDaAtividade, nivelDaEtapa, obterConfiguracoes, registrarRodada, rodadasDe,
+} from '../../shared/descobertas.js';
+import { anunciarConquistas, cartaoDaConquista, ligarFalaDasConquistas } from '../../shared/conquistas-tela.js';
 import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
 import {
   DIRECOES, criarPartida, direcaoEntre, haParedeEntre, mapasDoNivel, posicoesDaRota, resolverMapa,
@@ -43,6 +46,8 @@ let dicaVisual = null;
 let centroVisual = null;
 let indiceVisao = VISIVEIS.length - 1;
 let bloqueiosSeguidos = { motivo: '', quantidade: 0 };
+// Dicas pedidas neste mapa. Fica na tela porque Recomeçar zera a conta do motor.
+let dicasNoMapa = 0;
 let tipoDemo = null;
 let cicloSemaforo = 0;
 let semaforoEmContagem = false;
@@ -342,6 +347,7 @@ function abrirMapa({ falarInstrucao = true, demonstrar = false } = {}) {
   cancelarContagemSemaforo();
   limparDica();
   bloqueiosSeguidos = { motivo: '', quantidade: 0 };
+  dicasNoMapa = 0;
   partida = criarPartida(mapas[indiceMapa]);
   $('nivel').textContent = `${NOMES_NIVEL[nivel]} · mapa ${indiceMapa + 1} de ${mapas.length}`;
   $('retorno').textContent = '';
@@ -356,15 +362,32 @@ function abrirMapa({ falarInstrucao = true, demonstrar = false } = {}) {
   if (demonstrar) abrirDemonstracao();
 }
 
+/** O que aconteceu neste mapa, para as conquistas do álbum (P15). */
+function feitosDaPartida() {
+  const estado = partida.estado();
+  return {
+    mapaId: estado.mapa.id,
+    nivel,
+    aventura: Boolean(estado.mapa.aventura),
+    dicas: dicasNoMapa,
+    estrela: estado.coletouEstrela,
+    semaforo: estado.semaforosVerdes.length > 0,
+    ponte: estado.pontesBaixadas.length > 0,
+    portao: estado.portoesAbertos.length > 0,
+    obras: temSimbolo(estado.mapa, 'X'),
+  };
+}
+
 async function concluir() {
-  const { figurinha } = registrarRodada(ATIVIDADE);
+  const { figurinha, conquistasNovas } = registrarRodada(ATIVIDADE, { feitos: feitosDaPartida() });
   mostrarTela('fim');
   $('figurinha').src = caminhoDaFigura(figurinha);
   $('figurinha').alt = `Figurinha nova: ${figura(figurinha)?.nome || figurinha}`;
   $('texto-fim').textContent = `Você ganhou uma figurinha: ${nomeComArtigo(figurinha)}!`;
+  const falasDaConquista = anunciarConquistas(conquistasNovas, { depoisDe: $('texto-fim'), dizer: dizerPista });
   tocar('vitoria');
   lancarConfete();
-  await dizerPista([{ texto: 'Muito bem! O carrinho chegou à garagem!' }, { texto: `Você ganhou uma figurinha: ${nomeComArtigo(figurinha)}.` }]);
+  await dizerPista([{ texto: 'Muito bem! O carrinho chegou à garagem!' }, { texto: `Você ganhou uma figurinha: ${nomeComArtigo(figurinha)}.` }, ...falasDaConquista]);
 }
 
 function registrarBloqueio(motivo) {
@@ -460,6 +483,7 @@ function mostrarDica() {
   document.querySelectorAll('.controle--dica, .objetivo--dica').forEach(item => item.classList.remove('controle--dica', 'objetivo--dica'));
   const dica = partida.dica();
   if (!dica) return;
+  dicasNoMapa += 1;
   const pendente = objetivoPendente(partida.estado());
   dicaVisual = dica.destino;
   pintarTabuleiro();
@@ -472,6 +496,17 @@ function mostrarDica() {
   dizerPista([{ texto: frase }]);
   if (dica.acao === 'esperar') iniciarContagemSemaforo();
 }
+
+function pintarFaixaDeConquistas() {
+  const conquistas = conquistasDaAtividade(ATIVIDADE);
+  $('faixa-conquistas').innerHTML = conquistas.map(conquista => cartaoDaConquista(conquista, { compacta: true })).join('');
+  return conquistas;
+}
+
+ligarFalaDasConquistas($('faixa-conquistas'), pintarFaixaDeConquistas(), async itens => {
+  await preparar();
+  dizerPista(itens);
+});
 
 $('comecar').addEventListener('click', async () => {
   tocar('clique');

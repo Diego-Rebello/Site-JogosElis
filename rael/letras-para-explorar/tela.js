@@ -4,6 +4,7 @@ import { lancarConfete } from '../../shared/confete.js';
 import { definirPreferencia, falarSequencia, limpar, modoAcompanhado, parar, preparar } from '../../shared/fala.js';
 import { criarSessao } from '../../shared/rodada.js';
 import { obterConfiguracoes, registrarRodada } from '../../shared/descobertas.js';
+import { anunciarConquistas } from '../../shared/conquistas-tela.js';
 import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
 import { EXEMPLOS_POR_LETRA, nomeDaLetra } from './dados.js';
 import { montarRodadaLetras } from './jogo.js';
@@ -161,13 +162,14 @@ function abrirMesa() {
 }
 
 async function encerrar() {
-  const { figurinha } = registrarRodada(ATIVIDADE);
+  const { figurinha, conquistasNovas } = registrarRodada(ATIVIDADE);
   mostrarTela('fim');
   $('figurinha').src = caminhoDaFigura(figurinha);
   $('figurinha').alt = `Figurinha nova: ${figura(figurinha)?.nome || figurinha}`;
   $('texto-fim').textContent = `Você ganhou uma figurinha: ${nomeComArtigo(figurinha)}!`;
+  const falasDaConquista = anunciarConquistas(conquistasNovas, { depoisDe: $('texto-fim'), dizer: dizerPista });
   tocar('vitoria'); lancarConfete();
-  await dizerPista([{ texto: 'Você explorou as letras!' }, { texto: `Ganhou uma figurinha: ${nomeComArtigo(figurinha)}.` }]);
+  await dizerPista([{ texto: 'Você explorou as letras!' }, { texto: `Ganhou uma figurinha: ${nomeComArtigo(figurinha)}.` }, ...falasDaConquista]);
 }
 
 document.querySelector('.modos-letras').addEventListener('click', async evento => {

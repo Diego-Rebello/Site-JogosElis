@@ -252,7 +252,9 @@ esperando o tempo máximo a cada frase.
 
 | Módulo | O que faz |
 |---|---|
-| `descobertas.js` | Preferências do adulto, rodadas por atividade, álbum de figurinhas e `nivelDaEtapa()`, em `localStorage['jogos-elis:descobertas']` |
+| `descobertas.js` | Preferências do adulto, rodadas por atividade, álbum de figurinhas, marcas e conquistas (estado versão 2) e `nivelDaEtapa()`, em `localStorage['jogos-elis:descobertas']` |
+| `conquistas-descobertas.js` | Catálogo das conquistas (P15) e as regras puras: `acumularFeitos()`, `avaliarConquistas()`, `resumirConquista()` |
+| `conquistas-tela.js` | Cartão da conquista no álbum, faixa do convite e anúncio "Conquista nova!" na tela de fim |
 | `rodada.js` | `montarDesafios()` sorteia alvos e alternativas sem repetir; `criarSessao()` conta tentativas e manda demonstrar depois de duas |
 | `catalogo-figuras.js` | 62 figuras com nome, artigo (`o`/`a`) e categoria, mais os temas e `caminhoDaFigura(id)` |
 
@@ -262,7 +264,11 @@ figura. Os desenhos são do [OpenMoji](https://openmoji.org) (CC BY-SA 4.0) — 
 em `public/figuras/LICENCA.txt`.
 
 Aqui não existe estrela nem recorde de propósito: cada rodada terminada rende uma figurinha,
-com ajuda ou sem ajuda.
+com ajuda ou sem ajuda. Além delas, **conquistas** (moldura dourada) reconhecem feitos dentro
+das brincadeiras — baixar a ponte, abrir o portão com a chave, terminar os dez mapas de um
+nível. Premiam o que foi feito e acumulado, nunca rapidez, erro, prazo ou dias seguidos, e nunca
+se perdem. As telas mandam os feitos em `registrarRodada(atividade, { feitos })` e recebem
+`conquistasNovas` para celebrar.
 
 ### `tema-rael.css` e `descobertas.css`
 

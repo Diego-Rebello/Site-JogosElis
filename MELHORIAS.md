@@ -9,7 +9,9 @@
 > [MELHORIAS-historico.md](MELHORIAS-historico.md).** Consulte lá se uma tarefa nova precisar
 > entender uma decisão do passado; este arquivo só traz o que ainda falta.
 >
-> Atualizado em 2026-09-11: implementação técnica da P14 concluída na branch
+> Atualizado em 2026-09-19: P15 (Álbum com Conquistas) implementada na branch
+> `p15-album-conquistas`; falta validar com o Rael.
+> Anterior, 2026-09-11: implementação técnica da P14 concluída na branch
 > `p14-labirinto-obstaculos`. A publicação e a validação presencial com o Rael continuam pendentes.
 
 ---
@@ -22,6 +24,7 @@
 - **P00, P02 a P07** (área, Encaixe as Figuras, Palmas nas Palavras, Rimas com Figuras, Começa com o Mesmo Som, Letras para Explorar, Meu Primeiro Labirinto): a área **Jogos do Rael** está no ar com sete brincadeiras. Falta validar todas com a criança (marcado em cada uma).
 
 **Implementado em branch, aguardando validação com a criança:**
+- **P15** (conquistas no álbum do Rael), branch `p15-album-conquistas`. Detalhes no item 10 da tarefa.
 - **P14** (mapas 15×15, 20×20 e 25×25, obstáculos, visão ampliada e ajuda visual). A opção
   30×30 não foi exposta antes da validação prevista.
 
@@ -42,6 +45,8 @@
 
 **Ordem recomendada:** P09 → P10 (sem gravação nem banco, validam o fluxo) → P01 (a única que
 depende de áudio gravado) → P08, P11 → P12, P13 → J03 → J12 → J14. Motivo completo na seção 5.4.
+As atividades entregues depois da P15 acrescentam suas próprias conquistas ao catálogo
+(`shared/conquistas-descobertas.js`).
 
 **Nota sobre o estado do repositório:** a P14 está isolada na branch
 `p14-labirinto-obstaculos`. Não fazer merge na `main` nem disparar deploy até o Diego reunir as
@@ -305,9 +310,12 @@ modelo executor e para a validação com a criança, não como meta a cobrar del
 - **Retorno acolhedor:** ao errar, repetir a pista; após duas tentativas, demonstrar a resposta e
   seguir em frente. Sem vidas, contagem regressiva, ranking ou perda de pontos. Celebrar
   participação e conclusão, inclusive com ajuda.
-- **Figurinhas em vez de estrelas:** cada rodada concluída dá uma figurinha para o **Álbum** da
-  etapa (dinossauros, foguetes, animais...). O álbum não tem meta, não some e não compara.
-  Não usar `calcularEstrelas` de `shared/progresso.js` nesta etapa.
+- **Figurinhas em vez de estrelas:** cada rodada concluída dá uma figurinha para o **Álbum**,
+  com ou sem ajuda. Além delas, **conquistas** (figurinhas especiais, com moldura dourada)
+  reconhecem feitos dentro das brincadeiras (P15). Conquistas nunca se perdem, não têm prazo, não
+  dependem de rapidez, acerto de primeira nem de dias seguidos, e nenhuma tela anuncia uma
+  conquista que ficou de fora. Atividade nova acrescenta as suas em
+  `shared/conquistas-descobertas.js`. Não usar `calcularEstrelas` nesta etapa.
 - **Fala em pt-BR em três camadas**, já resolvida por `shared/fala.js`: (1) gravação local quando
   existir; (2) voz sintetizada do aparelho via `speechSynthesis` com `lang = 'pt-BR'`; (3) modo
   acompanhado, com roteiro curto na tela para o adulto ler. Uma fala por vez; botão de repetir
@@ -653,6 +661,309 @@ obstáculos continua limitado mesmo quando a grade aumenta.
   `npm run typecheck` e `npm run build` passam na implementação futura.
 - [ ] Validação com o Rael registrada separadamente dos testes técnicos, com observações
   sobre compreensão, planejamento, autonomia e cansaço; não marcar antes de realizá-la.
+
+### P15 — Álbum com Conquistas (figurinhas por mérito)
+
+**Prioridade:** Média · **Esforço:** M/G · **Modelo:** Opus · **Depende de:** P00 e P14 (prontas)
+
+**Foco:** reconhecer o que a criança **fez** dentro de cada brincadeira — abrir o portão com a
+chave, baixar a ponte, terminar todos os mapas de um nível — com figurinhas especiais,
+guardadas numa página própria do álbum. Hoje toda figurinha vem só de terminar uma rodada, e o
+álbum não conta nada sobre as descobertas feitas no caminho.
+
+#### 1. Situação atual (ponto de partida)
+
+- `shared/descobertas.js` guarda, em `localStorage['jogos-elis:descobertas']`, `atividades`
+  (`{ [atividade]: { rodadas, ultimaEm } }`) e `figurinhas` (lista de ids de `FIGURINHAS`, 18
+  figuras do catálogo em ordem fixa).
+- `registrarRodada(atividade, { figurinha })` soma uma rodada e entrega a próxima figurinha da
+  lista. As sete telas em `rael/*/tela.js` chamam essa função em `concluir()` e mostram uma
+  figurinha na tela de fim.
+- `rael/index.html` monta o álbum (18 casas, `?` nas que faltam) e o resumo "X de 18".
+- `rael/configuracoes.html` tem "Zerar álbum" (`zerarAlbum()`).
+- No labirinto, `criarPartida()` (`Games/labirinto/jogo.js`) já expõe em `estado()`: `mapa`
+  (com `id`, `nivel`, `aventura`), `dicas`, `movimentos`, `coletouEstrela`, `semaforosVerdes`,
+  `pontesBaixadas`, `alavancasAcionadas`, `portoesAbertos`. Os mapas de aventura têm id estável
+  (`rael-aventura-<nivel>-<n>`, dez por nível); isso permite contar mapas diferentes concluídos.
+
+#### 2. Mudança de regra da etapa (decisão do Diego, 2026-09-19)
+
+A seção 5.0 diz que o álbum "não tem meta, não some e não compara". A P15 acrescenta metas
+**de feito**, mantendo o espírito da etapa. Ao implementar, reescrever o item "Figurinhas em
+vez de estrelas" da 5.0 assim:
+
+> **Figurinhas em vez de estrelas:** cada rodada concluída dá uma figurinha para o **Álbum**,
+> com ou sem ajuda. Além delas, **conquistas** (figurinhas especiais, com moldura dourada)
+> reconhecem feitos dentro das brincadeiras. Conquistas nunca se perdem, não têm prazo, não
+> dependem de rapidez, acerto de primeira nem de dias seguidos, e nenhuma tela anuncia uma
+> conquista que ficou de fora. Não usar `calcularEstrelas` nesta etapa.
+
+Guardas que valem para todo o resto desta tarefa:
+
+| Pode | Não pode |
+|---|---|
+| Premiar **fazer** algo novo (usar a chave, baixar a ponte, pegar a estrela) | Premiar velocidade, número de movimentos ou ausência de erro |
+| Premiar **quantidade acumulada** (10 mapas, 5 dias diferentes) | Sequência de dias seguidos, prazo, algo que se perde |
+| Mostrar a conquista que falta como silhueta com dica falada | Mensagem "você perdeu a conquista" ou "usou dica, não vale" |
+| Mostrar progresso em bolinhas (●●●○○) | Ranking, comparação, porcentagem, placar |
+
+A figurinha comum da rodada continua vindo **sempre**; a conquista é um extra.
+
+#### 3. Catálogo de conquistas
+
+Criar `shared/conquistas-descobertas.js`, um módulo puro (sem DOM, sem `localStorage`), com a
+lista `CONQUISTAS` e as funções de avaliação. Cada conquista:
+
+```js
+{
+  id: 'lab-chaveiro',               // estável; é o que fica salvo
+  pagina: 'labirinto',              // 'labirinto' | 'brincadeiras' | 'geral'
+  atividade: 'meu-primeiro-labirinto', // ou null nas gerais
+  figura: '/figuras/chave.svg',     // só arquivos que já existem em public/figuras/
+  nome: 'Chaveiro',                 // curto, dito em voz alta
+  comoGanhar: 'Abra um portão com a chave.',   // fala da silhueta
+  parabens: 'Você abriu o portão com a chave!', // fala ao ganhar
+  meta: 1,                          // 1 = feito único; >1 mostra bolinhas
+  medir: marcas => número,          // progresso atual a partir das marcas
+}
+```
+
+**Página Labirinto** (Meu Primeiro Labirinto, modo aventura; o modo clássico só conta nas
+conquistas marcadas com ✱):
+
+| id | Nome | Figura | Como ganhar | Meta |
+|---|---|---|---|---|
+| `lab-primeira-garagem` ✱ | Primeira garagem | `casa.svg` | Chegar à garagem pela primeira vez | 1 |
+| `lab-sinal-verde` | Sinal verde | `labirinto/semaforo-verde.svg` | Concluir um mapa esperando o semáforo abrir | 1 |
+| `lab-ponte` | Construtor de pontes | `labirinto/ponte.svg` | Baixar a ponte com a alavanca e concluir | 1 |
+| `lab-chaveiro` | Chaveiro | `chave.svg` | Abrir um portão com a chave e concluir | 1 |
+| `lab-desvio` | Desvio esperto | `labirinto/obras.svg` | Concluir um mapa com trecho em obras | 1 |
+| `lab-mestre-transito` | Mestre do trânsito | `labirinto/semaforo.svg` | Já ter usado semáforo, ponte, portão e obras | 4 |
+| `lab-estrelas` ✱ | Caçador de estrelas | `estrela.svg` | Pegar a estrela em 5 mapas | 5 |
+| `lab-explorar-10` | Explorador | `carro.svg` | Concluir os 10 mapas diferentes do nível Explorar | 10 |
+| `lab-planejar-10` | Planejador | `onibus.svg` | Concluir os 10 mapas diferentes do nível Planejar | 10 |
+| `lab-combinar-10` | Grande combinador | `caminhao.svg` | Concluir os 10 mapas diferentes do nível Combinar | 10 |
+| `lab-eu-consigo` | Eu consigo! | `foguete.svg` | Concluir 3 mapas Planejar ou Combinar sem pedir dica | 3 |
+| `lab-viajante` ✱ | Grande viajante | `trem.svg` | Concluir 25 mapas no total | 25 |
+
+> **Decisão a confirmar na validação — `lab-eu-consigo`:** é a única conquista que olha para o
+> uso de dica, então é a mais próxima de "mérito" no sentido estrito. Ela entra porque o Diego
+> pediu mérito, mas com três cuidados: só existe nos níveis normal e esperto; pedir dica nunca
+> gera fala ou aviso sobre ela; e a silhueta diz "Tente chegar à garagem sem pedir ajuda",
+> nunca "sem errar". Se na validação o Rael passar a evitar a dica e ficar frustrado,
+> remover a conquista (a remoção é só apagar a entrada do catálogo).
+
+**Página Brincadeiras** — gerada a partir da lista de atividades, duas por atividade, com a
+figura do cartão da atividade em `rael/index.html`:
+
+| Atividade | Figura | Estreia (1 rodada) | Fã (10 rodadas) |
+|---|---|---|---|
+| `toque-na-figura` | `dinossauro.svg` | Primeiro toque | Fã de figuras |
+| `encaixe-as-figuras` | `foguete.svg` | Primeiro encaixe | Fã de encaixar |
+| `palmas-nas-palavras` | `banana.svg` | Primeiras palmas | Fã de palmas |
+| `rimas-com-figuras` | `gato.svg` | Primeira rima | Fã de rimas |
+| `comeca-com-o-mesmo-som` | `abelha.svg` | Primeiro som | Fã de sons |
+| `letras-para-explorar` | `livro.svg` | Primeira letra | Fã de letras |
+| `meu-primeiro-labirinto` | `carro.svg` | (não gerar: `lab-primeira-garagem` já cobre) | Fã de labirintos |
+
+Quando P01, P08–P13 forem entregues, cada uma acrescenta sua linha nesta tabela e, se fizer
+sentido, conquistas de feito próprias (seguir o modelo da página Labirinto).
+
+**Página Geral:**
+
+| id | Nome | Figura | Como ganhar | Meta |
+|---|---|---|---|---|
+| `geral-todas` | Explorador de brincadeiras | `ilha.svg` | Brincar pelo menos uma vez de cada atividade disponível | nº de atividades |
+| `geral-dias-5` | Visitas animadas | `sol.svg` | Brincar em 5 dias diferentes (não precisam ser seguidos) | 5 |
+| `geral-dias-15` | Amigo das descobertas | `lua.svg` | Brincar em 15 dias diferentes | 15 |
+| `geral-album` | Álbum cheio | `bolo.svg` | Ganhar as 18 figurinhas comuns | 18 |
+
+Os nomes e frases acima são sugestão; revisar tom e vocabulário com o Rael na validação. Toda
+figura listada já existe em `public/figuras/`; não criar SVG novo nesta tarefa.
+
+#### 4. Dados e API (`shared/descobertas.js`)
+
+1. **Estado versão 2.** Acrescentar ao estado dois campos, com leitura defensiva igual à dos
+   demais:
+   - `marcas`: resumo acumulado dos feitos, por atividade. Formato sugerido:
+     ```js
+     marcas: {
+       geral: { dias: ['2026-09-19', ...] },          // datas locais distintas, no máximo 60
+       'meu-primeiro-labirinto': {
+         mapas: { 'rael-aventura-facil-3': 2, ... },  // id do mapa → vezes concluído
+         concluidos: 7,                               // total, inclusive modo clássico
+         estrelas: 3, semDica: 1,
+         usou: { semaforo: 2, ponte: 1, portao: 0, obras: 0 },
+       },
+     }
+     ```
+   - `conquistas`: `{ [id]: '2026-09-19T…Z' }` com a data em que foi ganha.
+   Estados salvos na versão 1 continuam válidos: campos ausentes viram `{}`. Ids desconhecidos em
+   `conquistas` são mantidos (não apagar dado por causa de catálogo mudado) mas ignorados na tela.
+2. **`registrarRodada(atividade, { figurinha, feitos } = {})`**: além do que já faz,
+   - marca o dia de hoje (data local `AAAA-MM-DD`) em `marcas.geral.dias`;
+   - passa `feitos` para `acumularFeitos(atividade, marcas, feitos)` (no módulo de conquistas),
+     que devolve as marcas novas; atividades sem regra própria só usam `rodadas`;
+   - chama `avaliarConquistas({ atividades, marcas, figurinhas }, conquistasJaGanhas)` e grava as
+     novas com a data de agora;
+   - devolve `{ figurinha, atividade, figurinhas, conquistasNovas }`, em que `conquistasNovas` é
+     a lista de objetos do catálogo (em ordem do catálogo). Quem só lê `figurinha` continua
+     funcionando sem mudança.
+3. **`obterAlbum()`** passa a devolver também `conquistas` (lista do catálogo com `ganha`,
+   `ganhaEm`, `progresso` limitado a `meta`, `meta`) e `totalConquistas`.
+4. **Migração silenciosa:** na primeira leitura de um estado sem `conquistas`, conceder as
+   conquistas que dá para deduzir dos dados antigos (Estreia, Fã, `geral-todas`, `geral-album`,
+   `lab-primeira-garagem`), com a data da migração e **sem** celebração. Conquistas que dependem
+   de marcas novas começam do zero.
+5. **`zerarAlbum()`** apaga também `marcas` e `conquistas`. Preferências do adulto continuam.
+6. Nova função `conquistasDaAtividade(atividade)` para a tela de convite da atividade (item 6.3).
+
+#### 5. Integração com o labirinto (`rael/meu-primeiro-labirinto/tela.js`)
+
+Em `concluir()`, montar os feitos a partir de `partida.estado()` e passar para `registrarRodada`:
+
+```js
+const estado = partida.estado();
+const feitos = {
+  mapaId: estado.mapa.id,
+  nivel,                                   // de nivelDaEtapa()
+  aventura: Boolean(estado.mapa.aventura), // false no modo clássico
+  dicas: estado.dicas,
+  estrela: estado.coletouEstrela,
+  semaforo: estado.semaforosVerdes.length > 0,
+  ponte: estado.pontesBaixadas.length > 0,
+  portao: estado.portoesAbertos.length > 0,
+  obras: estado.mapa.obstaculos.some(item => item.simbolo === 'X'),
+};
+const { figurinha, conquistasNovas } = registrarRodada(ATIVIDADE, { feitos });
+```
+
+Conferir os nomes exatos dos campos no motor antes de usar (a lista acima foi lida do código em
+2026-09-19). Não mudar o motor `Games/labirinto/jogo.js` para esta tarefa; se faltar algum dado,
+calcular na tela. `semDica` só soma quando `dicas === 0` **e** `nivel` é `normal` ou `esperto`
+**e** `aventura` é verdadeiro. A contagem de 10 mapas por nível usa ids distintos de
+`rael-aventura-<nivel>-*`.
+
+As outras seis telas não precisam enviar `feitos`; as conquistas delas saem de `rodadas` e dias.
+Elas só precisam mostrar `conquistasNovas` na tela de fim (item 6.2), de preferência por uma
+função compartilhada.
+
+#### 6. Telas
+
+1. **Álbum na casa do Rael (`rael/index.html`).** Dividir o cartão do álbum em duas abas com
+   botões grandes (≥ 64 px) e figura: **Figurinhas** (a grade atual, sem mudança) e
+   **Conquistas**. Na aba Conquistas, uma seção por página (Labirinto, Brincadeiras, Geral),
+   cada uma com título curto e ícone.
+   - Conquista ganha: figura colorida, moldura dourada e leve brilho (animação desligada com
+     `prefers-reduced-motion`), nome embaixo.
+   - Conquista que falta: a mesma figura em silhueta (cinza, mesmo truque da P02 — filtro CSS,
+     sem arquivo novo), sem nome escrito, e bolinhas de progresso quando `meta > 1`
+     (até 10 bolinhas; acima de 10, mostrar "7/25" pequeno para o adulto e 10 bolinhas
+     proporcionais).
+   - Tocar em qualquer conquista fala por `shared/fala.js`: ganha → `nome` + `parabens`;
+     falta → `comoGanhar`. Uma fala por vez, como no resto da etapa.
+   - O estado ganha/falta não pode depender só de cor: moldura + silhueta + texto acessível
+     (`aria-label="Chaveiro, ganha"` / `"Conquista ainda não ganha: abra um portão com a chave"`).
+   - Resumo para o adulto: "5 conquistas de 29". A aba escolhida pode abrir direto com
+     `rael/index.html#conquistas`.
+2. **Tela de fim de todas as atividades.** Depois da figurinha comum (fluxo atual intacto), se
+   `conquistasNovas` não estiver vazia: mostrar um cartão "Conquista nova!" com a figura na
+   moldura dourada, tocar `tocar('vitoria')` de novo ou um som já existente mais festivo,
+   confete, e falar `nome` + `parabens`. Mais de uma: mostrar a primeira e "e mais 1"; tocar no
+   cartão avança para a próxima. Botão **Ver meu álbum** leva a `../index.html#conquistas`.
+   Criar essa peça uma vez (por exemplo `mostrarConquistas(conquistasNovas, elemento)` num
+   módulo de `shared/`, estilos em `shared/descobertas.css`) e usar nas sete telas.
+3. **Convite do labirinto.** Na tela de convite de Meu Primeiro Labirinto, uma faixa pequena
+   com as conquistas da página Labirinto (ganhas coloridas, faltantes em silhueta, mesmo toque
+   para ouvir a dica). Isso liga a conquista ao jogo: ele vê "a ponte está cinza" antes de
+   começar. A faixa não pode empurrar o botão "Vamos brincar" para fora da tela em 360×800.
+4. **Configurações do adulto (`rael/configuracoes.html`).** Seção "Conquistas" só de leitura:
+   lista com nome, como ganhar e data em que foi ganha. Atualizar o texto de confirmação de
+   "Zerar álbum" para dizer que as conquistas também serão apagadas.
+
+#### 7. Passos sugeridos
+
+1. Criar a branch `p15-album-conquistas` a partir de `main`.
+2. `shared/conquistas-descobertas.js` com catálogo, `acumularFeitos` e `avaliarConquistas`;
+   testes em `tests/conquistas-descobertas.test.js` antes de mexer em tela.
+3. Estado v2, migração e nova `registrarRodada` em `shared/descobertas.js`; ampliar
+   `tests/descobertas.test.js` (v1 → v2, zerar, retorno compatível).
+4. Feitos no labirinto e peça de "Conquista nova!" nas sete telas de fim.
+5. Abas do álbum, faixa no convite do labirinto e seção nas configurações.
+6. Atualizar a 5.0 (texto do item 2), o README (seção de `descobertas.js`) e o status deste
+   arquivo. Conferir se o service worker gerado inclui o módulo novo.
+7. `npm test`, `npm run typecheck`, `npm run build` (lembrar a regra 10 da seção 2.2).
+
+#### 8. Critérios de aceite
+
+- [x] Toda conclusão de rodada continua dando a figurinha comum, com ou sem dica; o fluxo de
+  fim das sete atividades é igual ao de hoje quando não há conquista nova.
+- [x] Concluir um mapa normal abrindo a ponte concede `lab-ponte` uma única vez; repetir o feito
+  não duplica nem celebra de novo.
+- [x] Concluir os 10 mapas distintos de um nível concede a conquista do nível; repetir o mesmo
+  mapa 10 vezes não concede. Mapas do modo clássico não contam para essas três.
+- [x] `lab-eu-consigo` só conta mapas de aventura normal/esperto com `dicas === 0`; pedir dica
+  não gera nenhuma fala ou aviso sobre conquista.
+- [x] Dias diferentes contam mesmo sem serem seguidos; nada se perde com o tempo.
+- [x] Estado salvo na versão 1 abre sem erro, mantém figurinhas e rodadas e ganha as conquistas
+  dedutíveis sem celebração; ids desconhecidos não quebram a tela.
+- [x] `zerarAlbum()` apaga figurinhas, rodadas, marcas e conquistas e mantém as preferências.
+- [x] Álbum e faixa do convite funcionam sem leitura: tocar numa conquista fala o nome ou como
+  ganhar; ganho/falta distinguível sem cor e com nome acessível.
+- [x] Nenhuma tela mostra ranking, porcentagem, prazo, sequência de dias ou conquista perdida.
+- [x] Sem arquivo de figura novo; só SVGs já presentes em `public/figuras/`. Precache sem 404.
+- [x] Testes cobrem catálogo (ids únicos, figuras existentes no disco, metas ≥ 1), acumulação de
+  feitos do labirinto, avaliação, migração v1 → v2 e zerar. `npm test`, `npm run typecheck` e
+  `npm run build` passam.
+- [x] Layout conferido em 360×800, 768×1024 e 1280 px, com a checklist da seção 6.
+- [ ] Validação com o Rael registrada separadamente: se ele percebe a moldura dourada, se
+  procura a silhueta que falta, se toca para ouvir a dica e se `lab-eu-consigo` muda a relação
+  dele com o botão de dica. Não marcar antes de realizar.
+
+#### 10. Resultado da implementação (2026-09-19)
+
+1. **Lógica:** `shared/conquistas-descobertas.js` (catálogo com 29 conquistas: 12 do labirinto,
+   13 das brincadeiras e 4 gerais; regras puras) e estado versão 2 em `shared/descobertas.js`
+   (`marcas`, `conquistas`, migração silenciosa, `conquistasDaAtividade()`, zerar completo).
+2. **Tela:** `shared/conquistas-tela.js` + estilos em `shared/descobertas.css`. O cartão
+   "Conquista nova!" é criado pelo próprio módulo depois do texto da figurinha, então os
+   `index.html` das atividades não mudaram; só o labirinto ganhou a faixa do convite.
+3. **Labirinto:** as dicas são contadas na tela (`dicasNoMapa`), porque Recomeçar zera a conta
+   do motor; assim recomeçar depois de pedir dica não vale como mapa "sem dica".
+   `Games/labirinto/jogo.js` não foi alterado.
+4. **Álbum:** abas Figurinhas | Conquistas em `rael/index.html` (`#conquistas` abre direto) e
+   a frase falada também aparece escrita, para o modo sem fala. As configurações do adulto
+   listam as conquistas com data e progresso.
+5. **Verificação automatizada:** 250 testes (28 novos), `typecheck` e build passaram; o
+   precache inclui o módulo novo. No Chrome (Playwright): álbum, faixa e configurações em
+   360×800, 768×1024 e 1280×800 sem rolagem lateral; migração de estado v1 mostrando
+   3 conquistas deduzidas; um mapa normal jogado até o fim seguindo as dicas rendeu
+   Primeira garagem, Sinal verde e Construtor de pontes, com "e mais 2" avançando por toque
+   e "Ver meu álbum" abrindo a aba; console sem erros e rede sem 404.
+6. **Pendente com o Rael:** validar como está no critério 8 (moldura, silhuetas, toque para
+   ouvir e o efeito de `lab-eu-consigo` sobre o uso da dica).
+
+#### 9. Fora do escopo (para depois)
+
+- **Conquistas da Elis.** O módulo foi pensado para ser reaproveitado, mas o Mural de Conquistas
+  da Elis (`index.html`, `shared/progresso.js`) usa estrelas e outra chave. Uma tarefa futura
+  pode criar um catálogo próprio para ela (por exemplo: 3 estrelas em todos os mapas do
+  Labirinto de Aventuras, tabuada do 9 sem erro) — lá, mérito por desempenho faz sentido para
+  9 anos. Não misturar as chaves de armazenamento.
+- Figuras novas desenhadas para conquistas, troca de figurinhas entre aparelhos, sincronização.
+
+**Prompt para o executor**
+```
+Abra MELHORIAS.md e implemente a tarefa P15 (Álbum com Conquistas). Leia antes as seções 2.2,
+5.0 e 6 e a P14 (labirinto do Rael). Siga as guardas da tabela "Pode / Não pode" da P15: premiar
+feitos e quantidades acumuladas, nunca velocidade, erro, prazo ou sequência de dias. A figurinha
+comum da rodada continua vindo sempre. Comece pelo módulo puro shared/conquistas-descobertas.js
+e pelos testes; depois estado v2 com migração em shared/descobertas.js; depois as telas. Não
+altere Games/labirinto/jogo.js. Use só figuras já existentes em public/figuras/. Ao final rode
+npm test, npm run typecheck e npm run build (binários locais, regra 10), confira as páginas
+alteradas em 360, 768 e 1280 px, atualize a seção 5.0, o README e o status do MELHORIAS.md e
+escreva o resumo: o que mudou, como testou, o que precisa ser observado com o Rael.
+```
 
 ### 5.4 Ordem sugerida de entrega
 

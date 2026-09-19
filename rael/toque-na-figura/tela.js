@@ -22,6 +22,7 @@ import {
 } from '../../shared/fala.js';
 import { criarSessao, montarDesafios } from '../../shared/rodada.js';
 import { obterConfiguracoes, registrarRodada } from '../../shared/descobertas.js';
+import { anunciarConquistas } from '../../shared/conquistas-tela.js';
 import { caminhoDaFigura, figurasDoTema, nomeComArtigo, figura } from '../../shared/catalogo-figuras.js';
 
 const ATIVIDADE = 'toque-na-figura';
@@ -211,17 +212,19 @@ async function responder(idEscolhido) {
 // --- fim da rodada --------------------------------------------------------
 
 async function encerrar() {
-  const { figurinha } = registrarRodada(ATIVIDADE);
+  const { figurinha, conquistasNovas } = registrarRodada(ATIVIDADE);
   const dados = figura(figurinha);
   mostrarTela('fim');
   $('figurinha').src = caminhoDaFigura(figurinha);
   $('figurinha').alt = `Figurinha nova: ${dados ? dados.nome : figurinha}`;
   $('texto-fim').textContent = `Você ganhou uma figurinha: ${nomeComArtigo(figurinha)}!`;
+  const falasDaConquista = anunciarConquistas(conquistasNovas, { depoisDe: $('texto-fim'), dizer: dizerPista });
   tocar('vitoria');
   lancarConfete();
   await dizerPista([
     { texto: 'Você conseguiu!' },
     { texto: `Ganhou uma figurinha: ${nomeComArtigo(figurinha)}.` },
+    ...falasDaConquista,
   ]);
 }
 

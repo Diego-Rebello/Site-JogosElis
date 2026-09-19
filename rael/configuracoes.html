@@ -37,6 +37,18 @@
     .letra-opcao { display: grid; place-items: center; min-height: 56px; border: 2px solid var(--cor-secundaria);
                    border-radius: 12px; background: #fff; cursor: pointer; }
     .letra-opcao input { width: 22px; height: 22px; }
+    .conquistas-adulto { margin-top: 28px; text-align: left; }
+    .conquistas-adulto h2 { margin: 0 0 6px; color: var(--cor-texto-destaque); font-size: 1.35rem; }
+    .lista-conquistas { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+    .lista-conquistas li { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px;
+                           padding: 8px 10px; border: 2px solid var(--cor-secundaria); border-radius: 12px;
+                           background: #fff; font-family: var(--fonte-leitura); }
+    .lista-conquistas img { width: 40px; height: 40px; }
+    .lista-conquistas .falta img { filter: grayscale(1); opacity: 0.45; }
+    .lista-conquistas strong { display: block; }
+    .lista-conquistas small { color: var(--cor-suave); }
+    .lista-conquistas__estado { font-size: 0.9rem; text-align: right; color: var(--cor-suave); }
+    .lista-conquistas .ganha .lista-conquistas__estado { color: var(--cor-certo); font-weight: 700; }
   </style>
 </head>
 <body class="pagina">
@@ -113,6 +125,11 @@
         <div id="mensagem" class="feedback" aria-live="polite"></div>
       </form>
 
+      <section class="conquistas-adulto" aria-labelledby="titulo-conquistas">
+        <h2 id="titulo-conquistas">Conquistas do álbum</h2>
+        <p class="grupo__ajuda" id="resumo-conquistas-adulto"></p>
+        <ul class="lista-conquistas" id="lista-conquistas"></ul>
+      </section>
       <p class="privacidade">
         Tudo fica salvo só neste aparelho, separado das conquistas da Elis: zerar o álbum aqui
         não mexe no progresso dela, e "Zerar progresso" nas configurações dela não mexe no álbum daqui.
@@ -124,7 +141,7 @@
     import { montarCabecalho } from '../shared/cabecalho.js';
     montarCabecalho('Configurações do Rael');
 
-    import { ALFABETO, letrasIniciais, obterConfiguracoes, salvarConfiguracoes, zerarAlbum } from '../shared/descobertas.js';
+    import { ALFABETO, letrasIniciais, obterAlbum, obterConfiguracoes, salvarConfiguracoes, zerarAlbum } from '../shared/descobertas.js';
     import { TEMAS } from '../shared/catalogo-figuras.js';
     import { definirMudo, estaMudo, tocar } from '../shared/sons.js';
     import { definirPreferencia, falarSequencia, preparar } from '../shared/fala.js';
@@ -149,6 +166,24 @@
       areaLetras.querySelectorAll('input').forEach(input => { input.checked = escolhidas.has(input.value); });
     }
     marcarLetras(configuracoes.letras);
+
+    // Só leitura: o que o Rael já conquistou, quando, e o que falta para as outras.
+    function pintarConquistas() {
+      const album = obterAlbum();
+      const data = iso => new Date(iso).toLocaleDateString('pt-BR');
+      document.getElementById('resumo-conquistas-adulto').textContent =
+        `${album.conquistasGanhas} de ${album.totalConquistas} conquistas. Elas reconhecem feitos dentro das
+        brincadeiras e nunca se perdem; a figurinha comum de cada rodada continua vindo sempre.`;
+      document.getElementById('lista-conquistas').innerHTML = album.conquistas.map(conquista => `
+        <li class="${conquista.ganha ? 'ganha' : 'falta'}">
+          <img src="${conquista.figura}" alt="">
+          <span><strong>${conquista.nome}</strong><small>${conquista.comoGanhar}</small></span>
+          <span class="lista-conquistas__estado">${conquista.ganha
+            ? `✓ ${data(conquista.ganhaEm)}`
+            : conquista.meta > 1 ? `${conquista.progresso} de ${conquista.meta}` : 'Ainda não'}</span>
+        </li>`).join('');
+    }
+    pintarConquistas();
     document.getElementById('letras-iniciais').addEventListener('click', () => {
       marcarLetras(letrasIniciais(document.getElementById('nome').value));
     });
@@ -174,8 +209,9 @@
 
     document.getElementById('zerar').addEventListener('click', () => {
       tocar('clique');
-      if (!window.confirm('Quer mesmo apagar as figurinhas e as rodadas do Rael?')) return;
+      if (!window.confirm('Quer mesmo apagar as figurinhas, as conquistas e as rodadas do Rael?')) return;
       const apagou = zerarAlbum();
+      pintarConquistas();
       mensagem.textContent = apagou
         ? 'Álbum zerado. As configurações e o progresso da Elis continuam intactos.'
         : 'Não foi possível apagar o álbum neste navegador.';

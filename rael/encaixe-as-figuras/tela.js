@@ -16,6 +16,7 @@ import { tocar } from '../../shared/sons.js';
 import { lancarConfete } from '../../shared/confete.js';
 import { definirPreferencia, falarSequencia, limpar, modoAcompanhado, parar, preparar } from '../../shared/fala.js';
 import { nivelDaEtapa, obterConfiguracoes, registrarRodada } from '../../shared/descobertas.js';
+import { anunciarConquistas } from '../../shared/conquistas-tela.js';
 import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
 import { CENAS } from './dados.js';
 import { criarMontagem, montarCena, montarRodada } from './jogo.js';
@@ -306,17 +307,19 @@ function abrirRodada() {
 }
 
 async function encerrar() {
-  const { figurinha } = registrarRodada(ATIVIDADE);
+  const { figurinha, conquistasNovas } = registrarRodada(ATIVIDADE);
   const dados = figura(figurinha);
   mostrarTela('fim');
   $('figurinha').src = caminhoDaFigura(figurinha);
   $('figurinha').alt = `Figurinha nova: ${dados ? dados.nome : figurinha}`;
   $('texto-fim').textContent = `Você ganhou uma figurinha: ${nomeComArtigo(figurinha)}!`;
+  const falasDaConquista = anunciarConquistas(conquistasNovas, { depoisDe: $('texto-fim'), dizer: dizerPista });
   tocar('vitoria');
   lancarConfete();
   await dizerPista([
     { texto: 'Você montou tudo!' },
     { texto: `Ganhou uma figurinha: ${nomeComArtigo(figurinha)}.` },
+    ...falasDaConquista,
   ]);
 }
 

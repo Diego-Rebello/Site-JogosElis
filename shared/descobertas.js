@@ -7,9 +7,18 @@
  * jogos dela, "Zerar progresso" nas configurações dela não apaga o álbum dele,
  * e o contrário também vale.
  *
- * Aqui não existe estrela nem recorde de propósito (seção 6.0 do MELHORIAS):
- * cada rodada terminada rende uma figurinha, com ajuda ou sem ajuda.
+ * Aqui não existe estrela nem recorde de propósito (seção 5.0 do MELHORIAS):
+ * cada rodada terminada rende uma figurinha, com ajuda ou sem ajuda. Desde a
+ * P15 o álbum também tem conquistas, que reconhecem feitos dentro das
+ * brincadeiras; o catálogo e as regras delas ficam em conquistas-descobertas.js.
+ *
+ * Versão 2 do estado: `marcas` (o resumo acumulado dos feitos) e `conquistas`
+ * (`{ id: data em que foi ganha }`). Um estado da versão 1 continua valendo.
  */
+
+import {
+  CONQUISTAS, acumularFeitos, avaliarConquistas, limparMarcas, resumirConquista,
+} from './conquistas-descobertas.js';
 
 const CHAVE = 'jogos-elis:descobertas';
 
@@ -19,7 +28,7 @@ export const LABIRINTOS_VALIDOS = ['aventura', 'classico'];
 export const ALFABETO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 const PADRAO = Object.freeze({
-  versao: 1,
+  versao: 2,
   nome: 'Rael',
   alternativas: 3,
   tema: 'tudo',
@@ -104,7 +113,31 @@ export function obterEstado(armazenamento = armazenamentoPadrao()) {
     letras: normalizarLetras(salvo.letras, nome),
     atividades: salvo.atividades && typeof salvo.atividades === 'object' ? salvo.atividades : {},
     figurinhas: Array.isArray(salvo.figurinhas) ? salvo.figurinhas.filter(id => typeof id === 'string') : [],
+    marcas: limparMarcas(salvo.marcas),
+    conquistas: lerConquistas(salvo),
   };
+}
+
+function limparConquistas(conquistas) {
+  if (!conquistas || typeof conquistas !== 'object' || Array.isArray(conquistas)) return {};
+  return Object.fromEntries(Object.entries(conquistas).filter(([, data]) => typeof data === 'string'));
+}
+
+/**
+ * Um estado da versão 1 ainda não tem conquistas. Na primeira leitura ele
+ * ganha as que dá para deduzir das rodadas e das figurinhas, com a data de
+ * agora e sem festa: quem já brincou não começa a coleção do zero. Ids que o
+ * catálogo não conhece mais são mantidos; a tela só os ignora.
+ */
+function lerConquistas(salvo) {
+  if (Object.hasOwn(salvo, 'conquistas')) return limparConquistas(salvo.conquistas);
+  const contexto = {
+    atividades: salvo.atividades && typeof salvo.atividades === 'object' ? salvo.atividades : {},
+    marcas: limparMarcas(salvo.marcas),
+    figurinhas: Array.isArray(salvo.figurinhas) ? salvo.figurinhas.filter(id => typeof id === 'string') : [],
+  };
+  const agora = new Date().toISOString();
+  return Object.fromEntries(avaliarConquistas(contexto).map(conquista => [conquista.id, agora]));
 }
 
 /** As preferências do adulto, sem o progresso junto. */
@@ -145,8 +178,12 @@ export function proximaFigurinha(armazenamento = armazenamentoPadrao()) {
 /**
  * Guarda uma rodada concluída e entrega a figurinha. Sem acertos, sem erros e
  * sem estrelas: terminar já basta.
+ *
+ * `feitos` é opcional e diz o que aconteceu na rodada (hoje só o labirinto
+ * manda). A resposta traz `conquistasNovas`: as que esta rodada acabou de
+ * alcançar, prontas para a tela de fim celebrar.
  */
-export function registrarRodada(atividade, { figurinha } = {}, armazenamento = armazenamentoPadrao()) {
+export function registrarRodada(atividade, { figurinha, feitos } = {}, armazenamento = armazenamentoPadrao()) {
   const estado = obterEstado(armazenamento);
   const anterior = estado.atividades[atividade] || { rodadas: 0, ultimaEm: null };
   const premio = figurinha || proximaFigurinha(armazenamento);
@@ -157,8 +194,29 @@ export function registrarRodada(atividade, { figurinha } = {}, armazenamento = a
   };
   if (premio && !estado.figurinhas.includes(premio)) estado.figurinhas.push(premio);
 
+  estado.marcas = acumularFeitos(atividade, estado.marcas, feitos);
+  const contexto = contextoDe(estado);
+  const agora = new Date().toISOString();
+  const novas = avaliarConquistas(contexto, estado.conquistas);
+  novas.forEach(conquista => { estado.conquistas[conquista.id] = agora; });
+
   gravar(estado, armazenamento);
-  return { figurinha: premio, atividade: estado.atividades[atividade], figurinhas: [...estado.figurinhas] };
+  return {
+    figurinha: premio,
+    atividade: estado.atividades[atividade],
+    figurinhas: [...estado.figurinhas],
+    conquistasNovas: novas.map(conquista => resumirConquista(conquista, contexto, estado.conquistas)),
+  };
+}
+
+function contextoDe(estado) {
+  return { atividades: estado.atividades, marcas: estado.marcas, figurinhas: estado.figurinhas };
+}
+
+/** O catálogo inteiro com progresso e data, para o álbum e as configurações. */
+function conquistasDoEstado(estado) {
+  const contexto = contextoDe(estado);
+  return CONQUISTAS.map(conquista => resumirConquista(conquista, contexto, estado.conquistas));
 }
 
 /** O álbum para a página inicial da etapa. */
@@ -166,12 +224,21 @@ export function obterAlbum(armazenamento = armazenamentoPadrao()) {
   const estado = obterEstado(armazenamento);
   const rodadas = Object.values(estado.atividades)
     .reduce((total, item) => total + (Number(item?.rodadas) || 0), 0);
+  const conquistas = conquistasDoEstado(estado);
   return {
     figurinhas: estado.figurinhas,
     total: FIGURINHAS.length,
     rodadas,
     atividades: estado.atividades,
+    conquistas,
+    conquistasGanhas: conquistas.filter(conquista => conquista.ganha).length,
+    totalConquistas: conquistas.length,
   };
+}
+
+/** As conquistas de uma brincadeira, para a faixa da tela de convite. */
+export function conquistasDaAtividade(atividade, armazenamento = armazenamentoPadrao()) {
+  return conquistasDoEstado(obterEstado(armazenamento)).filter(conquista => conquista.atividade === atividade);
 }
 
 /**
@@ -191,10 +258,12 @@ export function rodadasDe(atividade, armazenamento = armazenamentoPadrao()) {
   return Number(obterEstado(armazenamento).atividades[atividade]?.rodadas) || 0;
 }
 
-/** Apaga só o álbum e as rodadas. As preferências do adulto continuam. */
+/** Apaga o álbum, as rodadas e as conquistas. As preferências do adulto continuam. */
 export function zerarAlbum(armazenamento = armazenamentoPadrao()) {
   const estado = obterEstado(armazenamento);
   estado.atividades = {};
   estado.figurinhas = [];
+  estado.marcas = {};
+  estado.conquistas = {};
   return gravar(estado, armazenamento);
 }

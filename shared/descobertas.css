@@ -672,3 +672,221 @@
 .mesa-letra { min-height: 76px; border: 3px solid var(--cor-secundaria); border-radius: 16px; background: #fff;
   color: var(--cor-texto-destaque); font-size: 2.4rem; cursor: pointer; }
 .exemplos-letra--mesa { min-height: 112px; margin-bottom: 18px; }
+
+/* --- Conquistas do álbum (P15) -------------------------------------------- */
+
+/* Ganha: figura colorida em moldura dourada. Falta: a mesma figura em
+   silhueta (o truque da sombra da P02) e moldura tracejada. Os dois estados
+   se distinguem pela forma, não só pela cor. */
+
+.conquistas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conquistas__item { display: grid; }
+
+.conquista {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 6px;
+  min-height: var(--toque, 64px);
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--cor-texto-destaque);
+  font-family: var(--fonte-corpo);
+  cursor: pointer;
+}
+
+.conquista:focus-visible { outline: 4px solid var(--cor-principal); outline-offset: 2px; }
+
+.conquista__moldura {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 5px solid #d9a21b;
+  background: radial-gradient(circle at 35% 30%, #fffbe6, #ffe28a);
+  box-shadow: 0 0 0 3px #fff3c4, 0 4px 0 #a8770c;
+  overflow: hidden;
+}
+
+.conquista__moldura img { width: 70%; height: 70%; }
+
+/* O brilho que passa pela moldura das conquistas ganhas. */
+.conquista--ganha .conquista__moldura::after,
+.conquista-nova .conquista__moldura::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.75) 50%, transparent 60%);
+  animation: conquista-brilho 3.5s ease-in-out infinite;
+}
+
+@keyframes conquista-brilho {
+  0%, 60% { transform: translateX(-60%); }
+  100% { transform: translateX(60%); }
+}
+
+.conquista--falta .conquista__moldura {
+  border: 4px dashed var(--cor-secundaria);
+  background: var(--cor-secundaria-clara);
+  box-shadow: none;
+}
+
+.conquista--falta .conquista__figura {
+  filter: brightness(0);
+  opacity: 0.22;
+}
+
+.conquista__nome {
+  font-size: 0.95rem;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.conquista__bolinhas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  max-width: 88px;
+}
+
+.conquista__bolinha {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--cor-secundaria);
+  background: #fff;
+}
+
+.conquista__bolinha--cheia {
+  background: #d9a21b;
+  border-color: #a8770c;
+}
+
+.conquista__conta {
+  font-family: var(--fonte-leitura);
+  font-size: 0.8rem;
+  color: var(--cor-suave);
+}
+
+.pagina-conquistas { margin-top: 18px; text-align: left; }
+
+.pagina-conquistas__titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--cor-texto-destaque);
+}
+
+.pagina-conquistas__titulo img { width: 36px; height: 36px; }
+
+/* Abas do álbum: Figurinhas | Conquistas. */
+.abas-album {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.aba-album {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--toque, 64px);
+  padding: 8px 18px;
+  border: 4px solid var(--cor-secundaria);
+  border-radius: 20px;
+  background: #fff;
+  color: var(--cor-texto-destaque);
+  font-family: var(--fonte-corpo);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.aba-album img { width: 40px; height: 40px; }
+
+.aba-album[aria-selected='true'] {
+  border-color: var(--cor-principal-profunda);
+  background: var(--cor-secundaria-clara);
+}
+
+/* Faixa do convite: uma linha que rola de lado dentro dela mesma, para não
+   empurrar o "Vamos brincar" para fora da tela no celular. */
+.faixa-conquistas {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 4px 8px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+.faixa-conquistas .conquistas__item { flex: 0 0 auto; scroll-snap-align: start; }
+/* Centraliza quando cabe e começa do início quando rola (margem automática). */
+.faixa-conquistas > :first-child { margin-left: auto; }
+.faixa-conquistas > :last-child { margin-right: auto; }
+.conquista--compacta { padding: 2px; gap: 0; }
+.conquista--compacta .conquista__moldura { width: 60px; height: 60px; border-width: 4px; }
+
+/* "Conquista nova!" na tela de fim. */
+.conquista-nova {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 4px solid #d9a21b;
+  border-radius: 24px;
+  background: #fff8dc;
+  animation: descobertas-chegar 0.6s ease-out 0.4s both;
+}
+
+.conquista-nova__titulo {
+  font-size: 1.35rem;
+  color: #8a5a00;
+}
+
+.conquista-nova__cartao {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: var(--toque, 64px);
+  padding: 4px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--cor-texto-destaque);
+  font-family: var(--fonte-corpo);
+  cursor: pointer;
+}
+
+.conquista__moldura--grande { width: 118px; height: 118px; border-width: 6px; }
+.conquista-nova__nome { font-size: 1.3rem; }
+
+.conquista-nova__mais {
+  font-family: var(--fonte-leitura);
+  font-weight: 700;
+  color: var(--cor-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conquista--ganha .conquista__moldura::after,
+  .conquista-nova .conquista__moldura::after { animation: none; display: none; }
+  .conquista-nova { animation: none; }
+}
