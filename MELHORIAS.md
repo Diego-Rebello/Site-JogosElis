@@ -1015,6 +1015,30 @@ a criança ganha uma figurinha comum e desbloqueia conquistas no álbum.
 5. **Pendente:** validação no navegador (mira, defesa, toque no tablet) e presencial com o Rael —
    principalmente a velocidade do goleiro, que é o que decide se o jogo fica fácil ou impossível.
 
+#### Modo goleiro (2026-09-19, mesma branch)
+
+Reaproveitando o campo, a bola e o motor já prontos, o jogo passou a começar por uma tela de
+escolha com três cartões grandes (ícones SVG próprios de chuteira e de luva):
+
+| Modo | O que acontece |
+|---|---|
+| **Chutar** (chuteira) | o de sempre: mira angular, chute e o goleiro do computador defendendo |
+| **Defender** (luva) | o Rael é o goleiro: as setas movem o goleiro pela boca do gol e o botão central vira **PULAR** (meio segundo de alcance maior, `ALCANCE_DO_MERGULHO`). O adversário se prepara, bate com mira sorteada (`anguloDoAdversario`) e a bola leva de 1,5 s a 1,0 s para chegar (`duracaoDoChuteAdversario`), encurtando a cada pênalti |
+| **Alternado** (chuteira + luva) | reveza começando por chutar: chute, defesa, chute, defesa, chute (`papelDaVez`) |
+
+Decisões desta parte:
+
+- **Defendendo, só o gol do adversário não conta** — bola na trave ou para fora entra como jogada
+  boa (`ehSucesso`), e nenhuma frase cobra o Rael (`mensagemDaDefesa`: "Que defesaça!",
+  "Na trave! Escapou!", "Passou por fora!", "Entrou! Vamos na próxima!").
+- **O placar mistura os dois papéis:** uma bola para cada gol, uma luva para cada defesa, tanto no
+  marcador quanto na contagem falada do fim (`historico` guarda papel e resultado de cada pênalti).
+- **`Math.random` continua fora do `jogo.js`:** a mira do adversário entra como um sorteio de 0 a 1.
+- **Brincar de novo volta para a escolha de modo**, não para o modo anterior.
+- 22 testes novos em `tests/chute-a-gol.test.js` (286 testes no total, 28 arquivos).
+- **Pendente:** validar com o Rael se defender no tablet é gostoso — o que se ajusta primeiro é
+  `PASSO_GOLEIRO`, `ALCANCE_DO_MERGULHO` e a base de `duracaoDoChuteAdversario`.
+
 ### 5.4 Ordem sugerida de entrega
 
 1. **P09 → P10.** Meu Nome e Conta Comigo não precisam de gravações nem de banco de dados,

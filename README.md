@@ -52,7 +52,7 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Começa com o Mesmo Som | `rael/comeca-com-o-mesmo-som/index.html` | Compare o começo de palavras faladas |
 | Letras para Explorar | `rael/letras-para-explorar/index.html` | Pareie, ouça e explore letras em caixa alta |
 | Meu Primeiro Labirinto | `rael/meu-primeiro-labirinto/index.html` | Explore mapas de 15×15, 20×20 ou 25×25 com semáforo, ponte, portão e desvios; os mapas clássicos continuam disponíveis |
-| Chute a Gol | `rael/chute-a-gol/index.html` | Cinco pênaltis: mire com as setas (ou A/D), espere o goleiro sair do caminho e chute (ou L) |
+| Chute a Gol | `rael/chute-a-gol/index.html` | Cinco pênaltis em três modos (chutar, defender ou alternado): mire e chute com as setas e o botão, ou vire goleiro e pule na bola |
 | Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, formato do labirinto, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras

@@ -18,6 +18,22 @@ import {
   moverNoCampo,
   resultadoDoChute,
   velocidadeDoGoleiro,
+  ALCANCE_DO_MERGULHO,
+  ANGULO_DO_ADVERSARIO,
+  DURACAO_MINIMA_DO_CHUTE,
+  MODOS,
+  PASSO_GOLEIRO,
+  alcanceDefensivo,
+  anguloDoAdversario,
+  duracaoDoChuteAdversario,
+  ehSucesso,
+  mensagemDaDefesa,
+  mensagemDoPapel,
+  moverGoleiroJogador,
+  papelDaVez,
+  resultadoDaDefesa,
+  resumoDaRodada,
+  tituloDoModo,
 } from '../rael/chute-a-gol/jogo.js';
 
 describe('Chute a Gol (P16) — motor portado do Football-game-in-HTML', () => {
@@ -155,5 +171,128 @@ describe('Chute a Gol (P16) — motor portado do Football-game-in-HTML', () => {
   it('a atividade chute-a-gol tem conquistas no catálogo', () => {
     const doChute = CONQUISTAS.filter(c => c.id.includes('chute-a-gol'));
     expect(doChute.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Chute a Gol — modos chutar, defender e alternado', () => {
+  it('MODOS tem os três jeitos de brincar do convite', () => {
+    expect(MODOS).toEqual(['chutar', 'defender', 'alternado']);
+  });
+
+  it('papelDaVez mantém o papel nos modos fixos', () => {
+    for (let i = 0; i < QUANTIDADE_DE_CHUTES; i++) {
+      expect(papelDaVez('chutar', i)).toBe('chutar');
+      expect(papelDaVez('defender', i)).toBe('defender');
+    }
+  });
+
+  it('papelDaVez reveza no alternado, começando por chutar', () => {
+    const papeis = Array.from({ length: QUANTIDADE_DE_CHUTES }, (_, i) => papelDaVez('alternado', i));
+    expect(papeis).toEqual(['chutar', 'defender', 'chutar', 'defender', 'chutar']);
+  });
+
+  it('papelDaVez trata índice inválido como o primeiro pênalti', () => {
+    expect(papelDaVez('alternado', undefined)).toBe('chutar');
+    expect(papelDaVez('alternado', -3)).toBe('chutar');
+  });
+
+  it('moverGoleiroJogador anda pela boca do gol e para nas traves', () => {
+    expect(moverGoleiroJogador(200, PASSO_GOLEIRO, 150, 250)).toBe(200 + PASSO_GOLEIRO);
+    expect(moverGoleiroJogador(200, -PASSO_GOLEIRO, 150, 250)).toBe(200 - PASSO_GOLEIRO);
+    expect(moverGoleiroJogador(155, -50, 150, 250)).toBe(150);
+    expect(moverGoleiroJogador(245, 50, 150, 250)).toBe(250);
+    expect(moverGoleiroJogador(300, 0, 250, 150)).toBe(250);
+  });
+
+  it('alcanceDefensivo cresce com o mergulho', () => {
+    expect(alcanceDefensivo(40)).toBe(20);
+    expect(alcanceDefensivo(40, true)).toBe(20 + ALCANCE_DO_MERGULHO);
+    expect(alcanceDefensivo(40, true, 10)).toBe(30);
+    expect(alcanceDefensivo(40, true, -10)).toBe(20);
+  });
+
+  const gol = { goalpostPos: 200, goalpostLargura: 100, goleiroLargura: 40 };
+
+  it('resultadoDaDefesa pega a bola quando o goleiro está no caminho', () => {
+    expect(resultadoDaDefesa({ ...gol, bolaX: 200, goleiroPos: 195 })).toBe('defesa');
+  });
+
+  it('resultadoDaDefesa deixa passar quando o goleiro está longe', () => {
+    expect(resultadoDaDefesa({ ...gol, bolaX: 240, goleiroPos: 170 })).toBe('gol');
+  });
+
+  it('resultadoDaDefesa alcança mais longe quando o goleiro pula', () => {
+    const lance = { ...gol, bolaX: 235, goleiroPos: 200 };
+    expect(resultadoDaDefesa({ ...lance })).toBe('gol');
+    expect(resultadoDaDefesa({ ...lance, mergulhando: true })).toBe('defesa');
+  });
+
+  it('resultadoDaDefesa devolve trave e fora sem depender do goleiro', () => {
+    expect(resultadoDaDefesa({ ...gol, bolaX: 155, goleiroPos: 200, traveLargura: 12 })).toBe('trave');
+    expect(resultadoDaDefesa({ ...gol, bolaX: 300, goleiroPos: 200 })).toBe('fora');
+  });
+
+  it('mensagemDaDefesa tem frase acolhedora para cada resultado', () => {
+    ['defesa', 'trave', 'fora', 'gol'].forEach(resultado => {
+      expect(mensagemDaDefesa(resultado).length).toBeGreaterThan(0);
+    });
+    expect(mensagemDaDefesa('defesa')).toBe('Que defesaça!');
+    expect(mensagemDaDefesa('gol')).not.toMatch(/errou|perdeu/i);
+  });
+
+  it('mensagemDoPapel escolhe a frase de quem chuta ou de quem defende', () => {
+    expect(mensagemDoPapel('chutar', 'gol')).toBe(mensagemDoResultado('gol'));
+    expect(mensagemDoPapel('defender', 'gol')).toBe(mensagemDaDefesa('gol'));
+  });
+
+  it('ehSucesso vale gol para quem chuta e tudo que não entrou para quem defende', () => {
+    expect(ehSucesso('chutar', 'gol')).toBe(true);
+    ['defesa', 'trave', 'fora'].forEach(r => expect(ehSucesso('chutar', r)).toBe(false));
+    expect(ehSucesso('defender', 'gol')).toBe(false);
+    ['defesa', 'trave', 'fora'].forEach(r => expect(ehSucesso('defender', r)).toBe(true));
+  });
+
+  it('anguloDoAdversario cobre a boca do gol sem passar dos limites da mira', () => {
+    expect(anguloDoAdversario(0)).toBe(-ANGULO_DO_ADVERSARIO);
+    expect(anguloDoAdversario(1)).toBe(ANGULO_DO_ADVERSARIO);
+    expect(anguloDoAdversario(0.5)).toBeCloseTo(0, 10);
+    for (let i = 0; i <= 20; i++) {
+      const angulo = anguloDoAdversario(i / 20);
+      expect(angulo).toBeGreaterThanOrEqual(ANGULO_MINIMO);
+      expect(angulo).toBeLessThanOrEqual(ANGULO_MAXIMO);
+    }
+    expect(anguloDoAdversario(9)).toBe(ANGULO_DO_ADVERSARIO);
+    expect(anguloDoAdversario(-9)).toBe(-ANGULO_DO_ADVERSARIO);
+  });
+
+  it('duracaoDoChuteAdversario dá tempo de reagir e nunca fica abaixo do piso', () => {
+    const tempos = Array.from({ length: QUANTIDADE_DE_CHUTES }, (_, i) => duracaoDoChuteAdversario(i));
+    tempos.forEach((tempo, i) => {
+      expect(tempo).toBeGreaterThanOrEqual(DURACAO_MINIMA_DO_CHUTE);
+      if (i > 0) expect(tempo).toBeLessThanOrEqual(tempos[i - 1]);
+    });
+    expect(duracaoDoChuteAdversario(0)).toBeGreaterThanOrEqual(DURACAO_DO_CHUTE);
+    expect(duracaoDoChuteAdversario(99)).toBe(DURACAO_MINIMA_DO_CHUTE);
+  });
+
+  it('tituloDoModo nomeia os três modos em pt-BR', () => {
+    expect(tituloDoModo('chutar')).toBe('Chutar');
+    expect(tituloDoModo('defender')).toBe('Defender');
+    expect(tituloDoModo('alternado')).toBe('Alternado');
+  });
+
+  it('resumoDaRodada conta o que interessa em cada modo', () => {
+    expect(resumoDaRodada({ modo: 'chutar', gols: 3 })).toBe('Você fez 3 de 5 pênaltis');
+    expect(resumoDaRodada({ modo: 'defender', defesas: 2 })).toBe('Você defendeu 2 de 5 pênaltis');
+    expect(resumoDaRodada({ modo: 'alternado', gols: 1, defesas: 1 }))
+      .toBe('Você fez 1 gol e defendeu 1 pênalti');
+    expect(resumoDaRodada({ modo: 'alternado', gols: 2, defesas: 2 }))
+      .toBe('Você fez 2 gols e defendeu 2 pênaltis');
+  });
+
+  it('constantes do modo goleiro', () => {
+    expect(PASSO_GOLEIRO).toBeGreaterThan(0);
+    expect(ALCANCE_DO_MERGULHO).toBeGreaterThan(0);
+    expect(ANGULO_DO_ADVERSARIO).toBeLessThan(ANGULO_MAXIMO);
   });
 });

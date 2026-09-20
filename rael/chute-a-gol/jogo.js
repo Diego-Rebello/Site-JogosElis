@@ -158,3 +158,134 @@ export function velocidadeDoGoleiro(chute = 0, base = 2.4, acrescimo = 0.35) {
   const n = Math.max(0, Number(chute) || 0);
   return base + n * acrescimo;
 }
+
+// --- Modo goleiro (P16b): chutar, defender ou alternado ---
+
+/** Os três modos do convite: bater pênalti, defender ou um de cada. */
+export const MODOS = ['chutar', 'defender', 'alternado'];
+
+/** Passo de cada toque nas setas quando o jogador é o goleiro, em px. */
+export const PASSO_GOLEIRO = 18;
+
+/** Quanto o mergulho estica o alcance do goleiro para cada lado, em px. */
+export const ALCANCE_DO_MERGULHO = 30;
+
+/** Quanto tempo o mergulho fica valendo, em ms. */
+export const DURACAO_DO_MERGULHO = 520;
+
+/** Tempo de preparo do adversário antes de bater, em ms. */
+export const ESPERA_DO_ADVERSARIO = 900;
+
+/** Abertura máxima da mira do adversário, em graus (cabe dentro da boca do gol). */
+export const ANGULO_DO_ADVERSARIO = 26;
+
+/** Piso da duração do chute do adversário, em ms. */
+export const DURACAO_MINIMA_DO_CHUTE = 1000;
+
+/**
+ * Qual papel o jogador tem no pênalti `indice` (contando do zero).
+ * No alternado começa chutando e vai revezando.
+ */
+export function papelDaVez(modo, indice = 0) {
+  const n = Math.max(0, Math.floor(Number(indice) || 0));
+  if (modo === 'defender') return 'defender';
+  if (modo === 'alternado') return n % 2 === 0 ? 'chutar' : 'defender';
+  return 'chutar';
+}
+
+/** Move o goleiro do jogador pela boca do gol, preso entre as traves. */
+export function moverGoleiroJogador(posicao, distancia, inicio, fim) {
+  const min = Math.min(inicio, fim);
+  const max = Math.max(inicio, fim);
+  const nova = (Number(posicao) || 0) + (Number(distancia) || 0);
+  return Math.max(min, Math.min(max, nova));
+}
+
+/** Alcance do goleiro para cada lado: meio corpo, mais o mergulho quando pulou. */
+export function alcanceDefensivo(goleiroLargura, mergulhando = false, extra = ALCANCE_DO_MERGULHO) {
+  const meia = Math.max(0, Number(goleiroLargura) || 0) * 0.5;
+  if (!mergulhando) return meia;
+  return meia + Math.max(0, Number(extra) || 0);
+}
+
+/**
+ * Resultado do pênalti do adversário, do ponto de vista de quem defende:
+ * 'fora', 'trave', 'defesa' ou 'gol' (gol do adversário).
+ */
+export function resultadoDaDefesa({
+  bolaX,
+  goalpostPos,
+  goalpostLargura,
+  goleiroPos,
+  goleiroLargura,
+  traveLargura = 0,
+  mergulhando = false,
+  alcanceExtra = ALCANCE_DO_MERGULHO,
+}) {
+  if (!ehGol(bolaX, goalpostPos, goalpostLargura)) return 'fora';
+  if (ehTrave(bolaX, goalpostPos, goalpostLargura, traveLargura)) return 'trave';
+  const alcance = alcanceDefensivo(goleiroLargura, mergulhando, alcanceExtra);
+  const distancia = Math.abs((Number(bolaX) || 0) - (Number(goleiroPos) || 0));
+  return distancia <= alcance ? 'defesa' : 'gol';
+}
+
+/** As frases de quem está no gol — nenhuma delas cobra o Rael. */
+export function mensagemDaDefesa(resultado) {
+  if (resultado === 'defesa') return 'Que defesaça!';
+  if (resultado === 'trave') return 'Na trave! Escapou!';
+  if (resultado === 'fora') return 'Passou por fora!';
+  return 'Entrou! Vamos na próxima!';
+}
+
+/** A frase certa para o papel do jogador naquele pênalti. */
+export function mensagemDoPapel(papel, resultado) {
+  return papel === 'defender' ? mensagemDaDefesa(resultado) : mensagemDoResultado(resultado);
+}
+
+/** Chutando, vale o gol; defendendo, vale tudo que não entrou. */
+export function ehSucesso(papel, resultado) {
+  if (papel === 'defender') return resultado !== 'gol';
+  return resultado === 'gol';
+}
+
+/**
+ * Mira do adversário a partir de um sorteio de 0 a 1 (o `Math.random` fica na tela,
+ * para `jogo.js` seguir sendo puro e testável).
+ */
+export function anguloDoAdversario(sorteio, limite = ANGULO_DO_ADVERSARIO) {
+  const s = Math.min(1, Math.max(0, Number(sorteio) || 0));
+  const lim = Math.abs(Number(limite) || 0);
+  return -lim + s * 2 * lim;
+}
+
+/** O adversário bate um pouco mais forte a cada pênalti, sem passar do piso. */
+export function duracaoDoChuteAdversario(
+  indice = 0,
+  base = 1500,
+  reducao = 120,
+  minimo = DURACAO_MINIMA_DO_CHUTE,
+) {
+  const n = Math.max(0, Number(indice) || 0);
+  return Math.max(minimo, base - n * reducao);
+}
+
+/** Nome do modo para a tela e para a fala. */
+export function tituloDoModo(modo) {
+  if (modo === 'defender') return 'Defender';
+  if (modo === 'alternado') return 'Alternado';
+  return 'Chutar';
+}
+
+/** Resumo da rodada para a tela do fim, conforme o modo escolhido. */
+export function resumoDaRodada({ modo, gols = 0, defesas = 0, total = QUANTIDADE_DE_CHUTES }) {
+  const g = Math.max(0, Number(gols) || 0);
+  const d = Math.max(0, Number(defesas) || 0);
+  const n = Math.max(0, Number(total) || 0);
+  if (modo === 'defender') {
+    return `Você defendeu ${d} de ${n} pênaltis`;
+  }
+  if (modo === 'alternado') {
+    return `Você fez ${g} ${g === 1 ? 'gol' : 'gols'} e defendeu ${d} ${d === 1 ? 'pênalti' : 'pênaltis'}`;
+  }
+  return `Você fez ${g} de ${n} pênaltis`;
+}

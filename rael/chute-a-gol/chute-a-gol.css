@@ -425,6 +425,7 @@
 /* Marcador estilo placar digital */
 .marcador {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--espaco-s, 8px);
@@ -509,3 +510,174 @@
   transform: scale(1.15);
 }
 
+
+/* --- Escolha do modo: chutar, defender ou alternado --- */
+
+.icones-modo-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.modos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espaco-m, 16px);
+  margin-top: var(--espaco-m, 16px);
+}
+
+.modo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 164px;
+  min-height: 188px;
+  padding: 14px 12px;
+  background: #ffffff;
+  color: #14212e;
+  border: 3px solid #c8102e;
+  border-radius: var(--raio-m, 14px);
+  box-shadow: 0 5px 0 #7b091a, 0 8px 16px rgba(200, 16, 46, 0.25);
+}
+
+.modo:hover {
+  background: #fff3f4;
+}
+
+.modo:active {
+  box-shadow: 0 1px 0 #7b091a;
+  transform: translateY(4px);
+}
+
+.modo__icones {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  height: 80px;
+}
+
+.modo__icone {
+  width: 100px;
+  height: 70px;
+}
+
+.modo__icone--luva {
+  width: 62px;
+  height: 76px;
+}
+
+.modo__icone--par {
+  width: 68px;
+  height: 48px;
+}
+
+.modo__icone--par.modo__icone--luva {
+  width: 44px;
+  height: 56px;
+}
+
+.modo__nome {
+  font-family: var(--fonte-titulo, system-ui, sans-serif);
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.modo__dica {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.8;
+  text-align: center;
+  line-height: 1.2;
+}
+
+@media (max-width: 480px) {
+  .modos {
+    gap: var(--espaco-s, 8px);
+  }
+  .modo {
+    min-width: 152px;
+    min-height: 172px;
+  }
+}
+
+/* Selo do papel: linha própria no alto do marcador, para caber em 360 px */
+.marcador__papel {
+  flex: 1 0 100%;
+  order: -1;
+  justify-content: center;
+  margin-bottom: 2px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffd000;
+  white-space: nowrap;
+}
+
+/* Adversário: o mesmo batedor, só que com o uniforme de outro time */
+#striker.adversario .uniforme {
+  fill: #1f3fa8;
+}
+
+#striker.adversario .uniforme-traco {
+  stroke: #ffffff;
+}
+
+#striker.preparando {
+  animation: preparo-adversario 0.9s ease-in-out infinite;
+}
+
+@keyframes preparo-adversario {
+  0%, 100% { transform: translateX(-50%) rotate(0deg); }
+  50% { transform: translateX(-50%) rotate(-7deg) scale(1.04); }
+}
+
+/* Goleiro conduzido pelo Rael: base brilhante para achar na hora */
+#goalkeeper.do-jogador::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 208, 0, 0.95), rgba(255, 208, 0, 0));
+  animation: brilho-goleiro 1.1s ease-in-out infinite;
+}
+
+@keyframes brilho-goleiro {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* Mergulho: meio segundo de braços esticados, com mais alcance */
+#goalkeeper.mergulhando {
+  transition: transform 0.12s ease-out;
+}
+
+#goalkeeper.mergulhando--esq {
+  transform: translateX(-50%) rotate(-26deg) scale(1.16);
+}
+
+#goalkeeper.mergulhando--dir {
+  transform: translateX(-50%) rotate(26deg) scale(1.16);
+}
+
+/* Luvas contadas na tela do fim */
+.bolas-fim__luva {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #striker.preparando,
+  #goalkeeper.do-jogador::after,
+  #goalkeeper.mergulhando {
+    animation-duration: 0.01ms;
+    transition-duration: 0.01ms;
+  }
+}
