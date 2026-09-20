@@ -17,6 +17,8 @@
  * - alem do teclado, da para jogar no toque (botoes ◀ CHUTAR ▶), porque o jogo
  *   roda no tablet;
  * - sao 5 penaltis, com placar, fala e a figurinha do album no fim;
+ * - no fim a tela mostra o placar da disputa contando so os gols: os que o
+ *   jogador fez de um lado, os que passaram por ele no gol do outro;
  * - tres modos no inicio: chutar, defender (o Rael vira goleiro) ou alternado.
  */
 import { montarCabecalho } from '../../shared/cabecalho.js';
@@ -42,15 +44,22 @@ import {
   ajustarAngulo,
   anguloDoAdversario,
   calcularImpactoNoGol,
+  desfechoDaRodada,
   duracaoDoChuteAdversario,
   ehSucesso,
   mensagemDoPapel,
   moverGoleiro,
   moverGoleiroJogador,
+  nomeDoAdversario,
+  ordemDoPapel,
   papelDaVez,
+  penaltisDoModo,
+  placarDaRodada,
   resultadoDaDefesa,
   resultadoDoChute,
   resumoDaRodada,
+  textoDoDesfecho,
+  tituloDoDesfecho,
   velocidadeDoGoleiro,
 } from './jogo.js';
 
@@ -81,6 +90,7 @@ montarCabecalho('Chute a Gol');
 
 let modo = 'chutar';
 let papel = 'chutar';
+let totalDePenaltis = QUANTIDADE_DE_CHUTES;
 let chute = 0;
 let gols = 0;
 let defesas = 0;
@@ -243,7 +253,7 @@ function penaltiDoAdversario() {
     const { origemX, distanciaY } = geometriaDoChute();
     const angulo = anguloDoAdversario(Math.random());
     const impactoX = calcularImpactoNoGol({ origemX, distanciaY, anguloGraus: angulo });
-    const duracao = duracaoDoChuteAdversario(chute);
+    const duracao = duracaoDoChuteAdversario(ordemDoPapel(modo, chute));
 
     striker.style.setProperty('--inclinacao-batedor', `${angulo * 0.45}deg`);
     football.style.setProperty('--chute-x', `${impactoX - origemX}px`);
@@ -355,7 +365,7 @@ function animarGoleiro() {
     }
   }
 
-  const velocidade = velocidadeDoGoleiro(chute) * velocidadeExtra;
+  const velocidade = velocidadeDoGoleiro(ordemDoPapel(modo, chute)) * velocidadeExtra;
 
   const passo = moverGoleiro({
     posicao: posAtual,
@@ -453,7 +463,7 @@ function aplicarPapel() {
 // --- Rodada ---
 
 function pintarPlacar() {
-  const marcas = Array.from({ length: QUANTIDADE_DE_CHUTES }, (_, i) => {
+  const marcas = Array.from({ length: totalDePenaltis }, (_, i) => {
     const lance = historico[i];
     if (!lance) return '·';
     if (!lance.sucesso) return '·';
@@ -461,7 +471,7 @@ function pintarPlacar() {
   });
   const sucessos = historico.filter(lance => lance.sucesso).length;
   $('placar').textContent = marcas.join('');
-  $('placar').setAttribute('aria-label', `${sucessos} de ${QUANTIDADE_DE_CHUTES} jogadas boas`);
+  $('placar').setAttribute('aria-label', `${sucessos} de ${totalDePenaltis} jogadas boas`);
 }
 
 function recolocarBola() {
@@ -489,7 +499,7 @@ function iniciarPenalti() {
   aplicarPapel();
   recolocarBola();
   goalMessage.textContent = '';
-  $('chute-atual').textContent = `Pênalti ${chute + 1} de ${QUANTIDADE_DE_CHUTES}`;
+  $('chute-atual').textContent = `Pênalti ${chute + 1} de ${totalDePenaltis}`;
   pintarPlacar();
 
   if (papel === 'defender') {
@@ -505,7 +515,7 @@ function iniciarPenalti() {
 
 function proximoChute() {
   chute++;
-  if (chute >= QUANTIDADE_DE_CHUTES) {
+  if (chute >= totalDePenaltis) {
     encerrar();
     return;
   }
@@ -518,6 +528,7 @@ function abrirRodada(escolha) {
   }
   limparTempos();
   modo = escolha || 'chutar';
+  totalDePenaltis = penaltisDoModo(modo);
   chute = 0;
   gols = 0;
   defesas = 0;
@@ -560,10 +571,24 @@ function marcadorDoLance(lance) {
   `;
 }
 
-function tituloDaConclusao(sucessos) {
-  if (modo === 'defender') return defesas > 0 ? 'Muralha do Furacão!' : 'Quase, goleirão!';
-  if (modo === 'alternado') return sucessos > 0 ? 'Craque completo!' : 'Quase, Furacão!';
-  return gols > 0 ? 'Festa no Caldeirão!' : 'Quase, Furacão!';
+/** Pinta o placar da disputa na tela do fim e devolve o desfecho da rodada. */
+function pintarPlacarDoFim() {
+  const placar = placarDaRodada({ modo, gols, defesas, total: totalDePenaltis });
+  const desfecho = desfechoDaRodada(placar);
+  const rival = nomeDoAdversario(modo);
+
+  $('placar-fim-jogador').textContent = String(placar.jogador);
+  $('placar-fim-adversario').textContent = String(placar.adversario);
+  $('placar-fim-rival').textContent = rival;
+  $('placar-fim').setAttribute(
+    'aria-label',
+    `Placar da disputa: você ${placar.jogador}, ${rival.toLowerCase()} ${placar.adversario}`,
+  );
+
+  const frase = textoDoDesfecho(desfecho, placar, modo);
+  $('desfecho-fim').textContent = frase;
+
+  return { placar, desfecho, frase };
 }
 
 async function encerrar() {
@@ -577,7 +602,8 @@ async function encerrar() {
   mostrarTela('fim');
 
   const sucessos = historico.filter(lance => lance.sucesso).length;
-  $('titulo-fim').textContent = tituloDaConclusao(sucessos);
+  const { desfecho, frase: fraseDoPlacar } = pintarPlacarDoFim();
+  $('titulo-fim').textContent = tituloDoDesfecho(desfecho, modo);
 
   const bolas = $('bolas-fim');
   bolas.innerHTML = historico.map(marcadorDoLance).join('');
@@ -586,7 +612,7 @@ async function encerrar() {
     .map((lance, i) => (lance.sucesso ? i : -1))
     .filter(i => i >= 0);
 
-  const numeros = ['um', 'dois', 'três', 'quatro', 'cinco'];
+  const numeros = ['um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez'];
   const convite = {
     chutar: 'Vamos contar os gols do Furacão!',
     defender: 'Vamos contar as defesas do Furacão!',
@@ -637,6 +663,7 @@ async function encerrar() {
   };
 
   await dizer([
+    { texto: fraseDoPlacar },
     { texto: `Ganhou uma figurinha: ${nomeComArtigo(premio)}.` },
     { texto: elogio[modo] || elogio.chutar },
     ...falasDaConquista,

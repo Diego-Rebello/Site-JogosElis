@@ -193,6 +193,27 @@ export function papelDaVez(modo, indice = 0) {
   return 'chutar';
 }
 
+/**
+ * Quantos pênaltis tem a rodada em cada modo.
+ * No alternado sao QUANTIDADE_DE_CHUTES de cada papel, entao a rodada dobra:
+ * 5 chutes e 5 defesas.
+ */
+export function penaltisDoModo(modo, porPapel = QUANTIDADE_DE_CHUTES) {
+  const n = Math.max(0, Number(porPapel) || 0);
+  return modo === 'alternado' ? n * 2 : n;
+}
+
+/**
+ * Qual e a vez do jogador *dentro do papel* daquele penalti (contando do zero).
+ * No alternado os indices 0, 2, 4... sao o 1o, 2o, 3o chute; 1, 3, 5... as defesas.
+ * E disso que saem a velocidade do goleiro e a forca do adversario, para a
+ * dificuldade subir igual nos tres modos.
+ */
+export function ordemDoPapel(modo, indice = 0) {
+  const n = Math.max(0, Math.floor(Number(indice) || 0));
+  return modo === 'alternado' ? Math.floor(n / 2) : n;
+}
+
 /** Move o goleiro do jogador pela boca do gol, preso entre as traves. */
 export function moverGoleiroJogador(posicao, distancia, inicio, fim) {
   const min = Math.min(inicio, fim);
@@ -285,7 +306,65 @@ export function resumoDaRodada({ modo, gols = 0, defesas = 0, total = QUANTIDADE
     return `Você defendeu ${d} de ${n} pênaltis`;
   }
   if (modo === 'alternado') {
-    return `Você fez ${g} ${g === 1 ? 'gol' : 'gols'} e defendeu ${d} ${d === 1 ? 'pênalti' : 'pênaltis'}`;
+    return `Você fez ${g} de ${n} ${n === 1 ? 'gol' : 'gols'} e defendeu ${d} de ${n} ${n === 1 ? 'pênalti' : 'pênaltis'}`;
   }
   return `Você fez ${g} de ${n} pênaltis`;
+}
+
+/**
+ * Placar da disputa, contando so o que entrou no gol.
+ * No alternado os dois lados batem 5: o jogador marca os gols dele e o
+ * adversario marca os penaltis que passaram pelo goleiro (os que o jogador nao
+ * defendeu). Nos modos de um papel so, o outro lado nunca chuta ou nunca
+ * defende, entao ali o placar e o duelo do penalti: gol do jogador de um lado,
+ * penalti que nao virou gol do outro.
+ */
+export function placarDaRodada({ modo, gols = 0, defesas = 0, total } = {}) {
+  const n = Math.max(0, Math.floor(Number(total ?? penaltisDoModo(modo)) || 0));
+  const porPapel = modo === 'alternado' ? Math.floor(n / 2) : n;
+  const g = Math.min(porPapel, Math.max(0, Math.floor(Number(gols) || 0)));
+  const d = Math.min(porPapel, Math.max(0, Math.floor(Number(defesas) || 0)));
+
+  if (modo === 'alternado') return { jogador: g, adversario: porPapel - d };
+  if (modo === 'defender') return { jogador: d, adversario: n - d };
+  return { jogador: g, adversario: n - g };
+}
+
+/** Quem levou a rodada: 'vitoria', 'empate' ou 'derrota' (do lado do jogador). */
+export function desfechoDaRodada({ jogador = 0, adversario = 0 } = {}) {
+  const meu = Number(jogador) || 0;
+  const dele = Number(adversario) || 0;
+  if (meu > dele) return 'vitoria';
+  if (meu < dele) return 'derrota';
+  return 'empate';
+}
+
+/** Quem esta do outro lado em cada modo. */
+export function nomeDoAdversario(modo) {
+  if (modo === 'chutar') return 'Goleiro';
+  if (modo === 'defender') return 'Batedor';
+  return 'Adversário';
+}
+
+/** Titulo da tela do fim: comemora a vitoria, acolhe o empate e a derrota. */
+export function tituloDoDesfecho(desfecho, modo) {
+  if (desfecho === 'vitoria') {
+    if (modo === 'defender') return 'Muralha do Furacão!';
+    if (modo === 'alternado') return 'Craque completo!';
+    return 'Festa no Caldeirão!';
+  }
+  if (desfecho === 'empate') return 'Empate no Caldeirão!';
+  return 'Quase, Furacão!';
+}
+
+/** A frase do placar, sempre convidando para a próxima — nunca cobrando. */
+export function textoDoDesfecho(desfecho, { jogador = 0, adversario = 0 } = {}, modo) {
+  const rival = nomeDoAdversario(modo).toLowerCase();
+  if (desfecho === 'vitoria') {
+    return `Você ganhou do ${rival} por ${jogador} a ${adversario}!`;
+  }
+  if (desfecho === 'empate') {
+    return `Empate com o ${rival}: ${jogador} a ${adversario}!`;
+  }
+  return `O ${rival} ganhou por ${adversario} a ${jogador}. Bora jogar de novo!`;
 }

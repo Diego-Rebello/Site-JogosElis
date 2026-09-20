@@ -27,12 +27,19 @@ import {
   anguloDoAdversario,
   duracaoDoChuteAdversario,
   ehSucesso,
+  desfechoDaRodada,
   mensagemDaDefesa,
   mensagemDoPapel,
   moverGoleiroJogador,
+  nomeDoAdversario,
+  ordemDoPapel,
   papelDaVez,
+  penaltisDoModo,
+  placarDaRodada,
   resultadoDaDefesa,
   resumoDaRodada,
+  textoDoDesfecho,
+  tituloDoDesfecho,
   tituloDoModo,
 } from '../rael/chute-a-gol/jogo.js';
 
@@ -187,8 +194,37 @@ describe('Chute a Gol — modos chutar, defender e alternado', () => {
   });
 
   it('papelDaVez reveza no alternado, começando por chutar', () => {
-    const papeis = Array.from({ length: QUANTIDADE_DE_CHUTES }, (_, i) => papelDaVez('alternado', i));
-    expect(papeis).toEqual(['chutar', 'defender', 'chutar', 'defender', 'chutar']);
+    const papeis = Array.from({ length: penaltisDoModo('alternado') }, (_, i) => papelDaVez('alternado', i));
+    expect(papeis).toEqual([
+      'chutar', 'defender', 'chutar', 'defender', 'chutar',
+      'defender', 'chutar', 'defender', 'chutar', 'defender',
+    ]);
+  });
+
+  it('penaltisDoModo dobra a rodada no alternado', () => {
+    expect(penaltisDoModo('chutar')).toBe(QUANTIDADE_DE_CHUTES);
+    expect(penaltisDoModo('defender')).toBe(QUANTIDADE_DE_CHUTES);
+    expect(penaltisDoModo('alternado')).toBe(QUANTIDADE_DE_CHUTES * 2);
+  });
+
+  it('o alternado dá 5 chutes e 5 defesas', () => {
+    const papeis = Array.from({ length: penaltisDoModo('alternado') }, (_, i) => papelDaVez('alternado', i));
+    expect(papeis.filter(p => p === 'chutar')).toHaveLength(QUANTIDADE_DE_CHUTES);
+    expect(papeis.filter(p => p === 'defender')).toHaveLength(QUANTIDADE_DE_CHUTES);
+  });
+
+  it('ordemDoPapel numera cada papel de 0 a 4 no alternado', () => {
+    const chutes = [0, 2, 4, 6, 8].map(i => ordemDoPapel('alternado', i));
+    const defesas = [1, 3, 5, 7, 9].map(i => ordemDoPapel('alternado', i));
+    expect(chutes).toEqual([0, 1, 2, 3, 4]);
+    expect(defesas).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it('ordemDoPapel segue o índice nos modos fixos', () => {
+    for (let i = 0; i < QUANTIDADE_DE_CHUTES; i++) {
+      expect(ordemDoPapel('chutar', i)).toBe(i);
+      expect(ordemDoPapel('defender', i)).toBe(i);
+    }
   });
 
   it('papelDaVez trata índice inválido como o primeiro pênalti', () => {
@@ -285,9 +321,90 @@ describe('Chute a Gol — modos chutar, defender e alternado', () => {
     expect(resumoDaRodada({ modo: 'chutar', gols: 3 })).toBe('Você fez 3 de 5 pênaltis');
     expect(resumoDaRodada({ modo: 'defender', defesas: 2 })).toBe('Você defendeu 2 de 5 pênaltis');
     expect(resumoDaRodada({ modo: 'alternado', gols: 1, defesas: 1 }))
-      .toBe('Você fez 1 gol e defendeu 1 pênalti');
-    expect(resumoDaRodada({ modo: 'alternado', gols: 2, defesas: 2 }))
-      .toBe('Você fez 2 gols e defendeu 2 pênaltis');
+      .toBe('Você fez 1 de 5 gols e defendeu 1 de 5 pênaltis');
+    expect(resumoDaRodada({ modo: 'alternado', gols: 5, defesas: 4 }))
+      .toBe('Você fez 5 de 5 gols e defendeu 4 de 5 pênaltis');
+  });
+
+  it('no alternado o placar é gol contra gol: os seus e os que passaram', () => {
+    expect(placarDaRodada({ modo: 'alternado', gols: 3, defesas: 4 }))
+      .toEqual({ jogador: 3, adversario: 1 });
+    expect(placarDaRodada({ modo: 'alternado', gols: 5, defesas: 5 }))
+      .toEqual({ jogador: 5, adversario: 0 });
+    expect(placarDaRodada({ modo: 'alternado', gols: 0, defesas: 0 }))
+      .toEqual({ jogador: 0, adversario: 5 });
+  });
+
+  it('nos modos de um papel só, o placar é o duelo do pênalti', () => {
+    expect(placarDaRodada({ modo: 'chutar', gols: 3 })).toEqual({ jogador: 3, adversario: 2 });
+    expect(placarDaRodada({ modo: 'defender', defesas: 1 })).toEqual({ jogador: 1, adversario: 4 });
+  });
+
+  it('placarDaRodada nunca passa dos pênaltis batidos por cada lado', () => {
+    MODOS.forEach(modo => {
+      const total = penaltisDoModo(modo);
+      const porPapel = modo === 'alternado' ? total / 2 : total;
+      for (let gols = 0; gols <= QUANTIDADE_DE_CHUTES + 2; gols++) {
+        for (let defesas = 0; defesas <= QUANTIDADE_DE_CHUTES + 2; defesas++) {
+          const placar = placarDaRodada({ modo, gols, defesas, total });
+          expect(placar.jogador).toBeGreaterThanOrEqual(0);
+          expect(placar.adversario).toBeGreaterThanOrEqual(0);
+          expect(placar.jogador).toBeLessThanOrEqual(porPapel);
+          expect(placar.adversario).toBeLessThanOrEqual(porPapel);
+        }
+      }
+    });
+  });
+
+  it('placarDaRodada ignora o que não pertence ao modo', () => {
+    expect(placarDaRodada({ modo: 'chutar', gols: 2, defesas: 5 })).toEqual({ jogador: 2, adversario: 3 });
+    expect(placarDaRodada({ modo: 'defender', gols: 5, defesas: 2 })).toEqual({ jogador: 2, adversario: 3 });
+  });
+
+  it('desfechoDaRodada compara o placar do jogador com o do adversário', () => {
+    expect(desfechoDaRodada({ jogador: 3, adversario: 2 })).toBe('vitoria');
+    expect(desfechoDaRodada({ jogador: 2, adversario: 3 })).toBe('derrota');
+    expect(desfechoDaRodada({ jogador: 5, adversario: 5 })).toBe('empate');
+    expect(desfechoDaRodada()).toBe('empate');
+  });
+
+  it('a rodada é ganha com mais da metade dos pênaltis', () => {
+    const vencer = (modo, gols, defesas) =>
+      desfechoDaRodada(placarDaRodada({ modo, gols, defesas }));
+    expect(vencer('chutar', 3, 0)).toBe('vitoria');
+    expect(vencer('chutar', 2, 0)).toBe('derrota');
+    expect(vencer('defender', 0, 3)).toBe('vitoria');
+    expect(vencer('defender', 0, 2)).toBe('derrota');
+    expect(vencer('alternado', 3, 3)).toBe('vitoria');
+    expect(vencer('alternado', 3, 2)).toBe('empate');
+    expect(vencer('alternado', 2, 2)).toBe('derrota');
+    // 3 gols contra 5 menos 4 defesas: 3 a 1 para o Furacão.
+    expect(vencer('alternado', 3, 4)).toBe('vitoria');
+  });
+
+  it('nomeDoAdversario diz quem está do outro lado em cada modo', () => {
+    expect(nomeDoAdversario('chutar')).toBe('Goleiro');
+    expect(nomeDoAdversario('defender')).toBe('Batedor');
+    expect(nomeDoAdversario('alternado')).toBe('Adversário');
+  });
+
+  it('tituloDoDesfecho comemora a vitória e acolhe empate e derrota', () => {
+    expect(tituloDoDesfecho('vitoria', 'chutar')).toBe('Festa no Caldeirão!');
+    expect(tituloDoDesfecho('vitoria', 'defender')).toBe('Muralha do Furacão!');
+    expect(tituloDoDesfecho('vitoria', 'alternado')).toBe('Craque completo!');
+    MODOS.forEach(modo => {
+      expect(tituloDoDesfecho('empate', modo)).toBe('Empate no Caldeirão!');
+      expect(tituloDoDesfecho('derrota', modo)).toBe('Quase, Furacão!');
+    });
+  });
+
+  it('textoDoDesfecho anuncia o placar sem cobrar a criança', () => {
+    expect(textoDoDesfecho('vitoria', { jogador: 3, adversario: 2 }, 'chutar'))
+      .toBe('Você ganhou do goleiro por 3 a 2!');
+    expect(textoDoDesfecho('empate', { jogador: 5, adversario: 5 }, 'alternado'))
+      .toBe('Empate com o adversário: 5 a 5!');
+    expect(textoDoDesfecho('derrota', { jogador: 2, adversario: 3 }, 'defender'))
+      .toBe('O batedor ganhou por 3 a 2. Bora jogar de novo!');
   });
 
   it('constantes do modo goleiro', () => {
