@@ -52,6 +52,7 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Começa com o Mesmo Som | `rael/comeca-com-o-mesmo-som/index.html` | Compare o começo de palavras faladas |
 | Letras para Explorar | `rael/letras-para-explorar/index.html` | Pareie, ouça e explore letras em caixa alta |
 | Meu Primeiro Labirinto | `rael/meu-primeiro-labirinto/index.html` | Explore mapas de 15×15, 20×20 ou 25×25 com semáforo, ponte, portão e desvios; os mapas clássicos continuam disponíveis |
+| Chute a Gol | `rael/chute-a-gol/index.html` | Cinco pênaltis: mire com as setas (ou A/D), espere o goleiro sair do caminho e chute (ou L) |
 | Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, formato do labirinto, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras
@@ -110,7 +111,8 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── toque-na-figura/             index.html + tela.js
 │   ├── encaixe-as-figuras/          index.html + dados.js + jogo.js + tela.js
 │   ├── palmas-nas-palavras/         index.html + dados.js + jogo.js + tela.js
-│   └── meu-primeiro-labirinto/      Tela infantil; reutiliza Games/labirinto/jogo.js
+│   ├── meu-primeiro-labirinto/      Tela infantil; reutiliza Games/labirinto/jogo.js
+│   └── chute-a-gol/                 index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
 └── Games/
     ├── forca/                       index.html + jogo.js
     ├── m-ou-n/                      index.html + jogo.js
@@ -426,6 +428,27 @@ manter a otimização “Pretty URLs” desligada para o preview corresponder ao
 
 O plano de melhorias técnicas e a lista de jogos novos estão em [MELHORIAS.md](MELHORIAS.md).
 Cada tarefa lá tem passos, critérios de aceite e um prompt pronto para ser executado.
+
+---
+
+## Créditos de terceiros
+
+**Chute a Gol** (`rael/chute-a-gol/`) é portado do
+[Football-game-in-HTML](https://github.com/hackingstar124/Football-game-in-HTML), de
+hackingstar124, sob a licença Apache 2.0. A cópia da licença está em
+`rael/chute-a-gol/LICENSE-Football-game-in-HTML.txt` e cada arquivo portado traz o aviso no
+topo. Do original vêm o campo, os elementos (`#field`, `#goalpost`, `#striker`, `#football`,
+`#goalkeeper`, `#goal-message`), as funções (`moveStriker`, `moveFootball`, `shootBall`,
+`checkGoal`, `displayGoalMessage`), o `@keyframes shoot` e as teclas **A**, **D** e **L**.
+
+Correções e acréscimos feitos no porte:
+
+- os caminhos `F:\Penalty\...` viraram caminhos relativos;
+- o `setInterval` do goleiro lia `footballPos` sem declarar (quebrava a cada 25 ms): o goleiro
+  agora vai e volta pela boca do gol, que é o que o `@keyframes goalkeeperMove` fazia de fato;
+- o `checkGoal` ignorava o goleiro; agora a defesa conta;
+- controles por toque (◀ CHUTAR ▶), além do teclado, porque o jogo roda no tablet;
+- cinco pênaltis, placar, fala em pt-BR e a figurinha do álbum no fim.
 
 ---
 

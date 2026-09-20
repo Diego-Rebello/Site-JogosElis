@@ -9,7 +9,9 @@
 > [MELHORIAS-historico.md](MELHORIAS-historico.md).** Consulte lá se uma tarefa nova precisar
 > entender uma decisão do passado; este arquivo só traz o que ainda falta.
 >
-> Atualizado em 2026-09-19: P15 (Álbum com Conquistas) implementada na branch
+> Atualizado em 2026-09-19: P16 (Chute a Gol) feita na branch `p16-chute-a-gol` como porte do
+> Football-game-in-HTML (Apache 2.0); falta validar no navegador e com o Rael.
+> Anterior, 2026-09-19: P15 (Álbum com Conquistas) implementada na branch
 > `p15-album-conquistas`; falta validar com o Rael.
 > Anterior, 2026-09-11: implementação técnica da P14 concluída na branch
 > `p14-labirinto-obstaculos`. A publicação e a validação presencial com o Rael continuam pendentes.
@@ -24,6 +26,8 @@
 - **P00, P02 a P07** (área, Encaixe as Figuras, Palmas nas Palavras, Rimas com Figuras, Começa com o Mesmo Som, Letras para Explorar, Meu Primeiro Labirinto): a área **Jogos do Rael** está no ar com sete brincadeiras. Falta validar todas com a criança (marcado em cada uma).
 
 **Implementado em branch, aguardando validação com a criança:**
+- **P16** (Chute a Gol: pênaltis com mira, goleiro em movimento e contagem de gols), branch
+  `p16-chute-a-gol`. Detalhes na seção 5.
 - **P15** (conquistas no álbum do Rael), branch `p15-album-conquistas`. Detalhes no item 10 da tarefa.
 - **P14** (mapas 15×15, 20×20 e 25×25, obstáculos, visão ampliada e ajuda visual). A opção
   30×30 não foi exposta antes da validação prevista.
@@ -964,6 +968,52 @@ npm test, npm run typecheck e npm run build (binários locais, regra 10), confir
 alteradas em 360, 768 e 1280 px, atualize a seção 5.0, o README e o status do MELHORIAS.md e
 escreva o resumo: o que mudou, como testou, o que precisa ser observado com o Rael.
 ```
+
+### P16 — Chute a Gol (pênaltis, porte do Football-game-in-HTML)
+
+Jogo de pênalti portado de
+[Football-game-in-HTML](https://github.com/hackingstar124/Football-game-in-HTML)
+(hackingstar124, Apache 2.0). A criança mira o chutador na horizontal com as setas na tela
+(◀ ▶) ou com **A**/**D** no teclado, espera o goleiro sair do caminho e chuta no botão
+**CHUTAR** ou na tecla **L**. A bola sobe até a linha do gol e o resultado sai na hora: **Gol!**,
+**O goleiro pegou!** ou **Fora!**. São 5 pênaltis; no fim, os gols são contados em voz alta,
+a criança ganha uma figurinha comum e desbloqueia conquistas no álbum.
+
+- **Habilidades:** mira, tempo de reação e leitura do movimento do goleiro; contagem dos gols no fim.
+- **Sem frustração:** errar não interrompe nem repete a instrução; passa direto para o próximo
+  pênalti. Nunca toca som de erro (`tocar('erro')` proibido). A figurinha vem mesmo com zero gol.
+- **Conquistas próprias:** `chute-a-gol-estreia` ("Primeiro gol") e `chute-a-gol-fa` ("Fã de futebol", após 10 rodadas).
+
+#### O que veio do original e o que mudou (2026-09-19)
+
+| Do original | No porte |
+|---|---|
+| `#field`, `#goalpost` 🥅, `#striker`, `#football` ⚽, `#goalkeeper`, `#goal-message`, `.goal-line` | mesmos ids, dentro do cartão da página em vez de `100vh` |
+| `moveStriker` / `moveFootball` (passo de 10 px, preso nas bordas) | `moverNoCampo` em `jogo.js`, puro e testado; o limite é a largura do campo, não `window.innerWidth` |
+| `shootBall` + `@keyframes shoot` (1 s) | mesma animação; a bola sobe até a linha do gol e fica, em vez de subir 500 px e voltar |
+| `checkGoal` (centro do gol ± metade da largura) | `ehGol` com a mesma conta, mais `defendeu`: o goleiro agora pega de verdade |
+| `displayGoalMessage` | mesmo comportamento, frases em pt-BR |
+| Teclas **A**, **D**, **L** | mantidas, mais setas, espaço e os botões de toque (◀ CHUTAR ▶) |
+| `setInterval` do goleiro lendo `footballPos`, nunca declarado (`ReferenceError` a cada 25 ms) | `moverGoleiro` em `requestAnimationFrame`: vaivém pela boca do gol — o que o `@keyframes goalkeeperMove` fazia de fato — acelerando a cada pênalti |
+| `F:\Penalty\ev.css` e `F:\Penalty\ani.js` | caminhos relativos |
+
+#### Resultado da implementação (2026-09-19)
+
+1. **Licença:** cópia da Apache 2.0 em `rael/chute-a-gol/LICENSE-Football-game-in-HTML.txt`,
+   aviso no topo de `jogo.js`, `tela.js` e `chute-a-gol.css`, e seção "Créditos de terceiros" no README.
+2. **Motor puro e testes:** `rael/chute-a-gol/jogo.js` tem as contas do `ani.js` sem DOM
+   (`moverNoCampo`, `areaDoGol`, `ehGol`, `defendeu`, `resultadoDoChute`, `mensagemDoResultado`,
+   `moverGoleiro`, `velocidadeDoGoleiro`). 14 testes em `tests/chute-a-gol.test.js`.
+3. **Interface:** `index.html`, `tela.js` e `chute-a-gol.css` com o campo do original (grama
+   verde-escura, trave, linhas brancas), placar de bolinhas, contagem falada no fim e
+   `prefers-reduced-motion: reduce`. Alvos de toque de 72 px.
+4. **Verificação automatizada:** 264 testes passando em 28 arquivos, `tsc --noEmit` limpo e
+   build Vite gerando `dist/rael/chute-a-gol/index.html`. Rodada completa jogada em Chrome
+   headless (390×844) pelo CDP: mira pelos botões, chute pela tecla **L**, goleiro em movimento,
+   5 pênaltis, tela de fim com figurinha e `rodadas` gravado no álbum. Console limpo (só o aviso
+   de service worker que todas as páginas dão no `vite dev`).
+5. **Pendente:** validação no navegador (mira, defesa, toque no tablet) e presencial com o Rael —
+   principalmente a velocidade do goleiro, que é o que decide se o jogo fica fácil ou impossível.
 
 ### 5.4 Ordem sugerida de entrega
 

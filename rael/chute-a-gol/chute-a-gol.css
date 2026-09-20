@@ -1,1 +1,499 @@
-/* Estilos específicos do Chute a Gol (Jogos do Rael) */
+/*
+ * Chute a Gol do Furacão — Estilos temáticos do Club Athletico Paranaense
+ * para os Jogos do Rael.
+ *
+ * Mantém os seletores principais (#field, #goalpost, #striker, #football,
+ * #goalkeeper, .goal-line, #goal-message, @keyframes shoot).
+ * Adiciona ambientação do Caldeirão da Baixada, jogador Rael com uniforme
+ * rubro-negro, mascote Fura-Cão e placar esportivo.
+ */
+
+/* #field: gramado estilizado do Caldeirão com corte de listras */
+#field {
+  position: relative;
+  width: 100%;
+  height: 350px;
+  margin: 0 auto var(--espaco-m, 16px);
+  border-radius: var(--raio-m, 14px);
+  overflow: hidden;
+  background-color: #1e7033;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.07) 0 30px,
+    transparent 30px 60px
+  );
+  border: 3px solid #111111;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.45), 0 6px 14px rgba(0, 0, 0, 0.15);
+  touch-action: manipulation;
+  user-select: none;
+}
+
+@media (min-width: 640px) {
+  #field {
+    height: 400px;
+  }
+}
+
+/* Painel de topo do Caldeirão do Furacão */
+.estadio-painel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 28px;
+  background: linear-gradient(90deg, #111111 0%, #850b1d 20%, #c8102e 50%, #850b1d 80%, #111111 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-bottom: 2px solid #ffd700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  z-index: 5;
+  user-select: none;
+}
+
+.estadio-letreiro {
+  color: #ffffff;
+  font-family: var(--fonte-titulo, system-ui, sans-serif);
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.estadio-ventos {
+  display: flex;
+  gap: 3px;
+  transform: skewX(-24deg);
+}
+
+.estadio-ventos span {
+  display: inline-block;
+  width: 4px;
+  height: 12px;
+  background-color: #ffffff;
+  border-radius: 1px;
+}
+
+.estadio-ventos span:nth-child(even) {
+  background-color: #111111;
+}
+
+.estadio-ventos--invertido {
+  transform: skewX(24deg);
+}
+
+/* Trave do gol: posicionada acima da linha de fundo, com z-index superior para a linha não passar por cima da trave */
+#goalpost {
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  transform: translateX(-50%);
+  font-size: 190px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@media (max-width: 480px) {
+  #goalpost {
+    font-size: 160px;
+    top: -12px;
+  }
+}
+
+/* Goleiro: posicionado no centro da boca do gol com pés na linha de fundo */
+#goalkeeper {
+  position: absolute;
+  left: 50%;
+  top: 88px;
+  transform: translateX(-50%);
+  width: 54px;
+  height: 56px;
+  pointer-events: none;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#goalkeeper.pegou {
+  animation: goleiro-pegou 0.45s ease-out;
+}
+
+/* Mascote Fura-Cão torcendo na lateral do campo */
+.mascote-furacao {
+  position: absolute;
+  top: 32px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.mascote-nome {
+  margin-top: 2px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.05em;
+}
+
+/* Linhas oficiais do campo do Caldeirão */
+.campo-linhas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Grande Área oficial: estende da linha de fundo até cobrir e ultrapassar o ponto do pênalti */
+.campo-grande-area {
+  position: absolute;
+  top: 146px;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(88%, 380px);
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-top: none;
+  pointer-events: none;
+}
+
+/* Pequena Área oficial: emoldura a trave a partir da linha de fundo */
+.campo-pequena-area {
+  position: absolute;
+  top: 146px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 48px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-top: none;
+  pointer-events: none;
+}
+
+/* Meia-lua: arco semicircular projetado para fora da grande área (em direção ao meio-campo) */
+.campo-meia-lua {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 26px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-top: none;
+  border-bottom-left-radius: 45px;
+  border-bottom-right-radius: 45px;
+  pointer-events: none;
+}
+
+/* Marca da cal (ponto do pênalti): exatamente na posição inicial da bola, DENTRO da grande área */
+.campo-ponto-penalti {
+  position: absolute;
+  bottom: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (max-width: 480px) {
+  #goalkeeper {
+    top: 80px;
+    width: 50px;
+    height: 52px;
+  }
+  .mascote-furacao {
+    top: 28px;
+    right: 8px;
+    transform: scale(0.82);
+    transform-origin: top right;
+  }
+  .campo-grande-area {
+    top: 138px;
+    bottom: 44px;
+    width: 92%;
+  }
+  .campo-pequena-area {
+    top: 138px;
+    width: 180px;
+    height: 40px;
+  }
+  .campo-meia-lua {
+    bottom: 18px;
+    width: 80px;
+    height: 24px;
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+  }
+  #goal-line-top {
+    top: 138px;
+  }
+}
+
+/* Guia de mira tracejada */
+.guia-mira {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 0.2s ease;
+}
+
+#mira-linha {
+  stroke: #ffeb3b;
+  stroke-width: 3.5;
+  stroke-dasharray: 7, 7;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgba(255, 235, 59, 0.85));
+  animation: fluxo-mira 0.7s linear infinite;
+}
+
+@keyframes fluxo-mira {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+#mira-alvo {
+  fill: #ffeb3b;
+  stroke: #111111;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(255, 235, 59, 0.9));
+  animation: pulso-alvo 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulso-alvo {
+  from {
+    r: 6;
+  }
+  to {
+    r: 8.5;
+  }
+}
+
+/* Batedor: Rael vestindo o uniforme rubro-negro do Furacão, fixo no pênalti */
+#striker {
+  position: absolute;
+  bottom: 18px;
+  left: calc(50% - 24px);
+  transform: translateX(-50%) rotate(var(--inclinacao-batedor, 0deg));
+  transform-origin: 24px 64px;
+  width: 48px;
+  height: 64px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  transition: transform 0.12s ease-out;
+}
+
+#striker.chutando {
+  animation: perna 0.35s ease-out;
+}
+
+/* Bola de futebol posicionada na marca da cal */
+#football {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 32px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+}
+
+/* Linha de fundo oficial (na base da trave do gol) */
+.goal-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#goal-line-top {
+  top: 146px;
+}
+
+#goal-line-bottom {
+  display: none;
+}
+
+/* Mensagem de resultado no campo */
+#goal-message {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.9), 0 0 16px rgba(200, 16, 46, 0.8);
+  text-align: center;
+  pointer-events: none;
+  z-index: 6;
+  font-family: var(--fonte-titulo, system-ui, sans-serif);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Animações de chute angular */
+@keyframes shoot {
+  from {
+    transform: translateX(-50%) translate(0, 0) scale(1) rotate(0deg);
+  }
+  to {
+    transform: translateX(-50%) translate(var(--chute-x, 0px), var(--distancia-chute, -180px)) scale(0.58) rotate(720deg);
+  }
+}
+
+#football.chutando {
+  animation: shoot 1s ease-out forwards;
+}
+
+@keyframes goleiro-pegou {
+  50% { transform: translateX(-50%) scale(1.35) rotate(-12deg); }
+  100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+}
+
+@keyframes perna {
+  40% { transform: translateX(-50%) rotate(-18deg) scale(1.08); }
+  70% { transform: translateX(-50%) rotate(8deg) scale(1.04); }
+  100% { transform: translateX(-50%) rotate(0deg) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #football.chutando,
+  #goalkeeper.pegou,
+  #striker.chutando,
+  .mascote-furacao.comemorando,
+  .mascote-rabo,
+  .mascote-bandeira {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* Faixa dos quatro ventos no convite */
+.convite__furacao-faixa {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  transform: skewX(-24deg);
+}
+
+.furacao-faixa-vento {
+  display: inline-block;
+  width: 10px;
+  height: 28px;
+  background-color: #c8102e;
+  border-radius: 2px;
+}
+
+.furacao-faixa-vento:nth-child(even) {
+  background-color: #111111;
+}
+
+/* Marcador estilo placar digital */
+.marcador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-s, 8px);
+  margin-bottom: var(--espaco-s, 8px);
+  padding: 8px 16px;
+  background: #0f151c;
+  color: #ffffff;
+  border: 2px solid #c8102e;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.marcador__item {
+  min-height: 1.6em;
+  display: flex;
+  align-items: center;
+}
+
+/* Controles */
+.controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-m, 16px);
+}
+
+.botao--seta {
+  min-width: 84px;
+  min-height: 72px;
+  font-size: 2rem;
+  padding: 0;
+}
+
+.botao--chutar {
+  min-width: 150px;
+  min-height: 72px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* Botão temático do Furacão */
+.botao--furacao {
+  background: #c8102e;
+  color: #ffffff;
+  box-shadow: 0 5px 0 #7b091a, 0 8px 16px rgba(200, 16, 46, 0.35);
+  border: 2px solid #8d0b1e;
+}
+
+.botao--furacao:hover {
+  background: #d81534;
+}
+
+.botao--furacao:active {
+  box-shadow: 0 1px 0 #7b091a;
+  transform: translateY(4px);
+}
+
+.controles__dica {
+  margin-top: var(--espaco-s, 8px);
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+}
+
+.bolas-fim {
+  display: flex;
+  justify-content: center;
+  gap: var(--espaco-s, 8px);
+  margin-bottom: var(--espaco-s, 8px);
+}
+
+.bolas-fim__item {
+  opacity: 0.25;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.bolas-fim__item.bola-contada {
+  opacity: 1;
+  transform: scale(1.15);
+}
+

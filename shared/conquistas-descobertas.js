@@ -31,6 +31,7 @@ export const ATIVIDADES_DESCOBERTAS = [
   { id: 'comeca-com-o-mesmo-som', nome: 'Começa com o Mesmo Som', figura: 'abelha', estreia: 'Primeiro som', fa: 'Fã de sons' },
   { id: 'letras-para-explorar', nome: 'Letras para Explorar', figura: 'livro', estreia: 'Primeira letra', fa: 'Fã de letras' },
   { id: LABIRINTO, nome: 'Meu Primeiro Labirinto', figura: 'carro', estreia: null, fa: 'Fã de labirintos' },
+  { id: 'chute-a-gol', nome: 'Chute a Gol', figura: 'bola', estreia: 'Primeiro gol', fa: 'Fã de futebol' },
 ];
 
 export const PAGINAS = [
