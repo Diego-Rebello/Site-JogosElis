@@ -39,7 +39,7 @@ function criarEmbaralhador(sementeInicial = 123456789) {
   };
 }
 
-describe('Corrida do Rael (P17) — Motor puro (jogo.js)', () => {
+describe('Corrida do Rael — Motor puro (jogo.js)', () => {
   // ---------------------------------------------------------------------------
   // Grupo 1: Constantes
   // ---------------------------------------------------------------------------
