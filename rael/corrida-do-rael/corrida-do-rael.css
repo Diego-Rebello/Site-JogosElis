@@ -1,0 +1,102 @@
+/*
+ * Corrida do Rael — Estilos para a pista, controles e interface acessível.
+ */
+
+.tela[hidden] {
+  display: none !important;
+}
+
+.descobertas__cartao {
+  max-width: 500px;
+}
+
+/* Indicador do tanque de combustível com 6 segmentos */
+.progresso {
+  margin-bottom: var(--espaco-s, 8px);
+}
+
+.tanque {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  max-width: 280px;
+  margin: 0 auto;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: var(--raio-m, 14px);
+}
+
+.tanque-segmento {
+  flex: 1;
+  height: 14px;
+  border-radius: 4px;
+  background: #cbd5e1;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s ease;
+}
+
+.tanque-segmento--cheio {
+  background: #22c55e;
+}
+
+/* Quadro da pista e Canvas 400x700 */
+.quadro-pista {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto var(--espaco-s, 8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#pista {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  aspect-ratio: 400 / 700;
+  border-radius: var(--raio-m, 14px);
+  background: #2b2b2b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Mensagem de retorno da ação */
+.retorno {
+  min-height: 1.5em;
+  margin-top: 4px;
+  font-weight: 700;
+  color: var(--cor-texto-destaque, #17518f);
+}
+
+/* Controles de direção */
+.controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-m, 16px);
+  margin-top: var(--espaco-s, 8px);
+}
+
+#esquerda,
+#direita {
+  min-width: 72px;
+  min-height: 72px;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  font-size: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--raio-m, 14px);
+  user-select: none;
+}
+
+/* Regra da Seção 6 e Critério A1.11: touch-action: none somente em #pista, #esquerda e #direita */
+#pista,
+#esquerda,
+#direita {
+  touch-action: none;
+}

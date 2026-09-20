@@ -43,6 +43,7 @@ const paginas = {
   'rael-letras-para-explorar': 'rael/letras-para-explorar/index.html',
   'rael-meu-primeiro-labirinto': 'rael/meu-primeiro-labirinto/index.html',
   'rael-chute-a-gol': 'rael/chute-a-gol/index.html',
+  'rael-corrida-do-rael': 'rael/corrida-do-rael/index.html',
 };
 
 export default defineConfig({

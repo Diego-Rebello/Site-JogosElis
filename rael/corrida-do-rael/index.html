@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Leve o carrinho até o posto para encher o tanque. Brincadeira falada dos Jogos do Rael.">
+  <meta name="theme-color" content="#0f5aa8">
+  <title>Corrida do Rael — Jogos do Rael</title>
+  <link rel="manifest" href="/rael.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/rael-192.png">
+  <link rel="icon" href="/icones/rael.svg">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="../../shared/tema-rael.css">
+  <link rel="stylesheet" href="../../shared/descobertas.css">
+  <link rel="stylesheet" href="./corrida-do-rael.css">
+  <script type="module" src="../../shared/pwa.js"></script>
+</head>
+<body class="pagina">
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao descobertas descobertas__cartao">
+      <div class="tela convite" id="tela-convite">
+        <img class="convite__figura" src="/figuras/carro.svg" alt="" aria-hidden="true" width="120" height="120">
+        <h2 class="instrucao__texto">Corrida do Rael</h2>
+        <p class="convite__texto">Leve o carrinho até o posto para encher o tanque!</p>
+        <button class="botao botao--gigante" id="comecar" type="button">▶ Vamos dirigir</button>
+        <p class="convite__texto" id="aviso-voz" hidden></p>
+      </div>
+
+      <div class="tela convite" id="tela-demonstracao" hidden>
+        <p class="instrucao__texto" id="demonstracao-texto">Use as setas. Leve o carrinho até o posto.</p>
+        <button class="botao botao--gigante" id="demonstracao-continuar" type="button">▶ Começar corrida</button>
+      </div>
+
+      <div class="tela" id="tela-brincadeira" hidden>
+        <div class="progresso" id="progresso">
+          <div class="tanque" id="tanque" role="img" aria-label="Tanque de combustível"></div>
+        </div>
+
+        <div class="instrucao">
+          <p class="instrucao__texto" id="instrucao" aria-live="polite">Leve o carrinho até o posto.</p>
+          <button class="botao botao--repetir" id="repetir" type="button">🔊 Ouvir de novo</button>
+        </div>
+
+        <div class="roteiro" id="roteiro" hidden>
+          <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
+          <span class="roteiro__fala" id="roteiro-fala"></span>
+        </div>
+
+        <div class="quadro-pista" id="quadro-pista">
+          <canvas id="pista" width="400" height="700" aria-label="Pista da Corrida do Rael">Pista da Corrida do Rael</canvas>
+          <div class="retorno" id="retorno" aria-live="polite"></div>
+        </div>
+
+        <div class="controles" id="controles">
+          <button class="botao botao--seta" id="esquerda" type="button" aria-label="Ir para a esquerda">◀</button>
+          <button class="botao botao--seta" id="direita" type="button" aria-label="Ir para a direita">▶</button>
+        </div>
+      </div>
+
+      <div class="tela conclusao" id="tela-fim" hidden>
+        <h2 class="instrucao__texto">Tanque cheio!</h2>
+        <div class="tanque" id="tanque-fim" role="img" aria-label="Tanque cheio"></div>
+        <img class="conclusao__figurinha" id="figurinha" src="" alt="" width="150" height="150">
+        <p class="convite__texto" id="texto-fim"></p>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="de-novo" type="button">🏎️ Dirigir de novo</button>
+          <a class="botao botao--secundario" href="../index.html">🏠 Voltar</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./tela.js"></script>
+</body>
+</html>
