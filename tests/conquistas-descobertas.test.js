@@ -269,3 +269,63 @@ describe('Conquistas — estado salvo na versão 1', () => {
     expect(() => obterAlbum(armazenamento)).not.toThrow();
   });
 });
+
+describe('Conquistas — Corrida do Rael (Etapa 5)', () => {
+  it('A5.2: conclui uma rodada em armazenamento falso e recebe figurinha, atividade com rodadas: 1 e somente corrida-do-rael-estreia entre as conquistas específicas do jogo', () => {
+    const armazenamento = criarArmazenamento();
+    const premio = registrarRodada('corrida-do-rael', {}, armazenamento);
+    expect(premio.figurinha).toBeTruthy();
+    expect(premio.atividade).toMatchObject({ rodadas: 1 });
+    const novasIds = ids(premio.conquistasNovas);
+    const conquistasDoJogo = novasIds.filter(id => id.startsWith('corrida-do-rael-'));
+    expect(conquistasDoJogo).toEqual(['corrida-do-rael-estreia']);
+  });
+
+  it('A5.3: após nove rodadas, "Piloto experiente" ainda não foi liberada; na décima, aparece uma vez; na décima primeira, não reaparece', () => {
+    const armazenamento = criarArmazenamento();
+    for (let i = 1; i <= 9; i++) {
+      const res = registrarRodada('corrida-do-rael', {}, armazenamento);
+      expect(ids(res.conquistasNovas)).not.toContain('corrida-do-rael-fa');
+    }
+    const decima = registrarRodada('corrida-do-rael', {}, armazenamento);
+    expect(ids(decima.conquistasNovas)).toContain('corrida-do-rael-fa');
+    expect(obterEstado(armazenamento).atividades['corrida-do-rael'].rodadas).toBe(10);
+
+    const decimaPrimeira = registrarRodada('corrida-do-rael', {}, armazenamento);
+    expect(ids(decimaPrimeira.conquistasNovas)).not.toContain('corrida-do-rael-fa');
+    expect(obterEstado(armazenamento).atividades['corrida-do-rael'].rodadas).toBe(11);
+  });
+
+  it('A5.4: rodada representada como "com ajuda" recebe exatamente as mesmas conquistas de quantidade; sem condição de rapidez ou acerto de primeira', () => {
+    const armazenamento = criarArmazenamento();
+    const res = registrarRodada('corrida-do-rael', { feitos: { comAjuda: 6 } }, armazenamento);
+    expect(ids(res.conquistasNovas)).toContain('corrida-do-rael-estreia');
+    expect(res.atividade.rodadas).toBe(1);
+  });
+
+  it('A5.5: teste de catálogo confirma IDs únicos, figuras existentes e duas conquistas ligadas à atividade corrida-do-rael', () => {
+    const doJogo = CONQUISTAS.filter(c => c.atividade === 'corrida-do-rael');
+    expect(doJogo).toHaveLength(2);
+    expect(ids(doJogo)).toEqual(['corrida-do-rael-estreia', 'corrida-do-rael-fa']);
+    doJogo.forEach(c => {
+      expect(existsSync(resolve('public', `.${c.figura}`)), c.figura).toBe(true);
+      expect(c.nome).toBeTruthy();
+      expect(c.comoGanhar).toBeTruthy();
+      expect(c.parabens).toBeTruthy();
+    });
+  });
+
+  it('A5.6: "Explorador de brincadeiras" exige agora também a Corrida do Rael e só é liberada quando todas as atividades do catálogo têm rodada >= 1', () => {
+    const armazenamento = criarArmazenamento();
+    const outras = ATIVIDADES_DESCOBERTAS.filter(a => a.id !== 'corrida-do-rael');
+
+    outras.forEach(a => {
+      registrarRodada(a.id, {}, armazenamento);
+    });
+    expect(obterEstado(armazenamento).conquistas).not.toHaveProperty('geral-todas');
+
+    const final = registrarRodada('corrida-do-rael', {}, armazenamento);
+    expect(ids(final.conquistasNovas)).toContain('geral-todas');
+    expect(obterEstado(armazenamento).conquistas).toHaveProperty('geral-todas');
+  });
+});

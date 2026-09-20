@@ -40,6 +40,12 @@
   background: #22c55e;
 }
 
+.tanque-segmento--contado {
+  box-shadow: 0 0 10px #22c55e;
+  transform: scale(1.08);
+}
+
+
 /* Quadro da pista e Canvas 400x700 */
 .quadro-pista {
   position: relative;

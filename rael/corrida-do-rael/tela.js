@@ -6,6 +6,7 @@
 
 import { montarCabecalho } from '../../shared/cabecalho.js';
 import { tocar } from '../../shared/sons.js';
+import { lancarConfete } from '../../shared/confete.js';
 import {
   definirPreferencia,
   falarSequencia,
@@ -14,8 +15,11 @@ import {
   preparar,
   repetir as repetirFala,
 } from '../../shared/fala.js';
-import { obterConfiguracoes } from '../../shared/descobertas.js';
+import { obterConfiguracoes, registrarRodada } from '../../shared/descobertas.js';
+import { anunciarConquistas } from '../../shared/conquistas-tela.js';
+import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
 import { criarSessao } from '../../shared/rodada.js';
+
 import {
   ALTURA_CANVAS,
   LARGURA_CANVAS,
@@ -94,6 +98,7 @@ let sessao = null;
 let trechos = [];
 let trechoAtual = null;
 let encontroAtual = null;
+let rodadaRegistrada = false;
 let deslocamentoPista = 0;
 let faixaDestaque = null;
 
@@ -130,6 +135,7 @@ function atualizarTanque(concluidos) {
     const segmentos = elTanque.querySelectorAll('.tanque-segmento');
     segmentos.forEach((seg, i) => {
       seg.classList.toggle('tanque-segmento--cheio', i < seguros);
+      seg.classList.remove('tanque-segmento--contado');
     });
     elTanque.setAttribute('aria-label', `Tanque: ${seguros} de ${QUANTIDADE_DE_TRECHOS} abastecimentos`);
   }
@@ -171,20 +177,26 @@ function mostrarTela(nome) {
 // Fala e Acessibilidade (Seção 2.6 e 2.8)
 // -----------------------------------------------------------------------------
 
-async function falarTexto(texto, { textoVisual, aoComecar } = {}) {
+async function falarItens(itens, { aoComecar } = {}) {
   parar();
   const minhaGeracao = geracaoDaRodada;
-  ultimaFalaTexto = texto;
+  const textoVisual = itens.map(i => (typeof i === 'string' ? i : (i.textoVisual || i.texto))).filter(Boolean).join(' ');
+  ultimaFalaTexto = textoVisual;
 
   if (elementoRoteiroFala) {
-    elementoRoteiroFala.textContent = textoVisual || texto;
+    elementoRoteiroFala.textContent = textoVisual;
   }
   if (elementoRoteiro) {
     elementoRoteiro.hidden = !modoAcompanhado();
   }
 
-  const res = await falarSequencia([{ texto }], { aoComecar });
-  if (minhaGeracao !== geracaoDaRodada) return 'cancelado';
+  const res = await falarSequencia(itens, { aoComecar });
+  if (minhaGeracao !== geracaoDaRodada) return ['cancelado'];
+  return res;
+}
+
+async function falarTexto(texto, { textoVisual, aoComecar } = {}) {
+  const res = await falarItens([{ texto, textoVisual: textoVisual || texto }], { aoComecar });
   return res[0] || 'sem-fala';
 }
 
@@ -268,6 +280,20 @@ async function iniciarDemonstracao() {
   cancelarTimers();
   parar();
   geracaoDaRodada += 1;
+  rodadaRegistrada = false;
+  sessao = null;
+  trechos = [];
+  trechoAtual = null;
+  encontroAtual = null;
+  animacaoRodopio = null;
+  animacaoAjuda = null;
+  faixaDestaque = null;
+
+  const caixaConquista = document.querySelector('.conquista-nova');
+  if (caixaConquista) {
+    caixaConquista.hidden = true;
+    caixaConquista.innerHTML = '';
+  }
 
   configuracoes = obterConfiguracoes();
   definirPreferencia(configuracoes.voz);
@@ -540,13 +566,23 @@ function prepararProximoTrecho() {
   atualizarEstadoControles(true);
 }
 
-function finalizarRodada() {
+async function finalizarRodada() {
+  if (rodadaRegistrada) return;
+  // 2. tela muda para FIM e controles são desabilitados
   faseAtual = FASES.FIM;
   atualizarEstadoControles(false);
   faixaDestaque = null;
 
+  if (btnDeNovo) {
+    btnDeNovo.disabled = true;
+  }
   mostrarTela('fim');
 
+  // 3. guarda rodadaRegistrada é ativada e registrarRodada é chamado uma vez
+  rodadaRegistrada = true;
+  const premio = registrarRodada('corrida-do-rael');
+
+  // 4. tanque final, figurinha e conquistas são renderizados
   if (elTanqueFim) {
     elTanqueFim.innerHTML = Array.from({ length: QUANTIDADE_DE_TRECHOS }, () =>
       '<div class="tanque-segmento tanque-segmento--cheio"></div>',
@@ -554,9 +590,60 @@ function finalizarRodada() {
     elTanqueFim.setAttribute('aria-label', 'Tanque cheio: 6 de 6 abastecimentos');
   }
 
+  const dadosFigura = figura(premio.figurinha);
+  const imgFigurinha = $('figurinha');
+  if (imgFigurinha) {
+    imgFigurinha.src = caminhoDaFigura(premio.figurinha);
+    imgFigurinha.alt = `Figurinha nova: ${dadosFigura?.nome || premio.figurinha}`;
+  }
+
+  const nome = configuracoes.nome?.trim() ? configuracoes.nome.trim().split(/\s+/)[0] : '';
+  const fraseFinal = nome
+    ? `Tanque cheio! Muito bem, ${nome}!`
+    : 'Tanque cheio! Muito bem, piloto!';
+
   if (textoFim) {
-    const nome = configuracoes.nome ? configuracoes.nome.trim().split(/\s+/)[0] : 'piloto';
-    textoFim.textContent = `Tanque cheio! Muito bem, ${nome}!`;
+    textoFim.textContent = fraseFinal;
+  }
+
+  const falasDaConquista = anunciarConquistas(premio.conquistasNovas, {
+    depoisDe: textoFim,
+    dizer: itens => falarItens(itens),
+  });
+
+  // 5. tocar vitória e lançar confete
+  tocar('vitoria');
+  lancarConfete();
+
+  // 6 e 7. falar introdução, números 1–6, encerramento e falas da conquista
+  const segmentosFim = elTanqueFim?.querySelectorAll('.tanque-segmento') || [];
+  const minhaGeracao = geracaoDaRodada;
+
+  await falarItens([
+    { texto: 'Vamos contar os abastecimentos!' },
+    { texto: '1' },
+    { texto: '2' },
+    { texto: '3' },
+    { texto: '4' },
+    { texto: '5' },
+    { texto: '6' },
+    { texto: fraseFinal },
+    ...falasDaConquista,
+  ], {
+    aoComecar: (indice) => {
+      if (indice >= 1 && indice <= 6) {
+        const seg = segmentosFim[indice - 1];
+        if (seg) {
+          seg.classList.add('tanque-segmento--contado');
+          tocar('clique');
+        }
+      }
+    },
+  });
+
+  // 8. habilitar “Dirigir de novo”
+  if (minhaGeracao === geracaoDaRodada && faseAtual === FASES.FIM && btnDeNovo) {
+    btnDeNovo.disabled = false;
   }
 }
 
@@ -594,6 +681,8 @@ if (btnRepetir) {
 
 if (btnDeNovo) {
   btnDeNovo.addEventListener('click', () => {
+    if (faseAtual !== FASES.FIM || btnDeNovo.disabled) return;
+    btnDeNovo.disabled = true;
     iniciarDemonstracao();
   });
 }
@@ -1082,4 +1171,20 @@ export function obterCarro() {
 
 export function obterEncontroAtual() {
   return encontroAtual ? { ...encontroAtual } : null;
+}
+
+export function obterRodadaRegistrada() {
+  return rodadaRegistrada;
+}
+
+if (typeof window !== 'undefined') {
+  window.__corridaRael = {
+    obterFaseAtual,
+    obterSessao,
+    obterCarro,
+    obterEncontroAtual,
+    obterRodadaRegistrada,
+    finalizarRodada,
+    iniciarDemonstracao,
+  };
 }

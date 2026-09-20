@@ -53,6 +53,7 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Letras para Explorar | `rael/letras-para-explorar/index.html` | Pareie, ouça e explore letras em caixa alta |
 | Meu Primeiro Labirinto | `rael/meu-primeiro-labirinto/index.html` | Explore mapas de 15×15, 20×20 ou 25×25 com semáforo, ponte, portão e desvios; os mapas clássicos continuam disponíveis |
 | Chute a Gol | `rael/chute-a-gol/index.html` | Cinco pênaltis em três modos (chutar, defender ou alternado): mire e chute com as setas e o botão, ou vire goleiro e pule na bola |
+| Corrida do Rael | `rael/corrida-do-rael/index.html` | Leve o carrinho até o posto para encher o tanque em seis trechos amigáveis |
 | Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, formato do labirinto, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras
@@ -113,6 +114,8 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── palmas-nas-palavras/         index.html + dados.js + jogo.js + tela.js
 │   ├── meu-primeiro-labirinto/      Tela infantil; reutiliza Games/labirinto/jogo.js
 │   └── chute-a-gol/                 index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
+│   ├── chute-a-gol/                 index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
+│   └── corrida-do-rael/             index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
 └── Games/
     ├── forca/                       index.html + jogo.js
     ├── m-ou-n/                      index.html + jogo.js
@@ -449,6 +452,12 @@ Correções e acréscimos feitos no porte:
 - o `checkGoal` ignorava o goleiro; agora a defesa conta;
 - controles por toque (◀ CHUTAR ▶), além do teclado, porque o jogo roda no tablet;
 - cinco pênaltis, placar, fala em pt-BR e a figurinha do álbum no fim.
+
+**Corrida do Rael** (`rael/corrida-do-rael/`) é portado do [Pixel Racer](https://github.com/Elomami1976/pixel-racer), de Tarek Elomami (commit `6be6d5b0ae295240228399583096e232145fb7cb`), sob a licença MIT. A cópia da licença está em `rael/corrida-do-rael/LICENSE-pixel-racer.txt` e cada arquivo derivado traz o aviso no topo.
+
+Matriz resumida de reaproveitamento:
+- **Reaproveitado / adaptado:** Canvas lógico 400×700 e encaixe responsivo; constantes geométricas e tema visual; entrada por teclado (setas/A/D) e mapa de toques com botões direcionais visíveis (◀ ▶); desenho da pista em Canvas 2D (`drawRoad`) generalizado para 2, 3 ou 4 faixas; desenho do carro (`drawCar`) com chassi azul e faixas esportivas; colisão AABB (`rectsOverlap`) pura e testável; único loop de animação com `requestAnimationFrame`, delta-time e clamp.
+- **Substituído / remodelado:** colisão punitiva e game over substituídos por encontros amigáveis com posto de combustível e poça de óleo (sem carros inimigos e sem defeat state); velocidade fixa e calma em vez de aceleração contínua; placar/recorde e `localStorage` substituídos pelo tanque de 6 segmentos e `registrarRodada`; áudio externo/MP3 substituídos por `shared/sons.js` e fala acessível via `shared/fala.js`; menus em inglês no Canvas substituídos por telas DOM acessíveis em pt-BR com ARIA, suporte a `prefers-reduced-motion` e condução assistida na 2ª tentativa.
 
 ---
 

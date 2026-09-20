@@ -1039,6 +1039,25 @@ Decisões desta parte:
 - **Pendente:** validar com o Rael se defender no tablet é gostoso — o que se ajusta primeiro é
   `PASSO_GOLEIRO`, `ALCANCE_DO_MERGULHO` e a base de `duracaoDoChuteAdversario`.
 
+### Corrida do Rael (adaptação do Pixel Racer)
+
+Adaptação amigável do [Pixel Racer](https://github.com/Elomami1976/pixel-racer) (Tarek Elomami, MIT, commit `6be6d5b0ae295240228399583096e232145fb7cb`) para a área Jogos do Rael.
+
+1. **Licença e origem:** cópia integral da licença MIT preservada em `rael/corrida-do-rael/LICENSE-pixel-racer.txt`, aviso de copyright no topo de `jogo.js`, `tela.js` e `corrida-do-rael.css`, e atribuição detalhada em `README.md`.
+2. **Reaproveitamento do original:** Canvas lógico 400×700 com wrapper responsivo; geometria e faixas dinâmicas (2, 3 ou 4 faixas); entrada unificada (teclado setas/A/D, toques no Canvas e botões direcionais visíveis ◀ ▶); rotinas Canvas 2D da pista (`drawRoad`) e carro (`drawCar`); colisão pura AABB (`rectsOverlap`) com margem configurável; loop único de animação via `requestAnimationFrame` com delta-time e clamp.
+3. **Adaptações para o Rael:**
+   - Substituição de carros inimigos, colisões destrutivas e game over por desafios amigáveis de abastecimento com posto de gasolina e poça de óleo.
+   - Rodada estruturada em 6 trechos (`montarTrechos` e `criarSessao`). Ao atingir o posto, abastece (+1 segmento no tanque) e comemora. Ao passar por óleo, roda suavemente e tenta de novo o mesmo trecho.
+   - Ajuda assistida após duas tentativas sem posto: a faixa correta é destacada por ≥900 ms e o carro é conduzido suavemente (≤140 px/s) até o posto, sem teletransporte e sem frustração.
+   - Suporte completo a `prefers-reduced-motion` (sem rotação do carro, apenas realce de contorno).
+   - Demonstração inicial guiada antes da rodada.
+   - Conclusão com contagem falada dos 6 abastecimentos, pulsar dos segmentos do tanque, figurinha e conquistas novas ("Primeira corrida" e "Piloto experiente").
+4. **Verificação automatizada:**
+   - 64 testes do motor puro em `tests/corrida-do-rael.test.js` (incluindo testes de propriedades com centenas de iterações).
+   - Testes de conquistas e catálogo em `tests/conquistas-descobertas.test.js`.
+   - Suíte geral com 371 testes passando em 29 arquivos; `tsc --noEmit` limpo; build e precache íntegros.
+5. **Pendente:** validação presencial com o Rael conforme roteiro da seção 7 do plano (compreensão da demonstração, diferenciação entre posto e óleo, uso dos controles no iPad/Android).
+
 ### 5.4 Ordem sugerida de entrega
 
 1. **P09 → P10.** Meu Nome e Conta Comigo não precisam de gravações nem de banco de dados,
