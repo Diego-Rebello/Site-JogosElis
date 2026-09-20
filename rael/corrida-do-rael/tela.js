@@ -1,6 +1,7 @@
 /**
  * Corrida do Rael — Renderização, entrada, fala e fluxo da rodada.
  * Derivado de cálculos e rotinas de Canvas do Pixel Racer sob licença MIT.
+ * Copyright (c) 2026 Tarek Elomami.
  * Cópia da licença em LICENSE-pixel-racer.txt.
  */
 
@@ -35,6 +36,7 @@ import {
   quantidadeDeFaixas,
   resultadoDoEncontro,
   retangulosSeSobrepoem,
+  rodadaEstaConcluida,
 } from './jogo.js';
 
 export const FASES = Object.freeze({
@@ -110,13 +112,14 @@ let animacaoAjuda = null;
 const timers = new Set();
 let geracaoDaRodada = 0;
 let ultimaFalaTexto = '';
+let repeticaoEmAndamento = false;
+let geracaoDaRepeticao = 0;
+let promessaRepeticaoAtual = Promise.resolve();
 let lastTime = 0;
 
 // Estado de entrada
 const teclas = new Set();
-let btnEsquerdaAtivo = false;
-let btnDireitaAtivo = false;
-let canvasToqueLado = 0;
+const direcoesPorPonteiro = new Map();
 
 // -----------------------------------------------------------------------------
 // Inicialização do indicador do Tanque no DOM (Seção 6, requisito 14)
@@ -191,6 +194,7 @@ async function falarItens(itens, { aoComecar } = {}) {
   }
 
   const res = await falarSequencia(itens, { aoComecar });
+  await aguardarRepeticaoAtual();
   if (minhaGeracao !== geracaoDaRodada) return ['cancelado'];
   return res;
 }
@@ -200,15 +204,26 @@ async function falarTexto(texto, { textoVisual, aoComecar } = {}) {
   return res[0] || 'sem-fala';
 }
 
+async function aguardarRepeticaoAtual() {
+  let observada;
+  do {
+    observada = promessaRepeticaoAtual;
+    await observada;
+  } while (observada !== promessaRepeticaoAtual);
+}
+
+async function esperarSemInterromperFala(delayMs) {
+  await new Promise(resolve => agendar(resolve, delayMs));
+  await aguardarRepeticaoAtual();
+}
+
 // -----------------------------------------------------------------------------
 // Controle de Entrada Unificada (Seção 2.2)
 // -----------------------------------------------------------------------------
 
 function zerarEntradas() {
   teclas.clear();
-  btnEsquerdaAtivo = false;
-  btnDireitaAtivo = false;
-  canvasToqueLado = 0;
+  direcoesPorPonteiro.clear();
 }
 
 function atualizarEstadoControles(habilitado) {
@@ -231,13 +246,15 @@ function obterDirecaoDeEntrada() {
   }
 
   let dir = 0;
-  if (teclas.has('arrowleft') || teclas.has('a') || btnEsquerdaAtivo) {
+  if (teclas.has('arrowleft') || teclas.has('a')) {
     dir -= 1;
   }
-  if (teclas.has('arrowright') || teclas.has('d') || btnDireitaAtivo) {
+  if (teclas.has('arrowright') || teclas.has('d')) {
     dir += 1;
   }
-  dir += canvasToqueLado;
+  for (const direcao of direcoesPorPonteiro.values()) {
+    dir += direcao;
+  }
 
   if (dir < 0) return -1;
   if (dir > 0) return 1;
@@ -280,6 +297,9 @@ async function iniciarDemonstracao() {
   cancelarTimers();
   parar();
   geracaoDaRodada += 1;
+  geracaoDaRepeticao += 1;
+  repeticaoEmAndamento = false;
+  promessaRepeticaoAtual = Promise.resolve();
   rodadaRegistrada = false;
   sessao = null;
   trechos = [];
@@ -288,6 +308,9 @@ async function iniciarDemonstracao() {
   animacaoRodopio = null;
   animacaoAjuda = null;
   faixaDestaque = null;
+
+  if (btnComecar) btnComecar.disabled = true;
+  if (btnDemoContinuar) btnDemoContinuar.disabled = true;
 
   const caixaConquista = document.querySelector('.conquista-nova');
   if (caixaConquista) {
@@ -301,6 +324,18 @@ async function iniciarDemonstracao() {
   geometria = geometriaDaPista({ faixas: faixasConfiguradas });
 
   await preparar();
+
+  mostrarTela('demonstracao');
+  await falarTexto('Use as setas. Leve o carrinho até o posto.');
+
+  if (faseAtual === FASES.PREPARANDO && btnDemoContinuar) {
+    btnDemoContinuar.disabled = false;
+    btnDemoContinuar.focus();
+  }
+}
+
+function executarDemonstracaoNaPista() {
+  if (faseAtual !== FASES.PREPARANDO || btnDemoContinuar?.disabled) return;
 
   faseAtual = FASES.DEMO;
   mostrarTela('brincadeira');
@@ -338,16 +373,15 @@ async function iniciarDemonstracao() {
   if (elementoRetorno) {
     elementoRetorno.textContent = '';
   }
-
-  falarTexto('Use as setas. Leve o carrinho até o posto.');
 }
 
 // -----------------------------------------------------------------------------
 // Início da Rodada de 6 Trechos (FASES.JOGANDO)
 // -----------------------------------------------------------------------------
 
-function iniciarRodadaPrincipal() {
-  faseAtual = FASES.JOGANDO;
+async function iniciarRodadaPrincipal() {
+  const minhaGeracao = geracaoDaRodada;
+  faseAtual = FASES.PREPARANDO;
   faixaDestaque = null;
   atualizarTanque(0);
 
@@ -359,7 +393,7 @@ function iniciarRodadaPrincipal() {
   carro.angulo = 0;
   carro.realceContorno = false;
   zerarEntradas();
-  atualizarEstadoControles(true);
+  atualizarEstadoControles(false);
 
   if (elementoInstrucao) {
     elementoInstrucao.textContent = 'Leve o carrinho até o posto.';
@@ -368,13 +402,36 @@ function iniciarRodadaPrincipal() {
     elementoRetorno.textContent = '';
   }
 
-  falarTexto('Agora é sua vez. Vá até o posto!', {
-    textoVisual: 'Leve o carrinho até o posto.',
-  });
-
   const estadoSessao = sessao.estado();
   trechoAtual = estadoSessao.desafio;
   encontroAtual = criarEncontro(trechoAtual, geometria);
+
+  await falarTexto('Agora é sua vez. Vá até o posto!', {
+    textoVisual: 'Leve o carrinho até o posto.',
+  });
+
+  if (minhaGeracao !== geracaoDaRodada || faseAtual !== FASES.PREPARANDO) return;
+  faseAtual = FASES.JOGANDO;
+  atualizarEstadoControles(true);
+}
+
+async function concluirDemonstracao() {
+  const minhaGeracao = geracaoDaRodada;
+  faseAtual = FASES.RETORNO;
+  atualizarEstadoControles(false);
+  tocar('acerto');
+
+  if (elementoRetorno) {
+    elementoRetorno.textContent = 'Muito bem!';
+  }
+
+  await falarTexto('Muito bem!');
+  if (minhaGeracao !== geracaoDaRodada || faseAtual !== FASES.RETORNO) return;
+
+  await esperarSemInterromperFala(900);
+  if (minhaGeracao === geracaoDaRodada && faseAtual === FASES.RETORNO) {
+    void iniciarRodadaPrincipal();
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -382,6 +439,8 @@ function iniciarRodadaPrincipal() {
 // -----------------------------------------------------------------------------
 
 async function tratarResultado(resultado) {
+  const minhaGeracao = geracaoDaRodada;
+
   if (resultado === 'posto') {
     faseAtual = FASES.RETORNO;
     atualizarEstadoControles(false);
@@ -396,23 +455,23 @@ async function tratarResultado(resultado) {
     }
 
     await falarTexto('Abasteceu!');
+    await esperarSemInterromperFala(900);
+    if (minhaGeracao !== geracaoDaRodada || faseAtual !== FASES.RETORNO) return;
 
-    agendar(() => {
-      sessao.avancar();
-      const novoEstado = sessao.estado();
-      if (novoEstado.fase === 'fim') {
-        finalizarRodada();
-      } else {
-        prepararProximoTrecho();
-      }
-    }, 900);
+    sessao.avancar();
+    const novoEstado = sessao.estado();
+    if (novoEstado.fase === 'fim') {
+      void finalizarRodada();
+    } else {
+      prepararProximoTrecho();
+    }
   } else if (resultado === 'oleo') {
     tocar('clique');
     const resp = sessao.responder('oleo');
 
     if (resp.fase === 'demonstrando') {
       // 2ª tentativa sem posto -> Dispara ajuda guiada
-      iniciarAjuda();
+      void iniciarAjuda();
     } else {
       // 1ª tentativa sem posto -> Rodopio e repete o mesmo trecho
       faseAtual = FASES.RETORNO;
@@ -421,11 +480,14 @@ async function tratarResultado(resultado) {
       if (elementoRetorno) {
         elementoRetorno.textContent = 'O carrinho rodopiou! Vamos de novo!';
       }
-      falarTexto('O carrinho rodopiou! Vamos de novo!');
 
-      executarRodopio(() => {
+      await Promise.all([
+        falarTexto('O carrinho rodopiou! Vamos de novo!'),
+        executarRodopio(),
+      ]);
+      if (minhaGeracao === geracaoDaRodada && faseAtual === FASES.RETORNO) {
         reiniciarMesmoTrecho();
-      });
+      }
     }
   } else if (resultado === 'passou') {
     tocar('clique');
@@ -433,7 +495,7 @@ async function tratarResultado(resultado) {
 
     if (resp.fase === 'demonstrando') {
       // 2ª tentativa sem posto -> Dispara ajuda guiada
-      iniciarAjuda();
+      void iniciarAjuda();
     } else {
       // 1ª tentativa sem posto -> Repete o mesmo trecho (sem rodopio)
       faseAtual = FASES.RETORNO;
@@ -443,26 +505,30 @@ async function tratarResultado(resultado) {
         elementoRetorno.textContent = 'O posto ficou ali. Vamos de novo!';
       }
 
-      falarTexto('O posto ficou ali. Vamos de novo!').then(() => {
-        agendar(() => {
+      await falarTexto('O posto ficou ali. Vamos de novo!');
+      if (minhaGeracao === geracaoDaRodada && faseAtual === FASES.RETORNO) {
+        await esperarSemInterromperFala(500);
+        if (minhaGeracao === geracaoDaRodada && faseAtual === FASES.RETORNO) {
           reiniciarMesmoTrecho();
-        }, 500);
-      });
+        }
+      }
     }
   }
 }
 
-function executarRodopio(aoTerminar) {
+function executarRodopio() {
   const reduzido = prefereMovimentoReduzido();
   const duracao = 700;
   const t0 = performance.now();
 
-  animacaoRodopio = {
-    t0,
-    duracao,
-    reduzido,
-    aoTerminar,
-  };
+  return new Promise(resolve => {
+    animacaoRodopio = {
+      t0,
+      duracao,
+      reduzido,
+      aoTerminar: resolve,
+    };
+  });
 }
 
 function reiniciarMesmoTrecho() {
@@ -486,6 +552,7 @@ function reiniciarMesmoTrecho() {
 }
 
 async function iniciarAjuda() {
+  const minhaGeracao = geracaoDaRodada;
   faseAtual = FASES.AJUDA;
   atualizarEstadoControles(false);
 
@@ -495,8 +562,6 @@ async function iniciarAjuda() {
   if (elementoRetorno) {
     elementoRetorno.textContent = '';
   }
-
-  falarTexto('Olhe o caminho brilhando. O carrinho vai até o posto.');
 
   // Faixa correta brilha por pelo menos 900 ms
   faixaDestaque = trechoAtual.postoFaixa;
@@ -508,8 +573,13 @@ async function iniciarAjuda() {
     encontroAtual.resolvido = false;
   }
 
-  // 1. Destaque prévio por pelo menos 900 ms (critério A4.7)
-  await new Promise(resolve => agendar(resolve, 950));
+  // 1. Destaque prévio por pelo menos 900 ms, sem mover durante a fala.
+  await Promise.all([
+    falarTexto('Olhe o caminho brilhando. O carrinho vai até o posto.'),
+    new Promise(resolve => agendar(resolve, 950)),
+  ]);
+
+  if (minhaGeracao !== geracaoDaRodada || faseAtual !== FASES.AJUDA) return;
 
   // 2. Condução suave do carro a <= 140 px/s
   animacaoAjuda = {
@@ -533,17 +603,17 @@ async function concluirAjuda() {
   }
 
   await falarTexto('Abasteceu!');
+  await esperarSemInterromperFala(900);
+  if (minhaGeracao !== geracaoDaRodada || faseAtual !== FASES.RETORNO) return;
 
-  agendar(() => {
-    faixaDestaque = null;
-    sessao.avancar();
-    const novoEstado = sessao.estado();
-    if (novoEstado.fase === 'fim') {
-      finalizarRodada();
-    } else {
-      prepararProximoTrecho();
-    }
-  }, 900);
+  faixaDestaque = null;
+  sessao.avancar();
+  const novoEstado = sessao.estado();
+  if (novoEstado.fase === 'fim') {
+    void finalizarRodada();
+  } else {
+    prepararProximoTrecho();
+  }
 }
 
 function prepararProximoTrecho() {
@@ -567,7 +637,7 @@ function prepararProximoTrecho() {
 }
 
 async function finalizarRodada() {
-  if (rodadaRegistrada) return;
+  if (rodadaRegistrada || !rodadaEstaConcluida(sessao?.estado())) return false;
   // 2. tela muda para FIM e controles são desabilitados
   faseAtual = FASES.FIM;
   atualizarEstadoControles(false);
@@ -645,6 +715,7 @@ async function finalizarRodada() {
   if (minhaGeracao === geracaoDaRodada && faseAtual === FASES.FIM && btnDeNovo) {
     btnDeNovo.disabled = false;
   }
+  return true;
 }
 
 // -----------------------------------------------------------------------------
@@ -661,21 +732,34 @@ if (btnComecar) {
 
 if (btnDemoContinuar) {
   btnDemoContinuar.addEventListener('click', () => {
-    iniciarRodadaPrincipal();
+    executarDemonstracaoNaPista();
   });
 }
 
 if (btnRepetir) {
-  btnRepetir.addEventListener('click', () => {
-    if (ultimaFalaTexto) {
-      if (elementoRoteiroFala) {
-        elementoRoteiroFala.textContent = ultimaFalaTexto;
-      }
-      if (elementoRoteiro) {
-        elementoRoteiro.hidden = !modoAcompanhado();
-      }
-      repetirFala();
+  btnRepetir.addEventListener('click', async () => {
+    if (!ultimaFalaTexto) return;
+
+    if (elementoRoteiroFala) {
+      elementoRoteiroFala.textContent = ultimaFalaTexto;
     }
+    if (elementoRoteiro) {
+      elementoRoteiro.hidden = !modoAcompanhado();
+    }
+
+    const minhaGeracaoDaRodada = geracaoDaRodada;
+    const minhaGeracaoDaRepeticao = ++geracaoDaRepeticao;
+    repeticaoEmAndamento = true;
+    atualizarEstadoControles(false);
+
+    promessaRepeticaoAtual = Promise.resolve(repetirFala()).catch(() => 'sem-fala');
+    await promessaRepeticaoAtual;
+
+    if (minhaGeracaoDaRodada !== geracaoDaRodada ||
+        minhaGeracaoDaRepeticao !== geracaoDaRepeticao) return;
+
+    repeticaoEmAndamento = false;
+    if (entradaEstaAtiva()) atualizarEstadoControles(true);
   });
 }
 
@@ -687,70 +771,103 @@ if (btnDeNovo) {
   });
 }
 
-// Botões direcionais visíveis
-if (btnEsquerda) {
-  btnEsquerda.addEventListener('pointerdown', () => {
-    if (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO) {
-      btnEsquerdaAtivo = true;
-    }
-  });
-  btnEsquerda.addEventListener('pointerup', () => {
-    btnEsquerdaAtivo = false;
-  });
-  btnEsquerda.addEventListener('pointercancel', () => {
-    btnEsquerdaAtivo = false;
-  });
+function entradaEstaAtiva() {
+  return faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO;
 }
 
-if (btnDireita) {
-  btnDireita.addEventListener('pointerdown', () => {
-    if (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO) {
-      btnDireitaAtivo = true;
-    }
-  });
-  btnDireita.addEventListener('pointerup', () => {
-    btnDireitaAtivo = false;
-  });
-  btnDireita.addEventListener('pointercancel', () => {
-    btnDireitaAtivo = false;
-  });
+function capturarDirecao(elemento, evento, direcao) {
+  if (!entradaEstaAtiva()) return;
+  evento.preventDefault();
+  direcoesPorPonteiro.set(evento.pointerId, direcao);
+  try {
+    elemento.setPointerCapture?.(evento.pointerId);
+  } catch {
+    // O pointerup global ainda garante a limpeza em navegadores sem captura.
+  }
 }
+
+function soltarDirecao(evento) {
+  direcoesPorPonteiro.delete(evento.pointerId);
+}
+
+function ligarBotaoDirecional(botao, direcao) {
+  if (!botao) return;
+  botao.addEventListener('pointerdown', evento => capturarDirecao(botao, evento, direcao));
+  botao.addEventListener('pointerup', soltarDirecao);
+  botao.addEventListener('pointercancel', soltarDirecao);
+  botao.addEventListener('lostpointercapture', soltarDirecao);
+}
+
+// Botões direcionais visíveis
+ligarBotaoDirecional(btnEsquerda, -1);
+ligarBotaoDirecional(btnDireita, 1);
 
 // Toque direto no Canvas (metade esquerda / direita) com coordenadas lógicas
-function atualizarToqueCanvas(clientX) {
+function atualizarToqueCanvas(pointerId, clientX) {
   const rect = canvas.getBoundingClientRect();
   const midX = rect.left + rect.width / 2;
-  canvasToqueLado = clientX < midX ? -1 : 1;
+  direcoesPorPonteiro.set(pointerId, clientX < midX ? -1 : 1);
 }
 
 canvas.addEventListener('pointerdown', (e) => {
-  if (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO) {
-    atualizarToqueCanvas(e.clientX);
+  if (entradaEstaAtiva()) {
+    e.preventDefault();
+    atualizarToqueCanvas(e.pointerId, e.clientX);
+    try {
+      canvas.setPointerCapture?.(e.pointerId);
+    } catch {
+      // O pointerup global ainda garante a limpeza em navegadores sem captura.
+    }
   }
 });
 
 canvas.addEventListener('pointermove', (e) => {
-  if (canvasToqueLado !== 0) {
-    atualizarToqueCanvas(e.clientX);
+  if (direcoesPorPonteiro.has(e.pointerId)) {
+    atualizarToqueCanvas(e.pointerId, e.clientX);
   }
 });
 
-canvas.addEventListener('pointerup', () => {
-  canvasToqueLado = 0;
-});
+canvas.addEventListener('pointerup', soltarDirecao);
+canvas.addEventListener('pointercancel', soltarDirecao);
+canvas.addEventListener('lostpointercapture', soltarDirecao);
 
-canvas.addEventListener('pointercancel', () => {
-  canvasToqueLado = 0;
-});
+function alvoUsaTecladoNativo(alvo) {
+  return alvo instanceof Element && Boolean(alvo.closest('button, a, input, select, textarea'));
+}
 
-// Teclado (setas e A/D)
+function acionarAtalhoPrincipal() {
+  if (faseAtual === FASES.CONVITE && btnComecar && !btnComecar.disabled) {
+    btnComecar.click();
+    return true;
+  }
+  if (faseAtual === FASES.PREPARANDO && telas.demonstracao && !telas.demonstracao.hidden &&
+      btnDemoContinuar && !btnDemoContinuar.disabled) {
+    btnDemoContinuar.click();
+    return true;
+  }
+  if (faseAtual === FASES.FIM && btnDeNovo && !btnDeNovo.disabled) {
+    btnDeNovo.click();
+    return true;
+  }
+  return false;
+}
+
+// Teclado (setas, A/D e Espaço fora da rodada)
 window.addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
-  if (k === 'arrowleft' || k === 'arrowright' || k === 'a' || k === 'd') {
-    if (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO) {
+  const ehEspaco = e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
+  if (ehEspaco) {
+    if (!e.repeat && !alvoUsaTecladoNativo(e.target) && acionarAtalhoPrincipal()) {
       e.preventDefault();
     }
-    teclas.add(k);
+    return;
+  }
+
+  if (k === 'arrowleft' || k === 'arrowright' || k === 'a' || k === 'd') {
+    if (entradaEstaAtiva()) {
+      e.preventDefault();
+      teclas.add(k);
+    }
   }
 });
 
@@ -761,7 +878,8 @@ window.addEventListener('keyup', (e) => {
 
 // Cancelamento global e limpeza
 window.addEventListener('blur', zerarEntradas);
-window.addEventListener('pointercancel', zerarEntradas);
+window.addEventListener('pointerup', soltarDirecao);
+window.addEventListener('pointercancel', soltarDirecao);
 
 document.addEventListener('visibilitychange', () => {
   zerarEntradas();
@@ -979,6 +1097,8 @@ function desenharCarro(c) {
 // -----------------------------------------------------------------------------
 
 function atualizar(dt) {
+  if (repeticaoEmAndamento) return;
+
   // 1. Atualização da animação de rodopio (quando ativa)
   if (animacaoRodopio) {
     const decorrido = performance.now() - animacaoRodopio.t0;
@@ -1031,13 +1151,7 @@ function atualizar(dt) {
 
       if (retangulosSeSobrepoem(carro, encontroAtual.posto, 4)) {
         encontroAtual.resolvido = true;
-        tocar('acerto');
-        if (elementoRetorno) {
-          elementoRetorno.textContent = 'Muito bem!';
-        }
-        agendar(() => {
-          iniciarRodadaPrincipal();
-        }, 900);
+        void concluirDemonstracao();
       } else if (encontroAtual.posto.y > carro.y + carro.h) {
         // Se ultrapassou na demo, reinicia o posto no topo
         encontroAtual.y = -90;
@@ -1126,7 +1240,7 @@ function renderizar() {
   desenharPista();
 
   // 2. Elementos do encontro (posto e óleo)
-  if (encontroAtual && (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO || faseAtual === FASES.AJUDA || faseAtual === FASES.RETORNO)) {
+  if (encontroAtual && (faseAtual === FASES.PREPARANDO || faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO || faseAtual === FASES.AJUDA || faseAtual === FASES.RETORNO)) {
     if (encontroAtual.posto) {
       desenharPosto(encontroAtual.posto);
     }
@@ -1155,36 +1269,3 @@ function loopDoJogo(timestamp) {
 
 // Inicia o único RAF do ciclo de vida da página
 requestAnimationFrame(loopDoJogo);
-
-// Helpers públicos para teste/inspeção de conformidade
-export function obterFaseAtual() {
-  return faseAtual;
-}
-
-export function obterSessao() {
-  return sessao;
-}
-
-export function obterCarro() {
-  return { ...carro };
-}
-
-export function obterEncontroAtual() {
-  return encontroAtual ? { ...encontroAtual } : null;
-}
-
-export function obterRodadaRegistrada() {
-  return rodadaRegistrada;
-}
-
-if (typeof window !== 'undefined') {
-  window.__corridaRael = {
-    obterFaseAtual,
-    obterSessao,
-    obterCarro,
-    obterEncontroAtual,
-    obterRodadaRegistrada,
-    finalizarRodada,
-    iniciarDemonstracao,
-  };
-}

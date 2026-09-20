@@ -15,6 +15,7 @@ import {
   quantidadeDeFaixas,
   resultadoDoEncontro,
   retangulosSeSobrepoem,
+  rodadaEstaConcluida,
 } from '../rael/corrida-do-rael/jogo.js';
 import { criarSessao } from '../shared/rodada.js';
 
@@ -60,6 +61,26 @@ describe('Corrida do Rael — Motor puro (jogo.js)', () => {
 
     it('RESPOSTA_POSTO é "posto"', () => {
       expect(RESPOSTA_POSTO).toBe('posto');
+    });
+  });
+
+  describe('rodadaEstaConcluida', () => {
+    it('aceita somente o fim do sexto e último trecho', () => {
+      expect(rodadaEstaConcluida({ fase: 'fim', indice: 5, total: 6 })).toBe(true);
+    });
+
+    it('rejeita uma rodada ainda em andamento', () => {
+      expect(rodadaEstaConcluida({ fase: 'pergunta', indice: 5, total: 6 })).toBe(false);
+    });
+
+    it('rejeita fim antecipado ou com quantidade adulterada', () => {
+      expect(rodadaEstaConcluida({ fase: 'fim', indice: 0, total: 6 })).toBe(false);
+      expect(rodadaEstaConcluida({ fase: 'fim', indice: 5, total: 1 })).toBe(false);
+    });
+
+    it('rejeita estado ausente ou incompleto', () => {
+      expect(rodadaEstaConcluida()).toBe(false);
+      expect(rodadaEstaConcluida({ fase: 'fim' })).toBe(false);
     });
   });
 

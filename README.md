@@ -113,7 +113,6 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── encaixe-as-figuras/          index.html + dados.js + jogo.js + tela.js
 │   ├── palmas-nas-palavras/         index.html + dados.js + jogo.js + tela.js
 │   ├── meu-primeiro-labirinto/      Tela infantil; reutiliza Games/labirinto/jogo.js
-│   └── chute-a-gol/                 index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
 │   ├── chute-a-gol/                 index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
 │   └── corrida-do-rael/             index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
 └── Games/

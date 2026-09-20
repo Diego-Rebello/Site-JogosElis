@@ -1053,9 +1053,9 @@ Adaptação amigável do [Pixel Racer](https://github.com/Elomami1976/pixel-race
    - Demonstração inicial guiada antes da rodada.
    - Conclusão com contagem falada dos 6 abastecimentos, pulsar dos segmentos do tanque, figurinha e conquistas novas ("Primeira corrida" e "Piloto experiente").
 4. **Verificação automatizada:**
-   - 64 testes do motor puro em `tests/corrida-do-rael.test.js` (incluindo testes de propriedades com centenas de iterações).
+   - Testes do motor puro em `tests/corrida-do-rael.test.js` (incluindo testes de propriedades com centenas de iterações).
    - Testes de conquistas e catálogo em `tests/conquistas-descobertas.test.js`.
-   - Suíte geral com 371 testes passando em 29 arquivos; `tsc --noEmit` limpo; build e precache íntegros.
+   - Suíte geral com 375 testes passando em 29 arquivos; `tsc --noEmit` limpo; build e precache íntegros.
 5. **Pendente:** validação presencial com o Rael conforme roteiro da seção 7 do plano (compreensão da demonstração, diferenciação entre posto e óleo, uso dos controles no iPad/Android).
 
 ### 5.4 Ordem sugerida de entrega

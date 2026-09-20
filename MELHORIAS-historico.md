@@ -64,8 +64,6 @@ headless) antes de cada commit.
 - As cinco páginas e a página inicial ganharam favicon SVG embutido em `data:` URI.
 - O Jogo da Memória usa `max-w-lg` no tabuleiro de 16 cartas: como as cartas agora são `w-full`,
   quem define o tamanho delas é a largura do tabuleiro.
-- Os dois PRs abertos pelo Snyk (passo 2 da T02) foram **descartados por decisão do Diego**: as
-  vulnerabilidades já tinham sido resolvidas pelo `npm audit fix` da própria T02.
 - As fontes Fredoka One, Pacifico e Nunito são servidas de `shared/fontes/` (77 KB em `.woff2`),
   e não do Google Fonts.
 - `shared/base.css` **não estiliza elementos crus** (`body`, `button`, `input`): é tudo classe.
@@ -137,7 +135,7 @@ headless) antes de cada commit.
   - Todo o código-fonte era servido publicamente (`/Games/emoji-memory-game/App.tsx`, `vite.config.ts`, `package-lock.json` respondiam 200). Sem risco real, porque o repositório já é público, mas desnecessário; a T20 resolveu publicando só a pasta gerada.
   - O `}` solto do Jogo da Memória (item 5 da tabela abaixo) estava visível no site no ar.
 - **GitHub Pages:** desativado no repositório e não era necessário; o Netlify continua sendo o provedor.
-- **Git:** a branch `main` local estava 4 commits atrás de `origin/main`. Existiam 2 branches abertas pelo Snyk (`react` e `react-dom` 19.1.1 → 19.2.0, só no Jogo da Velha). Havia um repositório git aninhado por engano em `Games/emoji-memory-game/.git`. Arquivos `.DS_Store` estavam versionados. Não existia `.gitignore` na raiz.
+- **Git:** a branch `main` local estava 4 commits atrás de `origin/main`. Havia um repositório git aninhado por engano em `Games/emoji-memory-game/.git`. Arquivos `.DS_Store` estavam versionados. Não existia `.gitignore` na raiz.
 - **CDNs externos:** Google Fonts, Font Awesome 6.5.1 e `cdn.tailwindcss.com` respondiam normalmente, mas o site dependia deles para funcionar.
 
 ### 2.3 Problemas encontrados, por gravidade
@@ -190,8 +188,8 @@ headless) antes de cada commit.
 > ✅ Concluída em 2026-09-06 — commit `74b6342`.
 
 **Prioridade:** Alta · **Esforço:** P · **Modelo:** Sonnet · **Depende de:** T01
-**Problema encontrado:** `main` local 4 commits atrás de `origin/main`; duas branches do Snyk; 5 vulnerabilidades altas em `vite`/`rollup`.
-**O que foi feito:** git sincronizado, `react`/`react-dom` alinhados em 19.2.x, `npm audit fix` nos dois jogos, `dist/` recompilado. As branches do Snyk foram **descartadas por decisão do Diego**: o `npm audit fix` já tinha resolvido as vulnerabilidades.
+**Problema encontrado:** `main` local 4 commits atrás de `origin/main`; 5 vulnerabilidades altas em `vite`/`rollup`.
+**O que foi feito:** git sincronizado, `react`/`react-dom` alinhados em 19.2.x, `npm audit fix` nos dois jogos e `dist/` recompilado.
 
 ### T03 — Remover restos do template AI Studio e endurecer o TypeScript
 

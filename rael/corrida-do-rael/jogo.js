@@ -1,6 +1,7 @@
 /**
  * Corrida do Rael — Motor puro de geometria, colisão e trechos.
  * Derivado de cálculos do Pixel Racer sob licença MIT.
+ * Copyright (c) 2026 Tarek Elomami.
  * Cópia da licença em LICENSE-pixel-racer.txt.
  */
 
@@ -261,4 +262,20 @@ export function progressoDoTanque(concluidos, total = QUANTIDADE_DE_TRECHOS) {
   const c = Math.floor(concluidos);
   if (c >= tot) return tot;
   return c;
+}
+
+/**
+ * Confirma que o motor da rodada realmente chegou ao fim dos seis trechos.
+ * A tela usa esta guarda antes de registrar prêmio, figurinha e conquistas.
+ *
+ * @param {{ fase?: string, indice?: number, total?: number } | null | undefined} estado
+ * @returns {boolean}
+ */
+export function rodadaEstaConcluida(estado) {
+  return Boolean(
+    estado &&
+    estado.fase === 'fim' &&
+    estado.total === QUANTIDADE_DE_TRECHOS &&
+    estado.indice === QUANTIDADE_DE_TRECHOS - 1,
+  );
 }
