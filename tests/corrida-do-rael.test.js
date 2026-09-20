@@ -16,6 +16,8 @@ import {
   resultadoDoEncontro,
   retangulosSeSobrepoem,
 } from '../rael/corrida-do-rael/jogo.js';
+import { criarSessao } from '../shared/rodada.js';
+
 
 /**
  * Embaralhador determinístico baseado em gerador linear congruencial (LCG),
@@ -559,6 +561,87 @@ describe('Corrida do Rael (P17) — Motor puro (jogo.js)', () => {
             expect(trinca).toBe(false);
           }
         }
+      }
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Grupo 11: Integração com criarSessao (Etapa 4)
+  // ---------------------------------------------------------------------------
+  describe('Integração com criarSessao (Etapa 4)', () => {
+    it('A4.2: Seis postos de primeira completam a rodada com semAjuda: 6 e comAjuda: 0', () => {
+      const trechos = montarTrechos({ faixas: 3, quantidade: 6 });
+      const sessao = criarSessao({ desafios: trechos, tentativasAteDemonstrar: 2 });
+
+      for (let i = 0; i < 6; i++) {
+        const resp = sessao.responder('posto');
+        expect(resp.certo).toBe(true);
+        expect(resp.fase).toBe('acertou');
+        sessao.avancar();
+      }
+
+      expect(sessao.resumo()).toEqual({
+        total: 6,
+        semAjuda: 6,
+        comAjuda: 0,
+        concluida: true,
+      });
+    });
+
+    it('A4.3: Seis conclusões com ajuda completam a rodada com semAjuda: 0 e comAjuda: 6', () => {
+      const trechos = montarTrechos({ faixas: 3, quantidade: 6 });
+      const sessao = criarSessao({ desafios: trechos, tentativasAteDemonstrar: 2 });
+
+      for (let i = 0; i < 6; i++) {
+        // 1ª tentativa falha
+        const r1 = sessao.responder('oleo');
+        expect(r1.certo).toBe(false);
+        expect(r1.fase).toBe('pergunta');
+
+        // 2ª tentativa falha -> atinge o limite e transiciona para demonstrando
+        const r2 = sessao.responder('passou');
+        expect(r2.certo).toBe(false);
+        expect(r2.fase).toBe('demonstrando');
+
+        // Conclui ajuda e avança sem chamar responder() novamente
+        sessao.avancar();
+      }
+
+      expect(sessao.resumo()).toEqual({
+        total: 6,
+        semAjuda: 0,
+        comAjuda: 6,
+        concluida: true,
+      });
+    });
+
+    it('A4.6: Todas as combinações de falha em 2 tentativas acionam fase demonstrando', () => {
+      const combinacoes = [
+        ['oleo', 'passou'],
+        ['passou', 'oleo'],
+        ['oleo', 'oleo'],
+        ['passou', 'passou'],
+      ];
+
+      for (const [tentativa1, tentativa2] of combinacoes) {
+        const trechos = montarTrechos({ faixas: 3, quantidade: 2 });
+        const sessao = criarSessao({ desafios: trechos, tentativasAteDemonstrar: 2 });
+
+        const r1 = sessao.responder(tentativa1);
+        expect(r1.certo).toBe(false);
+        expect(r1.fase).toBe('pergunta');
+        expect(r1.tentativas).toBe(1);
+
+        const r2 = sessao.responder(tentativa2);
+        expect(r2.certo).toBe(false);
+        expect(r2.fase).toBe('demonstrando');
+        expect(r2.tentativas).toBe(2);
+
+        // Avança uma única vez
+        const aposAvancar = sessao.avancar();
+        expect(aposAvancar.indice).toBe(1);
+        expect(aposAvancar.fase).toBe('pergunta');
+        expect(aposAvancar.tentativas).toBe(0);
       }
     });
   });

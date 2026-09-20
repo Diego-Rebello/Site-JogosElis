@@ -94,6 +94,15 @@
   user-select: none;
 }
 
+#esquerda:disabled,
+#direita:disabled,
+#esquerda[aria-disabled="true"],
+#direita[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* Regra da Seção 6 e Critério A1.11: touch-action: none somente em #pista, #esquerda e #direita */
 #pista,
 #esquerda,

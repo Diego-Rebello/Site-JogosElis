@@ -1,12 +1,21 @@
 /**
- * Corrida do Rael — Renderização, entrada e loop do jogo.
+ * Corrida do Rael — Renderização, entrada, fala e fluxo da rodada.
  * Derivado de cálculos e rotinas de Canvas do Pixel Racer sob licença MIT.
  * Cópia da licença em LICENSE-pixel-racer.txt.
  */
 
 import { montarCabecalho } from '../../shared/cabecalho.js';
-import { definirPreferencia, preparar } from '../../shared/fala.js';
+import { tocar } from '../../shared/sons.js';
+import {
+  definirPreferencia,
+  falarSequencia,
+  modoAcompanhado,
+  parar,
+  preparar,
+  repetir as repetirFala,
+} from '../../shared/fala.js';
 import { obterConfiguracoes } from '../../shared/descobertas.js';
+import { criarSessao } from '../../shared/rodada.js';
 import {
   ALTURA_CANVAS,
   LARGURA_CANVAS,
@@ -14,10 +23,14 @@ import {
   VELOCIDADE_DA_PISTA,
   VELOCIDADE_DO_CARRO,
   centroDaFaixa,
+  faixaDoCarro,
   geometriaDaPista,
   montarTrechos,
   moverCarro,
+  progressoDoTanque,
   quantidadeDeFaixas,
+  resultadoDoEncontro,
+  retangulosSeSobrepoem,
 } from './jogo.js';
 
 export const FASES = Object.freeze({
@@ -44,12 +57,19 @@ const telas = {
 const canvas = /** @type {HTMLCanvasElement} */ ($('pista'));
 const ctx = canvas.getContext('2d');
 
-const btnEsquerda = $('esquerda');
-const btnDireita = $('direita');
+const btnEsquerda = /** @type {HTMLButtonElement} */ ($('esquerda'));
+const btnDireita = /** @type {HTMLButtonElement} */ ($('direita'));
 const btnComecar = $('comecar');
 const btnDemoContinuar = $('demonstracao-continuar');
+const btnRepetir = $('repetir');
+const btnDeNovo = $('de-novo');
 const elementoInstrucao = $('instrucao');
 const elementoRetorno = $('retorno');
+const elementoRoteiro = $('roteiro');
+const elementoRoteiroFala = $('roteiro-fala');
+const elTanque = $('tanque');
+const elTanqueFim = $('tanque-fim');
+const textoFim = $('texto-fim');
 
 let faseAtual = FASES.CONVITE;
 
@@ -66,13 +86,26 @@ const carro = {
   w: 44,
   h: 64,
   angulo: 0,
+  realceContorno: false,
 };
 
-// Trechos e encontro atual
+// Sessão e trechos
+let sessao = null;
 let trechos = [];
-let indiceTrecho = 0;
+let trechoAtual = null;
 let encontroAtual = null;
 let deslocamentoPista = 0;
+let faixaDestaque = null;
+
+// Animações especiais
+let animacaoRodopio = null;
+let animacaoAjuda = null;
+
+// Controle de tempo, timers centrais e fala
+const timers = new Set();
+let geracaoDaRodada = 0;
+let ultimaFalaTexto = '';
+let lastTime = 0;
 
 // Estado de entrada
 const teclas = new Set();
@@ -80,8 +113,51 @@ let btnEsquerdaAtivo = false;
 let btnDireitaAtivo = false;
 let canvasToqueLado = 0;
 
-// Controle de tempo e animação
-let lastTime = 0;
+// -----------------------------------------------------------------------------
+// Inicialização do indicador do Tanque no DOM (Seção 6, requisito 14)
+// -----------------------------------------------------------------------------
+
+if (elTanque) {
+  elTanque.innerHTML = Array.from({ length: QUANTIDADE_DE_TRECHOS }, () =>
+    '<div class="tanque-segmento"></div>',
+  ).join('');
+  elTanque.setAttribute('aria-label', 'Tanque: 0 de 6 abastecimentos');
+}
+
+function atualizarTanque(concluidos) {
+  const seguros = progressoDoTanque(concluidos, QUANTIDADE_DE_TRECHOS);
+  if (elTanque) {
+    const segmentos = elTanque.querySelectorAll('.tanque-segmento');
+    segmentos.forEach((seg, i) => {
+      seg.classList.toggle('tanque-segmento--cheio', i < seguros);
+    });
+    elTanque.setAttribute('aria-label', `Tanque: ${seguros} de ${QUANTIDADE_DE_TRECHOS} abastecimentos`);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Gerenciador de Timers Centrais (Seção 2.6)
+// -----------------------------------------------------------------------------
+
+function agendar(callback, delayMs) {
+  const timer = setTimeout(() => {
+    timers.delete(timer);
+    callback();
+  }, delayMs);
+  timers.add(timer);
+  return timer;
+}
+
+function cancelarTimers() {
+  timers.forEach(t => clearTimeout(t));
+  timers.clear();
+}
+
+function prefereMovimentoReduzido() {
+  return typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 function mostrarTela(nome) {
   Object.entries(telas).forEach(([chave, el]) => {
@@ -91,12 +167,75 @@ function mostrarTela(nome) {
   });
 }
 
-/**
- * Cria o encontro (posto e óleo) para o trecho fornecido.
- *
- * @param {{ id: string, postoFaixa: number, oleoFaixa: number }} trecho
- * @param {ReturnType<typeof geometriaDaPista>} geom
- */
+// -----------------------------------------------------------------------------
+// Fala e Acessibilidade (Seção 2.6 e 2.8)
+// -----------------------------------------------------------------------------
+
+async function falarTexto(texto, { textoVisual, aoComecar } = {}) {
+  parar();
+  const minhaGeracao = geracaoDaRodada;
+  ultimaFalaTexto = texto;
+
+  if (elementoRoteiroFala) {
+    elementoRoteiroFala.textContent = textoVisual || texto;
+  }
+  if (elementoRoteiro) {
+    elementoRoteiro.hidden = !modoAcompanhado();
+  }
+
+  const res = await falarSequencia([{ texto }], { aoComecar });
+  if (minhaGeracao !== geracaoDaRodada) return 'cancelado';
+  return res[0] || 'sem-fala';
+}
+
+// -----------------------------------------------------------------------------
+// Controle de Entrada Unificada (Seção 2.2)
+// -----------------------------------------------------------------------------
+
+function zerarEntradas() {
+  teclas.clear();
+  btnEsquerdaAtivo = false;
+  btnDireitaAtivo = false;
+  canvasToqueLado = 0;
+}
+
+function atualizarEstadoControles(habilitado) {
+  if (btnEsquerda) {
+    btnEsquerda.disabled = !habilitado;
+    btnEsquerda.setAttribute('aria-disabled', String(!habilitado));
+  }
+  if (btnDireita) {
+    btnDireita.disabled = !habilitado;
+    btnDireita.setAttribute('aria-disabled', String(!habilitado));
+  }
+  if (!habilitado) {
+    zerarEntradas();
+  }
+}
+
+function obterDirecaoDeEntrada() {
+  if (faseAtual !== FASES.DEMO && faseAtual !== FASES.JOGANDO) {
+    return 0;
+  }
+
+  let dir = 0;
+  if (teclas.has('arrowleft') || teclas.has('a') || btnEsquerdaAtivo) {
+    dir -= 1;
+  }
+  if (teclas.has('arrowright') || teclas.has('d') || btnDireitaAtivo) {
+    dir += 1;
+  }
+  dir += canvasToqueLado;
+
+  if (dir < 0) return -1;
+  if (dir > 0) return 1;
+  return 0;
+}
+
+// -----------------------------------------------------------------------------
+// Criação de Encontro
+// -----------------------------------------------------------------------------
+
 function criarEncontro(trecho, geom) {
   const wPosto = Math.min(64, Math.floor(geom.larguraFaixa * 0.68));
   const hPosto = Math.min(72, Math.floor(wPosto * 1.2));
@@ -119,25 +258,82 @@ function criarEncontro(trecho, geom) {
   };
 }
 
-/**
- * Inicia a rodada configurando faixas, trechos e estado do carro.
- */
-function iniciarRodada() {
+// -----------------------------------------------------------------------------
+// Demonstração Inicial (Seção 6, requisito 2 e 10)
+// Ordem: CONVITE -> PREPARANDO -> DEMO -> JOGANDO
+// -----------------------------------------------------------------------------
+
+async function iniciarDemonstracao() {
+  faseAtual = FASES.PREPARANDO;
+  cancelarTimers();
+  parar();
+  geracaoDaRodada += 1;
+
   configuracoes = obterConfiguracoes();
+  definirPreferencia(configuracoes.voz);
   faixasConfiguradas = quantidadeDeFaixas(configuracoes.alternativas);
   geometria = geometriaDaPista({ faixas: faixasConfiguradas });
 
-  trechos = montarTrechos({ faixas: faixasConfiguradas, quantidade: QUANTIDADE_DE_TRECHOS });
-  indiceTrecho = 0;
-  encontroAtual = trechos.length > 0 ? criarEncontro(trechos[0], geometria) : null;
+  await preparar();
+
+  faseAtual = FASES.DEMO;
+  mostrarTela('brincadeira');
+  atualizarTanque(0);
 
   carro.x = 200 - carro.w / 2;
   carro.y = 580;
   carro.angulo = 0;
-  deslocamentoPista = 0;
+  carro.realceContorno = false;
+  zerarEntradas();
+  atualizarEstadoControles(true);
 
+  // Na demonstração: posto na faixa adjacente, sem poça de óleo
+  const faixaCentro = faixaDoCarro(carro.x, carro.w, geometria);
+  const faixaDemo = (faixaCentro + 1 < geometria.faixas) ? faixaCentro + 1 : Math.max(0, faixaCentro - 1);
+  faixaDestaque = faixaDemo;
+
+  const wPosto = Math.min(64, Math.floor(geometria.larguraFaixa * 0.68));
+  const hPosto = Math.min(72, Math.floor(wPosto * 1.2));
+  const xPostoCentro = centroDaFaixa(faixaDemo, geometria);
+  const xPosto = Math.round(xPostoCentro - wPosto / 2);
+  const yInicial = -90;
+
+  encontroAtual = {
+    trechoId: 'demo',
+    y: yInicial,
+    posto: { x: xPosto, y: yInicial, w: wPosto, h: hPosto },
+    oleo: null,
+    resolvido: false,
+  };
+
+  if (elementoInstrucao) {
+    elementoInstrucao.textContent = 'Use as setas. Leve o carrinho até o posto.';
+  }
+  if (elementoRetorno) {
+    elementoRetorno.textContent = '';
+  }
+
+  falarTexto('Use as setas. Leve o carrinho até o posto.');
+}
+
+// -----------------------------------------------------------------------------
+// Início da Rodada de 6 Trechos (FASES.JOGANDO)
+// -----------------------------------------------------------------------------
+
+function iniciarRodadaPrincipal() {
   faseAtual = FASES.JOGANDO;
-  mostrarTela('brincadeira');
+  faixaDestaque = null;
+  atualizarTanque(0);
+
+  trechos = montarTrechos({ faixas: faixasConfiguradas, quantidade: QUANTIDADE_DE_TRECHOS });
+  sessao = criarSessao({ desafios: trechos, tentativasAteDemonstrar: 2 });
+
+  carro.x = 200 - carro.w / 2;
+  carro.y = 580;
+  carro.angulo = 0;
+  carro.realceContorno = false;
+  zerarEntradas();
+  atualizarEstadoControles(true);
 
   if (elementoInstrucao) {
     elementoInstrucao.textContent = 'Leve o carrinho até o posto.';
@@ -145,39 +341,223 @@ function iniciarRodada() {
   if (elementoRetorno) {
     elementoRetorno.textContent = '';
   }
+
+  falarTexto('Agora é sua vez. Vá até o posto!', {
+    textoVisual: 'Leve o carrinho até o posto.',
+  });
+
+  const estadoSessao = sessao.estado();
+  trechoAtual = estadoSessao.desafio;
+  encontroAtual = criarEncontro(trechoAtual, geometria);
 }
 
-/**
- * Zera todas as entradas ativas para evitar movimento residual.
- */
-function zerarEntradas() {
-  teclas.clear();
-  btnEsquerdaAtivo = false;
-  btnDireitaAtivo = false;
-  canvasToqueLado = 0;
+// -----------------------------------------------------------------------------
+// Tratamento dos Resultados (Seção 6, requisitos 3, 4, 9)
+// -----------------------------------------------------------------------------
+
+async function tratarResultado(resultado) {
+  if (resultado === 'posto') {
+    faseAtual = FASES.RETORNO;
+    atualizarEstadoControles(false);
+    tocar('acerto');
+
+    sessao.responder('posto');
+    const concluidos = sessao.estado().indice + 1;
+    atualizarTanque(concluidos);
+
+    if (elementoRetorno) {
+      elementoRetorno.textContent = 'Abasteceu!';
+    }
+
+    await falarTexto('Abasteceu!');
+
+    agendar(() => {
+      sessao.avancar();
+      const novoEstado = sessao.estado();
+      if (novoEstado.fase === 'fim') {
+        finalizarRodada();
+      } else {
+        prepararProximoTrecho();
+      }
+    }, 900);
+  } else if (resultado === 'oleo') {
+    tocar('clique');
+    const resp = sessao.responder('oleo');
+
+    if (resp.fase === 'demonstrando') {
+      // 2ª tentativa sem posto -> Dispara ajuda guiada
+      iniciarAjuda();
+    } else {
+      // 1ª tentativa sem posto -> Rodopio e repete o mesmo trecho
+      faseAtual = FASES.RETORNO;
+      atualizarEstadoControles(false);
+
+      if (elementoRetorno) {
+        elementoRetorno.textContent = 'O carrinho rodopiou! Vamos de novo!';
+      }
+      falarTexto('O carrinho rodopiou! Vamos de novo!');
+
+      executarRodopio(() => {
+        reiniciarMesmoTrecho();
+      });
+    }
+  } else if (resultado === 'passou') {
+    tocar('clique');
+    const resp = sessao.responder('passou');
+
+    if (resp.fase === 'demonstrando') {
+      // 2ª tentativa sem posto -> Dispara ajuda guiada
+      iniciarAjuda();
+    } else {
+      // 1ª tentativa sem posto -> Repete o mesmo trecho (sem rodopio)
+      faseAtual = FASES.RETORNO;
+      atualizarEstadoControles(false);
+
+      if (elementoRetorno) {
+        elementoRetorno.textContent = 'O posto ficou ali. Vamos de novo!';
+      }
+
+      falarTexto('O posto ficou ali. Vamos de novo!').then(() => {
+        agendar(() => {
+          reiniciarMesmoTrecho();
+        }, 500);
+      });
+    }
+  }
 }
 
-/**
- * Calcula a direção horizontal combinada de todas as fontes de entrada.
- * Retorna -1 (esquerda), 1 (direita) ou 0 (parado / cancelamento).
- */
-function obterDirecaoDeEntrada() {
-  if (faseAtual !== FASES.DEMO && faseAtual !== FASES.JOGANDO) {
-    return 0;
+function executarRodopio(aoTerminar) {
+  const reduzido = prefereMovimentoReduzido();
+  const duracao = 700;
+  const t0 = performance.now();
+
+  animacaoRodopio = {
+    t0,
+    duracao,
+    reduzido,
+    aoTerminar,
+  };
+}
+
+function reiniciarMesmoTrecho() {
+  if (!trechoAtual) return;
+  // Mesmas faixas preservadas para o mesmo trecho
+  encontroAtual = criarEncontro(trechoAtual, geometria);
+  encontroAtual.resolvido = false;
+
+  carro.angulo = 0;
+  carro.realceContorno = false;
+
+  if (elementoInstrucao) {
+    elementoInstrucao.textContent = 'Leve o carrinho até o posto.';
+  }
+  if (elementoRetorno) {
+    elementoRetorno.textContent = '';
   }
 
-  let dir = 0;
-  if (teclas.has('arrowleft') || teclas.has('a') || btnEsquerdaAtivo) {
-    dir -= 1;
-  }
-  if (teclas.has('arrowright') || teclas.has('d') || btnDireitaAtivo) {
-    dir += 1;
-  }
-  dir += canvasToqueLado;
+  faseAtual = FASES.JOGANDO;
+  atualizarEstadoControles(true);
+}
 
-  if (dir < 0) return -1;
-  if (dir > 0) return 1;
-  return 0;
+async function iniciarAjuda() {
+  faseAtual = FASES.AJUDA;
+  atualizarEstadoControles(false);
+
+  if (elementoInstrucao) {
+    elementoInstrucao.textContent = 'Olhe o caminho brilhando. O carrinho vai até o posto.';
+  }
+  if (elementoRetorno) {
+    elementoRetorno.textContent = '';
+  }
+
+  falarTexto('Olhe o caminho brilhando. O carrinho vai até o posto.');
+
+  // Faixa correta brilha por pelo menos 900 ms
+  faixaDestaque = trechoAtual.postoFaixa;
+  const alvoX = Math.round(centroDaFaixa(trechoAtual.postoFaixa, geometria) - carro.w / 2);
+
+  // Remove óleo para não atrapalhar a condução assistida
+  if (encontroAtual) {
+    encontroAtual.oleo = null;
+    encontroAtual.resolvido = false;
+  }
+
+  // 1. Destaque prévio por pelo menos 900 ms (critério A4.7)
+  await new Promise(resolve => agendar(resolve, 950));
+
+  // 2. Condução suave do carro a <= 140 px/s
+  animacaoAjuda = {
+    alvoX,
+    velocidade: 120,
+    concluido: false,
+  };
+}
+
+async function concluirAjuda() {
+  tocar('acerto');
+  faseAtual = FASES.RETORNO;
+  animacaoAjuda = null;
+
+  // Conclusão com ajuda incrementa o tanque (+1)
+  const concluidos = sessao.estado().indice + 1;
+  atualizarTanque(concluidos);
+
+  if (elementoRetorno) {
+    elementoRetorno.textContent = 'Abasteceu!';
+  }
+
+  await falarTexto('Abasteceu!');
+
+  agendar(() => {
+    faixaDestaque = null;
+    sessao.avancar();
+    const novoEstado = sessao.estado();
+    if (novoEstado.fase === 'fim') {
+      finalizarRodada();
+    } else {
+      prepararProximoTrecho();
+    }
+  }, 900);
+}
+
+function prepararProximoTrecho() {
+  const estadoSessao = sessao.estado();
+  trechoAtual = estadoSessao.desafio;
+  encontroAtual = criarEncontro(trechoAtual, geometria);
+  faixaDestaque = null;
+
+  carro.angulo = 0;
+  carro.realceContorno = false;
+
+  if (elementoInstrucao) {
+    elementoInstrucao.textContent = 'Leve o carrinho até o posto.';
+  }
+  if (elementoRetorno) {
+    elementoRetorno.textContent = '';
+  }
+
+  faseAtual = FASES.JOGANDO;
+  atualizarEstadoControles(true);
+}
+
+function finalizarRodada() {
+  faseAtual = FASES.FIM;
+  atualizarEstadoControles(false);
+  faixaDestaque = null;
+
+  mostrarTela('fim');
+
+  if (elTanqueFim) {
+    elTanqueFim.innerHTML = Array.from({ length: QUANTIDADE_DE_TRECHOS }, () =>
+      '<div class="tanque-segmento tanque-segmento--cheio"></div>',
+    ).join('');
+    elTanqueFim.setAttribute('aria-label', 'Tanque cheio: 6 de 6 abastecimentos');
+  }
+
+  if (textoFim) {
+    const nome = configuracoes.nome ? configuracoes.nome.trim().split(/\s+/)[0] : 'piloto';
+    textoFim.textContent = `Tanque cheio! Muito bem, ${nome}!`;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -185,22 +565,45 @@ function obterDirecaoDeEntrada() {
 // -----------------------------------------------------------------------------
 
 if (btnComecar) {
-  btnComecar.addEventListener('click', async () => {
-    await preparar();
-    iniciarRodada();
+  btnComecar.addEventListener('click', () => {
+    if (faseAtual === FASES.CONVITE) {
+      iniciarDemonstracao();
+    }
   });
 }
 
 if (btnDemoContinuar) {
   btnDemoContinuar.addEventListener('click', () => {
-    iniciarRodada();
+    iniciarRodadaPrincipal();
+  });
+}
+
+if (btnRepetir) {
+  btnRepetir.addEventListener('click', () => {
+    if (ultimaFalaTexto) {
+      if (elementoRoteiroFala) {
+        elementoRoteiroFala.textContent = ultimaFalaTexto;
+      }
+      if (elementoRoteiro) {
+        elementoRoteiro.hidden = !modoAcompanhado();
+      }
+      repetirFala();
+    }
+  });
+}
+
+if (btnDeNovo) {
+  btnDeNovo.addEventListener('click', () => {
+    iniciarDemonstracao();
   });
 }
 
 // Botões direcionais visíveis
 if (btnEsquerda) {
   btnEsquerda.addEventListener('pointerdown', () => {
-    btnEsquerdaAtivo = true;
+    if (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO) {
+      btnEsquerdaAtivo = true;
+    }
   });
   btnEsquerda.addEventListener('pointerup', () => {
     btnEsquerdaAtivo = false;
@@ -212,7 +615,9 @@ if (btnEsquerda) {
 
 if (btnDireita) {
   btnDireita.addEventListener('pointerdown', () => {
-    btnDireitaAtivo = true;
+    if (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO) {
+      btnDireitaAtivo = true;
+    }
   });
   btnDireita.addEventListener('pointerup', () => {
     btnDireitaAtivo = false;
@@ -265,13 +670,18 @@ window.addEventListener('keyup', (e) => {
   teclas.delete(k);
 });
 
-// Cancelamento global
+// Cancelamento global e limpeza
 window.addEventListener('blur', zerarEntradas);
 window.addEventListener('pointercancel', zerarEntradas);
 
 document.addEventListener('visibilitychange', () => {
   zerarEntradas();
   lastTime = 0;
+});
+
+window.addEventListener('pagehide', () => {
+  cancelarTimers();
+  parar();
 });
 
 // -----------------------------------------------------------------------------
@@ -281,20 +691,32 @@ document.addEventListener('visibilitychange', () => {
 function desenharPista() {
   const { inicio, fim, larguraFaixa, faixas } = geometria;
 
-  // Fundo com grama nas margens
+  // 1. Fundo com grama nas margens
   ctx.fillStyle = '#1e7b34';
   ctx.fillRect(0, 0, LARGURA_CANVAS, ALTURA_CANVAS);
 
-  // Superfície de asfalto dirigível
+  // 2. Superfície de asfalto dirigível
   ctx.fillStyle = '#2b2b2b';
   ctx.fillRect(inicio, 0, fim - inicio, ALTURA_CANVAS);
 
-  // Linhas brancas de acostamento
+  // Destaque visual da faixa (demonstração ou ajuda)
+  if (faixaDestaque !== null && faixaDestaque >= 0 && faixaDestaque < faixas) {
+    const xFaixa = inicio + faixaDestaque * larguraFaixa;
+    ctx.save();
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+    ctx.fillRect(xFaixa, 0, larguraFaixa, ALTURA_CANVAS);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(xFaixa + 2, 0, larguraFaixa - 4, ALTURA_CANVAS);
+    ctx.restore();
+  }
+
+  // 3. Linhas brancas de acostamento
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(inicio - 4, 0, 4, ALTURA_CANVAS);
   ctx.fillRect(fim, 0, 4, ALTURA_CANVAS);
 
-  // Divisórias tracejadas entre as faixas
+  // 4. Divisórias tracejadas entre as faixas
   const dashHeight = 40;
   const gapHeight = 40;
   const dashCycle = dashHeight + gapHeight;
@@ -400,7 +822,7 @@ function desenharOleo(oleo) {
 /**
  * Desenha o carro do Rael com cores, vidros, faróis e rodas.
  *
- * @param {{ x: number, y: number, w: number, h: number, angulo?: number }} c
+ * @param {{ x: number, y: number, w: number, h: number, angulo?: number, realceContorno?: boolean }} c
  */
 function desenharCarro(c) {
   ctx.save();
@@ -411,6 +833,13 @@ function desenharCarro(c) {
     ctx.translate(cx, cy);
     ctx.rotate(c.angulo);
     ctx.translate(-cx, -cy);
+  }
+
+  // Realce de contorno para movimento reduzido / retorno
+  if (c.realceContorno) {
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(c.x - 2, c.y - 2, c.w + 4, c.h + 4);
   }
 
   // Chassi azul do Rael
@@ -461,7 +890,75 @@ function desenharCarro(c) {
 // -----------------------------------------------------------------------------
 
 function atualizar(dt) {
-  if (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO) {
+  // 1. Atualização da animação de rodopio (quando ativa)
+  if (animacaoRodopio) {
+    const decorrido = performance.now() - animacaoRodopio.t0;
+    const progresso = Math.min(1, decorrido / animacaoRodopio.duracao);
+
+    if (animacaoRodopio.reduzido) {
+      carro.angulo = 0;
+      carro.realceContorno = true;
+    } else {
+      carro.angulo = progresso * Math.PI * 2;
+      carro.realceContorno = false;
+    }
+
+    if (progresso >= 1) {
+      carro.angulo = 0;
+      carro.realceContorno = false;
+      const cb = animacaoRodopio.aoTerminar;
+      animacaoRodopio = null;
+      cb?.();
+    }
+  }
+
+  // 2. Atualização em DEMO
+  if (faseAtual === FASES.DEMO) {
+    const dir = obterDirecaoDeEntrada();
+    if (dir !== 0) {
+      carro.x = moverCarro({
+        x: carro.x,
+        direcao: dir,
+        velocidade: VELOCIDADE_DO_CARRO,
+        dt,
+        inicio: geometria.inicio,
+        fim: geometria.fim,
+        largura: carro.w,
+      });
+    } else if (faixaDestaque !== null && encontroAtual && encontroAtual.y > 100) {
+      // Guia suavemente para a faixa do posto se nenhuma tecla estiver pressionada
+      const centroAlvo = centroDaFaixa(faixaDestaque, geometria) - carro.w / 2;
+      const diff = centroAlvo - carro.x;
+      if (Math.abs(diff) > 2) {
+        carro.x += Math.sign(diff) * Math.min(Math.abs(diff), 120 * dt);
+      }
+    }
+
+    deslocamentoPista = (deslocamentoPista + VELOCIDADE_DA_PISTA * dt) % 80;
+
+    if (encontroAtual && !encontroAtual.resolvido) {
+      encontroAtual.y += VELOCIDADE_DA_PISTA * dt;
+      encontroAtual.posto.y = Math.round(encontroAtual.y);
+
+      if (retangulosSeSobrepoem(carro, encontroAtual.posto, 4)) {
+        encontroAtual.resolvido = true;
+        tocar('acerto');
+        if (elementoRetorno) {
+          elementoRetorno.textContent = 'Muito bem!';
+        }
+        agendar(() => {
+          iniciarRodadaPrincipal();
+        }, 900);
+      } else if (encontroAtual.posto.y > carro.y + carro.h) {
+        // Se ultrapassou na demo, reinicia o posto no topo
+        encontroAtual.y = -90;
+        encontroAtual.posto.y = -90;
+      }
+    }
+  }
+
+  // 3. Atualização em JOGANDO
+  if (faseAtual === FASES.JOGANDO) {
     const dir = obterDirecaoDeEntrada();
     carro.x = moverCarro({
       x: carro.x,
@@ -475,15 +972,59 @@ function atualizar(dt) {
 
     deslocamentoPista = (deslocamentoPista + VELOCIDADE_DA_PISTA * dt) % 80;
 
-    if (encontroAtual) {
+    if (encontroAtual && !encontroAtual.resolvido) {
       encontroAtual.y += VELOCIDADE_DA_PISTA * dt;
       encontroAtual.posto.y = Math.round(encontroAtual.y);
-      encontroAtual.oleo.y = Math.round(encontroAtual.y + (encontroAtual.posto.h - encontroAtual.oleo.h) / 2);
+      if (encontroAtual.oleo) {
+        encontroAtual.oleo.y = Math.round(encontroAtual.y + (encontroAtual.posto.h - encontroAtual.oleo.h) / 2);
+      }
 
-      // Ao ultrapassar a tela, prepara o próximo trecho
-      if (encontroAtual.y > ALTURA_CANVAS + 60) {
-        indiceTrecho = (indiceTrecho + 1) % trechos.length;
-        encontroAtual = criarEncontro(trechos[indiceTrecho], geometria);
+      const oleoPassou = encontroAtual.oleo ? (encontroAtual.oleo.y > carro.y + carro.h) : true;
+      const postoPassou = encontroAtual.posto.y > carro.y + carro.h;
+      const itensPassaram = postoPassou && oleoPassou;
+
+      const resultado = resultadoDoEncontro({
+        carro,
+        posto: encontroAtual.posto,
+        oleo: encontroAtual.oleo,
+        itensPassaram,
+      });
+
+      if (resultado !== null) {
+        encontroAtual.resolvido = true;
+        tratarResultado(resultado);
+      }
+    }
+  }
+
+  // 4. Atualização em AJUDA (movimento assistido a <= 140 px/s)
+  if (faseAtual === FASES.AJUDA) {
+    deslocamentoPista = (deslocamentoPista + VELOCIDADE_DA_PISTA * dt) % 80;
+
+    if (animacaoAjuda && !animacaoAjuda.concluido) {
+      const diff = animacaoAjuda.alvoX - carro.x;
+      if (Math.abs(diff) > 1) {
+        const passo = Math.sign(diff) * Math.min(Math.abs(diff), animacaoAjuda.velocidade * dt);
+        carro.x += passo;
+      } else {
+        carro.x = animacaoAjuda.alvoX;
+        animacaoAjuda.concluido = true;
+
+        if (encontroAtual) {
+          encontroAtual.y = -90;
+          encontroAtual.posto.y = -90;
+          encontroAtual.posto.x = Math.round(centroDaFaixa(trechoAtual.postoFaixa, geometria) - encontroAtual.posto.w / 2);
+          encontroAtual.oleo = null;
+          encontroAtual.resolvido = false;
+        }
+      }
+    } else if (animacaoAjuda && animacaoAjuda.concluido && encontroAtual && !encontroAtual.resolvido) {
+      encontroAtual.y += VELOCIDADE_DA_PISTA * dt;
+      encontroAtual.posto.y = Math.round(encontroAtual.y);
+
+      if (retangulosSeSobrepoem(carro, encontroAtual.posto, 4)) {
+        encontroAtual.resolvido = true;
+        concluirAjuda();
       }
     }
   }
@@ -492,13 +1033,17 @@ function atualizar(dt) {
 function renderizar() {
   ctx.clearRect(0, 0, LARGURA_CANVAS, ALTURA_CANVAS);
 
-  // 1. Fundo, pista e divisórias
+  // 1. Fundo, pista, destaque de faixa e divisórias
   desenharPista();
 
   // 2. Elementos do encontro (posto e óleo)
-  if (encontroAtual && (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO)) {
-    desenharPosto(encontroAtual.posto);
-    desenharOleo(encontroAtual.oleo);
+  if (encontroAtual && (faseAtual === FASES.DEMO || faseAtual === FASES.JOGANDO || faseAtual === FASES.AJUDA || faseAtual === FASES.RETORNO)) {
+    if (encontroAtual.posto) {
+      desenharPosto(encontroAtual.posto);
+    }
+    if (encontroAtual.oleo) {
+      desenharOleo(encontroAtual.oleo);
+    }
   }
 
   // 3. Carro do jogador
@@ -521,3 +1066,20 @@ function loopDoJogo(timestamp) {
 
 // Inicia o único RAF do ciclo de vida da página
 requestAnimationFrame(loopDoJogo);
+
+// Helpers públicos para teste/inspeção de conformidade
+export function obterFaseAtual() {
+  return faseAtual;
+}
+
+export function obterSessao() {
+  return sessao;
+}
+
+export function obterCarro() {
+  return { ...carro };
+}
+
+export function obterEncontroAtual() {
+  return encontroAtual ? { ...encontroAtual } : null;
+}
