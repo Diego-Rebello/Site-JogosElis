@@ -37,6 +37,7 @@ import {
   QUANTIDADE_DE_CHUTES,
   ajustarAngulo,
   calcularImpactoNoGol,
+  ehTrave,
   mensagemDoResultado,
   moverGoleiro,
   resultadoDoChute,
@@ -74,6 +75,9 @@ let jogando = false;
 let goleiroDir = 1;
 let animacaoGoleiro = 0;
 let anguloMira = 0;
+let goleiroPausa = 0;
+let framesSemFinta = 0;
+let velocidadeExtra = 1;
 
 function mostrarTela(nome) {
   Object.entries(telas).forEach(([chave, el]) => {
@@ -90,11 +94,18 @@ function posicaoDe(elemento) {
   return parseInt(getComputedStyle(elemento).left, 10) || 0;
 }
 
-/** Boca do gol: o mesmo calculo do checkGoal original (centro ± metade da largura). */
+/** Boca do gol: o centro e largura, mais a espessura da trave lateral (12% da largura). */
 function medidasDoGol() {
   const centro = posicaoDe(goalpost);
   const largura = goalpost.clientWidth;
-  return { centro, largura, inicio: centro - largura * 0.5, fim: centro + largura * 0.5 };
+  const traveLargura = Math.round(largura * 0.12);
+  return {
+    centro,
+    largura,
+    traveLargura,
+    inicio: centro - largura * 0.5,
+    fim: centro + largura * 0.5,
+  };
 }
 
 // --- Mira angular e linha tracejada ---
@@ -159,13 +170,14 @@ function shootBall() {
 }
 
 function checkGoal(impactoX) {
-  const { centro, largura } = medidasDoGol();
+  const { centro, largura, traveLargura } = medidasDoGol();
   const resultado = resultadoDoChute({
     footballPos: impactoX,
     goalpostPos: centro,
     goalpostLargura: largura,
     goalkeeperPos: posicaoDe(goalkeeper),
     goalkeeperLargura: goalkeeper.clientWidth,
+    traveLargura,
   });
 
   pararGoleiro();
@@ -183,6 +195,9 @@ function checkGoal(impactoX) {
     if (resultado === 'defesa') {
       goalkeeper.classList.add('pegou');
       setTimeout(() => goalkeeper.classList.remove('pegou'), 500);
+    } else if (resultado === 'trave') {
+      goalpost.classList.add('tremeu');
+      setTimeout(() => goalpost.classList.remove('tremeu'), 500);
     }
   }
 
@@ -200,19 +215,61 @@ function displayGoalMessage(message) {
   }, 2000);
 }
 
-// --- Vaivem do goleiro (o setInterval quebrado do original) ---
+// --- Vaivem do goleiro (com fintas e paradinhas imprevisíveis) ---
 
 function animarGoleiro() {
-  const { inicio, fim } = medidasDoGol();
+  const { inicio, fim, traveLargura } = medidasDoGol();
   const meia = goalkeeper.clientWidth * 0.5;
+  const margem = (traveLargura || 16) + 4;
+  const limiteMin = inicio + margem + meia;
+  const limiteMax = fim - margem - meia;
+  const posAtual = posicaoDe(goalkeeper);
+
+  // Se estiver em paradinha / hesitação de leitura
+  if (goleiroPausa > 0) {
+    goleiroPausa--;
+    animacaoGoleiro = requestAnimationFrame(animarGoleiro);
+    return;
+  }
+
+  framesSemFinta++;
+
+  // Comportamento dinâmico e imprevisível na área central do gol
+  const larguraBoca = Math.max(10, limiteMax - limiteMin);
+  const distCentro = Math.abs(posAtual - (limiteMin + limiteMax) * 0.5);
+  const noMeio = distCentro < larguraBoca * 0.35;
+
+  if (noMeio && framesSemFinta > 45) {
+    const sorteio = Math.random();
+    if (sorteio < 0.02) {
+      // Paradinha: hesita na leitura do chute (~0.2s a 0.3s)
+      goleiroPausa = Math.floor(10 + Math.random() * 8);
+      framesSemFinta = 0;
+      velocidadeExtra = 0.9 + Math.random() * 0.3;
+    } else if (sorteio < 0.045) {
+      // Finta: inverte a direção repentinamente!
+      goleiroDir = -goleiroDir;
+      framesSemFinta = 0;
+      velocidadeExtra = 1.0 + Math.random() * 0.25;
+    }
+  }
+
+  const velocidade = velocidadeDoGoleiro(chute) * velocidadeExtra;
+
   const passo = moverGoleiro({
-    posicao: posicaoDe(goalkeeper),
+    posicao: posAtual,
     direcao: goleiroDir,
-    velocidade: velocidadeDoGoleiro(chute),
-    inicio: inicio + meia,
-    fim: fim - meia,
+    velocidade,
+    inicio: limiteMin,
+    fim: limiteMax,
   });
-  goleiroDir = passo.direcao;
+
+  if (passo.direcao !== goleiroDir) {
+    goleiroDir = passo.direcao;
+    framesSemFinta = 0;
+    velocidadeExtra = 0.95 + Math.random() * 0.2;
+  }
+
   goalkeeper.style.left = `${passo.posicao}px`;
   animacaoGoleiro = requestAnimationFrame(animarGoleiro);
 }
@@ -254,6 +311,10 @@ function proximoChute() {
     return;
   }
 
+  goleiroPausa = 0;
+  framesSemFinta = 0;
+  velocidadeExtra = 1;
+
   recolocarBola();
   $('chute-atual').textContent = `Pênalti ${chute + 1} de ${QUANTIDADE_DE_CHUTES}`;
   comecarGoleiro();
@@ -269,6 +330,9 @@ function abrirRodada() {
   jogando = true;
   goleiroDir = 1;
   anguloMira = 0;
+  goleiroPausa = 0;
+  framesSemFinta = 0;
+  velocidadeExtra = 1;
   mostrarTela('brincadeira');
   recolocarBola();
   goalMessage.textContent = '';

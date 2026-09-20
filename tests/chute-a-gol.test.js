@@ -12,6 +12,7 @@ import {
   calcularImpactoNoGol,
   defendeu,
   ehGol,
+  ehTrave,
   mensagemDoResultado,
   moverGoleiro,
   moverNoCampo,
@@ -51,6 +52,23 @@ describe('Chute a Gol (P16) — motor portado do Football-game-in-HTML', () => {
     expect(defendeu(221, 200, 40)).toBe(false);
   });
 
+  it('ehTrave detecta quando a bola bate nas traves laterais', () => {
+    // Gol de 150 a 250 (centro 200, largura 100), traveLargura = 12
+    // Trave esquerda: 150 a 162
+    // Trave direita: 238 a 250
+    expect(ehTrave(150, 200, 100, 12)).toBe(true);
+    expect(ehTrave(162, 200, 100, 12)).toBe(true);
+    expect(ehTrave(163, 200, 100, 12)).toBe(false); // boca do gol
+    expect(ehTrave(237, 200, 100, 12)).toBe(false); // boca do gol
+    expect(ehTrave(238, 200, 100, 12)).toBe(true);
+    expect(ehTrave(250, 200, 100, 12)).toBe(true);
+    // Fora do gol
+    expect(ehTrave(140, 200, 100, 12)).toBe(false);
+    expect(ehTrave(260, 200, 100, 12)).toBe(false);
+    // Sem trave configurada (0)
+    expect(ehTrave(150, 200, 100, 0)).toBe(false);
+  });
+
   const gol = { goalpostPos: 200, goalpostLargura: 100, goalkeeperLargura: 40 };
 
   it('resultadoDoChute devolve gol quando a bola entra longe do goleiro', () => {
@@ -61,6 +79,11 @@ describe('Chute a Gol (P16) — motor portado do Football-game-in-HTML', () => {
     expect(resultadoDoChute({ ...gol, footballPos: 200, goalkeeperPos: 195 })).toBe('defesa');
   });
 
+  it('resultadoDoChute devolve trave quando bate na trave lateral', () => {
+    expect(resultadoDoChute({ ...gol, footballPos: 155, goalkeeperPos: 200, traveLargura: 12 })).toBe('trave');
+    expect(resultadoDoChute({ ...gol, footballPos: 245, goalkeeperPos: 200, traveLargura: 12 })).toBe('trave');
+  });
+
   it('resultadoDoChute devolve fora quando a bola nem entra no gol', () => {
     expect(resultadoDoChute({ ...gol, footballPos: 300, goalkeeperPos: 300 })).toBe('fora');
   });
@@ -68,6 +91,7 @@ describe('Chute a Gol (P16) — motor portado do Football-game-in-HTML', () => {
   it('mensagemDoResultado tem uma frase em pt-BR para cada resultado', () => {
     expect(mensagemDoResultado('gol')).toBe('Golaço do Furacão!');
     expect(mensagemDoResultado('defesa')).toBe('O goleiro pegou!');
+    expect(mensagemDoResultado('trave')).toBe('Na trave!');
     expect(mensagemDoResultado('fora')).toBe('Fora!');
   });
 
@@ -102,8 +126,8 @@ describe('Chute a Gol (P16) — motor portado do Football-game-in-HTML', () => {
   it('constantes vindas do original e da mira angular', () => {
     expect(PASSO).toBe(10);
     expect(PASSO_ANGULO).toBe(2.5);
-    expect(ANGULO_MINIMO).toBe(-28);
-    expect(ANGULO_MAXIMO).toBe(28);
+    expect(ANGULO_MINIMO).toBe(-35);
+    expect(ANGULO_MAXIMO).toBe(35);
     expect(DURACAO_DO_CHUTE).toBe(1000);
     expect(QUANTIDADE_DE_CHUTES).toBe(5);
   });
@@ -111,8 +135,8 @@ describe('Chute a Gol (P16) — motor portado do Football-game-in-HTML', () => {
   it('ajustarAngulo altera o angulo e respeita os limites minimo e maximo', () => {
     expect(ajustarAngulo(0, PASSO_ANGULO)).toBe(2.5);
     expect(ajustarAngulo(0, -PASSO_ANGULO)).toBe(-2.5);
-    expect(ajustarAngulo(27, 5)).toBe(28);
-    expect(ajustarAngulo(-27, -5)).toBe(-28);
+    expect(ajustarAngulo(34, 5)).toBe(35);
+    expect(ajustarAngulo(-34, -5)).toBe(-35);
   });
 
   it('calcularImpactoNoGol calcula deltaX via trigonometria com precisao', () => {

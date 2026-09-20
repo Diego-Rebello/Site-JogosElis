@@ -372,6 +372,17 @@
   100% { transform: translateX(-50%) scale(1) rotate(0deg); }
 }
 
+@keyframes trave-tremeu {
+  0%, 100% { transform: translateX(-50%) rotate(0deg); }
+  25% { transform: translateX(-50%) rotate(-1.5deg) scale(1.02); }
+  50% { transform: translateX(-50%) rotate(1.5deg) scale(1.02); }
+  75% { transform: translateX(-50%) rotate(-0.8deg); }
+}
+
+#goalpost.tremeu {
+  animation: trave-tremeu 0.45s ease-out;
+}
+
 @keyframes perna {
   40% { transform: translateX(-50%) rotate(-18deg) scale(1.08); }
   70% { transform: translateX(-50%) rotate(8deg) scale(1.04); }
@@ -381,6 +392,7 @@
 @media (prefers-reduced-motion: reduce) {
   #football.chutando,
   #goalkeeper.pegou,
+  #goalpost.tremeu,
   #striker.chutando,
   .mascote-furacao.comemorando,
   .mascote-rabo,

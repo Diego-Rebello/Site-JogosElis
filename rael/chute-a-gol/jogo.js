@@ -19,9 +19,9 @@ export const PASSO = 10;
 /** Passo em graus para cada toque de mira. */
 export const PASSO_ANGULO = 2.5;
 
-/** Limites do ângulo de mira (em graus), cobrindo de ponta a ponta do gol. */
-export const ANGULO_MINIMO = -28;
-export const ANGULO_MAXIMO = 28;
+/** Limites do ângulo de mira (em graus), cobrindo a boca do gol, as traves e para fora. */
+export const ANGULO_MINIMO = -35;
+export const ANGULO_MAXIMO = 35;
 
 /** Penaltis por rodada. */
 export const QUANTIDADE_DE_CHUTES = 5;
@@ -87,8 +87,21 @@ export function defendeu(footballPos, goalkeeperPos, goalkeeperLargura) {
 }
 
 /**
- * Resultado de um chute: 'gol', 'defesa' ou 'fora'.
- * Fora tem prioridade: se a bola nem entrou no gol, o goleiro nao defendeu nada.
+ * A bola acerta a trave quando atinge as extremidades laterais da armação do gol.
+ */
+export function ehTrave(footballPos, goalpostPos, goalpostLargura, traveLargura = 0) {
+  const t = Math.max(0, Number(traveLargura) || 0);
+  if (t <= 0) return false;
+  const { inicio, fim } = areaDoGol(goalpostPos, goalpostLargura);
+  const bola = Number(footballPos) || 0;
+  return (bola >= inicio && bola <= inicio + t) || (bola >= fim - t && bola <= fim);
+}
+
+/**
+ * Resultado de um chute: 'gol', 'defesa', 'trave' ou 'fora'.
+ * Fora tem prioridade: se a bola nem entrou na área do gol, não é gol nem trave.
+ * Em seguida, verifica se pegou na trave (não entra no placar).
+ * Se entrou na boca livre, o goleiro tem chance de defender.
  */
 export function resultadoDoChute({
   footballPos,
@@ -96,9 +109,13 @@ export function resultadoDoChute({
   goalpostLargura,
   goalkeeperPos,
   goalkeeperLargura,
+  traveLargura = 0,
 }) {
   if (!ehGol(footballPos, goalpostPos, goalpostLargura)) {
     return 'fora';
+  }
+  if (ehTrave(footballPos, goalpostPos, goalpostLargura, traveLargura)) {
+    return 'trave';
   }
   if (defendeu(footballPos, goalkeeperPos, goalkeeperLargura)) {
     return 'defesa';
@@ -110,6 +127,7 @@ export function resultadoDoChute({
 export function mensagemDoResultado(resultado) {
   if (resultado === 'gol') return 'Golaço do Furacão!';
   if (resultado === 'defesa') return 'O goleiro pegou!';
+  if (resultado === 'trave') return 'Na trave!';
   return 'Fora!';
 }
 
