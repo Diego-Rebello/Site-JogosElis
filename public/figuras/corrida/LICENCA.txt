@@ -1,0 +1,23 @@
+Figuras do Grande Prêmio do Rael (Jogos do Rael)
+===============================================
+
+Todos os arquivos .svg desta pasta são do projeto OpenMoji.
+
+  OpenMoji — the open-source emoji and icon project
+  https://openmoji.org
+  Licença: Creative Commons Attribution-ShareAlike 4.0 International
+           (CC BY-SA 4.0) — https://creativecommons.org/licenses/by-sa/4.0/
+
+Os arquivos foram baixados da versão colorida (color/svg) do repositório
+oficial, no commit aeb8bb3a59e2de39c754ac79180c8131c906acea
+(https://github.com/hfg-gmuend/openmoji), e apenas renomeados:
+
+  1F3CE.svg  →  carro-de-corrida.svg
+  1F3C1.svg  →  bandeira-quadriculada.svg
+  26FD.svg   →  bomba-de-gasolina.svg
+
+Ficam nesta subpasta, fora do catálogo de shared/catalogo-figuras.js, para
+não entrarem nas brincadeiras de palavras.
+
+Nenhum desenho foi alterado. Quem redistribuir estes arquivos precisa manter
+esta atribuição e a mesma licença.

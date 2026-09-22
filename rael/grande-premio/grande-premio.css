@@ -1,0 +1,228 @@
+/*
+ * Grande Prêmio do Rael — painel, pista, semáforo, pausa e controles.
+ * Derivado de Pixel Racer (https://github.com/Elomami1976/pixel-racer).
+ * Copyright (c) 2026 Tarek Elomami — licença MIT. Cópia em LICENSE-pixel-racer.txt.
+ */
+
+.descobertas__cartao {
+  max-width: 500px;
+}
+
+/* --- painel: ultrapassagens e gasolina ------------------------------------ */
+
+.painel {
+  display: grid;
+  grid-template-columns: 64px 1fr 64px;
+  align-items: center;
+  gap: 6px 8px;
+  max-width: 400px;
+  margin: 0 auto 8px;
+}
+
+.medidor--gasolina {
+  grid-column: 1 / -1;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.medidor {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--raio-m, 14px);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.medidor__icone {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+.medidor__trilha {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  border-radius: 8px;
+  background: #cbd5e1;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.medidor__barra {
+  height: 100%;
+  border-radius: 8px;
+}
+
+.medidor__barra--ultrapassagens {
+  background: #2563eb;
+}
+
+.medidor__barra--gasolina {
+  background: #22c55e;
+}
+
+.medidor__barra--metade {
+  background: #eab308;
+}
+
+.medidor__barra--pouca {
+  background: #ef4444;
+}
+
+/* O número fica sobre a trilha, para não roubar largura no celular. */
+.medidor__numero {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+}
+
+/* Repetir e Pausar ficam no painel, longe das setas de direção. */
+.botao--painel {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  padding: 0;
+  font-size: 1.6rem;
+}
+
+/* --- quadro da pista e Canvas 400×700 ------------------------------------- */
+
+.quadro-pista {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+#pista {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 400 / 700;
+  border-radius: var(--raio-m, 14px);
+  background: #2b2b2b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* A pista encolhe pela altura: painel, pista e setas cabem sem rolar. */
+@media (max-height: 1100px) {
+  .quadro-pista {
+    max-width: min(400px, calc((100dvh - var(--fora-da-pista, 350px)) * 400 / 700));
+  }
+}
+
+/* Mensagem curta da última fala, sobre o alto da pista. */
+.quadro-pista .retorno {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  font-size: 1.05rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Vazia, some sem sair da árvore acessível (display: none calaria o aria-live). */
+.quadro-pista .retorno:empty {
+  padding: 0;
+  background: transparent;
+}
+
+/* --- semáforo da largada --------------------------------------------------- */
+
+.semaforo {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #111827;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.semaforo__luz {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #374151;
+}
+
+.semaforo__luz--vermelha.semaforo__luz--acesa { background: #ef4444; }
+.semaforo__luz--amarela.semaforo__luz--acesa { background: #facc15; }
+.semaforo__luz--verde.semaforo__luz--acesa { background: #22c55e; }
+
+/* --- bandeira da chegada ---------------------------------------------------- */
+
+.bandeira {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  width: 40%;
+  height: auto;
+  margin-left: -20%;
+  transform-origin: 10% 90%;
+}
+
+/* --- pausa ------------------------------------------------------------------- */
+
+.pausa {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--raio-m, 14px);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+/* --- controles de direção ---------------------------------------------------- */
+
+.controles {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 8px;
+}
+
+#esquerda,
+#direita {
+  width: 80px;
+  height: 80px;
+  min-width: 72px;
+  min-height: 72px;
+  padding: 0;
+  font-size: 2.2rem;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Só a pista e as setas bloqueiam o gesto do navegador. */
+#pista,
+#esquerda,
+#direita {
+  touch-action: none;
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="tema-rael">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ultrapasse os carros, passe no posto para abastecer e ganhe a bandeirada. Corrida falada dos Jogos do Rael.">
+  <meta name="theme-color" content="#0f5aa8">
+  <title>Grande Prêmio do Rael — Jogos do Rael</title>
+  <link rel="manifest" href="/rael.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/rael-192.png">
+  <link rel="icon" href="/icones/rael.svg">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="../../shared/tema-rael.css">
+  <link rel="stylesheet" href="../../shared/descobertas.css">
+  <link rel="stylesheet" href="./grande-premio.css">
+  <script type="module" src="../../shared/pwa.js"></script>
+</head>
+<body class="pagina">
+  <main class="pagina__conteudo pagina__conteudo--centro">
+    <section class="cartao descobertas descobertas__cartao">
+      <div class="tela convite" id="tela-convite">
+        <img class="convite__figura" src="/figuras/corrida/carro-de-corrida.svg" alt="" aria-hidden="true" width="120" height="120">
+        <h2 class="instrucao__texto">Grande Prêmio do Rael</h2>
+        <p class="convite__texto">Ultrapasse 30 carros para ganhar a bandeirada!</p>
+        <button class="botao botao--gigante" id="comecar" type="button">🏁 Vamos correr</button>
+        <p class="convite__texto" id="aviso-voz" hidden></p>
+      </div>
+
+      <div class="tela" id="tela-corrida" hidden>
+        <div class="painel" id="painel">
+          <button class="botao botao--painel" id="pausar" type="button" aria-label="Pausar a corrida">⏸</button>
+          <div class="medidor" id="ultrapassagens" role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" aria-label="Carros ultrapassados: 0 de 30">
+            <img class="medidor__icone" src="/figuras/corrida/carro-de-corrida.svg" alt="" aria-hidden="true" width="28" height="28">
+            <div class="medidor__trilha">
+              <div class="medidor__barra medidor__barra--ultrapassagens" id="barra-ultrapassagens" style="width: 0%;"></div>
+              <span class="medidor__numero" id="contador" aria-hidden="true">0/30</span>
+            </div>
+            <img class="medidor__icone" src="/figuras/corrida/bandeira-quadriculada.svg" alt="" aria-hidden="true" width="28" height="28">
+          </div>
+          <button class="botao botao--painel botao--repetir" id="repetir" type="button" aria-label="Ouvir de novo">🔊</button>
+          <div class="medidor medidor--gasolina" id="gasolina" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="Gasolina cheia">
+            <img class="medidor__icone" src="/figuras/corrida/bomba-de-gasolina.svg" alt="" aria-hidden="true" width="28" height="28">
+            <div class="medidor__trilha">
+              <div class="medidor__barra medidor__barra--gasolina" id="barra-gasolina" style="width: 100%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="roteiro" id="roteiro" hidden>
+          <span class="roteiro__titulo">Para o adulto ler em voz alta</span>
+          <span class="roteiro__fala" id="roteiro-fala"></span>
+        </div>
+
+        <div class="quadro-pista" id="quadro-pista">
+          <canvas id="pista" width="400" height="700" aria-label="Pista do Grande Prêmio">Pista do Grande Prêmio, com o carro azul do Rael e os outros carros da corrida.</canvas>
+          <div class="semaforo" id="semaforo" aria-hidden="true" hidden>
+            <span class="semaforo__luz semaforo__luz--vermelha"></span>
+            <span class="semaforo__luz semaforo__luz--amarela"></span>
+            <span class="semaforo__luz semaforo__luz--verde"></span>
+          </div>
+          <img class="bandeira" id="bandeira" src="/figuras/corrida/bandeira-quadriculada.svg" alt="" aria-hidden="true" width="160" height="160" hidden>
+          <div class="pausa" id="tela-pausa" hidden>
+            <p class="instrucao__texto">Corrida pausada</p>
+            <button class="botao botao--gigante" id="continuar" type="button">▶ Continuar</button>
+            <a class="botao botao--secundario" href="../index.html">🏠 Início</a>
+          </div>
+          <div class="retorno" id="retorno" aria-live="polite"></div>
+        </div>
+
+        <div class="controles" id="controles">
+          <button class="botao botao--seta" id="esquerda" type="button" aria-label="Ir para a esquerda">◀</button>
+          <button class="botao botao--seta" id="direita" type="button" aria-label="Ir para a direita">▶</button>
+        </div>
+      </div>
+
+      <div class="tela conclusao" id="tela-fim" hidden>
+        <h2 class="instrucao__texto">Bandeirada!</h2>
+        <img class="convite__figura" src="/figuras/corrida/bandeira-quadriculada.svg" alt="" aria-hidden="true" width="120" height="120">
+        <p class="convite__texto" id="texto-fim"></p>
+        <img class="conclusao__figurinha" id="figurinha" src="" alt="" width="150" height="150" hidden>
+        <div class="conclusao__acoes">
+          <button class="botao botao--gigante" id="de-novo" type="button">🏁 Correr de novo</button>
+          <a class="botao botao--secundario" href="../index.html">🏠 Início</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./tela.js"></script>
+</body>
+</html>
