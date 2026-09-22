@@ -3,13 +3,14 @@
  * Derivado de Pixel Racer (https://github.com/Elomami1976/pixel-racer).
  * Copyright (c) 2026 Tarek Elomami — licença MIT. Cópia em LICENSE-pixel-racer.txt.
  *
- * Etapas 3 e 4 do PLANO-GRANDE-PREMIO-DO-RAEL.md: pista, rivais, posto, controles, loop,
- * batida, largada com semáforo, narrador, aquecimento, ajudas e pausa. A bandeirada
- * completa (álbum e conquistas) entra na Etapa 5.
+ * Etapas 3 a 5 do PLANO-GRANDE-PREMIO-DO-RAEL.md: pista, rivais, posto, controles, loop,
+ * batida, largada com semáforo, narrador, aquecimento, ajudas, pausa, bandeirada, figurinha
+ * e conquistas.
  */
 
 import { montarCabecalho } from '../../shared/cabecalho.js';
 import { tocar } from '../../shared/sons.js';
+import { lancarConfete } from '../../shared/confete.js';
 import {
   definirPreferencia,
   falar,
@@ -19,7 +20,9 @@ import {
   preparar,
   repetir as repetirFala,
 } from '../../shared/fala.js';
-import { obterConfiguracoes } from '../../shared/descobertas.js';
+import { obterConfiguracoes, registrarRodada } from '../../shared/descobertas.js';
+import { anunciarConquistas } from '../../shared/conquistas-tela.js';
+import { caminhoDaFigura, figura } from '../../shared/catalogo-figuras.js';
 import { centroDaFaixa, faixaDoCarro, quantidadeDeFaixas } from '../corrida-do-rael/jogo.js';
 
 import {
@@ -35,6 +38,7 @@ import {
   avancarCorrida,
   criarCorrida,
   faixaSugerida,
+  resumoDaCorrida,
 } from './jogo.js';
 
 export const FASES = Object.freeze({
@@ -60,6 +64,7 @@ const DURACAO_LUZ_DO_SEMAFORO_MS = 800;   // vermelho → amarelo → verde, 0,8
 const JANELA_PRIORIDADE_1_MS = 1500;      // fala de prioridade 1 espera 1,5 s da anterior
 const DURACAO_DO_RETORNO_MS = 4000;       // o texto curto some da pista depois disso
 const PERIODO_BRILHO_DO_POSTO = 1;        // 1 Hz, abaixo do limite de 2 Hz
+const DURACAO_DA_BANDEIRADA_MS = 2000;    // bandeira acenando antes da tela final (seção 2.10)
 
 /** Falas da seção 2.13. Números por extenso para garantir a pronúncia. */
 const FALAS = Object.freeze({
@@ -118,6 +123,9 @@ const elBarraUltrapassagens = $('barra-ultrapassagens');
 const elContador = $('contador');
 const elGasolina = $('gasolina');
 const elBarraGasolina = $('barra-gasolina');
+const elBandeira = $('bandeira');
+const elTextoFim = $('texto-fim');
+const elFigurinha = /** @type {HTMLImageElement | null} */ ($('figurinha'));
 
 let faseDaTela = FASES.CONVITE;
 let configuracoes = obterConfiguracoes();
@@ -135,6 +143,8 @@ let fumacas = [];
 /** @type {Array<{ x: number, y: number, idade: number }>} */
 let maisUns = [];
 let categoriaDaGasolina = '';
+/** Guarda de registro: uma rodada salva por corrida, definida antes de registrarRodada. */
+let corridaRegistrada = false;
 /** Rivais do aquecimento: a seta verde aparece para eles (seção 2.8). */
 const rivaisDoAquecimento = new Set();
 
@@ -294,11 +304,13 @@ function podeNarrar(prioridade) {
   return !falaEmAndamento && performance.now() - inicioDaUltimaFala >= JANELA_PRIORIDADE_1_MS;
 }
 
+/** Devolve a promessa da fala, ou null se ela foi descartada pela prioridade. */
 function narrar(texto, prioridade) {
-  if (!podeNarrar(prioridade)) return false;
+  if (!podeNarrar(prioridade)) return null;
   mostrarTextoNarrado(texto);
-  acompanharFala(prioridade, falar({ texto }));
-  return true;
+  const promessa = falar({ texto });
+  acompanharFala(prioridade, promessa);
+  return promessa;
 }
 
 function zerarNarrador() {
@@ -400,7 +412,9 @@ function prepararNovaCorrida() {
 
   ultimoTempo = 0;
   zerarEntradas();
+  corridaRegistrada = false;
   if (telaPausa) telaPausa.hidden = true;
+  mostrarBandeira(false);
 }
 
 function acenderSemaforo(indice) {
@@ -471,12 +485,93 @@ function continuarCorrida() {
   }
 }
 
-/** Bandeirada provisória da Etapa 3: só troca para a tela final, sem registrar nada. */
-function terminarCorrida() {
-  faseDaTela = FASES.FIM;
+function mostrarBandeira(visivel) {
+  if (!elBandeira) return;
+  elBandeira.hidden = !visivel;
+  elBandeira.classList.toggle('bandeira--acenando', visivel);
+}
+
+/** Frase da bandeirada (seção 2.10): com o primeiro nome, ou "piloto" sem nome. */
+function falaDaBandeirada() {
+  return `Bandeirada! Você completou o Grande Prêmio, ${primeiroNome() || 'piloto'}!`;
+}
+
+/** Texto da tela final (seção 2.13): nada de batidas nem de tempo. */
+function textoDoFim({ ultrapassagens, abastecimentos }) {
+  const carros = `Você ultrapassou ${ultrapassagens} carros`;
+  if (abastecimentos <= 0) return `${carros}!`;
+  const vezes = abastecimentos === 1 ? '1 vez' : `${abastecimentos} vezes`;
+  return `${carros} e abasteceu ${vezes}!`;
+}
+
+/**
+ * Bandeirada (seção 2.10), na ordem fechada da Etapa 5: fase e controles, registro único,
+ * festa; a tela final vem 2,0 s depois, enquanto o motor freia o carro até parar.
+ */
+function comecarBandeirada() {
+  if (faseDaTela !== FASES.CORRIDA || corridaRegistrada) return;
+
+  // 1. Fase da bandeirada, controles desabilitados.
+  faseDaTela = FASES.BANDEIRADA;
   atualizarEstadoControles(false);
   if (btnPausar) btnPausar.disabled = true;
+  if (btnDeNovo) btnDeNovo.disabled = true;
+
+  // 2. Guarda antes do registro: uma única rodada por corrida.
+  corridaRegistrada = true;
+  const premio = registrarRodada('grande-premio');
+
+  // 3. Bandeira acenando, som, confete e fala.
+  mostrarBandeira(true);
+  tocar('vitoria');
+  lancarConfete();
+  const falaDaFesta = narrar(falaDaBandeirada(), 3);
+
+  const minhaGeracao = geracaoDaCorrida;
+  agendar(() => {
+    if (minhaGeracao !== geracaoDaCorrida || faseDaTela !== FASES.BANDEIRADA) return;
+    mostrarFim(premio, falaDaFesta);
+  }, DURACAO_DA_BANDEIRADA_MS);
+}
+
+/**
+ * Tela final: texto, figurinha, conquistas novas e "Correr de novo". A fala do resumo
+ * espera a da bandeirada terminar, para não cortá-la no meio.
+ */
+function mostrarFim(premio, falaDaFesta) {
+  // 4. Fim, texto final e figurinha pelo catálogo.
+  faseDaTela = FASES.FIM;
+  mostrarBandeira(false);
   mostrarTela('fim');
+
+  const texto = textoDoFim(resumoDaCorrida(estado));
+  if (elTextoFim) elTextoFim.textContent = texto;
+
+  if (elFigurinha) {
+    const id = premio?.figurinha;
+    elFigurinha.hidden = !id;
+    if (id) {
+      elFigurinha.src = caminhoDaFigura(id);
+      elFigurinha.alt = `Figurinha nova: ${figura(id)?.nome || id}`;
+    }
+  }
+
+  // 5. Conquistas novas, sem filtrar.
+  const falasDaConquista = anunciarConquistas(premio?.conquistasNovas || [], {
+    depoisDe: elTextoFim,
+    dizer: itens => acompanharFala(2, falarSequencia(itens)),
+  });
+
+  const minhaGeracao = geracaoDaCorrida;
+  Promise.resolve(falaDaFesta)
+    .catch(() => 'sem-fala')
+    .then(() => {
+      if (minhaGeracao !== geracaoDaCorrida || faseDaTela !== FASES.FIM) return;
+      mostrarTextoNarrado(texto);
+      acompanharFala(2, falarSequencia([{ texto }, ...falasDaConquista]));
+    });
+
+  // 6. "Correr de novo" liberado.
   if (btnDeNovo) {
     btnDeNovo.disabled = false;
     btnDeNovo.focus();
@@ -538,7 +633,7 @@ function tratarEvento(evento) {
       narrar(FALAS.meta, 3);
       break;
     case 'bandeirada':
-      terminarCorrida();
+      comecarBandeirada();
       break;
     default:
       break;
@@ -1040,6 +1135,12 @@ function atualizarEfeitos(dt) {
 }
 
 function atualizar(dt) {
+  // Na bandeirada o motor só freia o carro até parar (fase 'fim', sem eventos).
+  if (faseDaTela === FASES.BANDEIRADA) {
+    avancarCorrida(estado, { dt, direcao: 0 }, { sortear });
+    atualizarEfeitos(dt);
+    return;
+  }
   if (faseDaTela !== FASES.CORRIDA) return;
 
   const eventos = avancarCorrida(estado, { dt, direcao: obterDirecaoDeEntrada() }, { sortear });

@@ -54,6 +54,7 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Meu Primeiro Labirinto | `rael/meu-primeiro-labirinto/index.html` | Explore mapas de 15×15, 20×20 ou 25×25 com semáforo, ponte, portão e desvios; os mapas clássicos continuam disponíveis |
 | Chute a Gol | `rael/chute-a-gol/index.html` | Cinco pênaltis em três modos (chutar, defender ou alternado): mire e chute com as setas e o botão, ou vire goleiro e pule na bola |
 | Corrida do Rael | `rael/corrida-do-rael/index.html` | Leve o carrinho até o posto para encher o tanque em seis trechos amigáveis |
+| Grande Prêmio do Rael | `rael/grande-premio/index.html` | Corrida de reflexo: desvie e ultrapasse 30 carros, passe no posto para abastecer e ganhe a bandeirada; batida só deixa o carro devagar |
 | Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, formato do labirinto, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras
@@ -87,6 +88,7 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── manifest.webmanifest         Nome, cores e ícones do app instalável (Elis)
 │   ├── rael.webmanifest             O mesmo para os Jogos do Rael, com start_url /rael/
 │   ├── figuras/                     SVGs do OpenMoji usados nas Primeiras Descobertas
+│   │   └── corrida/                 Carro de corrida, bandeira e bomba do Grande Prêmio (fora do catálogo)
 │   ├── audio/                       Palavras e sons iniciais locais do Rael
 │   └── icones/                      icone-*.png e rael-*.png (192 e 512) mais os .svg
 ├── shared/                          Biblioteca compartilhada (sem dependências externas)
@@ -114,7 +116,8 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── palmas-nas-palavras/         index.html + dados.js + jogo.js + tela.js
 │   ├── meu-primeiro-labirinto/      Tela infantil; reutiliza Games/labirinto/jogo.js
 │   ├── chute-a-gol/                 index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
-│   └── corrida-do-rael/             index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
+│   ├── corrida-do-rael/             index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
+│   └── grande-premio/               index.html + jogo.js + tela.js + CSS; motor importa de corrida-do-rael/
 └── Games/
     ├── forca/                       index.html + jogo.js
     ├── m-ou-n/                      index.html + jogo.js
@@ -457,6 +460,16 @@ Correções e acréscimos feitos no porte:
 Matriz resumida de reaproveitamento:
 - **Reaproveitado / adaptado:** Canvas lógico 400×700 e encaixe responsivo; constantes geométricas e tema visual; entrada por teclado (setas/A/D) e mapa de toques com botões direcionais visíveis (◀ ▶); desenho da pista em Canvas 2D (`drawRoad`) generalizado para 2, 3 ou 4 faixas; desenho do carro (`drawCar`) com chassi azul e faixas esportivas; colisão AABB (`rectsOverlap`) pura e testável; único loop de animação com `requestAnimationFrame`, delta-time e clamp.
 - **Substituído / remodelado:** colisão punitiva e game over substituídos por encontros amigáveis com posto de combustível e poça de óleo (sem carros inimigos e sem defeat state); velocidade fixa e calma em vez de aceleração contínua; placar/recorde e `localStorage` substituídos pelo tanque de 6 segmentos e `registrarRodada`; áudio externo/MP3 substituídos por `shared/sons.js` e fala acessível via `shared/fala.js`; menus em inglês no Canvas substituídos por telas DOM acessíveis em pt-BR com ARIA, suporte a `prefers-reduced-motion` e condução assistida na 2ª tentativa.
+
+**Grande Prêmio do Rael** (`rael/grande-premio/`) também deriva do [Pixel Racer](https://github.com/Elomami1976/pixel-racer), de Tarek Elomami (commit `6be6d5b0ae295240228399583096e232145fb7cb`), sob a licença MIT. A cópia da licença está em `rael/grande-premio/LICENSE-pixel-racer.txt` (idêntica à da Corrida do Rael) e `jogo.js`, `tela.js` e `grande-premio.css` trazem o aviso no topo.
+
+Reaproveitamento:
+- **Importado da Corrida do Rael, sem cópia:** `quantidadeDeFaixas`, `geometriaDaPista`, `centroDaFaixa`, `faixaDoCarro`, `moverCarro` e `retangulosSeSobrepoem` (`rael/corrida-do-rael/jogo.js`).
+- **Copiado e adaptado da Corrida do Rael:** entrada unificada (setas/A/D, botões ◀ ▶ e toque no Canvas), timers centrais, loop único com `requestAnimationFrame`, `desenharPista` (rolagem pelo motor e zebras nas bordas), `desenharCarro` (com cor, para os rivais) e `desenharPosto`.
+- **Trazido de volta do Pixel Racer original:** carros na pista (`spawnEnemy`), ultrapassagem contada (`scored`) e aceleração pelo placar, agora em degraus com teto e em funções puras testadas (`sortearFaixasDosRivais`, `avancarCorrida`, `nivelDaCorrida`).
+- **Substituído:** o `triggerGameOver` da batida virou 2 s de lentidão (35% da velocidade) sem derrota; o fim da partida virou a bandeirada depois de 30 ultrapassagens, com figurinha e as conquistas "Primeira bandeirada" e "Campeão das pistas". Gasolina com posto, ajuda e reserva também nunca encerram a corrida.
+
+**Figuras do OpenMoji** em `public/figuras/corrida/` (`carro-de-corrida.svg` = 1F3CE, `bandeira-quadriculada.svg` = 1F3C1, `bomba-de-gasolina.svg` = 26FD), sob CC BY-SA 4.0, sem edição. A atribuição e o commit do OpenMoji usado estão em `public/figuras/corrida/LICENCA.txt`. Ficam numa subpasta para não entrarem no catálogo dos jogos de palavras.
 
 ---
 

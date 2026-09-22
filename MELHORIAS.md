@@ -1058,6 +1058,46 @@ Adaptação amigável do [Pixel Racer](https://github.com/Elomami1976/pixel-race
    - Suíte geral com 375 testes passando em 29 arquivos; `tsc --noEmit` limpo; build e precache íntegros.
 5. **Pendente:** validação presencial com o Rael conforme roteiro da seção 7 do plano (compreensão da demonstração, diferenciação entre posto e óleo, uso dos controles no iPad/Android).
 
+### Grande Prêmio do Rael
+
+Corrida de reflexo pedida pelo Diego, em `rael/grande-premio/` (id `grande-premio`), também
+derivada do [Pixel Racer](https://github.com/Elomami1976/pixel-racer) (MIT, commit
+`6be6d5b0ae295240228399583096e232145fb7cb`). O plano completo, com números e critérios, está em
+`PLANO-GRANDE-PREMIO-DO-RAEL.md`. A Corrida do Rael continua igual.
+
+**Exceções conscientes à seção 5.0, só para este jogo:**
+
+| Regra da 5.0 | Exceção aqui | Por quê |
+|---|---|---|
+| Não exigir reflexo rápido | Exige reflexo, com curva suave (tempo de reação de ~5,6 s caindo a ~3,6 s) e ajuda adaptativa (seta verde e rivais mais lentos depois de 2 batidas seguidas) | Objetivo declarado do pai |
+| Rodadas de 5 a 8 desafios | 30 ultrapassagens (~1,5 min sem batidas) | A duração fica perto de 3 a 5 min, sem virar limite |
+| Trânsito vindo contra a criança | Carros rivais na mesma direção, mais lentos | É a essência de ultrapassar |
+
+Todo o resto da 5.0 vale: sem game over, vidas, recorde, cronômetro, perda de pontos ou contador
+que diminui; batidas nunca aparecem na tela; figurinha sempre; fala em pt-BR com Repetir.
+
+**Resultado:**
+
+1. **Motor puro** (`jogo.js`, sem DOM nem relógio, sorteio injetado) com ultrapassagem contada,
+   níveis em degraus, batida = 35% da velocidade por 2 s, gasolina com posto, posto de ajuda e
+   reserva (sem derrota), aquecimento de 3 rivais e bandeirada. Testado em
+   `tests/grande-premio.test.js`, incluindo simulações com bots em 2, 3 e 4 faixas: o bot parado
+   sempre termina e o que desvia termina mais rápido.
+2. **Tela:** pista com zebras e rivais coloridos, ◀ ▶ de 80 px, painel com as barras de
+   ultrapassagens e gasolina, largada com semáforo, narrador com prioridades, seta verde, pausa
+   (inclusive ao esconder a aba) e movimento reduzido.
+3. **Conclusão:** 30 ultrapassagens → linha de chegada → bandeira acenando, `vitoria`, confete
+   e fala → tela final com o resumo (ultrapassagens e abastecimentos), figurinha e as conquistas
+   "Primeira bandeirada" (1.ª corrida) e "Campeão das pistas" (10 corridas). "Explorador de
+   brincadeiras" passa a exigir também o Grande Prêmio.
+4. **Verificação automatizada:** 456 testes em 30 arquivos, `tsc --noEmit` limpo, build e
+   precache com a página e as três figuras de `public/figuras/corrida/`.
+
+**Falta observar com o Rael** (seção 6 do plano): se entende que precisa sair da frente depois
+do 1.º rival com seta; se usa ◀ ▶ com antecedência; se a batida frustra; se percebe a gasolina e
+procura o posto antes da reserva; se mantém o interesse até a bandeirada e quanto tempo leva; se
+toca em Pausar ou Repetir sem querer. A ordem de ajuste de dificuldade também está na seção 6.
+
 ### 5.4 Ordem sugerida de entrega
 
 1. **P09 → P10.** Meu Nome e Conta Comigo não precisam de gravações nem de banco de dados,

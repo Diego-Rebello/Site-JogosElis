@@ -329,3 +329,55 @@ describe('Conquistas — Corrida do Rael (Etapa 5)', () => {
     expect(obterEstado(armazenamento).conquistas).toHaveProperty('geral-todas');
   });
 });
+
+describe('Conquistas — Grande Prêmio do Rael (Etapa 5)', () => {
+  it('a primeira corrida concluída dá figurinha e "Primeira bandeirada"', () => {
+    const armazenamento = criarArmazenamento();
+    const premio = registrarRodada('grande-premio', {}, armazenamento);
+    expect(premio.figurinha).toBeTruthy();
+    expect(premio.atividade).toMatchObject({ rodadas: 1 });
+    const doJogo = ids(premio.conquistasNovas).filter(id => id.startsWith('grande-premio-'));
+    expect(doJogo).toEqual(['grande-premio-estreia']);
+    expect(premio.conquistasNovas.find(c => c.id === 'grande-premio-estreia').nome).toBe('Primeira bandeirada');
+  });
+
+  it('"Campeão das pistas" não vem em 9 corridas, vem na 10.ª e não se repete na 11.ª', () => {
+    const armazenamento = criarArmazenamento();
+    for (let i = 1; i <= 9; i++) {
+      const res = registrarRodada('grande-premio', {}, armazenamento);
+      expect(ids(res.conquistasNovas)).not.toContain('grande-premio-fa');
+    }
+    const decima = registrarRodada('grande-premio', {}, armazenamento);
+    expect(ids(decima.conquistasNovas)).toEqual(expect.arrayContaining(['grande-premio-fa']));
+    expect(decima.conquistasNovas.find(c => c.id === 'grande-premio-fa').nome).toBe('Campeão das pistas');
+    expect(obterEstado(armazenamento).atividades['grande-premio'].rodadas).toBe(10);
+
+    const decimaPrimeira = registrarRodada('grande-premio', {}, armazenamento);
+    expect(ids(decimaPrimeira.conquistasNovas)).not.toContain('grande-premio-fa');
+    expect(obterEstado(armazenamento).atividades['grande-premio'].rodadas).toBe(11);
+  });
+
+  it('a figura das duas conquistas é o carro de corrida da subpasta, e o arquivo existe', () => {
+    const doJogo = CONQUISTAS.filter(c => c.atividade === 'grande-premio');
+    expect(ids(doJogo)).toEqual(['grande-premio-estreia', 'grande-premio-fa']);
+    doJogo.forEach(c => {
+      expect(c.figura).toBe('/figuras/corrida/carro-de-corrida.svg');
+      expect(existsSync(resolve('public', `.${c.figura}`)), c.figura).toBe(true);
+    });
+  });
+
+  it('entra no catálogo logo depois da Corrida do Rael', () => {
+    const idsDasAtividades = ATIVIDADES_DESCOBERTAS.map(a => a.id);
+    expect(idsDasAtividades.indexOf('grande-premio')).toBe(idsDasAtividades.indexOf('corrida-do-rael') + 1);
+  });
+
+  it('"Explorador de brincadeiras" passa a exigir também o Grande Prêmio', () => {
+    const armazenamento = criarArmazenamento();
+    ATIVIDADES_DESCOBERTAS.filter(a => a.id !== 'grande-premio')
+      .forEach(a => registrarRodada(a.id, {}, armazenamento));
+    expect(obterEstado(armazenamento).conquistas).not.toHaveProperty('geral-todas');
+
+    const final = registrarRodada('grande-premio', {}, armazenamento);
+    expect(ids(final.conquistasNovas)).toContain('geral-todas');
+  });
+});

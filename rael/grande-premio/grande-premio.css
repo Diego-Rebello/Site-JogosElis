@@ -268,6 +268,22 @@
   transform-origin: 10% 90%;
 }
 
+/* Aceno de ±8° na bandeirada (seção 2.10); desligado com movimento reduzido. */
+.bandeira--acenando {
+  animation: bandeira-aceno 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes bandeira-aceno {
+  from { transform: rotate(-8deg); }
+  to { transform: rotate(8deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandeira--acenando {
+    animation: none;
+  }
+}
+
 /* --- pausa ------------------------------------------------------------------- */
 
 .pausa {

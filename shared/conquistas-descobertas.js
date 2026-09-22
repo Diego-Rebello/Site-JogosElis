@@ -33,6 +33,7 @@ export const ATIVIDADES_DESCOBERTAS = [
   { id: LABIRINTO, nome: 'Meu Primeiro Labirinto', figura: 'carro', estreia: null, fa: 'Fã de labirintos' },
   { id: 'chute-a-gol', nome: 'Chute a Gol', figura: 'bola', estreia: 'Primeiro gol', fa: 'Fã de futebol' },
   { id: 'corrida-do-rael', nome: 'Corrida do Rael', figura: 'carro', estreia: 'Primeira corrida', fa: 'Piloto experiente' },
+  { id: 'grande-premio', nome: 'Grande Prêmio do Rael', figura: 'corrida/carro-de-corrida', estreia: 'Primeira bandeirada', fa: 'Campeão das pistas' },
 ];
 
 export const PAGINAS = [
