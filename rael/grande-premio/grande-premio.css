@@ -58,10 +58,28 @@
 }
 
 .medidor__barra--ultrapassagens {
+  position: relative;
+  min-width: 22px;
   background: #2563eb;
+  transition: width 0.25s ease-out;
 }
 
+/* Marcador na ponta da barra: é ele que anda da largada até a bandeira. */
+.medidor__barra--ultrapassagens::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px #1e3a8a;
+}
+
+/* Mesmo vazia, um toco vermelho continua à vista na reserva. */
 .medidor__barra--gasolina {
+  min-width: 12px;
   background: #22c55e;
 }
 
@@ -71,6 +89,22 @@
 
 .medidor__barra--pouca {
   background: #ef4444;
+  animation: gasolina-pisca 1s steps(1, end) infinite;
+}
+
+/* 1 Hz: bem abaixo do limite de 2 Hz da seção 2.14. */
+@keyframes gasolina-pisca {
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .medidor__barra--ultrapassagens {
+    transition: none;
+  }
+
+  .medidor__barra--pouca {
+    animation: none;
+  }
 }
 
 /* O número fica sobre a trilha, para não roubar largura no celular. */
