@@ -158,6 +158,28 @@
   }
 }
 
+/* Roteiro do adulto (modo acompanhado) compacto, entre o painel e a pista. */
+#tela-corrida .roteiro {
+  gap: 2px;
+  max-width: 400px;
+  margin: 0 auto 8px;
+  padding: 6px 12px;
+  border-width: 2px;
+}
+
+#tela-corrida .roteiro__titulo {
+  font-size: 0.75rem;
+}
+
+#tela-corrida .roteiro__fala {
+  font-size: 1rem;
+}
+
+/* Com o roteiro à vista, a pista encolhe um pouco mais para as setas continuarem na tela. */
+#tela-corrida:has(.roteiro:not([hidden])) .quadro-pista {
+  --fora-da-pista: 420px;
+}
+
 /* Mensagem curta da última fala, sobre o alto da pista. */
 .quadro-pista .retorno {
   position: absolute;
@@ -172,6 +194,19 @@
   font-size: 1.05rem;
   text-align: center;
   pointer-events: none;
+}
+
+/*
+ * Com o roteiro do adulto à vista, o mesmo texto sobre a pista só esconderia os rivais
+ * que acabam de nascer: sai da tela, mas continua no aria-live.
+ */
+#tela-corrida:has(.roteiro:not([hidden])) .quadro-pista .retorno {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* Vazia, some sem sair da árvore acessível (display: none calaria o aria-live). */
@@ -206,6 +241,20 @@
 .semaforo__luz--vermelha.semaforo__luz--acesa { background: #ef4444; }
 .semaforo__luz--amarela.semaforo__luz--acesa { background: #facc15; }
 .semaforo__luz--verde.semaforo__luz--acesa { background: #22c55e; }
+
+.semaforo__luz--acesa {
+  transform: scale(1.15);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.55);
+  transition: transform 0.15s ease-out;
+}
+
+/* Movimento reduzido: a luz só troca de cor, sem crescer. */
+@media (prefers-reduced-motion: reduce) {
+  .semaforo__luz--acesa {
+    transform: none;
+    transition: none;
+  }
+}
 
 /* --- bandeira da chegada ---------------------------------------------------- */
 
