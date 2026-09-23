@@ -53,12 +53,13 @@
   text-shadow: 0 0 3px white;
 }
 
-.quadro-pista { position: relative; width: 100%; max-width: 400px; margin: 0 auto; }
+.quadro-pista { position: relative; width: 100%; max-width: 400px; margin: 0 auto; container-type: inline-size; }
+/* 400×580: a vista do renderizador começa em y = 120, sem o céu vazio de cima. */
 #pista {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 400 / 700;
+  aspect-ratio: 400 / 580;
   border-radius: 14px;
   background: #7dd3fc;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
@@ -66,7 +67,7 @@
 
 /* Conserva o Canvas inteiro e espaço para os controles em retrato. */
 @media (max-height: 1100px) {
-  .quadro-pista { max-width: min(400px, max(160px, calc((100dvh - 360px) * 400 / 700))); }
+  .quadro-pista { max-width: min(400px, max(160px, calc((100dvh - 360px) * 400 / 580))); }
 }
 
 .quadro-pista .retorno {
@@ -81,7 +82,7 @@
 #tela-corrida .roteiro { gap: 2px; max-width: 400px; margin: 0 auto 8px; padding: 6px 12px; border-width: 2px; }
 #tela-corrida .roteiro__titulo { font-size: .75rem; }
 #tela-corrida .roteiro__fala { font-size: 1rem; }
-#tela-corrida:has(.roteiro:not([hidden])) .quadro-pista { max-width: min(400px, max(160px, calc((100dvh - 420px) * 400 / 700))); }
+#tela-corrida:has(.roteiro:not([hidden])) .quadro-pista { max-width: min(400px, max(160px, calc((100dvh - 420px) * 400 / 580))); }
 
 .semaforo, .bandeira, .pausa { position: absolute; }
 .semaforo { top: 18%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 7px; padding: 9px; border-radius: 16px; background: #111827; box-shadow: 0 6px 16px #0006; }
@@ -137,7 +138,13 @@
 .medidor__barra--gasolina { min-width: 12px; }
 .medidor__barra--metade { background: #eab308; }
 .medidor__barra--pouca { background: #ef4444; }
-.quadro-pista .retorno { min-height: 0; margin: 0; padding: 4px 8px; background: #fffffff0; border-radius: 10px; text-align: center; }
+.quadro-pista .retorno { min-height: 0; margin: 0; padding: 4px 8px; background: #fffffff0; border-radius: 10px; text-align: center; font-size: clamp(.9rem, 6cqi, 1.35rem); line-height: 1.2; }
+/* No modo acompanhado o roteiro já mostra a frase: o retorno sai da frente da pista,
+   mas continua no DOM (aria-live) para o leitor de tela. */
+#tela-corrida:has(.roteiro:not([hidden])) .quadro-pista .retorno {
+  top: 0; left: 0; right: auto; width: 1px; height: 1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
 .quadro-pista .retorno:empty { padding: 0; background: transparent; }
 .bandeira { width: 40%; height: auto; }
 .controles .botao--seta { width: 80px; height: 80px; padding: 0; font-size: 2.2rem; user-select: none; -webkit-user-select: none; }

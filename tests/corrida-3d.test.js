@@ -149,7 +149,7 @@ describe('Corrida 3D — contrato de projeção (Etapa 2)', () => {
     cena.objetos[0].base.x = -999;
     cena.objetos[0].pegada[0].x = -999;
     cena.objetos.reverse();
-    cena.segmentos[0].faixas[0][0].x = -999;
+    cena.segmentos[0].poligono[0].x = -999;
     cena.linhaDeChegada.inicio.x = -999;
     expect(estado).toEqual(antes);
     expect(criarCena(estado).objetos[0].base.x).not.toBe(-999);
@@ -171,7 +171,7 @@ describe('Corrida 3D — contrato de projeção (Etapa 2)', () => {
             else objeto.x = estado.carro.x + estado.carro.w - 2 * margem + (dentro ? -0.01 : 0.01);
             if (tipo === 'rival') estado.rivais = [objeto];
             else estado.posto = objeto;
-            const cena = criarCena(estado);
+            const cena = criarCena(estado, { hitboxes: true });
             const jogador = cena.objetos.find(o => o.tipo === 'jogador');
             const projetado = cena.objetos.find(o => o.tipo === tipo);
             expect(poligonosSobrepostos(jogador.hitboxes[chave], projetado.hitboxes[chave])).toBe(dentro);
@@ -229,13 +229,21 @@ describe('Corrida 3D — contrato de projeção (Etapa 2)', () => {
     for (let i = 0; i < cena.segmentos.length; i++) {
       const segmento = cena.segmentos[i];
       if (i > 0) expect(segmento.dLonge).toBe(cena.segmentos[i - 1].dPerto);
-      expect(segmento.faixas).toHaveLength(4);
-      for (const p of [segmento.poligono, ...segmento.faixas].flat()) {
+      for (const p of segmento.poligono) {
         expect(p.x).toBeGreaterThanOrEqual(0);
         expect(p.x).toBeLessThanOrEqual(400);
         expect(p.y).toBeGreaterThanOrEqual(170);
         expect(p.y).toBeLessThanOrEqual(700);
       }
+    }
+    // Divisórias das 4 faixas (3 linhas) também ficam dentro do viewport lógico.
+    const divisorias = cena.marcas.filter(m => m.cor === '#f8fafc');
+    expect(divisorias.length).toBeGreaterThan(0);
+    expect(divisorias.length % 3).toBe(0); // uma marca por divisória em cada trecho
+    for (const p of cena.marcas.flatMap(m => m.poligono)) {
+      expect(p.x).toBeGreaterThanOrEqual(0);
+      expect(p.x).toBeLessThanOrEqual(400);
+      expect(p.y).toBeLessThanOrEqual(700);
     }
     estado.distancia = 1234.567;
     const depois = criarCena(estado, { movimentoReduzido: true });

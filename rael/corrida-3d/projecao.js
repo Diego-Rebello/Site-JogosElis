@@ -7,16 +7,25 @@
  * Motor importado do Grande Prêmio, derivado de Pixel Racer:
  * Copyright (c) 2026 Tarek Elomami — MIT, LICENSE-pixel-racer.txt.
  */
-import { ALTURA_CANVAS, LARGURA_CANVAS, MARGEM_COLISAO } from '../grande-premio/jogo.js';
+import {
+  ALTURA_CANVAS, LARGURA_CANVAS, MARGEM_COLISAO, Y_NASCIMENTO_POSTO, Y_NASCIMENTO_RIVAL,
+} from '../grande-premio/jogo.js';
 
 export const ALTURA_CARROCERIA = 34;
 // O motor usa literalmente 4 na coleta; não exporta uma constante para essa margem.
 const MARGEM_COLETA = 4;
 const DISTANCIA_PROXIMA = -200;
 const DISTANCIA_DISTANTE = 3500;
+// Rival e posto nascem já visíveis (alfa mínimo) e ficam opacos nestes px lógicos,
+// cerca de 0,2 s: suaviza o surgimento no meio da estrada sem atrasar o contorno.
+export const DISTANCIA_DE_ENTRADA = 25;
+export const ALFA_AO_NASCER = 0.45;
+// A névoa cobre a estrada vazia além do ponto de nascimento; termina um pouco antes dele.
+const FOLGA_DA_NEVOA = 80;
 
 /**
- * Câmera criada por criarCena. Curva decorativa só além dos 300 px de contato.
+ * Câmera criada por criarCena. A cena usa pista reta (curva 0); a curva suave
+ * além dos 300 px de contato continua disponível aqui para uma versão futura.
  * Preserva subpixels: arredondar aqui causaria saltos durante trocas de faixa.
  * null significa recorte no plano próximo (z <= 100) ou entrada não finita.
  */
@@ -91,7 +100,7 @@ function recortarPoligono(pontos) {
 }
 
 function criarSegmentos(estado, camera, quantidade) {
-  const { inicio, fim, larguraFaixa } = estado.geometria;
+  const { inicio, fim } = estado.geometria;
   const comprimento = (DISTANCIA_DISTANTE - DISTANCIA_PROXIMA) / quantidade;
   return Array.from({ length: quantidade }, (_, indice) => {
     // Distante → próximo, como os objetos. A malha é fixa; marcas/zebras usam a
@@ -106,9 +115,6 @@ function criarSegmentos(estado, camera, quantidade) {
       mundoPerto: dPerto + estado.distancia,
       mundoLonge: dLonge + estado.distancia,
       poligono: recortarPoligono(projetarRetangulo(retangulo, camera)),
-      faixas: Array.from({ length: estado.faixas }, (_, faixa) => recortarPoligono(
-        projetarRetangulo({ ...retangulo, x: inicio + faixa * larguraFaixa, w: larguraFaixa }, camera),
-      )),
     };
   });
 }
@@ -146,34 +152,43 @@ function criarMarcas(estado, camera, quantidade) {
   return marcas;
 }
 
-function objetoDaCena(objeto, tipo, id, camera) {
+/** 0 no nascimento → 1 depois de DISTANCIA_DE_ENTRADA; jogador sempre 1. */
+function entrada(objeto, tipo) {
+  const nascimento = tipo === 'rival' ? Y_NASCIMENTO_RIVAL : tipo === 'posto' ? Y_NASCIMENTO_POSTO : null;
+  if (nascimento === null) return 1;
+  return Math.max(0, Math.min(1, (objeto.y - nascimento) / DISTANCIA_DE_ENTRADA));
+}
+
+function objetoDaCena(objeto, tipo, id, camera, comHitboxes) {
   const projecao = projetarObjeto(objeto, camera);
   if (!projecao) return null;
+  const alfaDoMotor = objeto.alfa ?? 1;
   return {
     ...projecao,
     tipo,
     id,
     faixa: objeto.faixa ?? null,
     cor: tipo === 'jogador' ? '#0f5aa8' : objeto.cor ?? null,
-    alfa: objeto.alfa ?? 1,
+    alfa: alfaDoMotor * (ALFA_AO_NASCER + (1 - ALFA_AO_NASCER) * entrada(objeto, tipo)),
     saindo: objeto.saindo ?? false,
     contado: objeto.contado ?? false,
     comAjuda: objeto.comAjuda ?? objeto.ajuda ?? false,
-    // Apenas dados: a futura tela/renderizador decide exibi-los em desenvolvimento.
+    // Só para a depuração em desenvolvimento; fora dela não custa nada por quadro.
     // O jogador tem duas pegadas porque colisão e coleta usam margens diferentes.
-    hitboxes: {
+    hitboxes: comHitboxes ? {
       colisao: tipo === 'posto' ? null : projetarRetangulo(objeto, camera, MARGEM_COLISAO),
       coleta: tipo === 'rival' ? null : projetarRetangulo(objeto, camera, MARGEM_COLETA),
-    },
+    } : null,
   };
 }
 
 /**
  * Snapshot visual novo, sem referências mutáveis ao estado do motor.
- * movimentoReduzido força reta; curva decorativa deriva só da distância do motor.
- * qualidade é opção técnica para medição, nunca configuração na tela infantil.
+ * Pista reta: a curva decorativa foi retirada na revisão R04 (quase invisível).
+ * qualidade é opção técnica para medição, nunca configuração na tela infantil;
+ * hitboxes só é pedido pela depuração em desenvolvimento.
  */
-export function criarCena(estado, { movimentoReduzido = false, qualidade = 'padrao' } = {}) {
+export function criarCena(estado, { movimentoReduzido = false, qualidade = 'padrao', hitboxes = false } = {}) {
   const camera = {
     referencia: estado.carro.y,
     centro: LARGURA_CANVAS / 2,
@@ -181,11 +196,14 @@ export function criarCena(estado, { movimentoReduzido = false, qualidade = 'padr
     profundidade: 700,
     recorte: 100,
     movimentoReduzido,
-    curva: movimentoReduzido ? 0 : 18 * Math.sin(2 * Math.PI * estado.distancia / 2400),
+    curva: 0,
   };
-  const objetos = [objetoDaCena(estado.carro, 'jogador', 'jogador', camera)];
-  for (const rival of estado.rivais) objetos.push(objetoDaCena(rival, 'rival', rival.id, camera));
-  if (estado.posto) objetos.push(objetoDaCena(estado.posto, 'posto', 'posto', camera));
+  camera.nevoa = projetarPonto({
+    x: camera.centro, y: Math.min(Y_NASCIMENTO_RIVAL, Y_NASCIMENTO_POSTO) - FOLGA_DA_NEVOA,
+  }, camera).y;
+  const objetos = [objetoDaCena(estado.carro, 'jogador', 'jogador', camera, hitboxes)];
+  for (const rival of estado.rivais) objetos.push(objetoDaCena(rival, 'rival', rival.id, camera, hitboxes));
+  if (estado.posto) objetos.push(objetoDaCena(estado.posto, 'posto', 'posto', camera, hitboxes));
   const visiveis = objetos.filter(Boolean);
   visiveis.sort((a, b) => {
     const profundidade = a.centroLongitudinal - b.centroLongitudinal;

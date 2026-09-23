@@ -9,6 +9,13 @@
  */
 import { ALTURA_CANVAS, LARGURA_CANVAS } from '../grande-premio/jogo.js';
 
+// Parte do Canvas lógico 400×700 que aparece na tela. O céu acima de TOPO_DA_VISTA
+// não tem jogo; cortá-lo deixa a pista mais larga no celular. A base continua em 700
+// porque rivais ultrapassados saem por baixo antes de o motor removê-los (y ≤ 720).
+export const TOPO_DA_VISTA = 120;
+export const ALTURA_DA_VISTA = ALTURA_CANVAS - TOPO_DA_VISTA;
+const COR_DO_CEU = '#9cddf5';
+
 function caminho(ctx, pontos) {
   if (!pontos || pontos.length < 3 || pontos.some(p => !Number.isFinite(p.x) || !Number.isFinite(p.y))) return false;
   ctx.beginPath();
@@ -29,7 +36,7 @@ function poligono(ctx, pontos, cor, contorno = null) {
 }
 
 function desenharEstrada(ctx, cena) {
-  ctx.fillStyle = '#9cddf5';
+  ctx.fillStyle = COR_DO_CEU;
   ctx.fillRect(0, 0, 400, 700);
   ctx.fillStyle = '#4c9b52';
   ctx.fillRect(0, cena.camera.horizonte, 400, 700 - cena.camera.horizonte);
@@ -40,6 +47,18 @@ function desenharEstrada(ctx, cena) {
   ], '#374151');
   for (const segmento of cena.segmentos) poligono(ctx, segmento.poligono, '#374151');
   for (const marca of cena.marcas) poligono(ctx, marca.poligono, marca.cor);
+  desenharNevoa(ctx, cena.camera);
+}
+
+/** A estrada some aos poucos na distância; os carros surgem logo abaixo da névoa. */
+function desenharNevoa(ctx, camera) {
+  const { horizonte, nevoa } = camera;
+  if (!Number.isFinite(nevoa) || nevoa <= horizonte) return;
+  const gradiente = ctx.createLinearGradient(0, horizonte, 0, nevoa);
+  gradiente.addColorStop(0, 'rgba(156, 221, 245, 0.92)');
+  gradiente.addColorStop(1, 'rgba(156, 221, 245, 0)');
+  ctx.fillStyle = gradiente;
+  ctx.fillRect(0, horizonte, LARGURA_CANVAS, nevoa - horizonte);
 }
 
 function desenharLinhaDeChegada(ctx, linha) {
@@ -177,15 +196,15 @@ export function criarRenderizador(canvas, { qualidade = 'padrao' } = {}) {
     const limite = qualidade === 'economica' ? 1 : 1.5;
     const escala = Number.isFinite(dpr) ? Math.max(1, Math.min(limite, dpr)) : 1;
     canvas.width = Math.round(LARGURA_CANVAS * escala);
-    canvas.height = Math.round(ALTURA_CANVAS * escala);
-    ctx.setTransform(escala, 0, 0, escala, 0, 0);
+    canvas.height = Math.round(ALTURA_DA_VISTA * escala);
+    ctx.setTransform(escala, 0, 0, escala, 0, -TOPO_DA_VISTA * escala);
   }
   function desenhar(cena, apresentacao = {}) {
     if (!ativo) return;
     ctx.save();
     try {
       ctx.beginPath();
-      ctx.rect(0, 0, LARGURA_CANVAS, ALTURA_CANVAS);
+      ctx.rect(0, TOPO_DA_VISTA, LARGURA_CANVAS, ALTURA_DA_VISTA);
       ctx.clip();
       desenharEstrada(ctx, cena);
       desenharLinhaDeChegada(ctx, cena.linhaDeChegada);
@@ -199,7 +218,7 @@ export function criarRenderizador(canvas, { qualidade = 'padrao' } = {}) {
       if (import.meta.env.DEV && apresentacao.hitboxes) {
         ctx.lineWidth = 1;
         for (const objeto of cena.objetos) {
-          for (const [tipo, pontos] of Object.entries(objeto.hitboxes)) {
+          for (const [tipo, pontos] of Object.entries(objeto.hitboxes || {})) {
             if (caminho(ctx, pontos)) {
               ctx.strokeStyle = tipo === 'colisao' ? '#f472b6' : '#67e8f9';
               ctx.stroke();

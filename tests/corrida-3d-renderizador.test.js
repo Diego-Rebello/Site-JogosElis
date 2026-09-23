@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { criarRenderizador } from '../rael/corrida-3d/renderizador.js';
-import { criarCena, projetarPonto } from '../rael/corrida-3d/projecao.js';
-import { criarCorrida, avancarCorrida, CARRO } from '../rael/grande-premio/jogo.js';
+import { ALFA_AO_NASCER, DISTANCIA_DE_ENTRADA, criarCena, projetarPonto } from '../rael/corrida-3d/projecao.js';
+import {
+  criarCorrida, avancarCorrida, CARRO, Y_NASCIMENTO_POSTO, Y_NASCIMENTO_RIVAL,
+} from '../rael/grande-premio/jogo.js';
 import { centroDaFaixa } from '../rael/corrida-do-rael/jogo.js';
 
 function congelar(objeto) {
@@ -25,6 +27,11 @@ function canvasInstrumentado() {
     if (nome === 'arc' && args[2] < 0) throw new Error('Raio negativo');
     chamadas.push([nome, ...args]);
   }]));
+  metodosCtx.createLinearGradient = (...args) => {
+    for (const arg of args) if (!Number.isFinite(arg)) throw new Error(`createLinearGradient: ${arg}`);
+    chamadas.push(['createLinearGradient', ...args]);
+    return { addColorStop: (posicao) => { if (!(posicao >= 0 && posicao <= 1)) throw new Error('Parada inválida'); } };
+  };
   metodosCtx.save = () => { profundidade++; };
   metodosCtx.restore = () => { if (--profundidade < 0) throw new Error('restore sem save'); };
   const ctx = new Proxy(metodosCtx, {
@@ -61,7 +68,7 @@ describe('Corrida 3D — renderizador Canvas', () => {
         for (const y of [-400, -70, 300, 528, 580, 645, 720]) {
           const estado = congelar(estadoVisual(faixas, y));
           const antes = JSON.stringify(estado);
-          const cena = congelar(criarCena(estado, { qualidade }));
+          const cena = congelar(criarCena(estado, { qualidade, hitboxes: true }));
           const cenaAntes = JSON.stringify(cena);
           for (const reduzido of [false, true]) {
             const apresentacao = congelar({
@@ -80,6 +87,7 @@ describe('Corrida 3D — renderizador Canvas', () => {
         }
         expect(instrumento.chamadas.some(c => c[0] === 'fillText' && c[1] === '+1')).toBe(true);
         expect(instrumento.chamadas.some(c => c[0] === 'arc')).toBe(true);
+        expect(instrumento.chamadas.some(c => c[0] === 'createLinearGradient')).toBe(true);
       });
     }
   }
@@ -90,8 +98,9 @@ describe('Corrida 3D — renderizador Canvas', () => {
     for (const dpr of [3, 1, 2, NaN, 0, 1.25, 2]) renderizador.redimensionar(dpr);
     const limite = qualidade === 'economica' ? 1 : 1.5;
     expect(canvas.width).toBe(400 * limite);
-    expect(canvas.height).toBe(700 * limite);
-    expect(chamadas.at(-1)).toEqual(['setTransform', limite, 0, 0, limite, 0, 0]);
+    // Só a vista de y = 120 a 700 vai para o backing store; a escala continua absoluta.
+    expect(canvas.height).toBe(580 * limite);
+    expect(chamadas.at(-1)).toEqual(['setTransform', limite, 0, 0, limite, 0, -120 * limite]);
     expect(chamadas.filter(c => c[0] === 'setTransform').map(c => c[1])).toEqual(
       qualidade === 'economica' ? [1,1,1,1,1,1,1,1] : [1,1.5,1,1.5,1,1,1.25,1.5],
     );
@@ -144,27 +153,80 @@ describe('Corrida 3D — renderizador Canvas', () => {
   });
 });
 
-describe('Corrida 3D — curva decorativa e marcas', () => {
-  it('curva aplica o smoothstep fechado a chão e objetos, sem deslocar a zona de contato', () => {
-    const estado = estadoVisual(4, -70);
-    const antes = structuredClone(estado);
-    const reta = criarCena(estado, { movimentoReduzido: true });
-    const curva = criarCena(estado);
+describe('Corrida 3D — pista reta, névoa, entrada dos rivais e marcas', () => {
+  it('projetarPonto ainda aplica o smoothstep fechado quando uma câmera traz curva', () => {
+    const reta = criarCena(estadoVisual(4, -70)).camera;
+    const curva = { ...reta, curva: 18 };
     for (const d of [-200, 0, 150, 300, 450, 600, 900, 3500]) {
-      const p = { x: 120, y: estado.carro.y - d };
-      const a = projetarPonto(p, reta.camera);
-      const b = projetarPonto(p, curva.camera);
+      const p = { x: 120, y: 580 - d };
+      const a = projetarPonto(p, reta);
+      const b = projetarPonto(p, curva);
       const t = Math.max(0, Math.min(1, (d - 300) / 600));
       expect(b.x - a.x).toBeCloseTo(18 * t * t * (3 - 2 * t) * a.escala);
       expect(b.y).toBe(a.y);
       if (d <= 300) expect(b).toEqual(a);
     }
-    const rival = curva.objetos.find(o => o.tipo === 'rival');
-    const logico = estado.rivais.find(r => r.id === rival.id);
-    expect(rival.base).toEqual(projetarPonto({ x: logico.x + logico.w / 2, y: logico.y + logico.h }, curva.camera));
-    expect(curva.objetos.find(o => o.tipo === 'jogador')).toEqual(reta.objetos.find(o => o.tipo === 'jogador'));
-    expect(criarCena(estado, { qualidade: 'economica' }).objetos).toEqual(curva.objetos);
+    expect(projetarPonto({ x: 120, y: -1000 }, { ...curva, movimentoReduzido: true }))
+      .toEqual(projetarPonto({ x: 120, y: -1000 }, reta));
+  });
+
+  it('a cena usa pista reta em qualquer distância, igual com ou sem movimento reduzido', () => {
+    const estado = estadoVisual(4, -70);
+    const antes = structuredClone(estado);
+    for (const distancia of [0, 600, 1234.5, 5000]) {
+      estado.distancia = distancia;
+      const normal = criarCena(estado);
+      const reduzido = criarCena(estado, { movimentoReduzido: true });
+      expect(normal.camera.curva).toBe(0);
+      expect(normal.objetos).toEqual(reduzido.objetos);
+      normal.segmentos.forEach((segmento, i) => expect(segmento.poligono).toEqual(reduzido.segmentos[i].poligono));
+      expect(criarCena(estado, { qualidade: 'economica' }).objetos).toEqual(normal.objetos);
+    }
+    estado.distancia = antes.distancia;
     expect(estado).toEqual(antes);
+  });
+
+  it('rival e posto nascem visíveis e ficam opacos em DISTANCIA_DE_ENTRADA; jogador não muda', () => {
+    const estado = criarCorrida();
+    const alfaDe = (tipo, y, alfa = 1) => {
+      estado.rivais = tipo === 'rival' ? [{ ...CARRO, x: 100, y, id: 1, faixa: 0, alfa, cor: '#ef4444' }] : [];
+      estado.posto = tipo === 'posto' ? { x: 100, y, w: 48, h: 58, faixa: 0 } : null;
+      return criarCena(estado).objetos.find(o => o.tipo === tipo).alfa;
+    };
+    for (const [tipo, nascimento] of [['rival', Y_NASCIMENTO_RIVAL], ['posto', Y_NASCIMENTO_POSTO]]) {
+      expect(alfaDe(tipo, nascimento)).toBeCloseTo(ALFA_AO_NASCER);
+      expect(alfaDe(tipo, nascimento + DISTANCIA_DE_ENTRADA / 2)).toBeCloseTo((1 + ALFA_AO_NASCER) / 2);
+      expect(alfaDe(tipo, nascimento + DISTANCIA_DE_ENTRADA)).toBe(1);
+      expect(alfaDe(tipo, 300)).toBe(1);
+    }
+    // A saída do motor (alfa decrescente de rival batido) continua valendo por inteiro.
+    expect(alfaDe('rival', 300, 0.4)).toBeCloseTo(0.4);
+    expect(alfaDe('rival', Y_NASCIMENTO_RIVAL, 0.5)).toBeCloseTo(0.5 * ALFA_AO_NASCER);
+    expect(criarCena(estado).objetos.find(o => o.tipo === 'jogador').alfa).toBe(1);
+  });
+
+  it('névoa cobre a estrada vazia e termina antes de rival, posto e chegada que acabam de nascer', () => {
+    const estado = estadoVisual(3, Y_NASCIMENTO_RIVAL);
+    estado.posto = { x: 300, y: Y_NASCIMENTO_POSTO, w: 48, h: 58, faixa: 2 };
+    estado.linhaDeChegada = { y: -40 };
+    const cena = criarCena(estado);
+    const { horizonte, nevoa } = cena.camera;
+    expect(nevoa).toBeGreaterThan(horizonte + 150);
+    for (const objeto of cena.objetos.filter(o => o.tipo !== 'jogador')) {
+      expect(objeto.base.y - (objeto.tipo === 'posto' ? 48 * objeto.escala : objeto.alturaCarroceria)).toBeGreaterThan(nevoa - 6);
+      expect(Math.min(...objeto.pegada.map(p => p.y))).toBeGreaterThan(nevoa);
+    }
+    for (const ladrilho of cena.linhaDeChegada.ladrilhos) {
+      for (const p of ladrilho.poligono) expect(p.y).toBeGreaterThan(nevoa);
+    }
+  });
+
+  it('hitboxes só são calculadas quando a depuração pede', () => {
+    const estado = estadoVisual(3, 300);
+    expect(criarCena(estado).objetos.every(o => o.hitboxes === null)).toBe(true);
+    const comDepuracao = criarCena(estado, { hitboxes: true });
+    expect(comDepuracao.objetos.find(o => o.tipo === 'jogador').hitboxes.colisao).toHaveLength(4);
+    expect(comDepuracao.objetos.find(o => o.tipo === 'posto').hitboxes.coleta).toHaveLength(4);
   });
 
   it('marca de faixa desce continuamente com a distância, inclusive na virada do ciclo', () => {
