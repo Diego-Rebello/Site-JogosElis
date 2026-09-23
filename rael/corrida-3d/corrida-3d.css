@@ -1,0 +1,101 @@
+/*
+ * Corrida 3D — estrutura da tela do novo jogo.
+ * Layout adaptado do Grande Prêmio do Rael, derivado de Pixel Racer
+ * (Tarek Elomami, MIT; licença em LICENSE-pixel-racer.txt).
+ */
+
+.descobertas__cartao { max-width: 500px; }
+
+.aviso-previa {
+  max-width: 400px;
+  margin: 0 auto 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: 700;
+  text-align: center;
+}
+
+.painel {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 6px;
+  max-width: 400px;
+  margin: 0 auto 8px;
+}
+
+.botao--painel { min-width: 64px; min-height: 64px; padding: 0; font-size: 1.6rem; }
+.painel button:disabled, .controles button:disabled { opacity: 0.55; }
+
+.medidor {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 5px;
+  padding: 4px 6px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.medidor--gasolina { grid-column: 1 / -1; }
+.medidor__icone { flex: none; width: 28px; height: 28px; }
+.medidor__trilha {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  overflow: hidden;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  background: #cbd5e1;
+}
+.medidor__barra { height: 100%; }
+.medidor__barra--ultrapassagens { width: 0; background: #2563eb; }
+.medidor__barra--gasolina { width: 100%; background: #22c55e; }
+.medidor__numero {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #0f172a;
+  text-shadow: 0 0 3px white;
+}
+
+.quadro-pista { position: relative; width: 100%; max-width: 400px; margin: 0 auto; }
+#pista {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 400 / 700;
+  border-radius: 14px;
+  background: #7dd3fc;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Conserva o Canvas inteiro e espaço para os controles em retrato. */
+@media (max-height: 1100px) {
+  .quadro-pista { max-width: min(400px, max(160px, calc((100dvh - 390px) * 400 / 700))); }
+}
+
+.quadro-pista .retorno {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  pointer-events: none;
+}
+
+.semaforo, .bandeira, .pausa { position: absolute; }
+.semaforo { top: 12px; left: 50%; transform: translateX(-50%); }
+.bandeira { top: 24%; left: 50%; transform: translateX(-50%); }
+.pausa { inset: 0; display: grid; place-content: center; gap: 16px; background: rgba(255,255,255,.93); }
+[hidden] { display: none !important; }
+
+.controles { display: flex; justify-content: space-around; gap: 20px; max-width: 400px; margin: 8px auto; }
+.botao--seta { min-width: 72px; min-height: 72px; }
+.voltar-previa { display: block; margin: 6px auto 0; min-height: 64px; }
+
+#pista, #esquerda, #direita { touch-action: none; }

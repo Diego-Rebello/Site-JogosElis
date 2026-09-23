@@ -45,6 +45,7 @@ const paginas = {
   'rael-chute-a-gol': 'rael/chute-a-gol/index.html',
   'rael-corrida-do-rael': 'rael/corrida-do-rael/index.html',
   'rael-grande-premio': 'rael/grande-premio/index.html',
+  'rael-corrida-3d': 'rael/corrida-3d/index.html',
 };
 
 export default defineConfig({
