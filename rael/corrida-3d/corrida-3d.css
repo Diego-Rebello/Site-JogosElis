@@ -148,3 +148,49 @@
 .quadro-pista .retorno:empty { padding: 0; background: transparent; }
 .bandeira { width: 40%; height: auto; }
 .controles .botao--seta { width: 80px; height: 80px; padding: 0; font-size: 2.2rem; user-select: none; -webkit-user-select: none; }
+
+/* Paisagem (R02): ◀ à esquerda da pista, painel e ▶ à direita — um polegar de cada lado. */
+@media (orientation: landscape) and (min-width: 600px) {
+  .pagina__conteudo:has(#tela-corrida:not([hidden])) { padding: 6px 12px; }
+  .descobertas__cartao:has(#tela-corrida:not([hidden])) { max-width: 1100px; padding: 8px 14px; }
+  #tela-corrida:not([hidden]) {
+    display: grid;
+    grid-template-columns: auto auto minmax(240px, 400px);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "esq pista painel" "esq pista roteiro" "esq pista dir";
+    justify-content: center;
+    column-gap: 16px;
+  }
+  #tela-corrida .painel { grid-area: painel; width: 100%; margin: 0; }
+  #tela-corrida .roteiro { grid-area: roteiro; width: 100%; margin: 8px 0 0; }
+  #tela-corrida .controles { display: contents; }
+  #tela-corrida #esquerda { grid-area: esq; align-self: end; }
+  #tela-corrida #direita { grid-area: dir; align-self: end; justify-self: end; }
+  /* Cabeçalho (~83 px) e respiros da página e do cartão: o resto é da pista. */
+  #tela-corrida .quadro-pista,
+  #tela-corrida:has(.roteiro:not([hidden])) .quadro-pista {
+    grid-area: pista;
+    width: calc((100dvh - 122px) * 400 / 580);
+    max-width: 560px;
+    min-width: 160px;
+    margin: 0;
+  }
+}
+/* Celular deitado: cabeçalho e roteiro mais baixos para nada ficar fora da tela. */
+@media (orientation: landscape) and (max-height: 500px) {
+  body:has(#tela-corrida:not([hidden])) .cabecalho { padding-block: 2px; }
+  #tela-corrida .quadro-pista,
+  #tela-corrida:has(.roteiro:not([hidden])) .quadro-pista { width: calc((100dvh - 112px) * 400 / 580); }
+  #tela-corrida .roteiro { padding: 4px 10px; }
+  #tela-corrida .roteiro__titulo { font-size: .7rem; }
+  #tela-corrida .roteiro__fala { font-size: .9rem; }
+}
+
+/* Tela final (R07): o botão "Correr de novo" cabe sem rolar em celulares de 800 px. */
+@media (max-height: 900px) {
+  #tela-fim { gap: 10px; }
+  #tela-fim > .convite__figura { display: none; }
+  #tela-fim .conclusao__figurinha { width: 110px; height: 110px; padding: 10px; }
+  #tela-fim .conquista-nova { gap: 4px; padding: 8px 14px; }
+  #tela-fim .conquista__moldura--grande { width: 84px; height: 84px; }
+}
