@@ -1327,6 +1327,14 @@ evidências só em `/tmp`, curva quase invisível, entre outros) estão na
 [seção 10 do plano](PLANO-CORRIDA-3D.md#10-revisão-das-etapas-05-2026-09-23), para tratar antes
 ou durante a Etapa 6.
 
+**Correções R01–R12 (2026-09-23).** Commits `4c7e4dc`, `97eac86` e `dfbfde4`. Céu vazio
+cortado e névoa na distância (pista 21% mais larga no celular), rivais com entrada suave,
+pista reta, paisagem em duas colunas sem rolagem, tela final sem cortar “Correr de novo”,
+foco na pista, RAF só quando anima, largada falada por luz e fala retomada após a pausa.
+508/508 testes, typecheck, build e precache aprovados; validação no preview com voz
+simulada. Detalhes e pendências na seção 10.4 do plano. **PENDENTE:** Etapa 6, FPS em
+aparelho real e observação com o Rael.
+
 ### 5.4 Ordem sugerida de entrega
 
 1. **P09 → P10.** Meu Nome e Conta Comigo não precisam de gravações nem de banco de dados,

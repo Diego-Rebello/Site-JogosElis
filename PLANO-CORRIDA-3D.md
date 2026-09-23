@@ -923,6 +923,42 @@ ao fim de cada item com caminhos explícitos (4.1), sem push/PR/merge (G16).
 4. Etapa 6 completa, incluindo medição de FPS (R05 só se a medição pedir).
 5. Observação com o Rael (seção 6), dando atenção especial a “percebe o rival cedo?”.
 
+### 10.4 Correções aplicadas (2026-09-23)
+
+Implementadas pelo Claude a pedido do Diego, no branch `corrida-3d-etapa-1`, sem push.
+Commits: `4c7e4dc` (R01, R04, R05), `97eac86` (R02, R07), `dfbfde4` (R06, R08–R10).
+Nenhuma mudança no motor, nos outros jogos, em `shared/` ou em dependências.
+
+| # | Status | O que foi feito |
+|---|---|---|
+| R01 | **Feito; falta validar com o Rael** | O renderizador mostra só `y = 120–700` do Canvas lógico (`TOPO_DA_VISTA`), sem o céu vazio: em 360×800 com roteiro a pista passou de 217 para **262 CSS px** de largura (+21%); em 390×844, de 242 para 292. Névoa degradê do horizonte até logo acima do ponto de nascimento (`camera.nevoa`): a estrada vazia some na distância e os carros saem da névoa. Rival e posto nascem com 45% de opacidade e ficam opacos em 25 px lógicos (~0,2 s), multiplicando o alfa do motor. Câmera, horizonte (170) e profundidade (700) mantidos: T01–T10 inalterados. O rival ainda nasce com ~17 CSS px em 360×800, abaixo dos 20 do aceite; subir a escala exigiria profundidade maior, o que faz o rival ultrapassado sumir visivelmente antes de sair da tela (ver R11). |
+| R02 | Feito | Paisagem ≥ 600 px: grid com ◀ à esquerda da pista e painel/roteiro/▶ à direita (um polegar de cada lado). Celular deitado compacta cabeçalho e roteiro. 844×390: pista 192×278, **sem rolagem**; 1180×820: pista 481×698, sem rolagem. |
+| R03 | Feito | Evidências do Codex copiadas de `/tmp` para `~/Desktop/Programas : Jogos/evidencias-corrida-3d/codex-etapas-3-a-5/`. Novos scripts `capturas.mjs` e `validar.mjs` na mesma pasta (fora do repositório), com capturas `antes/` e `depois/`. `validar.mjs` refaz A5.1/A5.3 com voz simulada: 5 cliques → 1 largada e 62 RAF/s (um loop), 2 corridas → 2 rodadas, pausa de 10 s na celebração → 1 rodada. Ainda usa o Playwright do runtime do Codex. |
+| R04 | Feito (opção a) | `criarCena` usa `curva: 0`. `projetarPonto` mantém o suporte à curva (testado) para uma futura curva acumulada. |
+| R05 | Feito | Sem `segmentos[].faixas`; hitboxes só com `criarCena(..., { hitboxes: true })` (depuração em dev). Medição em Node, 4 faixas, 3 rivais e posto: **438 → 287 µs por cena** e 859 → 539 polígonos. A estrada ainda é pintada por segmento; FPS em aparelho real segue pendente (B15). |
+| R06 | Feito | Foco vai para `#quadro-pista` (`tabindex="-1"`, sem contorno) na largada e ao continuar. Espaço durante a corrida não rola a página nem pausa. |
+| R07 | Feito | Até 900 px de altura, a tela final esconde a bandeira decorativa e reduz figurinha e conquista. “Correr de novo” visível sem rolar em 360×800 e 390×844, com e sem conquista nova. |
+| R08 | Feito | RAF só em largada, corrida e bandeirada: 0 chamadas/s no convite, na pausa e no final; retoma em `iniciarLargada` e `continuar`. `pageshow` persistido fica em pausa sem RAF até Continuar. |
+| R09 | Feito | Cada palavra sai quando a sua luz acende (0; 0,8; 1,6 s), medido com voz simulada. O texto mostra as palavras acumuladas. |
+| R10 | Feito | Fala de prioridade 2 ou 3 cortada pela pausa é repetida ao continuar; na bandeirada, a tela final espera a fala retomada. Conferido: instrução do 1.º rival e “Bandeirada!” faladas 2 vezes com pausa no meio. |
+| R11 | **Mantido de propósito** | O motor só remove rivais em `y > 720`; a faixa de 621–700 é onde o rival ultrapassado sai por baixo. Cortá-la faria o carro sumir ainda visível. |
+| R12 | Feito | Três commits por grupo de itens, mais este registro. |
+
+**Extra:** no modo acompanhado, o `#retorno` sobre a pista fica só para o leitor de tela
+(visualmente oculto), porque o roteiro do adulto já mostra a mesma frase logo acima. O texto
+de retorno usa tamanho relativo à pista (`cqi`) para não cobrir a estrada em paisagem.
+
+**Verificação:** Vitest **508/508** (32 arquivos; +5 testes novos de névoa, entrada, pista
+reta, curva em `projetarPonto` e hitboxes sob demanda; o teste da curva na cena foi trocado
+pelo de pista reta), `tsc --noEmit`, build e precache (267 endereços) aprovados; guardas
+limpas. Preview de produção no Chrome headless 154, sem erros de console, 404 ou pedidos
+externos. Uma execução isolada do T10 (3 faixas, reserva/chegada) falhou uma vez com a
+máquina carregada e passou nas três seguintes; parece tempo limite, não regressão, mas vale
+observar na Etapa 6.
+
+**Continua pendente:** Etapa 6 completa (offline, matriz B01–B15, FPS em iPad/Android),
+tamanho do rival ao nascer (R01) e a observação com o Rael.
+
 ---
 
 ## Fontes consultadas (2026-09-22)
