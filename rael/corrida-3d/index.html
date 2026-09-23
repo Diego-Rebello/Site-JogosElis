@@ -22,7 +22,17 @@
         <img class="convite__figura" src="/figuras/corrida/carro-de-corrida.svg" alt="" aria-hidden="true" width="120" height="120">
         <h2 class="instrucao__texto">Corrida 3D</h2>
         <p class="convite__texto">Ultrapasse 30 carros para ganhar a bandeirada!</p>
-        <button class="botao botao--gigante" id="comecar" type="button">🏁 Vamos correr</button>
+        <div class="dificuldades" role="group" aria-label="Escolha como vai ser a corrida">
+          <button class="botao botao--gigante dificuldade dificuldade--facil" id="comecar" type="button" data-dificuldade="facil">
+            <span class="dificuldade__estrelas" aria-hidden="true">⭐</span> Fácil
+          </button>
+          <button class="botao botao--gigante dificuldade dificuldade--medio" id="comecar-medio" type="button" data-dificuldade="medio">
+            <span class="dificuldade__estrelas" aria-hidden="true">⭐⭐</span> Médio
+          </button>
+          <button class="botao botao--gigante dificuldade dificuldade--dificil" id="comecar-dificil" type="button" data-dificuldade="dificil">
+            <span class="dificuldade__estrelas" aria-hidden="true">⭐⭐⭐</span> Difícil
+          </button>
+        </div>
         <p class="convite__texto" id="texto-convite-fala" hidden></p>
         <p class="convite__texto" id="aviso-voz" hidden></p>
       </div>
@@ -83,6 +93,7 @@
         <img class="conclusao__figurinha" id="figurinha" src="" alt="" width="150" height="150" hidden>
         <div class="conclusao__acoes">
           <button class="botao botao--gigante" id="de-novo" type="button">🏁 Correr de novo</button>
+          <button class="botao botao--secundario" id="trocar-dificuldade" type="button">⭐ Trocar dificuldade</button>
           <a class="botao botao--secundario" href="../index.html">🏠 Início</a>
         </div>
       </div>

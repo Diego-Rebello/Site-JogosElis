@@ -65,11 +65,63 @@ function desenharLinhaDeChegada(ctx, linha) {
   if (linha) for (const ladrilho of linha.ladrilhos) poligono(ctx, ladrilho.poligono, ladrilho.cor);
 }
 
+/** Poça escura com brilho, apoiada na pegada do óleo; some aos poucos depois de usada. */
+function desenharOleo(ctx, oleo) {
+  if (!oleo || !oleo.pegada || oleo.pegada.length < 3) return;
+  const xs = oleo.pegada.map(p => p.x);
+  const ys = oleo.pegada.map(p => p.y);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const rx = (Math.max(...xs) - Math.min(...xs)) / 2;
+  const ry = (Math.max(...ys) - Math.min(...ys)) / 2;
+  if (![cx, cy, rx, ry].every(Number.isFinite) || rx <= 0 || ry <= 0) return;
+  ctx.save();
+  try {
+    ctx.globalAlpha = Math.max(0, Math.min(1, oleo.alfa * (oleo.usado ? 0.6 : 1)));
+    ctx.fillStyle = '#0b0b12';
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = Math.max(1, 2 * oleo.escala);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#64748b';
+    ctx.beginPath();
+    ctx.ellipse(cx - rx * 0.3, cy - ry * 0.25, rx * 0.28, ry * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } finally { ctx.restore(); }
+}
+
+/** Pisca-pisca: lanterna âmbar do lado da troca e uma seta âmbar sobre o teto. */
+function desenharPiscaPisca(ctx, objeto, apresentacao, topo) {
+  const { base, largura: w, alturaCarroceria: h, sinal } = objeto;
+  const aceso = apresentacao.movimentoReduzido || (apresentacao.tempo ?? 0) % 0.4 < 0.22;
+  if (!aceso) return;
+  ctx.fillStyle = '#f59e0b';
+  const lanternaX = sinal < 0 ? base.x - w * 0.46 : base.x + w * 0.28;
+  ctx.fillRect(lanternaX, base.y - h * 0.4, w * 0.18, h * 0.22);
+  // Seta com tamanho mínimo: longe, o carro é pequeno, mas o aviso precisa aparecer.
+  const t = Math.max(11, w * 0.4);
+  const y = topo - t * 0.9;
+  const ponta = base.x + sinal * t;
+  poligono(ctx, [
+    { x: ponta, y },
+    { x: ponta - sinal * t, y: y - t * 0.7 },
+    { x: ponta - sinal * t, y: y + t * 0.7 },
+  ], '#f59e0b', '#78350f');
+}
+
 function desenharCarroTraseiro(ctx, objeto, apresentacao) {
   const { pegada, base, largura: w, alturaCarroceria: h, escala: s } = objeto;
   const jogador = objeto.tipo === 'jogador';
   ctx.save();
   try {
+    if (jogador && Number.isFinite(objeto.derrapando) && !apresentacao.movimentoReduzido) {
+      // Balanço do escorregão, em torno do centro traseiro; a pegada no chão também gira.
+      ctx.translate(base.x, base.y);
+      ctx.rotate(0.14 * Math.sin((apresentacao.tempo ?? 0) * 26));
+      ctx.translate(-base.x, -base.y);
+    }
     ctx.globalAlpha = Math.max(0, Math.min(1, objeto.alfa));
     if (jogador && apresentacao.imune && !apresentacao.movimentoReduzido) {
       ctx.globalAlpha *= (apresentacao.tempo % 0.5 < 0.25) ? 0.55 : 1;
@@ -110,6 +162,12 @@ function desenharCarroTraseiro(ctx, objeto, apresentacao) {
       ctx.lineWidth = 3;
       ctx.stroke();
     }
+    if (jogador && Number.isFinite(objeto.derrapando) && caminho(ctx, pegada)) {
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+    if (!jogador && objeto.sinal) desenharPiscaPisca(ctx, objeto, apresentacao, Math.min(alto[2].y, alto[3].y));
   } finally { ctx.restore(); }
 }
 
@@ -208,6 +266,7 @@ export function criarRenderizador(canvas, { qualidade = 'padrao' } = {}) {
       ctx.clip();
       desenharEstrada(ctx, cena);
       desenharLinhaDeChegada(ctx, cena.linhaDeChegada);
+      desenharOleo(ctx, cena.oleo);
       desenharSeta(ctx, apresentacao.seta);
       for (const objeto of cena.objetos) {
         if (objeto.tipo === 'posto') desenharPosto(ctx, objeto);
@@ -217,6 +276,10 @@ export function criarRenderizador(canvas, { qualidade = 'padrao' } = {}) {
       // Esta opção é removida pelo build de produção, mesmo se passada pelo chamador.
       if (import.meta.env.DEV && apresentacao.hitboxes) {
         ctx.lineWidth = 1;
+        if (caminho(ctx, cena.oleo?.hitbox)) {
+          ctx.strokeStyle = '#facc15';
+          ctx.stroke();
+        }
         for (const objeto of cena.objetos) {
           for (const [tipo, pontos] of Object.entries(objeto.hitboxes || {})) {
             if (caminho(ctx, pontos)) {

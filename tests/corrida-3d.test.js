@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { criarCena, projetarObjeto, projetarPonto } from '../rael/corrida-3d/projecao.js';
+import {
+  DISTANCIA_DISTANTE, JUNCAO_DISTANTE, criarCena, projetarObjeto, projetarPonto,
+} from '../rael/corrida-3d/projecao.js';
 import {
   CARRO, DT_MAXIMO, MARGEM_COLISAO, avancarCorrida, criarCorrida,
 } from '../rael/grande-premio/jogo.js';
@@ -59,7 +61,46 @@ describe('Corrida 3D — contrato de projeção (Etapa 2)', () => {
     for (const x of [0, 36, 91.25, 200, 364, 400]) {
       expect(projetarPonto({ x, y: 580 }, camera)).toEqual({ x, y: 580, escala: 1 });
     }
-    expect(projetarPonto({ x: 300, y: -120 }, camera)).toEqual({ x: 250, y: 375, escala: 0.5 });
+    // A fórmula física continua valendo sem a cauda distante e, com ela, até a junção.
+    const fisica = { ...camera, juncao: undefined };
+    expect(projetarPonto({ x: 300, y: -120 }, fisica)).toEqual({ x: 250, y: 375, escala: 0.5 });
+    for (const d of [-200, -64, 0, 25, JUNCAO_DISTANTE]) {
+      expect(projetarPonto({ x: 300, y: 580 - d }, camera)).toEqual(projetarPonto({ x: 300, y: 580 - d }, fisica));
+    }
+  });
+
+  it('cauda distante: rival nasce no fundo da estrada, sem quebra de velocidade na junção', () => {
+    const fisica = { ...camera, juncao: undefined };
+    const nascendo = projetarObjeto({ x: 178, y: -70, w: 44, h: 64 }, camera);
+    // Antes nascia em y ≈ 393 (meio da tela); agora perto do fim visível da estrada.
+    expect(nascendo.base.y).toBeLessThan(290);
+    expect(nascendo.base.y).toBeGreaterThan(camera.nevoa);
+    expect(nascendo.escala).toBeLessThan(projetarObjeto({ x: 178, y: -70, w: 44, h: 64 }, fisica).escala);
+    // Longe, o comprimento no chão encolhe como na perspectiva: o carro não vira um traço.
+    expect(nascendo.base.y - nascendo.pegada[0].y).toBeLessThan(nascendo.largura);
+    // A pegada não salta quando a traseira cruza a junção.
+    const yTraseira = 580 - JUNCAO_DISTANTE;
+    const antesDaJuncao = projetarObjeto({ x: 178, y: yTraseira - 64 + 0.001, w: 44, h: 64 }, camera);
+    const depoisDaJuncao = projetarObjeto({ x: 178, y: yTraseira - 64 - 0.001, w: 44, h: 64 }, camera);
+    antesDaJuncao.pegada.forEach((p, i) => {
+      expect(Math.abs(p.x - depoisDaJuncao.pegada[i].x)).toBeLessThan(0.5);
+      expect(Math.abs(p.y - depoisDaJuncao.pegada[i].y)).toBeLessThan(0.5);
+    });
+    // Inclinação contínua na junção: passos de 0,01 dos dois lados diferem < 0,5%.
+    const yNa = d => projetarPonto({ x: 200, y: 580 - d }, camera).y;
+    const antes = yNa(JUNCAO_DISTANTE - 0.01) - yNa(JUNCAO_DISTANTE);
+    const depois = yNa(JUNCAO_DISTANTE) - yNa(JUNCAO_DISTANTE + 0.01);
+    expect(Math.abs(depois / antes - 1)).toBeLessThan(0.005);
+    // A velocidade aparente nunca cai ao se aproximar: |dy/dd| não cresce com a distância.
+    let passoAnterior = Infinity;
+    for (let d = -200; d < 1300; d += 5) {
+      const passo = yNa(d) - yNa(d + 5);
+      expect(passo).toBeGreaterThan(0);
+      expect(passo).toBeLessThanOrEqual(passoAnterior + 1e-9);
+      passoAnterior = passo;
+    }
+    expect(yNa(DISTANCIA_DISTANTE)).toBeGreaterThan(camera.horizonte);
+    expect(yNa(5000)).toBeGreaterThanOrEqual(camera.horizonte);
   });
 
   it('T02: aproximação aumenta a largura, altura visual e posição da base', () => {
@@ -220,11 +261,11 @@ describe('Corrida 3D — contrato de projeção (Etapa 2)', () => {
     expect(criarCena(estado).objetos).toEqual(cena.objetos);
   });
 
-  it('segmentos cobrem -200 a 3500, recortam no viewport e mantêm a fase do mundo', () => {
+  it('segmentos cobrem -200 a DISTANCIA_DISTANTE, recortam no viewport e mantêm a fase do mundo', () => {
     const estado = criarCorrida({ faixas: 4 });
     const cena = criarCena(estado);
     expect(cena.segmentos).toHaveLength(80);
-    expect(cena.segmentos[0].dLonge).toBe(3500);
+    expect(cena.segmentos[0].dLonge).toBe(DISTANCIA_DISTANTE);
     expect(cena.segmentos.at(-1).dPerto).toBe(-200);
     for (let i = 0; i < cena.segmentos.length; i++) {
       const segmento = cena.segmentos[i];
@@ -256,7 +297,7 @@ describe('Corrida 3D — contrato de projeção (Etapa 2)', () => {
     const economica = criarCena(estado, { qualidade: 'economica', movimentoReduzido: true });
     expect(economica.segmentos).toHaveLength(40);
     expect(economica.objetos).toEqual(depois.objetos);
-    expect(economica.segmentos[0].dLonge).toBe(3500);
+    expect(economica.segmentos[0].dLonge).toBe(DISTANCIA_DISTANTE);
     expect(economica.segmentos.at(-1).dPerto).toBe(-200);
   });
 });

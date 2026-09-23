@@ -980,6 +980,16 @@ Testes 508/508, typecheck, build e precache aprovados; guardas limpas.
 **Ainda pendente:** FPS e fluidez no iPad/Safari e Android/Chrome (B15), voz, aba oculta e
 bfcache reais nesses aparelhos, leitor de tela e a observação com o Rael (seção 6).
 
+### 10.6 Ajustes depois do teste local (2026-09-23)
+
+**Pedido do Diego** (precedência da seção 4.1), que muda decisões deste plano:
+carros surgindo no fundo da estrada, escolha de dificuldade e, no difícil, carros mudando de
+faixa e óleo. Isso revoga, só para esses pontos, a guarda G07 (“IA extra dos rivais”) e o
+item “novas regras” da seção 7, e altera `rael/grande-premio/jogo.js` e a projeção da seção
+3.5 (cauda distante além de d = 50). As regras novas são opcionais no motor e o padrão
+mantém o Grande Prêmio idêntico. Detalhes, números e evidências no
+[MELHORIAS.md](MELHORIAS.md#corrida-3d), em “Ajustes pedidos pelo Diego depois do teste local”.
+
 ---
 
 ## Fontes consultadas (2026-09-22)

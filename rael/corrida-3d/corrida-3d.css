@@ -188,6 +188,16 @@
   #tela-corrida .roteiro__fala { font-size: .9rem; }
 }
 
+/* Convite: três corridas, com estrelas e cor além do nome (dá para escolher sem ler). */
+.dificuldades { display: grid; gap: 10px; width: min(100%, 320px); margin: 0 auto; }
+.dificuldades .dificuldade { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; border: 4px solid transparent; }
+.dificuldade__estrelas { font-size: 1.1em; letter-spacing: -2px; }
+/* Seletores com o grupo na frente: vencem .botao mesmo que o build mude a ordem das folhas. */
+.dificuldades .dificuldade--facil { background: #15803d; box-shadow: 0 4px 0 #14532d; }
+.dificuldades .dificuldade--medio { background: #b45309; box-shadow: 0 4px 0 #78350f; }
+.dificuldades .dificuldade--dificil { background: #b91c1c; box-shadow: 0 4px 0 #7f1d1d; }
+.dificuldades .dificuldade.dificuldade--escolhida { border-color: #facc15; }
+
 /* Zoom de 200% em celular (≤ 340 px CSS): contador em linha própria, sem Pausar por cima,
    e a fala abaixo da pista em vez de cobri-la. Rolagem vertical é aceita nesse caso. */
 @media (max-width: 340px) {

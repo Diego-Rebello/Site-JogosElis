@@ -20,11 +20,13 @@ function canvasInstrumentado() {
   const chamadas = [];
   let profundidade = 0;
   const metodos = ['setTransform', 'beginPath', 'moveTo', 'lineTo', 'closePath', 'fill',
-    'stroke', 'fillRect', 'strokeRect', 'rect', 'clip', 'arc', 'fillText', 'strokeText'];
+    'stroke', 'fillRect', 'strokeRect', 'rect', 'clip', 'arc', 'fillText', 'strokeText',
+    'ellipse', 'translate', 'rotate'];
   const metodosCtx = Object.fromEntries(metodos.map(nome => [nome, (...args) => {
     for (const arg of args) if (typeof arg === 'number' && !Number.isFinite(arg)) throw new Error(`${nome}: ${arg}`);
     if (['fillRect', 'strokeRect', 'rect'].includes(nome) && (args[2] < 0 || args[3] < 0)) throw new Error('Dimensão negativa');
     if (nome === 'arc' && args[2] < 0) throw new Error('Raio negativo');
+    if (nome === 'ellipse' && (args[2] < 0 || args[3] < 0)) throw new Error('Raio negativo');
     chamadas.push([nome, ...args]);
   }]));
   metodosCtx.createLinearGradient = (...args) => {
@@ -38,6 +40,7 @@ function canvasInstrumentado() {
     set(alvo, chave, valor) {
       if (chave === 'globalAlpha' && (!Number.isFinite(valor) || valor < 0 || valor > 1)) throw new Error(`Alpha inválido: ${valor}`);
       if (chave === 'lineWidth' && (!Number.isFinite(valor) || valor <= 0)) throw new Error('Traço inválido');
+      if (chave === 'fillStyle') chamadas.push(['fillStyle', valor]);
       alvo[chave] = valor;
       return true;
     },
@@ -91,6 +94,47 @@ describe('Corrida 3D — renderizador Canvas', () => {
       });
     }
   }
+
+  it.each([2, 3, 4])('difícil com %i faixas: óleo, pisca-pisca e derrapagem sem mutar dados', faixas => {
+    const instrumento = canvasInstrumentado();
+    const renderizador = criarRenderizador(instrumento.canvas);
+    for (const y of [-400, -60, 200, 540, 690]) {
+      for (const fase of ['sinalizando', 'mudando']) {
+        const estado = criarCorrida({ faixas, dificuldade: 'dificil' });
+        const para = 1;
+        estado.rivais = [{
+          ...CARRO, x: centroDaFaixa(0, estado.geometria) - CARRO.w / 2, y, id: 1,
+          faixa: fase === 'mudando' ? para : 0, ...(fase === 'mudando' ? { faixaAnterior: 0 } : {}),
+          alfa: 1, saindo: false, contado: false, velocidade: 99, cor: '#22c55e', comAjuda: false,
+          troca: { para, gatilho: 0, fase, tempo: 0.3 },
+        }];
+        estado.oleo = { faixa: faixas - 1, x: centroDaFaixa(faixas - 1, estado.geometria) - 25, y, w: 50, h: 34, usado: y > 500 };
+        estado.derrapagem = { tempo: 0.2, lado: 1, alvoX: estado.carro.x + 50 };
+        congelar(estado);
+        const antes = JSON.stringify(estado);
+        const cena = congelar(criarCena(estado, { hitboxes: true }));
+        const rival = cena.objetos.find(o => o.tipo === 'rival');
+        if (rival) expect(rival.sinal).toBe(1);
+        expect(cena.objetos.find(o => o.tipo === 'jogador').derrapando).toBe(1);
+        for (const movimentoReduzido of [false, true]) {
+          for (const tempo of [0.1, 0.3]) {
+            renderizador.desenhar(cena, congelar({ tempo, movimentoReduzido, hitboxes: true, efeitos: [] }));
+            expect(instrumento.profundidade()).toBe(0);
+          }
+        }
+        expect(JSON.stringify(estado)).toBe(antes);
+      }
+    }
+    expect(instrumento.chamadas.some(c => c[0] === 'ellipse')).toBe(true);
+    expect(instrumento.chamadas.some(c => c[0] === 'fillStyle' && c[1] === '#f59e0b')).toBe(true);
+    // O balanço da derrapagem só existe sem movimento reduzido.
+    expect(instrumento.chamadas.some(c => c[0] === 'rotate')).toBe(true);
+    const reduzido = canvasInstrumentado();
+    const estado = criarCorrida({ faixas, dificuldade: 'dificil' });
+    estado.derrapagem = { tempo: 0.2, lado: -1, alvoX: estado.carro.x - 50 };
+    criarRenderizador(reduzido.canvas).desenhar(criarCena(estado), { tempo: 0.1, movimentoReduzido: true, efeitos: [] });
+    expect(reduzido.chamadas.some(c => c[0] === 'rotate')).toBe(false);
+  });
 
   it.each(['padrao', 'economica'])('resize %s não acumula escala; destruir impede desenho posterior', qualidade => {
     const { canvas, chamadas } = canvasInstrumentado();
@@ -211,7 +255,10 @@ describe('Corrida 3D — pista reta, névoa, entrada dos rivais e marcas', () =>
     estado.linhaDeChegada = { y: -40 };
     const cena = criarCena(estado);
     const { horizonte, nevoa } = cena.camera;
-    expect(nevoa).toBeGreaterThan(horizonte + 150);
+    // A névoa cobre só a estrada além do nascimento: rival, posto e chegada surgem
+    // logo abaixo dela, no fundo da estrada, e não no meio da tela.
+    expect(nevoa).toBeGreaterThan(horizonte + 20);
+    for (const objeto of cena.objetos.filter(o => o.tipo !== 'jogador')) expect(objeto.base.y).toBeLessThan(nevoa + 100);
     for (const objeto of cena.objetos.filter(o => o.tipo !== 'jogador')) {
       expect(objeto.base.y - (objeto.tipo === 'posto' ? 48 * objeto.escala : objeto.alturaCarroceria)).toBeGreaterThan(nevoa - 6);
       expect(Math.min(...objeto.pegada.map(p => p.y))).toBeGreaterThan(nevoa);

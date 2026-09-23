@@ -48,7 +48,17 @@ const FALAS = Object.freeze({
   primeiraBatida: 'Opa! Bateu. Desvie dos carros!',
   ajudaDesvio: 'Siga a seta verde!',
   meta: 'Trinta carros! Agora é a reta final!',
+  primeiroOleo: 'Cuidado! Tem óleo na pista. Desvie da mancha!',
+  primeiraDerrapagem: 'Escorregou no óleo!',
+  primeiroPisca: 'Olha o pisca-pisca! Aquele carro vai mudar de faixa.',
 });
+// Cada corrida tem a sua explicação extra no convite; a fácil é a de sempre.
+const EXPLICACAO_DA_DIFICULDADE = Object.freeze({
+  facil: '',
+  medio: 'No médio, os carros andam mais rápido.',
+  dificil: 'No difícil, cuidado com o óleo e com o pisca-pisca dos carros!',
+});
+const BOTOES_DE_DIFICULDADE = Object.freeze(['comecar', 'comecar-medio', 'comecar-dificil']);
 const FALAS_DOS_MARCOS = Object.freeze({
   5: 'Cinco carros!', 10: 'Dez carros!', 15: 'Quinze carros!',
   20: 'Vinte carros!', 25: 'Vinte e cinco carros!',
@@ -57,7 +67,10 @@ const FALAS_DOS_MARCOS = Object.freeze({
 const teclas = new Set();
 const ponteiros = new Map();
 const rivaisDoAquecimento = new Set();
-let estado = criarCorrida({ faixas: obterConfiguracoes().alternativas });
+// Lembrada durante a visita; "Correr de novo" repete a mesma corrida.
+let dificuldade = 'facil';
+let avisouPiscaPisca = false;
+let estado = criarCorrida({ faixas: obterConfiguracoes().alternativas, dificuldade });
 let configuracoes = obterConfiguracoes();
 definirPreferencia(configuracoes.voz);
 let faseDaTela = 'convite';
@@ -172,7 +185,8 @@ function iniciarLargada() {
   zerarNarrador();
   configuracoes = obterConfiguracoes();
   definirPreferencia(configuracoes.voz);
-  estado = criarCorrida({ faixas: configuracoes.alternativas });
+  estado = criarCorrida({ faixas: configuracoes.alternativas, dificuldade });
+  avisouPiscaPisca = false;
   faseDaTela = 'largada';
   ultimoTempo = null;
   tempoAtivo = tempoLargada = tempoBandeirada = tempoFumaca = 0;
@@ -200,11 +214,35 @@ function iniciarLargada() {
 }
 // O foco fica na pista, não em Pausar: sem anel chamativo e sem Espaço/Enter pausando.
 function focarPista() { $('quadro-pista').focus({ preventScroll: true }); }
+function habilitarDificuldades(habilitar) {
+  for (const id of BOTOES_DE_DIFICULDADE) {
+    $(id).disabled = !habilitar;
+    $(id).classList.toggle('dificuldade--escolhida', $(id).dataset.dificuldade === dificuldade);
+  }
+}
+function escolherDificuldade(evento) {
+  if (faseDaTela !== 'convite' || preparandoConvite) return;
+  dificuldade = evento.currentTarget.dataset.dificuldade;
+  iniciarCorrida();
+}
+/** Do final de volta ao convite, para escolher outra corrida. */
+function voltarAoConvite() {
+  if (faseDaTela !== 'fim') return;
+  geracaoDaCorrida += 1;
+  zerarNarrador();
+  faseDaTela = 'convite';
+  preparandoConvite = false;
+  $('texto-convite-fala').hidden = true;
+  habilitarDificuldades(true);
+  mostrarTela('convite');
+  atualizarControles();
+  $(BOTOES_DE_DIFICULDADE.find(id => $(id).dataset.dificuldade === dificuldade)).focus({ preventScroll: true });
+}
 async function iniciarCorrida() {
   if (faseDaTela === 'fim') { iniciarLargada(); return; }
   if (faseDaTela !== 'convite' || preparandoConvite) return;
   preparandoConvite = true;
-  $('comecar').disabled = true;
+  habilitarDificuldades(false);
   configuracoes = obterConfiguracoes();
   definirPreferencia(configuracoes.voz);
   const geracao = geracaoDaCorrida;
@@ -221,15 +259,16 @@ async function iniciarCorrida() {
   const nome = primeiroNome();
   const convite = nome ? `${nome}, vamos brincar de Corrida três dê?` : 'Vamos brincar de Corrida três dê?';
   const conviteVisual = nome ? `${nome}, vamos brincar de Corrida 3D?` : 'Vamos brincar de Corrida 3D?';
-  const introducao = `${conviteVisual} ${FALAS.explicacao}`;
+  const explicacao = [FALAS.explicacao, EXPLICACAO_DA_DIFICULDADE[dificuldade]].filter(Boolean).join(' ');
+  const introducao = `${conviteVisual} ${explicacao}`;
   $('texto-convite-fala').textContent = introducao;
   $('texto-convite-fala').hidden = false;
   mostrarTextoNarrado(introducao);
-  await acompanharFala(2, falarSequencia([convite, FALAS.explicacao]));
+  await acompanharFala(2, falarSequencia([convite, explicacao]));
   if (geracao !== geracaoDaCorrida || pagina !== geracaoDaPagina) return;
   if (faseDaTela === 'convite') iniciarLargada();
   preparandoConvite = false;
-  $('comecar').disabled = false;
+  habilitarDificuldades(true);
 }
 function pausar() {
   limparEntrada();
@@ -292,6 +331,14 @@ function tratarEvento(evento) {
     case 'pouca-gasolina': narrar(FALAS.poucaGasolina, 3); break;
     case 'reserva': narrar(FALAS.reserva, 3); break;
     case 'meta': narrar(FALAS.meta, 3); break;
+    case 'oleo-apareceu': if (evento.primeiro) narrar(FALAS.primeiroOleo, 2); break;
+    case 'derrapou':
+      tocar('erro');
+      if (evento.primeira) narrar(FALAS.primeiraDerrapagem, 2);
+      break;
+    case 'rival-sinalizou':
+      if (!avisouPiscaPisca && narrar(FALAS.primeiroPisca, 2)) avisouPiscaPisca = true;
+      break;
     case 'bandeirada':
       if (faseDaTela !== 'corrida' || corridaRegistrada) break;
       faseDaTela = 'bandeirada';
@@ -462,8 +509,9 @@ window.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('keyup', e => teclas.delete(e.key.toLowerCase()));
-$('comecar').addEventListener('click', iniciarCorrida);
+for (const id of BOTOES_DE_DIFICULDADE) $(id).addEventListener('click', escolherDificuldade);
 $('de-novo').addEventListener('click', iniciarCorrida);
+$('trocar-dificuldade').addEventListener('click', voltarAoConvite);
 $('repetir').addEventListener('click', () => {
   if (!ultimoTextoNarrado || $('repetir').disabled) return;
   mostrarTextoNarrado(ultimoTextoNarrado);
@@ -480,7 +528,7 @@ window.addEventListener('pagehide', () => {
   interromperFala();
   if (faseDaTela === 'convite') {
     preparandoConvite = false;
-    $('comecar').disabled = false;
+    habilitarDificuldades(true);
   }
   ultimoTempo = null;
   if (raf !== null) cancelAnimationFrame(raf);
@@ -493,6 +541,7 @@ window.addEventListener('pageshow', e => {
     redimensionar();
   }
 });
+habilitarDificuldades(true);
 atualizarControles();
 atualizarPainel();
 redimensionar();

@@ -1395,6 +1395,55 @@ com `main`), branch `corrida-3d-etapa-1`. Sem push, PR, merge ou deploy.
   verdade no Safari/iPad e no Chrome/Android, leitor de tela. **PENDENTE COM O RAEL:** a
   observação da seção 6 do plano.
 
+**Ajustes pedidos pelo Diego depois do teste local (2026-09-23).** Dois pedidos: os carros
+surgiam “muito em cima”, no meio da tela, apesar de a estrada ir longe; e a corrida podia ser
+mais difícil, com escolha de dificuldade, carros mudando de faixa e óleo na pista.
+
+- **Surgimento no fundo da estrada (só visual):** a projeção mantém a perspectiva física até
+  50 unidades à frente do carro (contato, colisão e ultrapassagem iguais) e, além disso, usa
+  uma cauda que encolhe a escala mais depressa até a névoa. O rival passa a nascer em y ≈ 279
+  do Canvas lógico (antes 393), pequeno, e cresce até o carro; a velocidade aparente nunca
+  diminui ao se aproximar. A pegada no chão dos objetos distantes encolhe como na perspectiva,
+  para o carro não virar um traço. O tempo de reação é o mesmo de antes (o motor não mudou).
+- **Três corridas no convite:** Fácil (a de sempre), Médio e Difícil, com cor e estrelas
+  (dá para escolher sem ler). “Correr de novo” repete a mesma; “Trocar dificuldade”, no
+  final, volta ao convite com a última destacada. A escolha vale durante a visita; guardar
+  entre visitas exigiria mexer nas configurações de `shared/`, o que não foi feito.
+- **Regras novas no motor compartilhado, desligadas por padrão:** `criarCorrida({ faixas,
+  dificuldade })` em `rael/grande-premio/jogo.js`. Com o padrão `'facil'` o Grande Prêmio fica
+  idêntico, inclusive a sequência de sorteios (teste dedicado). Médio: cruzeiro × 1,12,
+  intervalos × 0,85, dupla +10% a partir de 3 ultrapassagens. Difícil: cruzeiro × 1,2,
+  intervalos × 0,8, dupla +15%, e:
+  - **Rival que muda de faixa:** 35% dos rivais sozinhos (nunca dupla, ajuda ou aquecimento)
+    ligam o pisca-pisca logo depois de nascer, esperam 0,6 s e passam para a faixa vizinha em
+    0,6 s. Só troca se a faixa de destino estiver livre; durante a troca ocupa as duas faixas
+    para a seta verde e para o posto. Menor folga medida ao fim de uma troca: 245 px entre a
+    traseira do rival e a frente do carro (mais de 1,2 s no nível mais rápido).
+  - **Óleo:** uma mancha por vez, a cada 7–11 s depois do aquecimento, fora da reserva e
+    nunca na faixa do posto. Passar nela escorrega o carro até o centro de uma faixa vizinha
+    sem rival ao lado (ou só tira o controle, se não houver lado seguro), com os controles
+    ignorados por 0,6 s. Não conta batida nem reduz a velocidade. Terminar no centro de uma
+    faixa foi necessário: com um escorregão parcial, uma criança parada em 2 faixas ficava
+    fora do alcance do posto na reserva e a corrida não terminava.
+- **Tela:** pisca-pisca âmbar com seta sobre o rival, poça escura com brilho, carro
+  balançando e com contorno lilás na derrapagem (sem balanço com movimento reduzido). Falas
+  novas na primeira vez: óleo, derrapagem e pisca-pisca; o convite explica o Médio e o Difícil.
+- **Testes:** 526/526 em 33 arquivos (novo `tests/corrida-3d-dificuldade.test.js` com 14
+  cenários: equivalência do fácil, fatores, duplas, conclusão do difícil com 2/3/4 faixas
+  parado e desviando, sinal antes da troca, cancelamento, ocupação durante a troca, óleo,
+  derrapagem e intervalo). Testes de projeção atualizados para a nova câmera, com asserções
+  novas de continuidade na junção, velocidade aparente e pegada distante; `tsc`, build e
+  precache aprovados. Os testes antigos do Grande Prêmio passam sem alteração.
+- **Navegador (preview de produção):** capturas e 14 verificações em
+  `evidencias-corrida-3d/dificuldade/` (convite, fácil nascendo no fundo, pisca-pisca,
+  óleo, derrapagem, final, troca de dificuldade). Regressão da Etapa 6 reexecutada e aprovada:
+  B01, B05, B08, B09, B11, B12, B14 e acessibilidade.
+- **Simulação (20 sementes por caso, robô que desvia):** tempo médio até a bandeirada com
+  3 faixas de 100 s (fácil), 82 s (médio) e 82 s (difícil); o difícil tem ~6 trocas de faixa
+  e ~4 manchas por corrida. Sem tocar, todas as combinações terminam.
+- **Observar com o Rael:** se o rival pequeno no fundo é percebido; se o pisca-pisca é
+  entendido; se o óleo diverte ou frustra; qual dificuldade ele escolhe sozinho.
+
 ### 5.4 Ordem sugerida de entrega
 
 1. **P09 → P10.** Meu Nome e Conta Comigo não precisam de gravações nem de banco de dados,

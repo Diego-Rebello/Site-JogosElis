@@ -55,7 +55,7 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Chute a Gol | `rael/chute-a-gol/index.html` | Cinco pênaltis em três modos (chutar, defender ou alternado): mire e chute com as setas e o botão, ou vire goleiro e pule na bola |
 | Corrida do Rael | `rael/corrida-do-rael/index.html` | Leve o carrinho até o posto para encher o tanque em seis trechos amigáveis |
 | Grande Prêmio do Rael | `rael/grande-premio/index.html` | Corrida de reflexo: desvie e ultrapasse 30 carros, passe no posto para abastecer e ganhe a bandeirada; batida só deixa o carro devagar |
-| Corrida 3D | `rael/corrida-3d/index.html` | A mesma corrida vista de trás, com estrada em perspectiva, álbum e conquistas próprios |
+| Corrida 3D | `rael/corrida-3d/index.html` | A mesma corrida vista de trás, com estrada em perspectiva, três dificuldades (Fácil, Médio, Difícil), álbum e conquistas próprios |
 | Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, formato do labirinto, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras
@@ -472,6 +472,8 @@ Reaproveitamento:
 - **Substituído:** o `triggerGameOver` da batida virou 2 s de lentidão (35% da velocidade) sem derrota; o fim da partida virou a bandeirada depois de 30 ultrapassagens, com figurinha e as conquistas "Primeira bandeirada" e "Campeão das pistas". Gasolina com posto, ajuda e reserva também nunca encerram a corrida.
 
 **Corrida 3D** (`rael/corrida-3d/`) importa diretamente `avancarCorrida` de `rael/grande-premio/jogo.js`: ultrapassagens, colisões, gasolina, ajuda e chegada continuam no mesmo motor. A nova camada `projecao.js`/`renderizador.js` transforma as posições desse motor numa estrada reta de perspectiva em Canvas 2D, com névoa na distância e sem física nova. `tela.js` cuida de controles, largada, pausa, narração e registro próprio no álbum. A corrida dá figurinha comum e as conquistas “Primeira corrida 3D” e “Piloto 3D”. A implementação não usa WebGL, modelos 3D, tráfego independente nem recursos baixados para jogar.
+
+No convite a criança escolhe **Fácil** (a corrida de sempre), **Médio** (cruzeiro 12% mais rápido, rivais mais frequentes e dupla já a partir de 3 ultrapassagens) ou **Difícil** (20% mais rápido, rivais que ligam o pisca-pisca e mudam para a faixa vizinha e manchas de óleo que escorregam o carro para a faixa ao lado, sem contar batida). Essas regras vivem no motor compartilhado como a opção `criarCorrida({ faixas, dificuldade })`; o padrão `'facil'` mantém o Grande Prêmio idêntico, com a mesma sequência de sorteios. Para os carros surgirem lá no fundo da estrada, a projeção usa a perspectiva física até 50 unidades à frente do carro (contato e colisão iguais) e, além disso, uma cauda que encolhe a escala mais depressa até a névoa do horizonte.
 
 A perspectiva adapta conceitos de projeção e desenho de segmentos de [javascript-racer](https://github.com/jakesgordon/javascript-racer), de Jake Gordon e colaboradores, revisão `3e8a060b5900755db27f899612a74a77427c853e` (licença MIT integral em `rael/corrida-3d/LICENSE-javascript-racer.txt`). A tela e a entrada também adaptam o Grande Prêmio/Pixel Racer (licença MIT em `rael/corrida-3d/LICENSE-pixel-racer.txt`). Todos os carros, pista, posto e efeitos em movimento são desenhos locais; **nenhuma imagem ou música do javascript-racer ou de OutRun foi copiada**. Os SVGs do painel e cartões são os OpenMoji locais já atribuídos abaixo.
 
