@@ -1092,6 +1092,12 @@ que diminui; batidas nunca aparecem na tela; figurinha sempre; fala em pt-BR com
    brincadeiras" passa a exigir também o Grande Prêmio.
 4. **Verificação automatizada:** 456 testes em 30 arquivos, `tsc --noEmit` limpo, build e
    precache com a página e as três figuras de `public/figuras/corrida/`.
+5. **Verificação no navegador** (Chrome headless no `vite preview`, toque emulado, bot lendo o
+   Canvas): matriz B01–B15 do plano completa em 360×800, 390×844 e 1280×800, com 2, 3 e 4
+   faixas, `sem-fala`, movimento reduzido, aba oculta, offline e armazenamento bloqueado; console
+   sem erro e nenhum 404. Corridas de 82 a 139 s (o bot parado termina sozinho em ~2 min
+   20 s). Um ajuste: Repetir e Pausar trocaram de lado no painel, para a ordem de Tab ficar
+   Repetir → Pausar → ◀ → ▶.
 
 **Falta observar com o Rael** (seção 6 do plano): se entende que precisa sair da frente depois
 do 1.º rival com seta; se usa ◀ ▶ com antecedência; se a batida frustra; se percebe a gasolina e
