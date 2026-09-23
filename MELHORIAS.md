@@ -1104,6 +1104,222 @@ do 1.º rival com seta; se usa ◀ ▶ com antecedência; se a batida frustra; s
 procura o posto antes da reserva; se mantém o interesse até a bandeirada e quanto tempo leva; se
 toca em Pausar ou Repetir sem querer. A ordem de ajuste de dificuldade também está na seção 6.
 
+### Corrida 3D
+
+**Etapa 2 — projeção pura e equivalência (2026-09-22).** Base local:
+`ce593cf2322382d3f77e039d50443df5a06f718d`, branch `corrida-3d-etapa-1`.
+Commit desta etapa: **não criado**. A estrutura da Etapa 1 já estava presente.
+
+- **Arquivos desta etapa:** novos `rael/corrida-3d/projecao.js` e
+  `tests/corrida-3d.test.js`; este registro em `MELHORIAS.md`. Preservados os trabalhos
+  anteriores nos planos `PLANO-CORRIDA-3D.md` e `PLANO-GRANDE-PREMIO-DO-RAEL.md`.
+- **Implementação:** `projetarPonto`, `projetarObjeto` e `criarCena`, sem efeitos
+  colaterais. Reta com horizonte 170, profundidade 700 e recorte em z ≤ 100;
+  referência dianteira em `(x, 580)`, base traseira e pegada de quatro cantos,
+  carroceria com altura visual independente do comprimento lógico. Jogador, rivais
+  e posto ordenados pelo centro longitudinal, com desempate por identidade.
+  Hitboxes projetadas usam margem 6 na batida e 4 na coleta; a chegada usa seu y real.
+  Estrada cobre d = −200 a 3500 em 80 segmentos (40 no perfil `economica`), com
+  polígonos recortados ao Canvas lógico. Coordenadas de mundo dos segmentos derivam
+  diretamente de `estado.distancia`, para a futura animação de faixas e zebras.
+- **Referência externa:** [javascript-racer, revisão
+  `3e8a060b5900755db27f899612a74a77427c853e`](https://github.com/jakesgordon/javascript-racer/tree/3e8a060b5900755db27f899612a74a77427c853e).
+  Consultados README, LICENSE, `Util.project`, `Render.segment`, `Render.sprite` e
+  os desenhos de `v2.curves.html`/`v4.final.html`. Fórmula adaptada para o contrato
+  local, sem arredondar subpixels nem mutar pontos do motor. Atribuição no módulo
+  e licença MIT existente preservada; nenhum sprite, música ou física externa.
+- **Testes:** linha de base com **456 testes / 30 arquivos**. Após a implementação,
+  `node ./node_modules/vitest/vitest.mjs run` aprovou **485 testes / 31 arquivos**.
+  Os **29 testes novos** cobrem T01–T10: referência, escala, faixas, recorte,
+  continuidade até a saída, estado congelado e independência dos dados, contato
+  lateral/longitudinal de rival e posto, chegada e ordenação. T10 compara estados e
+  eventos em cada passo com sorteadores independentes de mesma semente, 2/3/4 faixas,
+  zero/uma/três projeções por passo e cenários de nascimento, batida, reserva,
+  abastecimento e chegada; também verifica o próximo sorteio. A suíte anterior foi
+  reutilizada para conclusão do bot parado, vantagem de desviar e bandeirada única.
+- **Typecheck/build/precache:** `node ./node_modules/typescript/bin/tsc --noEmit`,
+  `node ./node_modules/vite/bin/vite.js build` e, após o build,
+  `node scripts/gerar-service-worker.mjs sw.js dist/sw.js dist`: aprovados.
+  Rota e bundles da estrutura existente presentes no build/precache. O novo módulo
+  é exercitado pelos testes; sua ligação à tela pertence à Etapa 3.
+- **Guardas:** A2.1–A2.3 atendidos; motor e testes anteriores sem diff, nenhuma
+  dependência nova, nenhuma API de DOM, relógio, sorteio, fala ou armazenamento
+  na projeção, nenhuma ocorrência de testes ignorados. `git diff --check` limpo.
+- **Navegador/capturas:** **NÃO EXECUTADO** nesta etapa de geometria pura; nenhuma
+  página ou apresentação visual foi alterada. Renderizador, integração da partida,
+  curvas decorativas e inspeção visual de contato ficam para a Etapa 3.
+  **PENDENTE NO APARELHO REAL:** desempenho e observação com o Rael nas etapas finais.
+
+**Etapa 3 — estrada, carros e integração visual (2026-09-23).** Base local:
+`ce593cf2322382d3f77e039d50443df5a06f718d`, branch `corrida-3d-etapa-1`.
+Commit desta etapa: **não criado**. Preservado o trabalho anterior da Etapa 2 e dos
+planos; nenhuma alteração no motor ou nos dois jogos existentes.
+
+- **Arquivos desta etapa:** `rael/corrida-3d/{index.html,corrida-3d.css,tela.js,projecao.js}`,
+  novo `rael/corrida-3d/renderizador.js`, `tests/corrida-3d.test.js`, novo
+  `tests/corrida-3d-renderizador.test.js` e este registro.
+- **Renderização:** estrada segmentada, zebras e divisórias presas à distância do motor,
+  céu/grama estáticos e arte própria de carros vistos de trás, com janela, lanternas,
+  rodas e faixa branca. Carrocerias apoiadas nas pegadas e ordenadas com o jogador;
+  posto amarelo/verde sobre a faixa coletável; quadriculado projetado pelo y real da
+  chegada. Nenhum emoji ou asset externo no mundo desenhado.
+- **Integração:** um RAF com `dt ≤ 0,05`, entrada por setas/A/D, botões e metades do
+  Canvas; direções opostas se anulam mesmo com várias entradas do mesmo lado.
+  Painel, som, contorno de batida, transparência a 2 Hz, fumaça e “+1” respondem aos
+  eventos reais. Seta preserva os critérios de aquecimento/ajuda e `faixaSugerida`.
+  Seta, fumaça e “+1” usam pontos projetados. Há pausa básica, limpeza de entradas,
+  cancelamento do RAF em `pagehide` e retomada pelo `pageshow` persistido.
+- **Curva/DPR:** a reta foi inspecionada antes de acrescentar a curva suave prevista
+  no plano; últimos 300 px lógicos permanecem retos, sem força lateral. Movimento
+  reduzido elimina curva, fumaça, pisca e deslocamento do “+1”. Perfil normal com
+  80 segmentos/DPR máximo 1,5; econômico com 40/DPR 1. Resize usa `setTransform`
+  absoluto e preserva a corrida. Somente em desenvolvimento: `?hitboxes` e
+  `?qualidade=economica`. Conferido que o desenho de depuração e a leitura desses
+  parâmetros são eliminados no bundle de produção.
+- **Referência/licenças:** mantida a revisão externa
+  `3e8a060b5900755db27f899612a74a77427c853e` já registrada na Etapa 2, com atribuição
+  de `Render.segment`/`Render.sprite` no renderizador e as licenças locais intactas.
+  Não foram incorporados física, loop, imagens ou áudio do javascript-racer.
+- **Testes:** baseline anterior registrada de 485 testes; agora
+  `node ./node_modules/vitest/vitest.mjs run`: **500 testes / 32 arquivos aprovados**.
+  Os 15 testes novos instrumentam Canvas em 2/3/4 faixas, ambos os perfis e várias
+  profundidades: coordenadas/dimensões/alpha válidos, pilha `save`/`restore` equilibrada
+  inclusive em erro, estado/cena congelados, resize repetido, destruição, movimento
+  reduzido, curva compartilhada com objetos, marcas contínuas e mesmos eventos após
+  desenhar. T01–T10 continuam passando; a comparação de pista reta entre perfis passou
+  a explicitar `movimentoReduzido: true`, sem remover asserções.
+- **Typecheck/build/precache:** `node ./node_modules/typescript/bin/tsc --noEmit`,
+  `node ./node_modules/vite/bin/vite.js build` e, em seguida,
+  `node scripts/gerar-service-worker.mjs sw.js dist/sw.js dist`: aprovados.
+  Precache com 268 endereços, incluindo rota, JS/CSS da Corrida 3D e motor compartilhado.
+- **Navegador:** Chrome headless 154.0.8037.58, perfil temporário, toque emulado.
+  O navegador integrado estava indisponível; utilizado Chrome local com Playwright
+  já instalado, sem adicionar dependência ao projeto. Em desenvolvimento, 22 cenários
+  aprovados com relógio controlado e estados de teste injetados apenas na resposta HTTP
+  do teste: contato longitudinal/lateral e faixa vizinha em 2/3/4 faixas, coleta,
+  ultrapassagem, rival batido sem “+1”, teclado e ponteiros simultâneos, cancelamento,
+  pausa sem avanço, primeiro quadro da retomada, fim/reinício e perfil econômico.
+  Resize em 360×800, 844×390 e 1280×800 preservou estado, sem rolagem horizontal.
+  Console sem exceções e rede sem 404/recursos externos nos cenários.
+- **Preview de produção:** em 390×844, entrada pelo cartão, corrida completa sem
+  comandos e sem injetar estado/módulos; o relógio controlado avançou 183,5 s até
+  observar o final com 30 ultrapassagens e 5 abastecimentos. Reinício zerou o painel.
+  Grande Prêmio e Corrida do Rael abriram com seus convites. Sem erros de console,
+  404 ou pedidos externos. Evidências: `producao.json`, `producao-rival.png` e
+  `producao-fim.png` em `/tmp/corrida3d-etapa3/`. Não foi realizado teste offline.
+- **Ajuste visual:** a primeira captura em 360×800 revelou setas terminando em y=818.
+  Corrigida a reserva de altura do layout: pista de aproximadamente 251×440 CSS px,
+  setas de 80×80 terminando em y=768. Não houve mudança na calibração da projeção,
+  hitboxes ou dificuldade. Inspeção visual confirmou rival distinguível ao nascer,
+  faixas separadas, base do posto na pista e contato das pegadas projetadas.
+- **Capturas/evidências locais:** `/tmp/corrida3d-etapa3/`: `inicio.png`, `distante.png`,
+  `proximo.png`, `dupla.png`, `posto.png`, `chegada.png`, `hitboxes-2.png`,
+  `hitboxes-3.png`, `hitboxes-4.png`, `reduzido.png`, `fim.png` e `resultado.json`.
+  `reta-contato-*.png` e `reta-distante.png` registram a inspeção anterior às curvas.
+  Scripts de verificação temporários na mesma pasta; nenhum gancho de teste foi
+  acrescentado ao código da página.
+- **Guardas:** arquivos protegidos sem diff; nenhuma dependência nova, teste ignorado,
+  relógio/RNG/armazenamento/RAF na projeção ou no renderizador. `git diff --check`
+  limpo, incluindo verificação separada dos arquivos novos não rastreados.
+- **Limite da etapa:** a partida começa diretamente; largada com semáforo, narrador,
+  Repetir e validação completa de acessibilidade/ciclo de vida ficam na Etapa 4.
+  O final atual mostra resumo e reinício; **ainda não registra rodada nem recompensa**
+  (Etapa 5). Paisagem foi conferida para resize/ausência de rolagem horizontal;
+  layout em duas colunas, zoom 200%, offline e matriz completa ficam nas etapas seguintes.
+  **PENDENTE NO APARELHO REAL:** desempenho em iPad/Safari e Android/Chrome e observação
+  com o Rael. Relógio controlado/headless não é medição de FPS nem teste em dispositivo real.
+
+**Etapa 4 — largada, narrador, ajudas e pausa (2026-09-23).** Base local:
+`ce593cf2322382d3f77e039d50443df5a06f718d`, branch `corrida-3d-etapa-1`.
+Commit desta etapa: **não criado**. A Etapa 3 e os planos já estavam modificados; o
+trabalho anterior foi preservado. Arquivos alterados nesta etapa:
+`rael/corrida-3d/{tela.js,index.html,corrida-3d.css}` e este relatório.
+
+- **Fluxo:** convite falado depois do toque, com desbloqueio da voz no gesto quando
+  necessário; largada com vermelho, amarelo e verde por 0,8 s cada. O motor só avança
+  depois de 2,4 s de tempo ativo. Nova corrida volta à largada. Semáforo e celebração
+  contam `dt ≤ 0,05` no RAF existente, sem timers de transição.
+- **Narrador:** textos visíveis em `#retorno` e `#roteiro-fala`, com roteiro do adulto
+  no modo acompanhado. O nome exibido permanece “Corrida 3D”; a voz pronuncia
+  “três dê”. Eventos reais do motor dão instruções de primeiro rival/posto,
+  ultrapassagem, marcos, batida inicial, ajuda de desvio, gasolina, meta e
+  bandeirada. Prioridades 1/2/3 e janela de 1,5 s impedem falas menores de
+  cortar avisos urgentes. Repetir somente refaz a fala guardada.
+- **Pausa/ciclo de vida:** conserva fase e tempo restante na largada, corrida ou
+  bandeirada; aba oculta exige “Continuar”. Entrada, fala, semáforo, efeitos e
+  espera pelo final param. `pagehide` cancela fala e RAF; `pageshow` persistido
+  retoma em pausa com um RAF. A geração da corrida e da página invalida respostas
+  assíncronas antigas. A bandeira para de acenar na pausa e não acena com
+  movimento reduzido.
+- **Layout:** roteiro reduz proporcionalmente a pista em telas baixas. Controles
+  quebram em duas linhas com zoom CSS simulado de 200%, mantendo alvos grandes e sem rolagem
+  horizontal. Retrato 360×800 e paisagem 844×390/1280×800 conferidos.
+- **Testes:** `node ./node_modules/vitest/vitest.mjs run`: **500/500 aprovados em
+  32 arquivos**, inclusive os dois jogos anteriores. `tsc --noEmit`, build Vite
+  e precache sequencial aprovados; 268 endereços, com rota e bundles da Corrida 3D.
+- **Navegador:** Chrome headless 154.0.8037.58, toque emulado e relógio controlado.
+  Onze grupos de cenários no dev: semáforo, pausa manual/aba oculta em cada fase,
+  Repetir, prioridades das falas, teclado/ponteiros simultâneos e cancelamento,
+  reinício, bfcache simulado, tamanhos, zoom CSS e movimento reduzido. Um teste
+  adicional com preferência de voz automática passou por `pagehide` durante o
+  convite e confirmou que a resposta antiga não inicia a corrida ao voltar.
+  Sem exceções,
+  404 ou requisições externas. O gancho de inspeção foi injetado somente na
+  resposta HTTP do teste; não entrou no código ou build. Evidências em
+  `/tmp/corrida3d-etapa4/verificar.mjs`, `resultado.json`, `convite.png`,
+  `largada.png` e `pausa-bandeirada.png`.
+- **Preview de produção:** entrada pelo cartão, voz configurada como “sem-fala”,
+  sem injeção de estado/módulos. Corrida completa em 390×844 com relógio
+  controlado: 30 ultrapassagens, 3 abastecimentos, tela final e reinício na
+  largada; Grande Prêmio e Corrida do Rael abriram. Sem erros de console,
+  404 ou rede externa. Capturas e resultado em `/tmp/corrida3d-etapa4/producao-*`
+  e `producao.json`. O tempo simulado até o final foi 163,5 s; não representa FPS.
+- **Guardas:** `git diff --check` limpo; arquivos protegidos sem diff; nenhuma
+  dependência, motor, regra, asset externo ou teste ignorado. Projeção e
+  renderizador continuam sem RNG, relógio, storage, fala ou RAF.
+- **Limite da etapa:** o resumo final ainda não registra rodada, figurinha ou
+  conquista (Etapa 5). **PENDENTE NO APARELHO REAL:** voz e ciclo de vida em
+  Safari/iPad e Chrome/Android, FPS e observação com o Rael. Teste offline e
+  matriz final de dispositivos pertencem à Etapa 6.
+
+**Etapa 5 — bandeirada, álbum, conquistas e documentação (2026-09-23).** Base local:
+`ce593cf2322382d3f77e039d50443df5a06f718d`, branch `corrida-3d-etapa-1`.
+Commit desta etapa: **não criado**. Alterados nesta etapa: `rael/corrida-3d/{tela.js,
+index.html,corrida-3d.css}`, `shared/conquistas-descobertas.js`,
+`tests/conquistas-descobertas.test.js`, `README.md` e este relatório. Alterações
+anteriores do plano e das Etapas 2–4 foram preservadas.
+
+- **Conclusão:** o evento único `bandeirada` muda a fase, desativa a direção,
+  marca `corridaRegistrada` antes de chamar `registrarRodada('corrida-3d')` e
+  guarda a recompensa. Bandeira, som, confete CSS pausável e fala começam uma
+  vez. Após 2 s ativos, o final mostra a figurinha do catálogo e as conquistas
+  novas por `anunciarConquistas`; o resumo falado espera a fala da bandeirada.
+  Nova corrida reinicia a guarda e a recompensa. Sem mudança no motor.
+- **Catálogo:** Corrida 3D vem depois do Grande Prêmio, com “Primeira corrida
+  3D” na 1.ª rodada e “Piloto 3D” na 10.ª. Usa o SVG local já existente. O
+  Explorador de brincadeiras passa a incluir a atividade; conquistas obtidas
+  anteriormente permanecem guardadas. Nenhuma migração ou limpeza de progresso.
+- **Testes:** 504/504 em 32 arquivos, incluindo 4 novos cenários de 1.ª, 9.ª,
+  10.ª e 11.ª rodadas, figura, ordem, isolamento do Grande Prêmio e Corrida do
+  Rael, Explorador e preservação do progresso. `tsc --noEmit`, build Vite e
+  `git diff --check` aprovados. O precache gerado em `dist/sw.js` tem a rota,
+  bundles, motor compartilhado e SVG. Nenhuma dependência nova.
+- **Preview de produção:** Chrome headless em 390×844, relógio controlado, duas
+  corridas completas sem direção do jogador. Na primeira, pausa de 10 s
+  simulados durante a bandeirada manteve exatamente uma rodada e congelou o
+  final; após Continuar apareceram figurinha e “Primeira corrida 3D”. Cinco
+  cliques síncronos em “Correr de novo” geraram uma largada; o contador só
+  subiu para 2 na segunda bandeirada. O cartão foi conferido na página inicial.
+  O script inicial recriava o armazenamento em cada navegação; isso foi
+  corrigido no teste. Um aviso de MIME apareceu quando o service worker foi
+  gerado durante um teste aberto; o arquivo final respondeu 200 com
+  `Content-Type: text/javascript`. Nova corrida completa e navegação ao cartão,
+  com o build e precache estáveis, passaram sem erros de console, 404 ou pedidos
+  externos. Evidências em `/tmp/corrida3d-etapa5/`.
+- **PENDENTE NO APARELHO REAL:** voz, desempenho em Safari/iPad e
+  Chrome/Android e observação com o Rael. Offline completo e matriz final
+  permanecem na Etapa 6.
+
 ### 5.4 Ordem sugerida de entrega
 
 1. **P09 → P10.** Meu Nome e Conta Comigo não precisam de gravações nem de banco de dados,

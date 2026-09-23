@@ -22,12 +22,12 @@
         <img class="convite__figura" src="/figuras/corrida/carro-de-corrida.svg" alt="" aria-hidden="true" width="120" height="120">
         <h2 class="instrucao__texto">Corrida 3D</h2>
         <p class="convite__texto">Ultrapasse 30 carros para ganhar a bandeirada!</p>
-        <button class="botao botao--gigante" id="comecar" type="button">🏁 Ver a pista</button>
+        <button class="botao botao--gigante" id="comecar" type="button">🏁 Vamos correr</button>
+        <p class="convite__texto" id="texto-convite-fala" hidden></p>
+        <p class="convite__texto" id="aviso-voz" hidden></p>
       </div>
 
       <div class="tela" id="tela-corrida" hidden>
-        <p class="aviso-previa" id="aviso-previa" role="status">A pista está sendo preparada. Em breve, vamos correr!</p>
-
         <div class="painel" id="painel">
           <button class="botao botao--painel" id="repetir" type="button" aria-label="Ouvir de novo" disabled>🔊</button>
           <div class="medidor" id="ultrapassagens" role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" aria-label="Carros ultrapassados: 0 de 30">
@@ -58,6 +58,10 @@
             <span class="semaforo__luz semaforo__luz--verde"></span>
           </div>
           <img class="bandeira" id="bandeira" src="/figuras/corrida/bandeira-quadriculada.svg" alt="" aria-hidden="true" width="160" height="160" hidden>
+          <div class="confete-corrida" id="confete" aria-hidden="true" hidden>
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
           <div class="pausa" id="tela-pausa" hidden>
             <p class="instrucao__texto">Corrida pausada</p>
             <button class="botao botao--gigante" id="continuar" type="button">▶ Continuar</button>
@@ -70,7 +74,6 @@
           <button class="botao botao--seta" id="esquerda" type="button" aria-label="Ir para a esquerda" disabled>◀</button>
           <button class="botao botao--seta" id="direita" type="button" aria-label="Ir para a direita" disabled>▶</button>
         </div>
-        <button class="botao botao--secundario voltar-previa" id="voltar-previa" type="button">Voltar</button>
       </div>
 
       <div class="tela conclusao" id="tela-fim" hidden>

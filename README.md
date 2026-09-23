@@ -55,6 +55,7 @@ alvos de toque de 64 px, instrução falada em toda tela e nenhum cronômetro, v
 | Chute a Gol | `rael/chute-a-gol/index.html` | Cinco pênaltis em três modos (chutar, defender ou alternado): mire e chute com as setas e o botão, ou vire goleiro e pule na bola |
 | Corrida do Rael | `rael/corrida-do-rael/index.html` | Leve o carrinho até o posto para encher o tanque em seis trechos amigáveis |
 | Grande Prêmio do Rael | `rael/grande-premio/index.html` | Corrida de reflexo: desvie e ultrapasse 30 carros, passe no posto para abastecer e ganhe a bandeirada; batida só deixa o carro devagar |
+| Corrida 3D | `rael/corrida-3d/index.html` | A mesma corrida vista de trás, com estrada em perspectiva, álbum e conquistas próprios |
 | Configurações | `rael/configuracoes.html` | Nome, opções, tema, voz, formato do labirinto, conjunto de letras e álbum |
 
 O número de opções das configurações é o único botão de dificuldade da etapa: nas brincadeiras
@@ -88,7 +89,7 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── manifest.webmanifest         Nome, cores e ícones do app instalável (Elis)
 │   ├── rael.webmanifest             O mesmo para os Jogos do Rael, com start_url /rael/
 │   ├── figuras/                     SVGs do OpenMoji usados nas Primeiras Descobertas
-│   │   └── corrida/                 Carro de corrida, bandeira e bomba do Grande Prêmio (fora do catálogo)
+│   │   └── corrida/                 Carro de corrida, bandeira e bomba das duas corridas (fora do catálogo)
 │   ├── audio/                       Palavras e sons iniciais locais do Rael
 │   └── icones/                      icone-*.png e rael-*.png (192 e 512) mais os .svg
 ├── shared/                          Biblioteca compartilhada (sem dependências externas)
@@ -117,7 +118,8 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── meu-primeiro-labirinto/      Tela infantil; reutiliza Games/labirinto/jogo.js
 │   ├── chute-a-gol/                 index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
 │   ├── corrida-do-rael/             index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
-│   └── grande-premio/               index.html + jogo.js + tela.js + CSS; motor importa de corrida-do-rael/
+│   ├── grande-premio/               index.html + jogo.js + tela.js + CSS; motor importa de corrida-do-rael/
+│   └── corrida-3d/                  index.html + tela.js + projecao.js + renderizador.js + CSS; motor importa de grande-premio/
 └── Games/
     ├── forca/                       index.html + jogo.js
     ├── m-ou-n/                      index.html + jogo.js
@@ -468,6 +470,10 @@ Reaproveitamento:
 - **Copiado e adaptado da Corrida do Rael:** entrada unificada (setas/A/D, botões ◀ ▶ e toque no Canvas), timers centrais, loop único com `requestAnimationFrame`, `desenharPista` (rolagem pelo motor e zebras nas bordas), `desenharCarro` (com cor, para os rivais) e `desenharPosto`.
 - **Trazido de volta do Pixel Racer original:** carros na pista (`spawnEnemy`), ultrapassagem contada (`scored`) e aceleração pelo placar, agora em degraus com teto e em funções puras testadas (`sortearFaixasDosRivais`, `avancarCorrida`, `nivelDaCorrida`).
 - **Substituído:** o `triggerGameOver` da batida virou 2 s de lentidão (35% da velocidade) sem derrota; o fim da partida virou a bandeirada depois de 30 ultrapassagens, com figurinha e as conquistas "Primeira bandeirada" e "Campeão das pistas". Gasolina com posto, ajuda e reserva também nunca encerram a corrida.
+
+**Corrida 3D** (`rael/corrida-3d/`) importa diretamente `avancarCorrida` de `rael/grande-premio/jogo.js`: ultrapassagens, colisões, gasolina, ajuda e chegada continuam no mesmo motor. A nova camada `projecao.js`/`renderizador.js` transforma as posições desse motor numa estrada de perspectiva em Canvas 2D; as curvas são somente visuais, sem física nova. `tela.js` cuida de controles, largada, pausa, narração e registro próprio no álbum. A corrida dá figurinha comum e as conquistas “Primeira corrida 3D” e “Piloto 3D”. A implementação não usa WebGL, modelos 3D, tráfego independente nem recursos baixados para jogar.
+
+A perspectiva adapta conceitos de projeção e desenho de segmentos de [javascript-racer](https://github.com/jakesgordon/javascript-racer), de Jake Gordon e colaboradores, revisão `3e8a060b5900755db27f899612a74a77427c853e` (licença MIT integral em `rael/corrida-3d/LICENSE-javascript-racer.txt`). A tela e a entrada também adaptam o Grande Prêmio/Pixel Racer (licença MIT em `rael/corrida-3d/LICENSE-pixel-racer.txt`). Todos os carros, pista, posto e efeitos em movimento são desenhos locais; **nenhuma imagem ou música do javascript-racer ou de OutRun foi copiada**. Os SVGs do painel e cartões são os OpenMoji locais já atribuídos abaixo.
 
 **Figuras do OpenMoji** em `public/figuras/corrida/` (`carro-de-corrida.svg` = 1F3CE, `bandeira-quadriculada.svg` = 1F3C1, `bomba-de-gasolina.svg` = 26FD), sob CC BY-SA 4.0, sem edição. A atribuição e o commit do OpenMoji usado estão em `public/figuras/corrida/LICENCA.txt`. Ficam numa subpasta para não entrarem no catálogo dos jogos de palavras.
 

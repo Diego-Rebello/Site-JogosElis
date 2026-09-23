@@ -1153,7 +1153,8 @@ renderização:
 - a batida do original já reduz a velocidade (`speed = car.speed * (car.speed/speed)`) e combina
   com a regra da seção 2.5.
 
-Isso exige um plano próprio.
+O plano próprio está em [PLANO-CORRIDA-3D.md](PLANO-CORRIDA-3D.md), com o nome **Corrida 3D**:
+jogo separado, motor de regras importado do Grande Prêmio e renderização em perspectiva.
 
 ---
 

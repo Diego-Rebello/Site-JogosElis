@@ -34,6 +34,7 @@ export const ATIVIDADES_DESCOBERTAS = [
   { id: 'chute-a-gol', nome: 'Chute a Gol', figura: 'bola', estreia: 'Primeiro gol', fa: 'Fã de futebol' },
   { id: 'corrida-do-rael', nome: 'Corrida do Rael', figura: 'carro', estreia: 'Primeira corrida', fa: 'Piloto experiente' },
   { id: 'grande-premio', nome: 'Grande Prêmio do Rael', figura: 'corrida/carro-de-corrida', estreia: 'Primeira bandeirada', fa: 'Campeão das pistas' },
+  { id: 'corrida-3d', nome: 'Corrida 3D', figura: 'corrida/carro-de-corrida', estreia: 'Primeira corrida 3D', fa: 'Piloto 3D' },
 ];
 
 export const PAGINAS = [

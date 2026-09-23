@@ -381,3 +381,61 @@ describe('Conquistas — Grande Prêmio do Rael (Etapa 5)', () => {
     expect(ids(final.conquistasNovas)).toContain('geral-todas');
   });
 });
+
+describe('Conquistas — Corrida 3D (Etapa 5)', () => {
+  it('premia a primeira corrida concluída com figurinha e conquista própria', () => {
+    const armazenamento = criarArmazenamento();
+    const premio = registrarRodada('corrida-3d', {}, armazenamento);
+    expect(FIGURINHAS).toContain(premio.figurinha);
+    expect(premio.atividade.rodadas).toBe(1);
+    expect(ids(premio.conquistasNovas).filter(id => id.startsWith('corrida-3d-'))).toEqual(['corrida-3d-estreia']);
+    expect(premio.conquistasNovas.find(c => c.id === 'corrida-3d-estreia').nome).toBe('Primeira corrida 3D');
+  });
+
+  it('entrega Piloto 3D só na décima rodada, e mantém as conquistas anteriores', () => {
+    const armazenamento = criarArmazenamento();
+    registrarRodada('grande-premio', {}, armazenamento);
+    registrarRodada('corrida-do-rael', {}, armazenamento);
+    for (let rodada = 1; rodada <= 9; rodada++) {
+      const premio = registrarRodada('corrida-3d', {}, armazenamento);
+      expect(ids(premio.conquistasNovas)).not.toContain('corrida-3d-fa');
+    }
+    const decima = registrarRodada('corrida-3d', {}, armazenamento);
+    expect(ids(decima.conquistasNovas)).toContain('corrida-3d-fa');
+    expect(decima.conquistasNovas.find(c => c.id === 'corrida-3d-fa').nome).toBe('Piloto 3D');
+    const decimaPrimeira = registrarRodada('corrida-3d', {}, armazenamento);
+    expect(ids(decimaPrimeira.conquistasNovas)).not.toContain('corrida-3d-fa');
+    const estado = obterEstado(armazenamento);
+    expect(estado.atividades['corrida-3d'].rodadas).toBe(11);
+    expect(estado.atividades['grande-premio'].rodadas).toBe(1);
+    expect(estado.atividades['corrida-do-rael'].rodadas).toBe(1);
+    expect(estado.conquistas).toHaveProperty('grande-premio-estreia');
+    expect(estado.conquistas).toHaveProperty('corrida-do-rael-estreia');
+  });
+
+  it('usa a figura existente e entra após o Grande Prêmio no catálogo', () => {
+    const doJogo = CONQUISTAS.filter(c => c.atividade === 'corrida-3d');
+    expect(ids(doJogo)).toEqual(['corrida-3d-estreia', 'corrida-3d-fa']);
+    doJogo.forEach(c => {
+      expect(c.figura).toBe('/figuras/corrida/carro-de-corrida.svg');
+      expect(existsSync(resolve('public', `.${c.figura}`))).toBe(true);
+    });
+    const atividades = ATIVIDADES_DESCOBERTAS.map(a => a.id);
+    expect(atividades.indexOf('corrida-3d')).toBe(atividades.indexOf('grande-premio') + 1);
+  });
+
+  it('Explorador exige a Corrida 3D, mas não retira conquista já obtida', () => {
+    const armazenamento = criarArmazenamento();
+    ATIVIDADES_DESCOBERTAS.filter(a => a.id !== 'corrida-3d')
+      .forEach(a => registrarRodada(a.id, {}, armazenamento));
+    expect(obterEstado(armazenamento).conquistas).not.toHaveProperty('geral-todas');
+    const premio = registrarRodada('corrida-3d', {}, armazenamento);
+    expect(ids(premio.conquistasNovas)).toContain('geral-todas');
+
+    const antigo = obterEstado(armazenamento);
+    antigo.atividades['corrida-3d'] = { rodadas: 0, ultimaEm: null };
+    armazenamento.setItem('jogos-elis:descobertas', JSON.stringify(antigo));
+    const album = obterAlbum(armazenamento);
+    expect(album.conquistas.find(c => c.id === 'geral-todas').ganha).toBe(true);
+  });
+});

@@ -6,17 +6,6 @@
 
 .descobertas__cartao { max-width: 500px; }
 
-.aviso-previa {
-  max-width: 400px;
-  margin: 0 auto 10px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: #e0f2fe;
-  color: #0c4a6e;
-  font-weight: 700;
-  text-align: center;
-}
-
 .painel {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr) 64px;
@@ -77,7 +66,7 @@
 
 /* Conserva o Canvas inteiro e espaço para os controles em retrato. */
 @media (max-height: 1100px) {
-  .quadro-pista { max-width: min(400px, max(160px, calc((100dvh - 390px) * 400 / 700))); }
+  .quadro-pista { max-width: min(400px, max(160px, calc((100dvh - 360px) * 400 / 700))); }
 }
 
 .quadro-pista .retorno {
@@ -88,14 +77,67 @@
   pointer-events: none;
 }
 
+/* O roteiro também precisa caber entre o painel e as setas em telas baixas. */
+#tela-corrida .roteiro { gap: 2px; max-width: 400px; margin: 0 auto 8px; padding: 6px 12px; border-width: 2px; }
+#tela-corrida .roteiro__titulo { font-size: .75rem; }
+#tela-corrida .roteiro__fala { font-size: 1rem; }
+#tela-corrida:has(.roteiro:not([hidden])) .quadro-pista { max-width: min(400px, max(160px, calc((100dvh - 420px) * 400 / 700))); }
+
 .semaforo, .bandeira, .pausa { position: absolute; }
-.semaforo { top: 12px; left: 50%; transform: translateX(-50%); }
+.semaforo { top: 18%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 7px; padding: 9px; border-radius: 16px; background: #111827; box-shadow: 0 6px 16px #0006; }
+.semaforo__luz { width: 38px; height: 38px; border-radius: 50%; background: #374151; }
+.semaforo__luz--vermelha.semaforo__luz--acesa { background: #ef4444; }
+.semaforo__luz--amarela.semaforo__luz--acesa { background: #facc15; }
+.semaforo__luz--verde.semaforo__luz--acesa { background: #22c55e; }
+.semaforo__luz--acesa { box-shadow: 0 0 12px #fffa; transform: scale(1.1); }
 .bandeira { top: 24%; left: 50%; transform: translateX(-50%); }
+.bandeira--acenando { animation: bandeira-aceno .5s ease-in-out infinite alternate; }
+@keyframes bandeira-aceno { from { transform: translateX(-50%) rotate(-8deg); } to { transform: translateX(-50%) rotate(8deg); } }
+.quadro-pista:has(.pausa:not([hidden])) .bandeira { animation-play-state: paused; }
+.confete-corrida { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.confete-corrida i { position: absolute; top: -10%; left: calc(5% + (var(--i) * 5%)); width: 9px; height: 15px; background: #facc15; opacity: 0; animation: confete-queda 1.8s ease-in var(--atraso) both; }
+.confete-corrida i:nth-child(3n) { background: #38bdf8; }
+.confete-corrida i:nth-child(3n + 1) { background: #fb7185; }
+.confete-corrida i:nth-child(6n + 1) { background: #34d399; }
+.confete-corrida i:nth-child(1) { --i: 1; --atraso: 0s; }
+.confete-corrida i:nth-child(2) { --i: 2; --atraso: .22s; }
+.confete-corrida i:nth-child(3) { --i: 3; --atraso: .08s; }
+.confete-corrida i:nth-child(4) { --i: 4; --atraso: .3s; }
+.confete-corrida i:nth-child(5) { --i: 5; --atraso: .12s; }
+.confete-corrida i:nth-child(6) { --i: 6; --atraso: .25s; }
+.confete-corrida i:nth-child(7) { --i: 7; --atraso: 0s; }
+.confete-corrida i:nth-child(8) { --i: 8; --atraso: .18s; }
+.confete-corrida i:nth-child(9) { --i: 9; --atraso: .34s; }
+.confete-corrida i:nth-child(10) { --i: 10; --atraso: .04s; }
+.confete-corrida i:nth-child(11) { --i: 11; --atraso: .2s; }
+.confete-corrida i:nth-child(12) { --i: 12; --atraso: .1s; }
+.confete-corrida i:nth-child(13) { --i: 13; --atraso: .28s; }
+.confete-corrida i:nth-child(14) { --i: 14; --atraso: .06s; }
+.confete-corrida i:nth-child(15) { --i: 15; --atraso: .24s; }
+.confete-corrida i:nth-child(16) { --i: 16; --atraso: .14s; }
+.confete-corrida i:nth-child(17) { --i: 17; --atraso: .32s; }
+.confete-corrida i:nth-child(18) { --i: 18; --atraso: .16s; }
+@keyframes confete-queda { 10% { opacity: 1; } 85% { opacity: 1; } to { top: 105%; transform: rotate(540deg); opacity: 0; } }
+.quadro-pista:has(.pausa:not([hidden])) .confete-corrida i { animation-play-state: paused; }
 .pausa { inset: 0; display: grid; place-content: center; gap: 16px; background: rgba(255,255,255,.93); }
 [hidden] { display: none !important; }
 
-.controles { display: flex; justify-content: space-around; gap: 20px; max-width: 400px; margin: 8px auto; }
+@media (prefers-reduced-motion: reduce) {
+  .semaforo__luz--acesa { transform: none; }
+  .bandeira--acenando { animation: none; }
+  .confete-corrida { display: none; }
+}
+
+.controles { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; max-width: 400px; margin: 8px auto; }
 .controles .botao--seta { min-width: 72px; min-height: 72px; }
-.voltar-previa { display: block; margin: 6px auto 0; min-height: 64px; }
+
 
 #pista, #esquerda, #direita { touch-action: none; }
+
+.medidor__barra--gasolina { min-width: 12px; }
+.medidor__barra--metade { background: #eab308; }
+.medidor__barra--pouca { background: #ef4444; }
+.quadro-pista .retorno { min-height: 0; margin: 0; padding: 4px 8px; background: #fffffff0; border-radius: 10px; text-align: center; }
+.quadro-pista .retorno:empty { padding: 0; background: transparent; }
+.bandeira { width: 40%; height: auto; }
+.controles .botao--seta { width: 80px; height: 80px; padding: 0; font-size: 2.2rem; user-select: none; -webkit-user-select: none; }
