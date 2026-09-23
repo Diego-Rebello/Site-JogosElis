@@ -54,6 +54,8 @@
 }
 
 .quadro-pista { position: relative; width: 100%; max-width: 400px; margin: 0 auto; container-type: inline-size; }
+/* Recebe o foco durante a corrida no lugar de Pausar (R06); não é um controle. */
+.quadro-pista:focus { outline: none; }
 /* 400×580: a vista do renderizador começa em y = 120, sem o céu vazio de cima. */
 #pista {
   display: block;

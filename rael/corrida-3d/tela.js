@@ -35,6 +35,7 @@ const DURACAO_DA_LUZ = 0.8;
 const DURACAO_DA_LARGADA = DURACAO_DA_LUZ * 3;
 const DURACAO_DA_CELEBRACAO = 2;
 const JANELA_PRIORIDADE_1 = 1.5;
+const FASES_ANIMADAS = Object.freeze(['largada', 'corrida', 'bandeirada']);
 const FALAS = Object.freeze({
   explicacao: 'Ultrapasse trinta carros para ganhar a bandeirada. E não esqueça de abastecer!',
   largada: Object.freeze(['Preparar...', 'apontar...', 'já!']),
@@ -78,6 +79,8 @@ let proximaFalaId = 0;
 let inicioDaUltimaFala = -Infinity;
 let ultimoTextoNarrado = '';
 let falaDaFesta = null;
+let falaInterrompida = null;
+let luzAcesa = -1;
 let corridaRegistrada = false;
 let premioDaCorrida = null;
 
@@ -135,6 +138,12 @@ function zerarNarrador() {
   tempoRetorno = 0;
 }
 function acenderSemaforo(indice) {
+  // Cada palavra da largada sai junto com a sua luz, pelo relógio ativo do jogo.
+  if (indice >= 0 && indice !== luzAcesa) {
+    mostrarTextoNarrado(FALAS.largada.slice(0, indice + 1).join(' '));
+    acompanharFala(2, falar({ texto: FALAS.largada[indice] }));
+  }
+  luzAcesa = indice;
   $('semaforo').hidden = indice < 0;
   for (const [numero, luz] of [...$('semaforo').querySelectorAll('.semaforo__luz')].entries()) {
     luz.classList.toggle('semaforo__luz--acesa', numero === indice);
@@ -169,6 +178,8 @@ function iniciarLargada() {
   tempoAtivo = tempoLargada = tempoBandeirada = tempoFumaca = 0;
   efeitos = [];
   falaDaFesta = null;
+  falaInterrompida = null;
+  luzAcesa = -1;
   corridaRegistrada = false;
   premioDaCorrida = null;
   rivaisDoAquecimento.clear();
@@ -180,14 +191,15 @@ function iniciarLargada() {
   $('tela-pausa').hidden = true;
   mostrarTela('corrida');
   acenderSemaforo(0);
-  mostrarTextoNarrado(FALAS.largada.join(' '));
-  acompanharFala(2, falarSequencia([...FALAS.largada]));
   atualizarControles();
   atualizarPainel();
   redimensionar();
-  $('pausar').focus({ preventScroll: true });
+  focarPista();
+  agendarQuadro();
   if (document.hidden) pausar();
 }
+// O foco fica na pista, não em Pausar: sem anel chamativo e sem Espaço/Enter pausando.
+function focarPista() { $('quadro-pista').focus({ preventScroll: true }); }
 async function iniciarCorrida() {
   if (faseDaTela === 'fim') { iniciarLargada(); return; }
   if (faseDaTela !== 'convite' || preparandoConvite) return;
@@ -225,6 +237,8 @@ function pausar() {
   faseAntesDaPausa = faseDaTela;
   faseDaTela = 'pausa';
   ultimoTempo = null;
+  // Instruções (prioridade 2 e 3) cortadas pela pausa voltam ao continuar.
+  falaInterrompida = falaEmAndamento?.prioridade >= 2 ? { prioridade: falaEmAndamento.prioridade } : null;
   interromperFala();
   $('tela-pausa').hidden = false;
   atualizarControles();
@@ -237,7 +251,15 @@ function continuar() {
   faseDaTela = faseAntesDaPausa;
   $('tela-pausa').hidden = true;
   atualizarControles();
-  $('pausar').focus({ preventScroll: true });
+  focarPista();
+  if (falaInterrompida) {
+    mostrarTextoNarrado(ultimoTextoNarrado);
+    const retomada = acompanharFala(falaInterrompida.prioridade, repetirFala());
+    // A tela final espera a fala da bandeirada; ela passa a ser a fala retomada.
+    if (faseDaTela === 'bandeirada') falaDaFesta = retomada;
+    falaInterrompida = null;
+  }
+  agendarQuadro();
 }
 function direcaoAtual() {
   const direcoes = new Set(ponteiros.values());
@@ -299,7 +321,7 @@ function faixaDaSeta() {
 }
 function desenhar() {
   const reduzido = movimentoReduzido.matches;
-  const cena = criarCena(estado, { movimentoReduzido: reduzido, qualidade });
+  const cena = criarCena(estado, { movimentoReduzido: reduzido, qualidade, hitboxes });
   const faixa = faixaDaSeta();
   const seta = faixa === null ? null : {
     de: projetarPonto({ x: estado.carro.x + estado.carro.w / 2, y: estado.carro.y - 75 }, cena.camera),
@@ -398,7 +420,10 @@ function quadro(agora) {
   }
   agendarQuadro();
 }
-function agendarQuadro() { if (raf === null) raf = requestAnimationFrame(quadro); }
+// Convite, pausa e final não animam o Canvas: sem RAF, até iniciarLargada/continuar.
+function agendarQuadro() {
+  if (raf === null && FASES_ANIMADAS.includes(faseDaTela)) raf = requestAnimationFrame(quadro);
+}
 function redimensionar() { renderizador.redimensionar(window.devicePixelRatio); desenhar(); }
 function soltar(evento) { ponteiros.delete(evento.pointerId); }
 function capturar(elemento, evento, direcao) {
@@ -431,6 +456,8 @@ window.addEventListener('keydown', e => {
     if (['convite', 'fim', 'pausa'].includes(faseDaTela)) {
       e.preventDefault();
       if (faseDaTela === 'pausa') continuar(); else iniciarCorrida();
+    } else if (FASES_ANIMADAS.includes(faseDaTela)) {
+      e.preventDefault(); // com o foco na pista, Espaço rolaria a página
     }
   }
 });
@@ -464,10 +491,8 @@ window.addEventListener('pageshow', e => {
     pausar();
     ultimoTempo = null;
     redimensionar();
-    agendarQuadro();
   }
 });
 atualizarControles();
 atualizarPainel();
 redimensionar();
-agendarQuadro();
