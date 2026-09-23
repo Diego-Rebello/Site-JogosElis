@@ -782,6 +782,149 @@ plano próprio: mudam visibilidade e dificuldade e não são uma extensão autom
 
 ---
 
+## 10. Revisão das Etapas 0–5 (2026-09-23)
+
+> Revisão feita pelo Claude a pedido do Diego, depois que o Codex implementou até a Etapa 5.
+> **Esta seção vale como pedido do Diego** (precedência da seção 4.1): o executor deve tratar
+> os itens R01–R12 antes ou durante a Etapa 6, na ordem de prioridade abaixo. Os itens que
+> mudam o visual continuam restritos a **constantes visuais**; nenhum altera o motor.
+
+### 10.1 Estado conferido
+
+- **Commit:** as Etapas 2–5 estavam sem commit (“Commit desta etapa: não criado” nos
+  relatórios do MELHORIAS). Foram commitadas juntas em `f440331` no branch
+  `corrida-3d-etapa-1`, sem ir para a `main`. Etapa 1: `fe0ad62` e `ce593cf`.
+- **Automático, reexecutado nesta revisão:** Vitest **504/504 em 32 arquivos**; `tsc --noEmit`
+  sem erros; build Vite e `gerar-service-worker.mjs` aprovados (267 endereços, com
+  `rael/corrida-3d/` e o bundle `rael-corrida-3d-*.js`).
+- **Guardas:** nenhum diff em `rael/grande-premio`, `rael/corrida-do-rael`, testes antigos ou
+  `package*.json`; nenhuma ocorrência de RNG, relógio, storage, fala ou RAF em `projecao.js` e
+  `renderizador.js`; nenhum `.skip`/`.only`/`.todo`. O desenho de hitboxes some do bundle de produção.
+- **Arquitetura conforme o plano:** motor importado de `../grande-premio/jogo.js` (sem cópia),
+  projeção pura e testada (T01–T10), renderizador sem regras, uma fase única (`faseDaTela`),
+  bandeirada com `corridaRegistrada = true` antes de `registrarRodada('corrida-3d')`, reinício
+  protegido contra cliques repetidos, conquistas “Primeira corrida 3D” e “Piloto 3D”
+  com testes de 1.ª/9.ª/10.ª/11.ª rodada e isolamento dos outros jogos.
+- **Ainda não feito:** Etapa 6 inteira (offline, matriz B01–B15, aparelho real, FPS) e seção 6
+  (observação com o Rael).
+
+### 10.2 Problemas e melhorias
+
+| # | Prioridade | Tipo | Resumo |
+|---|---|---|---|
+| R01 | **Alta** | Jogabilidade/visual | Rivais nascem pequenos no meio da tela; metade de cima do Canvas não tem jogo |
+| R02 | **Alta** | Layout | Paisagem sem as duas colunas exigidas em 2.11; pista minúscula em celular e tablet deitados |
+| R03 | **Alta** | Evidência | Provas só em `/tmp`, dependentes do runtime do Codex; JSON final da Etapa 5 não comprova A5.3 |
+| R04 | Média | Visual | Curva decorativa quase invisível e com formato de “dobra”, não de curva |
+| R05 | Média | Desempenho | Cena calcula por quadro dados que o renderizador não usa |
+| R06 | Média | UX | Foco fixo no botão Pausar: anel chamativo e Espaço/Enter pausam a corrida |
+| R07 | Média | Layout | Tela final em 390×844: figurinha no rodapé e “Correr de novo” abaixo da dobra |
+| R08 | Baixa | Bateria | RAF roda a 60 Hz também no convite, na pausa e no final |
+| R09 | Baixa | Fala | “Preparar... apontar... já!” não acompanha as luzes do semáforo |
+| R10 | Baixa | Fala | Fala cortada pela pausa não é retomada (ex.: “Bandeirada!”) |
+| R11 | Baixa | Área útil | Faixa inferior do Canvas (y 621–700) só mostra asfalto |
+| R12 | Processo | Git | Cada etapa deve terminar com commit próprio |
+
+**R01 — Rivais aparecem pequenos e “surgem do nada” no meio da tela (alta).**
+O motor nasce rivais em `Y_NASCIMENTO_RIVAL = -70`: a traseira fica em `d = 586`,
+`escala = 700 / 1286 ≈ 0,54`, `telaY ≈ 393` de 700. Ou seja: céu (0–170) e estrada distante
+(170–~390) ocupam **mais da metade do Canvas sem nenhum objeto interativo**, e o rival aparece
+de repente a 56% da altura com metade do tamanho. Em 360×800 a pista mede ~251×440 CSS px:
+o rival nasce com **~14 CSS px** de largura e o carro do Rael tem ~28 CSS px
+(capturas `producao-rival.png` e `dupla.png` da Etapa 3). Para uma criança pequena isso
+é pouco, e o “pop-in” no meio da estrada contradiz a ideia de ver o carro vindo do horizonte.
+*Como tratar (só constantes visuais, seção 3.5):* experimentar, uma mudança por vez e com
+captura antes/depois, (a) subir o horizonte e encurtar a estrada decorativa
+(`DISTANCIA_DISTANTE`) para que o ponto de nascimento fique perto do fim visível da pista;
+(b) reduzir o céu; (c) um *fade-in* curto (≤ 0,2 s) no nascimento, só no desenho, sem atrasar
+o contorno. Não mexer em `Y_NASCIMENTO_RIVAL` nem em hitboxes (afetaria o Grande Prêmio).
+*Aceite:* em 360×800 o rival nasce com ≥ 20 CSS px de largura **ou** aparece junto ao fim
+visível da estrada; T01–T10 continuam passando; contato visual continua coerente (A3.1–A3.4).
+
+**R02 — Paisagem não tem layout em duas colunas (alta).** A seção 2.11 pede “layout em duas
+colunas (pista e controles/painel)” em paisagem. O CSS só limita a largura por
+`(100dvh − 360px) × 400/700`: em 844×390 a pista cai para o mínimo de **160 CSS px** de largura
+e a página exige rolagem; num iPad deitado (1180×820) a pista fica com ~263 px de largura.
+O relatório da Etapa 3 adiou isso e o da Etapa 4 diz “paisagem conferida” só quanto a
+rolagem horizontal. *Como tratar:* `@media (orientation: landscape)` com grid de duas colunas
+(pista à esquerda com a altura toda; painel, Repetir/Pausar e ◀ ▶ à direita), alvos mínimos
+mantidos. *Aceite:* B04 com capturas em 844×390 e 1180×820, sem rolagem vertical na corrida.
+
+**R03 — Evidências frágeis (alta, antes de marcar A6.x).** Todas as capturas e scripts estão
+em `/tmp/corrida3d-etapa3..5/` (apagados ao reiniciar o Mac) e os scripts importam o
+Playwright de `~/.cache/codex-runtimes/...`, que não é dependência do projeto. Além disso, o
+`resultado.json` final da Etapa 5 registra `"cincoCliquesReinicio": false`: a execução final
+(`validar-final.mjs`) não repetiu o teste dos cinco cliques; a aprovação de A5.3 veio de uma
+execução anterior (`validar.mjs`), cujo JSON foi sobrescrito. *Como tratar:* na Etapa 6,
+reexecutar os cenários de reinício e guardar evidências numa pasta fora do repositório que
+não seja temporária (ex.: `~/Desktop/evidencias-corrida-3d/`), citando-a no relatório.
+Não commitar capturas nem scripts (G12).
+
+**R04 — Curva decorativa não parece curva (média).** Pela fórmula de 3.5 o deslocamento na
+tela é `18 × sin(...) × smoothstep(t) × escala`: no máximo **~8 px lógicos** perto de
+`d ≈ 900`, e volta ao centro no horizonte porque o ponto de fuga é fixo. O resultado é uma
+leve “dobra” das bordas (visível em `producao-rival.png`), não uma estrada que vira.
+*Decisão para o Diego:* (a) **retirar a curva** nesta versão (mais simples; é o 3.º passo da
+“ordem de ajuste” da seção 6), ou (b) trocar por curva acumulada como no javascript-racer
+(deslocamento cresce com a distância e o ponto de fuga se move), mantendo reta a zona
+dos últimos 300 px. Recomendação: (a) agora e (b) só depois da observação com o Rael.
+
+**R05 — Trabalho descartado a cada quadro (média).** `criarCena` monta dados que o
+renderizador nunca lê: `segmentos[].faixas` (80 × faixas polígonos projetados e recortados),
+`mundoPerto`/`mundoLonge`, `linhaDeChegada.inicio`/`fim` e as `hitboxes` de todos os objetos,
+também em produção. Com 4 faixas são ~850 polígonos por quadro, com várias alocações cada.
+A estrada, de cor única, é pintada com 80 `fill()` separados. Ainda sem medição em aparelho.
+*Como tratar:* medir primeiro (2.9/B15). Se preciso: calcular hitboxes só com a opção de
+depuração, retirar `faixas` da cena, desenhar a estrada reta como um polígono único e
+reutilizar a malha quando a curva for zero. Os testes que leem esses campos devem passar a
+verificar o equivalente no que é desenhado, **sem reduzir asserções** (G10).
+
+**R06 — Foco no botão Pausar durante a corrida (média).** `iniciarLargada` e `continuar`
+fazem `$('pausar').focus()`. Nas capturas o botão fica com um anel de foco grosso durante
+toda a corrida, chamando a atenção da criança para ele; e com teclado, Espaço/Enter (fáceis
+de apertar por acaso) acionam o botão focado e pausam. Herdado do Grande Prêmio.
+*Como tratar:* focar o quadro da pista (`tabindex="-1"`, com rótulo) ou mostrar o anel só com
+`:focus-visible` real de teclado; manter a retomada de foco exigida pela acessibilidade.
+
+**R07 — Tela final corta as ações (média, verificar).** Em `primeiro-fim.png` (390×844) há um
+grande espaço entre o texto e a figurinha, que fica no rodapé; “🏁 Correr de novo” e
+“🏠 Início” ficam abaixo da dobra. Provavelmente é o cartão de conquista nova animando.
+*Como tratar:* conferir no navegador depois da animação e comparar com o Grande Prêmio; se o
+botão continuar fora da tela, compactar o final (figura menor, figurinha ao lado do texto)
+só em `corrida-3d.css`. *Aceite:* botão “Correr de novo” visível sem rolar em 360×800 e 390×844.
+
+**R08 — RAF permanente (baixa).** `quadro` sempre chama `agendarQuadro()`, mesmo no convite,
+na pausa e no final, onde nada é desenhado. Gasta bateria no tablet. Parar o RAF nessas fases
+e reagendar em `iniciarLargada`, `continuar` e `pageshow`, preservando “um RAF por página”.
+
+**R09 — Contagem falada fora do ritmo das luzes (baixa).** A largada chama
+`falarSequencia(['Preparar...', 'apontar...', 'já!'])` de uma vez; o semáforo troca a cada
+0,8 s pelo relógio do jogo. Com voz lenta, “já!” sai depois do verde. Falar cada palavra ao
+acender a luz correspondente (herdado do Grande Prêmio; corrigir só aqui).
+
+**R10 — Fala interrompida pela pausa (baixa).** `pausar` chama `interromperFala()`; ao continuar,
+a frase cortada não volta (ex.: “Bandeirada! Você completou...” se pausar na celebração).
+O texto continua em `#retorno` e Repetir funciona; opcional: repetir a última fala de
+prioridade 3 ao continuar.
+
+**R11 — Asfalto vazio embaixo do carro (baixa).** A base do jogador projeta em `y ≈ 621`;
+de 621 a 700 só há estrada. Avaliar junto com R01 (câmera um pouco mais baixa ou Canvas
+recortado), sempre preservando a referência `(x, 580)` de T01/T08.
+
+**R12 — Commits por etapa (processo).** O plano sugere um commit por etapa (seção 5), mas as
+Etapas 2–5 ficaram sem commit até esta revisão. Na Etapa 6 e nas correções acima, commitar
+ao fim de cada item com caminhos explícitos (4.1), sem push/PR/merge (G16).
+
+### 10.3 Ordem sugerida
+
+1. R03 (salvar evidências e refazer A5.3) → R02 → R07: não mudam a perspectiva.
+2. R01 + R11 com capturas antes/depois; decidir R04 com o Diego.
+3. R06, R08–R10.
+4. Etapa 6 completa, incluindo medição de FPS (R05 só se a medição pedir).
+5. Observação com o Rael (seção 6), dando atenção especial a “percebe o rival cedo?”.
+
+---
+
 ## Fontes consultadas (2026-09-22)
 
 - [Plano do Grande Prêmio do Rael](PLANO-GRANDE-PREMIO-DO-RAEL.md), em especial a seção 9.

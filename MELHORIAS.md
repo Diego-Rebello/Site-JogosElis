@@ -1320,6 +1320,13 @@ anteriores do plano e das Etapas 2–4 foram preservadas.
   Chrome/Android e observação com o Rael. Offline completo e matriz final
   permanecem na Etapa 6.
 
+**Revisão das Etapas 2–5 (2026-09-23).** Etapas commitadas juntas em `f440331`, no branch
+`corrida-3d-etapa-1`. Testes (504/504), typecheck, build e precache reexecutados e aprovados.
+Problemas e melhorias (R01–R12: rivais pequenos no meio da tela, paisagem sem duas colunas,
+evidências só em `/tmp`, curva quase invisível, entre outros) estão na
+[seção 10 do plano](PLANO-CORRIDA-3D.md#10-revisão-das-etapas-05-2026-09-23), para tratar antes
+ou durante a Etapa 6.
+
 ### 5.4 Ordem sugerida de entrega
 
 1. **P09 → P10.** Meu Nome e Conta Comigo não precisam de gravações nem de banco de dados,
