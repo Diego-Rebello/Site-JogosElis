@@ -162,21 +162,22 @@ describe('Corrida 3D — rival que muda de faixa (difícil)', () => {
     }
   });
 
-  it('só rival sozinho, fora do aquecimento, troca; dupla e ajuda nunca', () => {
+  it('só rival sozinho troca, já desde o aquecimento; dupla e ajuda nunca', () => {
+    let trocasNoAquecimento = 0;
     for (let semente = 1; semente <= 20; semente++) {
       correr({
         faixas: 4, dificuldade: 'dificil', semente, direcao: () => 0,
         aCada: (e, passo) => {
           for (const ev of doTipo(passo, 'rival-apareceu')) {
             const novos = e.rivais.slice(-ev.faixas.length);
-            if (ev.faixas.length > 1 || ev.numero <= RIVAIS_DE_AQUECIMENTO) {
-              expect(novos.every(r => !r.troca)).toBe(true);
-            }
+            if (ev.faixas.length > 1) expect(novos.every(r => !r.troca)).toBe(true);
             if (novos.some(r => r.comAjuda)) expect(novos.every(r => !r.troca)).toBe(true);
+            if (ev.aquecimento && novos.some(r => r.troca)) trocasNoAquecimento++;
           }
         },
       });
     }
+    expect(trocasNoAquecimento).toBeGreaterThan(0);
   });
 
   it('cancela a troca quando a faixa de destino está ocupada perto do rival', () => {

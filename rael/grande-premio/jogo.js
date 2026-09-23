@@ -452,14 +452,13 @@ function nascerRivais(estado, cruzeiro, sortear, eventos) {
 }
 
 /**
- * Difícil: um rival sozinho (nunca dupla, ajuda ou aquecimento) pode ganhar uma troca
- * para a faixa vizinha. Só sorteia quando a dificuldade tem troca, para o fácil manter
- * a mesma sequência de sorteios.
+ * Difícil: um rival sozinho (nunca dupla ou ajuda) pode ganhar uma troca para a faixa
+ * vizinha, já desde o aquecimento. Só sorteia quando a dificuldade tem troca, para o
+ * fácil manter a mesma sequência de sorteios.
  */
 function sortearTroca(estado, faixas, comAjuda, sortear) {
   const { chanceTroca } = dificuldadeDe(estado);
-  if (!(chanceTroca > 0) || faixas.length !== 1 || comAjuda
-    || estado.rivaisNascidos <= RIVAIS_DE_AQUECIMENTO) return;
+  if (!(chanceTroca > 0) || faixas.length !== 1 || comAjuda) return;
   if (sortearSeguro(sortear) >= chanceTroca) return;
   const rival = estado.rivais[estado.rivais.length - 1];
   const vizinhas = [rival.faixa - 1, rival.faixa + 1].filter((f) => f >= 0 && f < estado.faixas);

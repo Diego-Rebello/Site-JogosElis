@@ -52,12 +52,6 @@ const FALAS = Object.freeze({
   primeiraDerrapagem: 'Escorregou no óleo!',
   primeiroPisca: 'Olha o pisca-pisca! Aquele carro vai mudar de faixa.',
 });
-// Cada corrida tem a sua explicação extra no convite; a fácil é a de sempre.
-const EXPLICACAO_DA_DIFICULDADE = Object.freeze({
-  facil: '',
-  medio: 'No médio, os carros andam mais rápido.',
-  dificil: 'No difícil, cuidado com o óleo e com o pisca-pisca dos carros!',
-});
 const BOTOES_DE_DIFICULDADE = Object.freeze(['comecar', 'comecar-medio', 'comecar-dificil']);
 const FALAS_DOS_MARCOS = Object.freeze({
   5: 'Cinco carros!', 10: 'Dez carros!', 15: 'Quinze carros!',
@@ -98,6 +92,8 @@ let corridaRegistrada = false;
 let premioDaCorrida = null;
 
 function limparEntrada() { teclas.clear(); ponteiros.clear(); }
+// Só o Fácil explica e ajuda no começo; Médio e Difícil largam direto, sem seta no aquecimento.
+function comAssistenciaInicial() { return dificuldade === 'facil'; }
 function atualizarControles() {
   const ativa = faseDaTela === 'corrida';
   $('esquerda').disabled = !ativa;
@@ -256,16 +252,17 @@ async function iniciarCorrida() {
     $('aviso-voz').textContent = 'Um adulto pode ler as frases da tela.';
     $('aviso-voz').hidden = false;
   }
-  const nome = primeiroNome();
-  const convite = nome ? `${nome}, vamos brincar de Corrida três dê?` : 'Vamos brincar de Corrida três dê?';
-  const conviteVisual = nome ? `${nome}, vamos brincar de Corrida 3D?` : 'Vamos brincar de Corrida 3D?';
-  const explicacao = [FALAS.explicacao, EXPLICACAO_DA_DIFICULDADE[dificuldade]].filter(Boolean).join(' ');
-  const introducao = `${conviteVisual} ${explicacao}`;
-  $('texto-convite-fala').textContent = introducao;
-  $('texto-convite-fala').hidden = false;
-  mostrarTextoNarrado(introducao);
-  await acompanharFala(2, falarSequencia([convite, explicacao]));
-  if (geracao !== geracaoDaCorrida || pagina !== geracaoDaPagina) return;
+  if (comAssistenciaInicial()) {
+    const nome = primeiroNome();
+    const convite = nome ? `${nome}, vamos brincar de Corrida três dê?` : 'Vamos brincar de Corrida três dê?';
+    const conviteVisual = nome ? `${nome}, vamos brincar de Corrida 3D?` : 'Vamos brincar de Corrida 3D?';
+    const introducao = `${conviteVisual} ${FALAS.explicacao}`;
+    $('texto-convite-fala').textContent = introducao;
+    $('texto-convite-fala').hidden = false;
+    mostrarTextoNarrado(introducao);
+    await acompanharFala(2, falarSequencia([convite, FALAS.explicacao]));
+    if (geracao !== geracaoDaCorrida || pagina !== geracaoDaPagina) return;
+  }
   if (faseDaTela === 'convite') iniciarLargada();
   preparandoConvite = false;
   habilitarDificuldades(true);
@@ -309,6 +306,7 @@ function direcaoAtual() {
 function tratarEvento(evento) {
   switch (evento.tipo) {
     case 'rival-apareceu':
+      if (!comAssistenciaInicial()) break;
       if (evento.aquecimento) {
         const primeiro = estado.proximoId - evento.faixas.length;
         for (const r of estado.rivais) if (r.id >= primeiro) rivaisDoAquecimento.add(r.id);

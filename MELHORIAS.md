@@ -1165,7 +1165,7 @@ planos; nenhuma alteração no motor ou nos dois jogos existentes.
   chegada. Nenhum emoji ou asset externo no mundo desenhado.
 - **Integração:** um RAF com `dt ≤ 0,05`, entrada por setas/A/D, botões e metades do
   Canvas; direções opostas se anulam mesmo com várias entradas do mesmo lado.
-  Painel, som, contorno de batida, transparência a 2 Hz, fumaça e “+1” respondem aos
+  Painel, som, halo âmbar de batida, transparência a 2 Hz, fumaça e “+1” respondem aos
   eventos reais. Seta preserva os critérios de aquecimento/ajuda e `faixaSugerida`.
   Seta, fumaça e “+1” usam pontos projetados. Há pausa básica, limpeza de entradas,
   cancelamento do RAF em `pagehide` e retomada pelo `pageshow` persistido.
@@ -1414,8 +1414,8 @@ mais difícil, com escolha de dificuldade, carros mudando de faixa e óleo na pi
   idêntico, inclusive a sequência de sorteios (teste dedicado). Médio: cruzeiro × 1,12,
   intervalos × 0,85, dupla +10% a partir de 3 ultrapassagens. Difícil: cruzeiro × 1,2,
   intervalos × 0,8, dupla +15%, e:
-  - **Rival que muda de faixa:** 35% dos rivais sozinhos (nunca dupla, ajuda ou aquecimento)
-    ligam o pisca-pisca logo depois de nascer, esperam 0,6 s e passam para a faixa vizinha em
+  - **Rival que muda de faixa:** 35% dos rivais sozinhos (nunca dupla ou ajuda; desde o
+    primeiro rival, inclusive no aquecimento) ligam o pisca-pisca logo depois de nascer, esperam 0,6 s e passam para a faixa vizinha em
     0,6 s. Só troca se a faixa de destino estiver livre; durante a troca ocupa as duas faixas
     para a seta verde e para o posto. Menor folga medida ao fim de uma troca: 245 px entre a
     traseira do rival e a frente do carro (mais de 1,2 s no nível mais rápido).
@@ -1426,8 +1426,18 @@ mais difícil, com escolha de dificuldade, carros mudando de faixa e óleo na pi
     faixa foi necessário: com um escorregão parcial, uma criança parada em 2 faixas ficava
     fora do alcance do posto na reserva e a corrida não terminava.
 - **Tela:** pisca-pisca âmbar com seta sobre o rival, poça escura com brilho, carro
-  balançando e com contorno lilás na derrapagem (sem balanço com movimento reduzido). Falas
-  novas na primeira vez: óleo, derrapagem e pisca-pisca; o convite explica o Médio e o Difícil.
+  balançando e com halo lilás no chão na derrapagem (sem balanço com movimento reduzido). Falas
+  novas na primeira vez: óleo, derrapagem e pisca-pisca.
+- **Largada direta no Médio e no Difícil:** o convite falado (nome + explicação) ficava vários
+  segundos entre o toque e o semáforo. Agora só o Fácil fala o convite e dá ajuda no começo
+  (dica do primeiro carro e seta verde nos rivais do aquecimento). Médio e Difícil vão direto
+  para “Preparar, apontar, já”, sem essas ajudas; a seta por batidas seguidas e as falas de
+  primeira vez (óleo, derrapagem, pisca-pisca, posto) continuam em todas as corridas.
+- **Halo em vez de contorno:** o contorno âmbar (batida) e o lilás (derrapagem) eram traçados
+  sobre a pegada depois da carroceria e cortavam o carro como um quadrado. Viraram um halo
+  oval no asfalto (`desenharAuras`), numa camada antes de todos os carros: o rival da frente
+  fica por cima, o anel passa por fora da sombra, não pisca junto com o carro e, com os dois
+  ao mesmo tempo, o âmbar fica por fora. Não use contorno sobre o carro para esses estados.
 - **Testes:** 526/526 em 33 arquivos (novo `tests/corrida-3d-dificuldade.test.js` com 14
   cenários: equivalência do fácil, fatores, duplas, conclusão do difícil com 2/3/4 faixas
   parado e desviando, sinal antes da troca, cancelamento, ocupação durante a troca, óleo,
