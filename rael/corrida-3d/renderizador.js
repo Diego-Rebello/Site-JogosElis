@@ -65,16 +65,24 @@ function desenharLinhaDeChegada(ctx, linha) {
   if (linha) for (const ladrilho of linha.ladrilhos) poligono(ctx, ladrilho.poligono, ladrilho.cor);
 }
 
-/** Poça escura com brilho, apoiada na pegada do óleo; some aos poucos depois de usada. */
-function desenharOleo(ctx, oleo) {
-  if (!oleo || !oleo.pegada || oleo.pegada.length < 3) return;
-  const xs = oleo.pegada.map(p => p.x);
-  const ys = oleo.pegada.map(p => p.y);
+/** Centro e raios do retângulo que envolve a pegada; null se ela for inválida. */
+function elipseDaPegada(pegada) {
+  if (!pegada || pegada.length < 3) return null;
+  const xs = pegada.map(p => p.x);
+  const ys = pegada.map(p => p.y);
   const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
   const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
   const rx = (Math.max(...xs) - Math.min(...xs)) / 2;
   const ry = (Math.max(...ys) - Math.min(...ys)) / 2;
-  if (![cx, cy, rx, ry].every(Number.isFinite) || rx <= 0 || ry <= 0) return;
+  if (![cx, cy, rx, ry].every(Number.isFinite) || rx <= 0 || ry <= 0) return null;
+  return { cx, cy, rx, ry };
+}
+
+/** Poça escura com brilho, apoiada na pegada do óleo; some aos poucos depois de usada. */
+function desenharOleo(ctx, oleo) {
+  const elipse = elipseDaPegada(oleo?.pegada);
+  if (!elipse) return;
+  const { cx, cy, rx, ry } = elipse;
   ctx.save();
   try {
     ctx.globalAlpha = Math.max(0, Math.min(1, oleo.alfa * (oleo.usado ? 0.6 : 1)));
@@ -109,6 +117,38 @@ function desenharPiscaPisca(ctx, objeto, apresentacao, topo) {
     { x: ponta - sinal * t, y: y - t * 0.7 },
     { x: ponta - sinal * t, y: y + t * 0.7 },
   ], '#f59e0b', '#78350f');
+}
+
+// Halo no asfalto em volta do jogador: âmbar enquanto está protegido depois da batida,
+// lilás no escorregão do óleo. Os fatores deixam o anel fora dos cantos da pegada,
+// longe da sombra escura; o do escudo é maior para os dois aparecerem juntos.
+const AURA_ESCUDO = { folga: 9, preenchimento: 'rgba(251, 191, 36, 0.35)', borda: '#fbbf24' };
+const AURA_DERRAPAGEM = { folga: 3, preenchimento: 'rgba(167, 139, 250, 0.35)', borda: '#a78bfa' };
+
+/** Camada de chão: vem antes de todos os carros, então o rival da frente a cobre. */
+function desenharAuras(ctx, objetos, apresentacao) {
+  const jogador = objetos.find(o => o.tipo === 'jogador');
+  const elipse = elipseDaPegada(jogador?.pegada);
+  if (!elipse) return;
+  const auras = [];
+  if (apresentacao.imune) auras.push(AURA_ESCUDO);
+  if (Number.isFinite(jogador.derrapando)) auras.push(AURA_DERRAPAGEM);
+  if (!auras.length) return;
+  const s = jogador.escala;
+  ctx.save();
+  try {
+    ctx.globalAlpha = Math.max(0, Math.min(1, jogador.alfa));
+    ctx.lineWidth = Math.max(2, 3 * s);
+    for (const { folga, preenchimento, borda } of auras) {
+      ctx.beginPath();
+      ctx.ellipse(elipse.cx, elipse.cy, elipse.rx * 1.25 + folga * s, elipse.ry * 1.7 + folga * s,
+        0, 0, Math.PI * 2);
+      ctx.fillStyle = preenchimento;
+      ctx.fill();
+      ctx.strokeStyle = borda;
+      ctx.stroke();
+    }
+  } finally { ctx.restore(); }
 }
 
 function desenharCarroTraseiro(ctx, objeto, apresentacao) {
@@ -157,16 +197,6 @@ function desenharCarroTraseiro(ctx, objeto, apresentacao) {
     for (const x of [base.x - w * 0.4, base.x + w * 0.22]) ctx.fillRect(x, base.y - h * 0.35, w * 0.18, h * 0.16);
     ctx.fillStyle = '#f8fafc';
     ctx.fillRect(base.x - w * 0.14, base.y - h * 0.23, w * 0.28, h * 0.12);
-    if (jogador && apresentacao.imune && caminho(ctx, pegada)) {
-      ctx.strokeStyle = '#fbbf24';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    }
-    if (jogador && Number.isFinite(objeto.derrapando) && caminho(ctx, pegada)) {
-      ctx.strokeStyle = '#a78bfa';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    }
     if (!jogador && objeto.sinal) desenharPiscaPisca(ctx, objeto, apresentacao, Math.min(alto[2].y, alto[3].y));
   } finally { ctx.restore(); }
 }
@@ -268,6 +298,7 @@ export function criarRenderizador(canvas, { qualidade = 'padrao' } = {}) {
       desenharLinhaDeChegada(ctx, cena.linhaDeChegada);
       desenharOleo(ctx, cena.oleo);
       desenharSeta(ctx, apresentacao.seta);
+      desenharAuras(ctx, cena.objetos, apresentacao);
       for (const objeto of cena.objetos) {
         if (objeto.tipo === 'posto') desenharPosto(ctx, objeto);
         else desenharCarroTraseiro(ctx, objeto, apresentacao);

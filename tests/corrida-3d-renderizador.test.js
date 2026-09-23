@@ -125,7 +125,8 @@ describe('Corrida 3D — renderizador Canvas', () => {
         expect(JSON.stringify(estado)).toBe(antes);
       }
     }
-    expect(instrumento.chamadas.some(c => c[0] === 'ellipse')).toBe(true);
+    // A cor da poça prova o óleo; elipse sozinha também vem do halo da derrapagem.
+    expect(instrumento.chamadas.some(c => c[0] === 'fillStyle' && c[1] === '#0b0b12')).toBe(true);
     expect(instrumento.chamadas.some(c => c[0] === 'fillStyle' && c[1] === '#f59e0b')).toBe(true);
     // O balanço da derrapagem só existe sem movimento reduzido.
     expect(instrumento.chamadas.some(c => c[0] === 'rotate')).toBe(true);
@@ -134,6 +135,33 @@ describe('Corrida 3D — renderizador Canvas', () => {
     estado.derrapagem = { tempo: 0.2, lado: -1, alvoX: estado.carro.x - 50 };
     criarRenderizador(reduzido.canvas).desenhar(criarCena(estado), { tempo: 0.1, movimentoReduzido: true, efeitos: [] });
     expect(reduzido.chamadas.some(c => c[0] === 'rotate')).toBe(false);
+  });
+
+  it('halo no chão: âmbar no escudo, lilás no óleo, os dois juntos e antes dos carros', () => {
+    const ESCUDO = 'rgba(251, 191, 36, 0.35)';
+    const OLEO = 'rgba(167, 139, 250, 0.35)';
+    const desenhar = ({ imune, derrapando, movimentoReduzido = false }) => {
+      const instrumento = canvasInstrumentado();
+      const estado = estadoVisual(3, 300);
+      if (derrapando) estado.derrapagem = { tempo: 0.2, lado: 1, alvoX: estado.carro.x + 50 };
+      criarRenderizador(instrumento.canvas).desenhar(criarCena(estado), { imune, tempo: 0.3, movimentoReduzido, efeitos: [] });
+      const { chamadas } = instrumento;
+      const halos = chamadas.flatMap((c, i) => (c[0] === 'fillStyle' && [ESCUDO, OLEO].includes(c[1])
+        ? [{ cor: c[1], i, raio: chamadas.slice(0, i).findLast(e => e[0] === 'ellipse')[3] }] : []));
+      const primeiroCarro = chamadas.findIndex(c => c[0] === 'fillStyle' && ['#ef4444', '#0f5aa8'].includes(c[1]));
+      return { halos, primeiroCarro };
+    };
+    expect(desenhar({ imune: false, derrapando: false }).halos).toEqual([]);
+    for (const movimentoReduzido of [false, true]) {
+      expect(desenhar({ imune: true, derrapando: false, movimentoReduzido }).halos.map(h => h.cor)).toEqual([ESCUDO]);
+    }
+    expect(desenhar({ imune: false, derrapando: true }).halos.map(h => h.cor)).toEqual([OLEO]);
+    const { halos, primeiroCarro } = desenhar({ imune: true, derrapando: true });
+    expect(halos.map(h => h.cor)).toEqual([ESCUDO, OLEO]);
+    // O escudo fica por fora para não sumir sob o anel do óleo.
+    expect(halos[0].raio).toBeGreaterThan(halos[1].raio);
+    // Camada de chão: nenhum carro, nem o rival da frente, fica embaixo do halo.
+    expect(halos.at(-1).i).toBeLessThan(primeiroCarro);
   });
 
   it.each(['padrao', 'economica'])('resize %s não acumula escala; destruir impede desenho posterior', qualidade => {

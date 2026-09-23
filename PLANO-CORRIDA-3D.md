@@ -171,8 +171,8 @@ de nascimentos, anti-sobreposição com posto e ajuda já implementados no motor
   retângulos dos desenhos em perspectiva para decidir batida.
 - Contato deve parecer contato. Validar sombra/base dos veículos, margens laterais e momento
   do evento com sobreposição de depuração das hitboxes projetadas, restrita a desenvolvimento.
-- Feedback de batida: contorno, transparência a no máximo 2 Hz e fumaça discreta. Nesta versão,
-  não tremer a câmera, mesmo quando movimento reduzido estiver desligado.
+- Feedback de batida: halo âmbar no chão, transparência a no máximo 2 Hz e fumaça discreta.
+  Nesta versão, não tremer a câmera, mesmo quando movimento reduzido estiver desligado.
 
 ### 2.7 Posto e ajuda visual
 
@@ -210,7 +210,8 @@ continuam apenas nas fases apropriadas, sem duplicar o clique nativo de um botã
 
 Com `prefers-reduced-motion: reduce`, usar pista reta e fundo estático; remover fumaça, pisca,
 aceno e deslocamento do “+1”. Manter o movimento indispensável de estrada e carros.
-Indicar batida por contorno fixo e pouca gasolina por barra vermelha fixa.
+Indicar batida por halo âmbar fixo no chão, sob o carro, e pouca gasolina por barra
+vermelha fixa.
 
 Qualidade inicial: **80 segmentos**, resolução interna até **DPR 1,5**, fundo sem parallax.
 Disponibilizar no renderizador um perfil econômico de **40 segmentos e DPR 1** para medição
