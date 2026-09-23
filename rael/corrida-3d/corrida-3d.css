@@ -188,6 +188,19 @@
   #tela-corrida .roteiro__fala { font-size: .9rem; }
 }
 
+/* Zoom de 200% em celular (≤ 340 px CSS): contador em linha própria, sem Pausar por cima,
+   e a fala abaixo da pista em vez de cobri-la. Rolagem vertical é aceita nesse caso. */
+@media (max-width: 340px) {
+  .painel { grid-template-columns: 64px 64px; justify-content: space-between; }
+  #ultrapassagens { grid-column: 1 / -1; grid-row: 2; }
+  .medidor--gasolina { grid-row: 3; }
+  #tela-corrida:not(:has(.roteiro:not([hidden]))) .quadro-pista .retorno {
+    position: static;
+    min-height: calc(4 * 1.2em + 8px);
+    margin-top: 6px;
+  }
+}
+
 /* Tela final (R07): o botão "Correr de novo" cabe sem rolar em celulares de 800 px. */
 @media (max-height: 900px) {
   #tela-fim { gap: 10px; }
