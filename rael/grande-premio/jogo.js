@@ -47,6 +47,40 @@ export const JANELA_DA_SETA = 300;
 export const RIVAIS_DE_AQUECIMENTO = 3;
 export const CORES_DOS_RIVAIS = Object.freeze(['#ef4444', '#eab308', '#22c55e', '#a855f7', '#f97316']);
 
+// -----------------------------------------------------------------------------
+// Dificuldade (opcional, usada pela Corrida 3D). 'facil' é o padrão e mantém o
+// Grande Prêmio idêntico: mesmos números e mesma sequência de sorteios.
+// -----------------------------------------------------------------------------
+
+/** Rival com pisca-pisca: sinaliza, espera e então muda para a faixa vizinha. */
+export const DURACAO_SINAL_TROCA = 0.6;
+/** Tempo para cruzar uma faixa, qualquer que seja a largura (2, 3 ou 4 faixas). */
+export const DURACAO_TROCA = 0.6;
+/**
+ * A troca começa com a frente do rival neste intervalo de y, logo depois de nascer.
+ * No pior caso (2 faixas, difícil, nível 3) ela termina com a traseira do rival
+ * ~240 px à frente do carro: mais de 1,2 s para reagir.
+ */
+export const GATILHO_TROCA = Object.freeze([-40, 40]);
+/** Folga longitudinal exigida na faixa de destino, além do comprimento do carro. */
+export const FOLGA_TROCA = 60;
+
+/** Mancha de óleo: escorrega o carro para a faixa vizinha, sem batida nem lentidão. */
+export const Y_NASCIMENTO_OLEO = -60;
+export const ALTURA_OLEO = 34;
+export const MARGEM_OLEO = 6;
+export const INTERVALO_OLEO = Object.freeze([7, 11]);
+/** Controles ignorados enquanto o carro escorrega até o centro da faixa vizinha. */
+export const DURACAO_DERRAPAGEM = 0.6;
+/** Óleo só nasce quando todos os rivais ativos já passaram desta linha. */
+export const Y_LIBERA_OLEO = 250;
+
+export const DIFICULDADES = Object.freeze({
+  facil: Object.freeze({ nome: 'facil', fatorCruzeiro: 1, fatorIntervalo: 1, duplaExtra: 0, chanceTroca: 0, oleo: false }),
+  medio: Object.freeze({ nome: 'medio', fatorCruzeiro: 1.12, fatorIntervalo: 0.85, duplaExtra: 0.1, chanceTroca: 0, oleo: false }),
+  dificil: Object.freeze({ nome: 'dificil', fatorCruzeiro: 1.2, fatorIntervalo: 0.8, duplaExtra: 0.15, chanceTroca: 0.35, oleo: true }),
+});
+
 /** Tabela da seção 2.7, congelada. */
 export const NIVEIS = Object.freeze([
   Object.freeze({ nome: 'aquecimento', ate: 2, cruzeiro: 190, intervalo: Object.freeze([3.6, 3.6]), chanceDupla: 0 }),
@@ -94,6 +128,29 @@ function rivalAtivo(rival) {
 
 function marcarTodosSaindo(estado) {
   for (const rival of estado.rivais) rival.saindo = true;
+}
+
+function dificuldadeDe(estado) {
+  return DIFICULDADES[estado.dificuldade] ?? DIFICULDADES.facil;
+}
+
+/** Nível da tabela com os fatores da dificuldade; no fácil é o próprio objeto congelado. */
+function nivelAjustado(estado) {
+  const base = nivelDaCorrida(estado.ultrapassagens);
+  const dificuldade = dificuldadeDe(estado);
+  if (dificuldade === DIFICULDADES.facil) return base;
+  return {
+    ...base,
+    cruzeiro: base.cruzeiro * dificuldade.fatorCruzeiro,
+    intervalo: base.intervalo.map((segundos) => segundos * dificuldade.fatorIntervalo),
+    // O aquecimento continua com rivais sozinhos.
+    chanceDupla: base === NIVEIS[0] ? 0 : base.chanceDupla + dificuldade.duplaExtra,
+  };
+}
+
+/** Durante uma troca o rival ocupa as duas faixas; depois, só a nova. */
+function ocupaFaixa(rival, faixa) {
+  return rival.faixa === faixa || rival.faixaAnterior === faixa;
 }
 
 function sortearIntervalo(nivel, sortear) {
@@ -197,8 +254,11 @@ export function faixaParaPosto({ estado, preferirFaixa = null, sortear }) {
     if (rival.saindo) continue;
     if (rival.y + rival.h > Y_NASCIMENTO_POSTO && rival.y <= estado.carro.y) {
       ocupadas[rival.faixa] = true;
+      if (Number.isInteger(rival.faixaAnterior)) ocupadas[rival.faixaAnterior] = true;
     }
   }
+  // Posto e óleo nunca dividem a faixa: chegar ao posto não pode exigir escorregar.
+  if (estado.oleo) ocupadas[estado.oleo.faixa] = true;
   const livres = [];
   for (let f = 0; f < total; f++) if (!ocupadas[f]) livres.push(f);
   if (livres.length === 0) return null;
@@ -226,7 +286,7 @@ export function faixaSugerida(estado) {
   const topoDaJanela = carro.y - JANELA_DA_SETA;
 
   const ameaca = estado.rivais.some((r) => rivalAtivo(r)
-    && r.faixa === faixaAtual
+    && ocupaFaixa(r, faixaAtual)
     && r.y + r.h >= topoDaJanela
     && r.y + r.h <= carro.y);
   if (!ameaca) return null;
@@ -234,8 +294,15 @@ export function faixaSugerida(estado) {
   const ocupadas = new Array(estado.faixas).fill(false);
   for (const r of estado.rivais) {
     if (!rivalAtivo(r)) continue;
-    if (r.y + r.h >= topoDaJanela && r.y < carro.y + carro.h) ocupadas[r.faixa] = true;
+    if (r.y + r.h >= topoDaJanela && r.y < carro.y + carro.h) {
+      ocupadas[r.faixa] = true;
+      if (Number.isInteger(r.faixaAnterior)) ocupadas[r.faixaAnterior] = true;
+      // Quem está sinalizando vai ocupar a faixa de destino: a seta não aponta para lá.
+      if (r.troca && r.troca.fase === 'sinalizando') ocupadas[r.troca.para] = true;
+    }
   }
+  if (estado.oleo && !estado.oleo.usado && estado.oleo.y + estado.oleo.h >= topoDaJanela
+    && estado.oleo.y < carro.y + carro.h) ocupadas[estado.oleo.faixa] = true;
 
   const centro = (estado.faixas - 1) / 2;
   let melhor = null;
@@ -253,7 +320,7 @@ export function faixaSugerida(estado) {
 }
 
 /** Estado inicial (seção 3.5). Carro centralizado na faixa floor((faixas - 1) / 2). */
-export function criarCorrida({ faixas = 3 } = {}) {
+export function criarCorrida({ faixas = 3, dificuldade = 'facil' } = {}) {
   const total = quantidadeDeFaixas(faixas);
   const geometria = geometriaDaPista({ largura: LARGURA_CANVAS, margem: MARGEM_DA_PISTA, faixas: total });
   const faixaInicial = Math.floor((total - 1) / 2);
@@ -292,6 +359,12 @@ export function criarCorrida({ faixas = 3 } = {}) {
     linhaDeChegada: null,
     tempoDeFreada: 0,
     proximoId: 1,
+    dificuldade: Object.hasOwn(DIFICULDADES, dificuldade) ? dificuldade : 'facil',
+    oleo: null,
+    oleosNascidos: 0,
+    tempoAteProximoOleo: INTERVALO_OLEO[0],
+    derrapagem: null,
+    derrapagens: 0,
   };
 }
 
@@ -310,6 +383,7 @@ function rolarObjetos(estado, dt) {
     }
   }
   if (estado.posto) estado.posto.y += v * dt;
+  if (estado.oleo) estado.oleo.y += v * dt;
   if (estado.linhaDeChegada) estado.linhaDeChegada.y += v * dt;
 }
 
@@ -325,6 +399,8 @@ function espacoLivreParaRival(estado, nascimentoNormal) {
   if (nascimentoNormal && estado.rivais.some((r) => r.comAjuda && rivalAtivo(r))) return false;
   // Posto recém-nascido ainda cobre a fileira onde o rival apareceria.
   if (estado.posto && estado.posto.y < Y_NASCIMENTO_RIVAL + CARRO.h) return false;
+  // Óleo e rival na mesma fileira poderiam fechar todas as faixas.
+  if (estado.oleo && estado.oleo.y < Y_LIBERA_NOVO_RIVAL) return false;
   return true;
 }
 
@@ -335,7 +411,7 @@ function nascerRivais(estado, cruzeiro, sortear, eventos) {
     return;
   }
 
-  const nivel = nivelDaCorrida(estado.ultrapassagens);
+  const nivel = nivelAjustado(estado);
   const faixas = sortearFaixasDosRivais({
     faixas: estado.faixas,
     chanceDupla: nivel.chanceDupla,
@@ -363,6 +439,7 @@ function nascerRivais(estado, cruzeiro, sortear, eventos) {
     estado.rivaisNascidos++;
   }
   if (comAjuda) estado.rivaisComAjuda--;
+  sortearTroca(estado, faixas, comAjuda, sortear);
 
   estado.historicoDeFaixas = [...estado.historicoDeFaixas, faixas].slice(-2);
   estado.tempoAteProximoRival = sortearIntervalo(nivel, sortear);
@@ -372,6 +449,127 @@ function nascerRivais(estado, cruzeiro, sortear, eventos) {
     numero: estado.rivaisNascidos,
     aquecimento: estado.rivaisNascidos <= RIVAIS_DE_AQUECIMENTO,
   });
+}
+
+/**
+ * Difícil: um rival sozinho (nunca dupla, ajuda ou aquecimento) pode ganhar uma troca
+ * para a faixa vizinha. Só sorteia quando a dificuldade tem troca, para o fácil manter
+ * a mesma sequência de sorteios.
+ */
+function sortearTroca(estado, faixas, comAjuda, sortear) {
+  const { chanceTroca } = dificuldadeDe(estado);
+  if (!(chanceTroca > 0) || faixas.length !== 1 || comAjuda
+    || estado.rivaisNascidos <= RIVAIS_DE_AQUECIMENTO) return;
+  if (sortearSeguro(sortear) >= chanceTroca) return;
+  const rival = estado.rivais[estado.rivais.length - 1];
+  const vizinhas = [rival.faixa - 1, rival.faixa + 1].filter((f) => f >= 0 && f < estado.faixas);
+  const [minimo, maximo] = GATILHO_TROCA;
+  rival.troca = {
+    para: escolher(vizinhas, sortear),
+    gatilho: minimo + sortearSeguro(sortear) * (maximo - minimo),
+    fase: 'aguardando',
+    tempo: 0,
+  };
+}
+
+/** A faixa de destino precisa estar livre de rival, posto e óleo perto da fileira do rival. */
+function trocaLivre(estado, rival) {
+  const { para } = rival.troca;
+  const perto = (y, h) => y < rival.y + rival.h + FOLGA_TROCA && y + h > rival.y - FOLGA_TROCA;
+  if (estado.rivais.some((r) => r !== rival && !r.saindo && ocupaFaixa(r, para) && perto(r.y, r.h))) return false;
+  if (estado.posto && estado.posto.faixa === para && perto(estado.posto.y, estado.posto.h)) return false;
+  if (estado.oleo && estado.oleo.faixa === para && perto(estado.oleo.y, estado.oleo.h)) return false;
+  return true;
+}
+
+/** Pisca-pisca, espera e deslocamento lateral até o centro da faixa vizinha. */
+function avancarTrocas(estado, passo, eventos) {
+  for (const rival of estado.rivais) {
+    const { troca } = rival;
+    if (!troca || ['feita', 'cancelada', 'interrompida'].includes(troca.fase)) continue;
+    // Reserva, meta, batida ou ultrapassagem: o rival para onde está e deixa de sinalizar.
+    if (!rivalAtivo(rival)) {
+      troca.fase = troca.fase === 'mudando' ? 'interrompida' : 'cancelada';
+      continue;
+    }
+    if (troca.fase === 'aguardando') {
+      if (rival.y < troca.gatilho) continue;
+      if (!trocaLivre(estado, rival)) { troca.fase = 'cancelada'; continue; }
+      troca.fase = 'sinalizando';
+      troca.tempo = 0;
+      eventos.push({ tipo: 'rival-sinalizou', rivalId: rival.id, de: rival.faixa, para: troca.para });
+      continue;
+    }
+    if (troca.fase === 'sinalizando') {
+      troca.tempo += passo;
+      if (troca.tempo < DURACAO_SINAL_TROCA - EPSILON) continue;
+      if (!trocaLivre(estado, rival)) { troca.fase = 'cancelada'; continue; }
+      troca.fase = 'mudando';
+      rival.faixaAnterior = rival.faixa;
+      rival.faixa = troca.para;
+      eventos.push({ tipo: 'rival-mudou-faixa', rivalId: rival.id, de: rival.faixaAnterior, para: troca.para });
+    }
+    const alvo = centroDaFaixa(troca.para, estado.geometria) - rival.w / 2;
+    const deslocamento = estado.geometria.larguraFaixa / DURACAO_TROCA * passo;
+    if (Math.abs(alvo - rival.x) <= deslocamento + EPSILON) {
+      rival.x = alvo;
+      troca.fase = 'feita';
+      delete rival.faixaAnterior;
+    } else {
+      rival.x += Math.sign(alvo - rival.x) * deslocamento;
+    }
+  }
+}
+
+function dimensoesDoOleo(geometria) {
+  return { w: Math.min(56, Math.floor(geometria.larguraFaixa * 0.62)), h: ALTURA_OLEO };
+}
+
+/** Difícil: uma mancha por vez, depois do aquecimento, numa faixa sem posto nem rival perto. */
+function nascerOleo(estado, sortear, eventos) {
+  const esperar = () => { estado.tempoAteProximoOleo = 0.5; };
+  if (estado.rivais.some((r) => rivalAtivo(r) && r.y < Y_LIBERA_OLEO)) { esperar(); return; }
+  const livres = [];
+  for (let f = 0; f < estado.faixas; f++) {
+    if (estado.posto && estado.posto.faixa === f) continue;
+    livres.push(f);
+  }
+  if (livres.length === 0) { esperar(); return; }
+  const faixa = escolher(livres, sortear);
+  const { w, h } = dimensoesDoOleo(estado.geometria);
+  estado.oleo = {
+    faixa,
+    x: centroDaFaixa(faixa, estado.geometria) - w / 2,
+    y: Y_NASCIMENTO_OLEO,
+    w,
+    h,
+    usado: false,
+  };
+  const primeiro = estado.oleosNascidos === 0;
+  estado.oleosNascidos++;
+  const [minimo, maximo] = INTERVALO_OLEO;
+  estado.tempoAteProximoOleo = minimo + sortearSeguro(sortear) * (maximo - minimo);
+  eventos.push({ tipo: 'oleo-apareceu', faixa, primeiro });
+}
+
+/**
+ * Derrapagem: o carro escorrega até o centro de uma faixa vizinha sem rival ao lado.
+ * Terminar no centro de uma faixa garante que o posto continue alcançável sem tocar.
+ * Sem vizinha segura, o carro só fica sem controle no lugar (lado 0).
+ */
+function criarDerrapagem(estado, sortear) {
+  const { carro, geometria } = estado;
+  const atual = faixaDoJogador(estado);
+  const seguros = [-1, 1].filter((lado) => {
+    const faixa = atual + lado;
+    if (faixa < 0 || faixa >= estado.faixas) return false;
+    const x = centroDaFaixa(faixa, geometria) - carro.w / 2;
+    const destino = { x, y: carro.y - 80, w: carro.w, h: carro.h + 160 };
+    return !estado.rivais.some((r) => rivalAtivo(r) && retangulosSeSobrepoem(destino, r, 0));
+  });
+  const lado = seguros.length === 0 ? 0 : seguros.length === 1 ? seguros[0] : escolher(seguros, sortear);
+  const alvoX = lado === 0 ? carro.x : centroDaFaixa(atual + lado, geometria) - carro.w / 2;
+  return { tempo: 0, lado, alvoX };
 }
 
 function nascerPosto(estado, sortear, eventos) {
@@ -410,7 +608,7 @@ export function avancarCorrida(estado, { dt, direcao = 0 }, { sortear }) {
   if (estado.fase === 'fim') {
     estado.tempoDeFreada += passo;
     const base = velocidadeDoJogador({
-      cruzeiro: nivelDaCorrida(estado.ultrapassagens).cruzeiro,
+      cruzeiro: nivelAjustado(estado).cruzeiro,
       tempoDesdeBatida: estado.tempoDesdeBatida,
       reserva: estado.reserva,
     });
@@ -452,27 +650,37 @@ export function avancarCorrida(estado, { dt, direcao = 0 }, { sortear }) {
   }
 
   // 4. Velocidade.
-  const cruzeiro = nivelDaCorrida(estado.ultrapassagens).cruzeiro;
+  const cruzeiro = nivelAjustado(estado).cruzeiro;
   estado.velocidade = velocidadeDoJogador({
     cruzeiro,
     tempoDesdeBatida: estado.tempoDesdeBatida,
     reserva: estado.reserva,
   });
 
-  // 5. Direção.
+  // 5. Direção. Na derrapagem o carro escorrega de lado e a entrada é ignorada.
   const { carro, geometria } = estado;
-  carro.x = moverCarro({
-    x: carro.x,
-    direcao: dir,
-    velocidade: VELOCIDADE_LATERAL,
-    dt: passo,
-    inicio: geometria.inicio,
-    fim: geometria.fim,
-    largura: carro.w,
-  });
+  if (estado.derrapagem) {
+    const derrapagem = estado.derrapagem;
+    const deslocamento = geometria.larguraFaixa / DURACAO_DERRAPAGEM * passo;
+    const falta = derrapagem.alvoX - carro.x;
+    carro.x = Math.abs(falta) <= deslocamento ? derrapagem.alvoX : carro.x + Math.sign(falta) * deslocamento;
+    derrapagem.tempo += passo;
+    if (derrapagem.tempo >= DURACAO_DERRAPAGEM - EPSILON) estado.derrapagem = null;
+  } else {
+    carro.x = moverCarro({
+      x: carro.x,
+      direcao: dir,
+      velocidade: VELOCIDADE_LATERAL,
+      dt: passo,
+      inicio: geometria.inicio,
+      fim: geometria.fim,
+      largura: carro.w,
+    });
+  }
 
-  // 6. Rolagem.
+  // 6. Rolagem e trocas de faixa dos rivais (só existem no difícil).
   rolarObjetos(estado, passo);
+  avancarTrocas(estado, passo, eventos);
 
   // 7. Batida.
   if (estado.fase === 'correndo' && estado.tempoDesdeBatida === null) {
@@ -488,6 +696,15 @@ export function avancarCorrida(estado, { dt, direcao = 0 }, { sortear }) {
         eventos.push({ tipo: 'ajuda-desvio' });
       }
     }
+  }
+
+  // 7b. Óleo: uma derrapagem por mancha, sem batida nem lentidão.
+  if (estado.fase === 'correndo' && estado.oleo && !estado.oleo.usado && !estado.derrapagem
+    && retangulosSeSobrepoem(carro, estado.oleo, MARGEM_OLEO)) {
+    estado.oleo.usado = true;
+    estado.derrapagens++;
+    estado.derrapagem = criarDerrapagem(estado, sortear);
+    eventos.push({ tipo: 'derrapou', lado: estado.derrapagem.lado, primeira: estado.derrapagens === 1 });
   }
 
   // 8. Posto.
@@ -516,6 +733,7 @@ export function avancarCorrida(estado, { dt, direcao = 0 }, { sortear }) {
         estado.fase = 'chegada';
         marcarTodosSaindo(estado);
         estado.posto = null;
+        estado.oleo = null;
         estado.tempoAteLinha = ESPERA_LINHA_DE_CHEGADA;
         eventos.push({ tipo: 'meta' });
         break;
@@ -531,6 +749,7 @@ export function avancarCorrida(estado, { dt, direcao = 0 }, { sortear }) {
     estado.tempoAteProximoPosto = estado.reserva ? ESPERA_POSTO_RESERVA : ESPERA_APOS_POSTO_PERDIDO;
     eventos.push({ tipo: 'posto-perdido' });
   }
+  if (estado.oleo && estado.oleo.y > ALTURA_CANVAS) estado.oleo = null;
 
   // 11. Nascimento de rival.
   if (estado.fase === 'correndo' && !estado.reserva && estado.tempoDesdeBatida === null) {
@@ -542,6 +761,13 @@ export function avancarCorrida(estado, { dt, direcao = 0 }, { sortear }) {
   if (estado.fase === 'correndo' && !estado.posto && (estado.reserva || estado.gasolina <= LIMIAR_POSTO)) {
     estado.tempoAteProximoPosto -= passo;
     if (estado.tempoAteProximoPosto <= EPSILON) nascerPosto(estado, sortear, eventos);
+  }
+
+  // 12b. Nascimento de óleo (difícil, depois do aquecimento, fora da reserva).
+  if (estado.fase === 'correndo' && dificuldadeDe(estado).oleo && !estado.reserva && !estado.oleo
+    && estado.ultrapassagens >= RIVAIS_DE_AQUECIMENTO) {
+    estado.tempoAteProximoOleo -= passo;
+    if (estado.tempoAteProximoOleo <= EPSILON) nascerOleo(estado, sortear, eventos);
   }
 
   // 13. Chegada (o relógio da linha começa no passo seguinte ao da meta).
