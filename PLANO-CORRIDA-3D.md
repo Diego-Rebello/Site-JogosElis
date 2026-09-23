@@ -959,6 +959,27 @@ observar na Etapa 6.
 **Continua pendente:** Etapa 6 completa (offline, matriz B01–B15, FPS em iPad/Android),
 tamanho do rival ao nascer (R01) e a observação com o Rael.
 
+### 10.5 Etapa 6 executada (2026-09-23)
+
+Relatório completo em [MELHORIAS.md → Corrida 3D → Etapa 6](MELHORIAS.md#corrida-3d).
+B01–B14 aprovados no preview de produção (16 cenários, 192 verificações, evidências em
+`~/Desktop/Programas : Jogos/evidencias-corrida-3d/etapa6/`), incluindo offline com o
+service worker. Correção única: zoom 200% no celular (contador e fala) em `corrida-3d.css`.
+Testes 508/508, typecheck, build e precache aprovados; guardas limpas.
+
+| Critério | Situação |
+|---|---|
+| A6.1 | Atendido: 508/508 (3 execuções), `tsc`, build e precache com código 0. |
+| A6.2 | B01–B14 documentados; **B15 PENDENTE NO APARELHO REAL**. |
+| A6.3 | Atendido no Chrome headless: console sem erros, rede sem 404 nem pedido externo. |
+| A6.4 | Atendido: os 20 recursos da página, inclusive o motor compartilhado, estão no precache. |
+| A6.5 | Atendido: convite, perspectiva, dupla, batida, reserva, bandeirada e final. |
+| A6.6 | Atendido: diff restrito à seção 3.2; motor e jogos anteriores sem diff. |
+| A6.7 | Atendido: relatório separa automático, navegador, aparelho real e Rael. |
+
+**Ainda pendente:** FPS e fluidez no iPad/Safari e Android/Chrome (B15), voz, aba oculta e
+bfcache reais nesses aparelhos, leitor de tela e a observação com o Rael (seção 6).
+
 ---
 
 ## Fontes consultadas (2026-09-22)

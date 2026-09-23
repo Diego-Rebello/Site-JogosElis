@@ -1335,6 +1335,66 @@ foco na pista, RAF só quando anima, largada falada por luz e fala retomada apó
 simulada. Detalhes e pendências na seção 10.4 do plano. **PENDENTE:** Etapa 6, FPS em
 aparelho real e observação com o Rael.
 
+**Etapa 6 — verificação final (2026-09-23).** Base da funcionalidade: `97d25e6` (merge-base
+com `main`), branch `corrida-3d-etapa-1`. Sem push, PR, merge ou deploy.
+
+- **Correção nesta etapa (só `corrida-3d.css`):** com zoom de 200% no celular (≤ 340 px CSS),
+  o botão Pausar cobria o contador “0/30” e a fala cobria quase toda a pista. Agora o contador
+  ganha linha própria e a fala vai para baixo da pista, com altura reservada. Não afeta
+  celulares sem zoom (360 px ou mais) nem a paisagem.
+- **Automático:** `vitest run` **508/508 em 32 arquivos**, repetido 3 vezes sem falha (a
+  instabilidade do T10 vista na revisão não se repetiu); `tsc --noEmit` sem erros; build Vite
+  e `gerar-service-worker.mjs` aprovados, **267 endereços** no precache.
+- **Guardas:** diff contra `97d25e6` restrito à seção 3.2 do plano; nenhum diff em
+  `rael/grande-premio`, `rael/corrida-do-rael`, testes antigos, `package*.json`, `sw.js`,
+  `scripts/`, `public/` ou `shared/catalogo-figuras.js`; em `shared/` só a entrada de
+  `ATIVIDADES_DESCOBERTAS`. Nenhum `.skip`/`.only`/`.todo`; nenhum RNG, relógio, storage,
+  fala ou RAF em `projecao.js`/`renderizador.js`. `git diff --check` limpo.
+- **Navegador (preview de produção, Chrome headless 154, toque emulado, relógio
+  controlado):** 16 cenários e **192 verificações aprovados**. Roteiro, resultado e 40
+  capturas em `~/Desktop/Programas : Jogos/evidencias-corrida-3d/etapa6/`
+  (`validar-etapa6.mjs`, `resultado.json`, `capturas/`), fora do repositório. Para dirigir o
+  carro de propósito (B01–B07, B09, B10), o teste envolve a chamada de `avancarCorrida` só
+  na resposta HTTP do bundle, para ler o estado; o código e o build não têm gancho. B08, B11,
+  B12, B13 e B14 rodaram sem gancho. Sorteio com semente fixa para repetir os cenários.
+
+| # | Resultado |
+|---|---|
+| B01 | 390×844, 3 faixas: 30 ultrapassagens em 91 s de corrida, 1 batida, 3 abastecimentos, uma bandeirada, **1 rodada**, figurinha e “Primeira corrida 3D”; “Correr de novo” visível sem rolar. |
+| B02 | 360×800, 2 faixas: 31 nascimentos, **nenhuma dupla**; pista, setas 80×80, Pausar e Repetir inteiros; sem rolagem horizontal (39 px de rolagem vertical no modo acompanhado, permitida). |
+| B03 | 360×800, 4 faixas: 4 duplas, toda fileira com faixa livre; captura da dupla. |
+| B04 | 844×390 (pista 192×278) e 1180×820 (481×698) sem rolagem; girar 390×844 → 844×390 → 1180×820 → 390×844 no meio da corrida mantém o mesmo estado e um RAF. Toque sustentado na metade esquerda da pista e em ▶ move para o lado certo em todos os tamanhos; soltar para o carro. |
+| B05 | 1280×800: ←/→ e A/D; teclas opostas se anulam; soltar uma mantém a outra; `blur` solta tudo. Enter em botão focado gera um único convite/uma única largada; Espaço/Enter na corrida não pausam; Espaço em Continuar retoma e o foco volta para a pista. |
+| B06 | Duas batidas de propósito com sobreposição real (44 px lateral, 12 px longitudinal); nenhuma batida durante os 2,6 s de imunidade; ajuda de desvio e seta verde para a faixa livre; 26 quadros com rival lado a lado na faixa vizinha sem batida. Desvio tardio: com folga de 40 e 25 px escapa, com 12 px bate. |
+| B07 | Fugindo dos postos: reserva aos 50 s (3 postos perdidos), barra vermelha “Na reserva”, pista esvazia, nenhum rival nasce na reserva, posto de ajuda na faixa do carro, abastece e termina. |
+| B08 | Sem tocar: termina com 2, 3 e 4 faixas em **306 s**, **154 s** e **150 s** simulados (8, 4 e 3 abastecimentos). Nenhum cronômetro, prazo ou contagem de batidas visível. |
+| B09 | Aba oculta simulada (`document.hidden` + `visibilitychange`) na largada, corrida, chegada e celebração: 0 RAF, semáforo/motor/gasolina congelados, retorno exige Continuar, primeiro quadro sem salto (1,1 e 4,7 unidades do motor); final não aparece durante a pausa; 1 rodada. |
+| B10 | Repetir na largada não muda o tempo do semáforo; na corrida e na pausa não muda fase nem distância. `#retorno` mudou 12 vezes em 60 s (sem anúncio por quadro). Sem-fala: nenhuma chamada de síntese, texto na tela, corrida concluída. Movimento reduzido: sem confete e sem aceno, corrida concluída. |
+| B11 | 5 cliques síncronos + 4 reinícios normais: sempre 62 RAF/s, painel zerado e nenhuma fala da corrida anterior; 5 rodadas; nenhum listener novo da página. Voltar pelo navegador recarregou a página (o Playwright desliga o bfcache) sem RAF solto e sem perder rodadas; `pagehide`/`pageshow` persistido simulados deixam em pausa sem RAF e Continuar volta a um RAF. |
+| B12 | Service worker controlando a página; os 20 recursos da Corrida 3D (HTML, JS, motor `jogo-*.js`, CSS, fontes, SVGs) estão no precache. Offline: `/rael/` recarrega, o cartão abre a Corrida 3D, SVGs carregados, corrida começa, recarregar funciona; sem erros. |
+| B13 | `localStorage` lançando exceção: corrida concluída, final com figurinha, reinício funciona, sem exceções. |
+| B14 | Com progresso prévio (Grande Prêmio 4, Corrida do Rael 2): Corrida 3D conta só para ela; Grande Prêmio completo sobe só o dele (5); Corrida do Rael abre e inicia; cartões mostram 1, 5 e 2. |
+| B15 | **PENDENTE NO APARELHO REAL** (iPad/Safari e Android/Chrome). Medida indicativa no Chrome headless do Mac, 390×844 DPR 3, perfil padrão: 59,9 FPS de mediana e p95 de 16,7 ms, igual com CPU 4× mais lenta. **Não vale como B15**: headless não reflete GPU nem Safari. |
+
+- **Acessibilidade conferida no navegador:** Tab na ordem cabeçalho → Repetir → Pausar → ◀ → ▶;
+  a partir da pista o Tab vai para ◀; anel de foco de 3 px em botão via teclado; foco vai para
+  Continuar na pausa e volta à pista; barras com `aria-valuenow` e nome atualizados.
+  Zoom 200% (195×422, 180×400 e 640×400, com e sem modo acompanhado): sem rolagem horizontal,
+  alvos de 72/64 px, nenhum controle cortado, contador legível. A pista fica pequena
+  (110–125 px) e a página rola na vertical, como o plano permite. Leitor de tela real **NÃO
+  VERIFICADO**; o Canvas continua descrito só pelo `aria-label`.
+- **Capturas (A6.5):** `b01-convite`, `b01-perspectiva-rival-proximo`, `b01-dupla`,
+  `b03-dupla`, `b06-batida-1`, `b06-seta-de-ajuda`, `b07-reserva`, `b01-bandeirada`,
+  `b01-final`, além de paisagem, zoom, offline e movimento reduzido.
+- **Observações para o Rael (não são falhas):** o rival ainda nasce com ~17,5 CSS px em
+  390×844 e ~15,7 em 360×800, abaixo dos 20 px do aceite de R01; ele aparece junto à névoa, no
+  fim visível da estrada. Um raspão com até 12 px lógicos de sobreposição não conta batida
+  (margem 6 de cada lado, regra do motor); na tela os carros parecem se encostar. Com 2 faixas
+  e sem tocar, a corrida leva ~5 min.
+- **PENDENTE NO APARELHO REAL:** FPS e fluidez (B15), voz real, aba oculta e bfcache de
+  verdade no Safari/iPad e no Chrome/Android, leitor de tela. **PENDENTE COM O RAEL:** a
+  observação da seção 6 do plano.
+
 ### 5.4 Ordem sugerida de entrega
 
 1. **P09 → P10.** Meu Nome e Conta Comigo não precisam de gravações nem de banco de dados,
