@@ -10,6 +10,8 @@ import tailwindcss from '@tailwindcss/vite';
  * O que NÃO entra aqui e fica em public/, copiado sem alteração:
  * _headers, _redirects, manifest.webmanifest e os ícones. O manifest aponta
  * para os ícones por caminho fixo, então eles não podem ganhar hash.
+ * shared/demo.html fica de fora do build de propósito: é página de teste,
+ * aberta só no `npm run dev` (http://localhost:5173/shared/demo.html).
  * O sw.js é um modelo: quem gera o final é scripts/gerar-service-worker.mjs,
  * rodado logo depois do build (ver o script "build" do package.json).
  */
@@ -31,7 +33,6 @@ const paginas = {
   labirinto: 'Games/labirinto/index.html',
   memoria: 'Games/memoria/index.html',
   velha: 'Games/velha/index.html',
-  demo: 'shared/demo.html',
   // Jogos do Rael: o site irmão de pré-alfabetização (seção 6 do MELHORIAS).
   rael: 'rael/index.html',
   'rael-configuracoes': 'rael/configuracoes.html',

@@ -1063,7 +1063,7 @@ Adaptação amigável do [Pixel Racer](https://github.com/Elomami1976/pixel-race
 Corrida de reflexo pedida pelo Diego, em `rael/grande-premio/` (id `grande-premio`), também
 derivada do [Pixel Racer](https://github.com/Elomami1976/pixel-racer) (MIT, commit
 `6be6d5b0ae295240228399583096e232145fb7cb`). O plano completo, com números e critérios, está em
-`PLANO-GRANDE-PREMIO-DO-RAEL.md`. A Corrida do Rael continua igual.
+`docs/planos/PLANO-GRANDE-PREMIO-DO-RAEL.md`. A Corrida do Rael continua igual.
 
 **Exceções conscientes à seção 5.0, só para este jogo:**
 
@@ -1112,7 +1112,7 @@ Commit desta etapa: **não criado**. A estrutura da Etapa 1 já estava presente.
 
 - **Arquivos desta etapa:** novos `rael/corrida-3d/projecao.js` e
   `tests/corrida-3d.test.js`; este registro em `MELHORIAS.md`. Preservados os trabalhos
-  anteriores nos planos `PLANO-CORRIDA-3D.md` e `PLANO-GRANDE-PREMIO-DO-RAEL.md`.
+  anteriores nos planos `docs/planos/PLANO-CORRIDA-3D.md` e `docs/planos/PLANO-GRANDE-PREMIO-DO-RAEL.md`.
 - **Implementação:** `projetarPonto`, `projetarObjeto` e `criarCena`, sem efeitos
   colaterais. Reta com horizonte 170, profundidade 700 e recorte em z ≤ 100;
   referência dianteira em `(x, 580)`, base traseira e pegada de quatro cantos,
@@ -1324,7 +1324,7 @@ anteriores do plano e das Etapas 2–4 foram preservadas.
 `corrida-3d-etapa-1`. Testes (504/504), typecheck, build e precache reexecutados e aprovados.
 Problemas e melhorias (R01–R12: rivais pequenos no meio da tela, paisagem sem duas colunas,
 evidências só em `/tmp`, curva quase invisível, entre outros) estão na
-[seção 10 do plano](PLANO-CORRIDA-3D.md#10-revisão-das-etapas-05-2026-09-23), para tratar antes
+[seção 10 do plano](docs/planos/PLANO-CORRIDA-3D.md#10-revisão-das-etapas-05-2026-09-23), para tratar antes
 ou durante a Etapa 6.
 
 **Correções R01–R12 (2026-09-23).** Commits `4c7e4dc`, `97eac86` e `dfbfde4`. Céu vazio

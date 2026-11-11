@@ -5,7 +5,7 @@ import GameStatus from './components/GameStatus';
 import ModeSelector from './components/ModeSelector';
 import { PLAYER_X, PLAYER_O } from './constants';
 import { aplicarJogada, findBestMove, melhorJogadaMinimax } from './lib/logica';
-import Cabecalho from './components/Cabecalho';
+import Cabecalho from '../../shared/react/Cabecalho';
 import { tocar } from '../../shared/sons.js';
 import { lancarConfete } from '../../shared/confete.js';
 import { obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';

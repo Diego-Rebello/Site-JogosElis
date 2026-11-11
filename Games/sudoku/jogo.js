@@ -1,9 +1,10 @@
+import { embaralhar } from '../../shared/texto.js';
+
 export const configuracoes = Object.freeze({
   4:{tamanho:4,blocoLinhas:2,blocoColunas:2,remover:6,nome:'Revisão 4×4'},
   6:{tamanho:6,blocoLinhas:2,blocoColunas:3,remover:18,nome:'Emojis 6×6'},
   9:{tamanho:9,blocoLinhas:3,blocoColunas:3,remover:40,nome:'Desafio 9×9'},
 });
-const embaralhar=(lista,aleatorio)=>{const a=[...lista];for(let i=a.length-1;i>0;i--){const j=Math.floor(aleatorio()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
 function padrao(linha,coluna,cfg){return(linha*cfg.blocoColunas+Math.floor(linha/cfg.blocoLinhas)+coluna)%cfg.tamanho}
 function ordemAgrupada(grupos,tamanhoGrupo,aleatorio){return embaralhar([...Array(grupos).keys()],aleatorio).flatMap(g=>embaralhar([...Array(tamanhoGrupo).keys()],aleatorio).map(i=>g*tamanhoGrupo+i))}

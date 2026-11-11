@@ -39,4 +39,15 @@ describe('Letras para Explorar (P06)', () => {
       expect(item.alvo.palavra).toBeTruthy();
     });
   });
+
+  it('no modo início, sem nenhuma letra com figura escolhida, usa as letras que têm figura', () => {
+    const semFigura = Object.keys(NOMES_DAS_LETRAS).filter(letra => !LETRAS_DO_SOM_INICIAL.includes(letra)).slice(0, 3);
+    const rodada = montarRodadaLetras(semFigura, { modo: 'inicio' });
+    expect(rodada.length).toBeGreaterThan(0);
+    rodada.forEach(item => {
+      expect(LETRAS_DO_SOM_INICIAL).toContain(item.respostaId);
+      expect(item.alvo.palavra).toBeTruthy();
+      expect(item.opcoes.map(opcao => opcao.id)).toContain(item.respostaId);
+    });
+  });
 });

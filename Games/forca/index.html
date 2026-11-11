@@ -279,7 +279,8 @@
     }
 
     function jogar(letraDigitada) {
-      if (jogoEncerrado) return;
+      // Na tela de temas ainda não há palavra: uma tecla ali contaria erro e quebraria.
+      if (jogoEncerrado || !atual || elTelaJogo.hidden) return;
       const letra = normalizar(letraDigitada);
       if (!/^[A-Z]$/.test(letra)) return;
 
@@ -321,7 +322,8 @@
 
     function fimDeJogo(ganhou) {
       jogoEncerrado = true;
-      const estrelas = erros === 0 ? 3 : erros <= 2 ? 2 : erros <= 5 ? 1 : 0;
+      // Perder nunca rende estrela, em qualquer nível (no Desafio são só 4 erros).
+      const estrelas = !ganhou ? 0 : erros === 0 ? 3 : erros <= 2 ? 2 : 1;
       elMensagem.textContent += estrelas ? ` · ${'⭐'.repeat(estrelas)}` : ' · Continue tentando!';
       registrarPartida('forca', {
         acertos: ganhou ? 1 : 0,

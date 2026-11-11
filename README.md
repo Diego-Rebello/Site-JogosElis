@@ -32,7 +32,7 @@ São **dois sites irmãos no mesmo endereço**, com abas para trocar de um para 
 | Dinheirinho | `Games/dinheirinho/index.html` | HTML/CSS/JS puro |
 | Quiz Sabe-Tudo | `Games/quiz/index.html` | HTML/CSS/JS puro |
 | Labirinto de Aventuras | `Games/labirinto/index.html` | HTML/CSS/JS puro |
-| Jogo da Velha | `Games/velha/` | React 19 + Vite 6 |
+| Jogo da Velha | `Games/velha/` | React 19 + Vite 7 |
 
 A página inicial (`index.html`) é o índice: ela lista os jogos em cartões e aponta para os
 caminhos acima. Todos os links são relativos, então o site funciona em qualquer subpasta.
@@ -103,10 +103,13 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── progresso.js                 Histórico de partidas em localStorage
 │   ├── fala.js                      Instrução falada em três camadas (Primeiras Descobertas)
 │   ├── descobertas.js               Preferências, rodadas e álbum de figurinhas do Rael
+│   ├── conquistas-descobertas.js    Catálogo e regras das conquistas do álbum (P15)
+│   ├── conquistas-tela.js           Cartão, faixa e anúncio das conquistas na tela
 │   ├── rodada.js                    Motor das rodadas curtas de alternativas
 │   ├── catalogo-figuras.js          Nome, artigo e categoria de cada figura de public/figuras/
 │   ├── pwa.js                       Registra o service worker
-│   ├── demo.html                    Página que exercita tudo acima
+│   ├── demo.html                    Página que exercita tudo acima (só no npm run dev)
+│   ├── react/Cabecalho.tsx          Cabeçalho em React, usado pela Memória e pela Velha
 │   └── fontes/                      Fredoka One, Pacifico e Nunito em .woff2
 ├── tests/                           Testes de lógica pura (Vitest)
 ├── rael/                            Jogos do Rael (área Primeiras Descobertas)
@@ -115,6 +118,9 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── toque-na-figura/             index.html + tela.js
 │   ├── encaixe-as-figuras/          index.html + dados.js + jogo.js + tela.js
 │   ├── palmas-nas-palavras/         index.html + dados.js + jogo.js + tela.js
+│   ├── rimas-com-figuras/           index.html + dados.js + jogo.js + tela.js
+│   ├── comeca-com-o-mesmo-som/      index.html + dados.js + jogo.js + tela.js
+│   ├── letras-para-explorar/        index.html + dados.js + jogo.js + tela.js
 │   ├── meu-primeiro-labirinto/      Tela infantil; reutiliza Games/labirinto/jogo.js
 │   ├── chute-a-gol/                 index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
 │   ├── corrida-do-rael/             index.html + jogo.js + tela.js + CSS (portado, ver Créditos)
@@ -151,7 +157,8 @@ são lidos pelo Netlify e precisam do nome exato.
 ## A biblioteca `shared/`
 
 Tudo aqui é código próprio, sem framework e sem CDN, escrito em módulos ES. Para ver as peças
-funcionando, sirva o projeto e abra `shared/demo.html`.
+funcionando, rode `npm run dev` e abra `http://localhost:5173/shared/demo.html` (a página
+não entra no build publicado).
 
 ### `base.css`
 
@@ -180,7 +187,7 @@ montarCabecalho('Jogo da Forca');
 Injeta no topo do `<body>` a barra com "🏠 Início", o título e o botão 🔊/🔇. O caminho da
 página inicial sai de `location.pathname`, então funciona em `Games/forca/`, em
 `Games/memoria/` e dentro de `rael/` — onde o Início volta para a casa do Rael, não para a
-raiz. Os jogos React não usam este arquivo: têm o componente `Cabecalho`, com o mesmo HTML
+raiz. Os jogos React não usam este arquivo: usam o componente `shared/react/Cabecalho.tsx`, com o mesmo HTML
 e as mesmas classes.
 
 ### `texto.js`
@@ -265,7 +272,7 @@ esperando o tempo máximo a cada frase.
 | `conquistas-descobertas.js` | Catálogo das conquistas (P15) e as regras puras: `acumularFeitos()`, `avaliarConquistas()`, `resumirConquista()` |
 | `conquistas-tela.js` | Cartão da conquista no álbum, faixa do convite e anúncio "Conquista nova!" na tela de fim |
 | `rodada.js` | `montarDesafios()` sorteia alvos e alternativas sem repetir; `criarSessao()` conta tentativas e manda demonstrar depois de duas |
-| `catalogo-figuras.js` | 62 figuras com nome, artigo (`o`/`a`) e categoria, mais os temas e `caminhoDaFigura(id)` |
+| `catalogo-figuras.js` | 64 figuras com nome, artigo (`o`/`a`) e categoria, mais os temas e `caminhoDaFigura(id)` |
 
 As figuras são arquivos SVG em `public/figuras/`, e não emoji: o mesmo emoji é desenhado de um
 jeito no iPad, de outro no Android e de outro no computador, e a criança precisa reconhecer a
@@ -294,29 +301,28 @@ tela de conclusão com figurinha e o álbum.
 
 ## Como abrir localmente
 
-Os jogos usam caminhos relativos, então basta servir a raiz do projeto:
+Desde a T23 todas as páginas passam pelo Vite (os dois jogos React são `.tsx` e o Tailwind é
+compilado no build), então um servidor de arquivos comum (`npx serve .`,
+`python3 -m http.server`) **não basta** e abrir o `index.html` com dois cliques também não
+funciona. Use o servidor de desenvolvimento:
 
 ```bash
-# opção 1 — Node
-npx serve .
-
-# opção 2 — Python
-python3 -m http.server 8000
+npm install   # uma vez
+npm run dev   # http://localhost:5173
 ```
 
-Depois abra http://localhost:3000 (npx serve) ou http://localhost:8000 (Python).
+Para conferir o site como ele vai ao ar, com o service worker: `npm run build` e depois
+`npm run preview`.
 
-**Não abra com dois cliques.** Desde a T10 os três jogos em HTML puro também usam
-`<script type="module">` para importar `shared/texto.js`, e módulos ES não carregam pelo
-protocolo `file://`. Use sempre um dos servidores acima.
-
-No VS Code, a configuração "Open index" (`.vscode/launch.json`) abre o `index.html` no Chrome.
+No VS Code, a configuração "Abrir no servidor de desenvolvimento" (`.vscode/launch.json`) abre
+o Chrome em `http://localhost:5173`; rode `npm run dev` antes.
 
 ---
 
 ## Como desenvolver, testar e compilar
 
-Um `package.json` só, na raiz. Requer Node.js 20.19+ ou 22.12+ (exigência do Vite 7).
+Um `package.json` só, na raiz. Requer Node.js 22.23.4+, 24.22.1+ ou 26.12.1+ (o campo `engines`
+do `package.json`; o Netlify usa a 22.23.4 fixada no `netlify.toml`).
 
 ```bash
 npm install       # uma vez
@@ -329,7 +335,7 @@ npm run preview   # serve o dist/ para conferir o resultado
 ```
 
 O `npm run build` é exatamente o que o Netlify roda. Ele faz duas coisas: `vite build`, que
-compila as vinte e cinco páginas em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
+compila todas as páginas (uma entrada por página no `vite.config.ts`) em `dist/`, e `scripts/gerar-service-worker.mjs`, que lê o que foi
 gerado e escreve o `dist/sw.js` com a lista de precache e a versão.
 
 Os testes cobrem texto e embaralhamento, M ou N, Ortografia, Matemática, Tabuada, Caça-Palavras,
@@ -361,8 +367,8 @@ O site é instalável e roda sem internet. Três peças:
 | `shared/pwa.js` | Registra o service worker; incluído em todas as páginas |
 
 O `npm run build` chama `scripts/gerar-service-worker.mjs`, que lista tudo o que foi para `dist/`,
-injeta essa lista no modelo e carimba a versão. A versão é o `COMMIT_REF` do Netlify (ou o SHA
-curto do commit local), então **cada deploy gera um cache novo** e o service worker apaga os
+injeta essa lista no modelo e carimba a versão. A versão é o `COMMIT_REF` do Netlify (fora dele, o texto fixo
+`local`), então **cada deploy gera um cache novo** e o service worker apaga os
 antigos ao ativar. O `_headers` manda `Cache-Control: no-cache` no `sw.js`, então o navegador
 percebe a troca na abertura seguinte.
 
@@ -380,7 +386,7 @@ guardar, o que descarta a marca. O precache também baixa um endereço de cada v
 
 ### Forçar a atualização do cache durante o desenvolvimento
 
-Como o `sw.js` local carimba o SHA do commit, editar um arquivo **não** troca a versão sozinho.
+Como o build local carimba sempre a versão `local`, editar um arquivo **não** troca a versão sozinho.
 Enquanto estiver mexendo no site:
 
 ```bash

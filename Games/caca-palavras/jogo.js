@@ -1,4 +1,4 @@
-import { normalizar } from '../../shared/texto.js';
+import { embaralhar, normalizar } from '../../shared/texto.js';
 
 export const dificuldades = Object.freeze({
   facil: { nome: 'Fácil', tamanho: 8, diagonais: false, invertidas: false },
@@ -12,14 +12,6 @@ const DIRECOES = Object.freeze({
 });
 
 const sortear = (lista, aleatorio) => lista[Math.floor(aleatorio() * lista.length)];
-const embaralhar = (lista, aleatorio) => {
-  const copia = [...lista];
-  for (let i = copia.length - 1; i > 0; i--) {
-    const j = Math.floor(aleatorio() * (i + 1));
-    [copia[i], copia[j]] = [copia[j], copia[i]];
-  }
-  return copia;
-};
 
 export function palavraDaGrade(palavra) {
   return normalizar(palavra).replace(/[^A-Z]/g, '');

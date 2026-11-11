@@ -1,4 +1,4 @@
-/* Este arquivo é um modelo. build-all.sh injeta a versão e a lista de arquivos. */
+/* Este arquivo é um modelo. scripts/gerar-service-worker.mjs injeta a versão e a lista de arquivos. */
 const VERSAO = '__VERSAO__';
 const CACHE_ATUAL = `jogos-da-elis-${VERSAO}`;
 const ARQUIVOS_PRECACHE = __ARQUIVOS_PRECACHE__;

@@ -4,7 +4,7 @@
  * Portado de https://github.com/hackingstar124/Football-game-in-HTML (ani.js),
  * de hackingstar124, licenca Apache 2.0 (copia em LICENSE-Football-game-in-HTML.txt).
  * Aqui as contas do ani.js viram funcoes puras, sem DOM, para dar para testar:
- * moveStriker/moveFootball -> moverNoCampo, checkGoal -> ehGol/resultadoDoChute.
+ * checkGoal -> ehGol/resultadoDoChute.
  *
  * Mudancas em relacao ao original:
  * - o original lia `footballPos` sem declarar dentro do setInterval do goleiro
@@ -48,17 +48,6 @@ export function calcularImpactoNoGol({ origemX, distanciaY, anguloGraus }) {
   const radianos = (angulo * Math.PI) / 180;
   const deltaX = y * Math.tan(radianos);
   return x + deltaX;
-}
-
-/**
- * moveStriker/moveFootball do original: soma a distancia e prende nas bordas.
- * O original usava window.innerWidth; aqui entra a largura do campo.
- */
-export function moverNoCampo(posicao, distancia, largura) {
-  const atual = Number(posicao) || 0;
-  const passo = Number(distancia) || 0;
-  const limite = Math.max(0, Number(largura) || 0);
-  return Math.max(0, Math.min(limite, atual + passo));
 }
 
 /**
@@ -288,13 +277,6 @@ export function duracaoDoChuteAdversario(
 ) {
   const n = Math.max(0, Number(indice) || 0);
   return Math.max(minimo, base - n * reducao);
-}
-
-/** Nome do modo para a tela e para a fala. */
-export function tituloDoModo(modo) {
-  if (modo === 'defender') return 'Defender';
-  if (modo === 'alternado') return 'Alternado';
-  return 'Chutar';
 }
 
 /** Resumo da rodada para a tela do fim, conforme o modo escolhido. */

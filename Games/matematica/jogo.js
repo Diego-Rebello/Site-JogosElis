@@ -1,3 +1,5 @@
+import { embaralhar } from '../../shared/texto.js';
+
 const inteiro = (minimo, maximo) =>
   Math.floor(Math.random() * (maximo - minimo + 1)) + minimo;
 
@@ -50,5 +52,5 @@ export function gerarOpcoes(resposta) {
   const distancia = Math.max(2, Math.ceil(Math.abs(resposta) * 0.2));
   const opcoes = new Set([resposta]);
   while (opcoes.size < 3) opcoes.add(Math.max(0, resposta + inteiro(-distancia, distancia)));
-  return [...opcoes].sort(() => Math.random() - 0.5);
+  return embaralhar([...opcoes]);
 }

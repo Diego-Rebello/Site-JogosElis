@@ -8,7 +8,7 @@ import {
 import { anunciarConquistas, cartaoDaConquista, ligarFalaDasConquistas } from '../../shared/conquistas-tela.js';
 import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
 import {
-  DIRECOES, criarPartida, direcaoEntre, haParedeEntre, mapasDoNivel, posicoesDaRota, resolverMapa,
+  DIRECOES, MAPAS_POR_NIVEL, criarPartida, direcaoEntre, haParedeEntre, mapaDoNivel, posicoesDaRota, resolverMapa,
 } from '../../Games/labirinto/jogo.js';
 
 const ATIVIDADE = 'meu-primeiro-labirinto';
@@ -17,7 +17,6 @@ const telas = { convite: $('tela-convite'), brincadeira: $('tela-brincadeira'), 
 const configuracoes = obterConfiguracoes();
 const nivel = nivelDaEtapa();
 const modoClassico = configuracoes.labirinto === 'classico';
-const mapas = mapasDoNivel(nivel, { classico: modoClassico });
 const NOMES_NIVEL = modoClassico ? {
   facil: 'Clássico · 9 por 9', normal: 'Clássico · 12 por 12', esperto: 'Clássico · 15 por 15',
 } : {
@@ -39,7 +38,7 @@ const VISIVEIS = [5, 9, Number.POSITIVE_INFINITY];
 definirPreferencia(configuracoes.voz);
 montarCabecalho('Meu Primeiro Labirinto');
 
-let indiceMapa = rodadasDe(ATIVIDADE) % mapas.length;
+let indiceMapa = rodadasDe(ATIVIDADE) % MAPAS_POR_NIVEL;
 let partida = null;
 let pistaAtual = [];
 let dicaVisual = null;
@@ -348,8 +347,8 @@ function abrirMapa({ falarInstrucao = true, demonstrar = false } = {}) {
   limparDica();
   bloqueiosSeguidos = { motivo: '', quantidade: 0 };
   dicasNoMapa = 0;
-  partida = criarPartida(mapas[indiceMapa]);
-  $('nivel').textContent = `${NOMES_NIVEL[nivel]} · mapa ${indiceMapa + 1} de ${mapas.length}`;
+  partida = criarPartida(mapaDoNivel(nivel, indiceMapa, { classico: modoClassico }));
+  $('nivel').textContent = `${NOMES_NIVEL[nivel]} · mapa ${indiceMapa + 1} de ${MAPAS_POR_NIVEL}`;
   $('retorno').textContent = '';
   $('retorno').className = 'feedback retorno retorno--labirinto';
   mostrarTela('brincadeira');
@@ -537,11 +536,11 @@ $('recomecar').addEventListener('click', () => {
   $('retorno').textContent = 'Vamos tentar este caminho de novo!'; pintarTabuleiro();
 });
 $('outro-mapa').addEventListener('click', () => {
-  tocar('clique'); indiceMapa = (indiceMapa + 1) % mapas.length; abrirMapa({ demonstrar: !modoClassico });
+  tocar('clique'); indiceMapa = (indiceMapa + 1) % MAPAS_POR_NIVEL; abrirMapa({ demonstrar: !modoClassico });
 });
 $('repetir').addEventListener('click', () => pistaAtual.length && falarSequencia(pistaAtual));
 $('de-novo').addEventListener('click', () => {
-  tocar('clique'); indiceMapa = (indiceMapa + 1) % mapas.length; abrirMapa({ demonstrar: !modoClassico });
+  tocar('clique'); indiceMapa = (indiceMapa + 1) % MAPAS_POR_NIVEL; abrirMapa({ demonstrar: !modoClassico });
 });
 $('diminuir').addEventListener('click', () => { indiceVisao = Math.min(VISIVEIS.length - 1, indiceVisao + 1); pintarTabuleiro(); });
 $('ampliar').addEventListener('click', () => { indiceVisao = Math.max(0, indiceVisao - 1); pintarTabuleiro(); });

@@ -15,7 +15,6 @@ import {
   ehTrave,
   mensagemDoResultado,
   moverGoleiro,
-  moverNoCampo,
   resultadoDoChute,
   velocidadeDoGoleiro,
   ALCANCE_DO_MERGULHO,
@@ -40,22 +39,9 @@ import {
   resumoDaRodada,
   textoDoDesfecho,
   tituloDoDesfecho,
-  tituloDoModo,
 } from '../rael/chute-a-gol/jogo.js';
 
 describe('Chute a Gol (P16) — motor portado do Football-game-in-HTML', () => {
-  it('moverNoCampo soma a distância e prende nas bordas, como moveStriker/moveFootball', () => {
-    expect(moverNoCampo(100, PASSO, 300)).toBe(110);
-    expect(moverNoCampo(100, -PASSO, 300)).toBe(90);
-    expect(moverNoCampo(5, -50, 300)).toBe(0);
-    expect(moverNoCampo(295, 50, 300)).toBe(300);
-  });
-
-  it('moverNoCampo trata valor inválido como zero', () => {
-    expect(moverNoCampo(undefined, 10, 300)).toBe(10);
-    expect(moverNoCampo(50, NaN, 300)).toBe(50);
-  });
-
   it('areaDoGol é o centro mais e menos metade da largura, como no checkGoal original', () => {
     expect(areaDoGol(200, 100)).toEqual({ inicio: 150, fim: 250 });
   });
@@ -309,12 +295,6 @@ describe('Chute a Gol — modos chutar, defender e alternado', () => {
     });
     expect(duracaoDoChuteAdversario(0)).toBeGreaterThanOrEqual(DURACAO_DO_CHUTE);
     expect(duracaoDoChuteAdversario(99)).toBe(DURACAO_MINIMA_DO_CHUTE);
-  });
-
-  it('tituloDoModo nomeia os três modos em pt-BR', () => {
-    expect(tituloDoModo('chutar')).toBe('Chutar');
-    expect(tituloDoModo('defender')).toBe('Defender');
-    expect(tituloDoModo('alternado')).toBe('Alternado');
   });
 
   it('resumoDaRodada conta o que interessa em cada modo', () => {

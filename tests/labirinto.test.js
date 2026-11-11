@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DIRECOES, analisarMapa, calcularEstrelasLabirinto, criarPartida, gerarMapaDoModo, mapasDoNivel,
+  DIRECOES, MAPAS_POR_NIVEL, analisarMapa, calcularEstrelasLabirinto, criarPartida, gerarMapaDoModo,
+  mapaDoNivel, mapasDoNivel,
   mapasClassicosDoNivel, podeMover, posicoesDaRota, resolverMapa,
 } from '../Games/labirinto/jogo.js';
 
@@ -218,5 +219,15 @@ describe('Labirinto de Aventuras (J13)', () => {
     expect(calcularEstrelasLabirinto(3, 3)).toBe(2);
     expect(calcularEstrelasLabirinto(4, 3)).toBe(1);
     expect(calcularEstrelasLabirinto(0, 2)).toBe(0);
+  });
+
+  it('gera um mapa avulso igual ao do banco completo do nível', () => {
+    for (const classico of [false, true]) {
+      const banco = mapasDoNivel('normal', { classico });
+      expect(banco).toHaveLength(MAPAS_POR_NIVEL);
+      for (const indice of [0, 4, MAPAS_POR_NIVEL - 1]) {
+        expect(mapaDoNivel('normal', indice, { classico })).toEqual(banco[indice]);
+      }
+    }
   });
 });

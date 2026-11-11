@@ -12,12 +12,13 @@ interface GameBoardProps {
 
 const GameBoard: React.FC<GameBoardProps> = ({ board, onSquareClick, winningLine, isGameOver }) => {
   return (
-    <div className={`grid grid-cols-3 gap-3 md:gap-4 p-3 md:p-4 bg-pink-100 rounded-2xl shadow-inner ${isGameOver ? 'pointer-events-none' : ''}`}>
+    <div role="group" aria-label="Tabuleiro" className={`grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4 bg-pink-100 rounded-2xl shadow-inner ${isGameOver ? 'pointer-events-none' : ''}`}>
       {board.map((value, index) => {
         const isWinningSquare = winningLine?.includes(index) ?? false;
         return (
           <Square
             key={index}
+            index={index}
             value={value}
             onClick={() => onSquareClick(index)}
             isWinning={isWinningSquare}

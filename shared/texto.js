@@ -19,12 +19,12 @@ export function normalizar(texto) {
 /**
  * Fisher-Yates: devolve uma cópia embaralhada em que toda ordem tem a
  * mesma chance de sair. (O velho `sort(() => Math.random() - 0.5)` é
- * enviesado e não deve ser usado.)
+ * enviesado e não deve ser usado.) `aleatorio` permite sorteios repetíveis.
  */
-export function embaralhar(lista) {
+export function embaralhar(lista, aleatorio = Math.random) {
   const copia = [...lista];
   for (let i = copia.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(aleatorio() * (i + 1));
     [copia[i], copia[j]] = [copia[j], copia[i]];
   }
   return copia;

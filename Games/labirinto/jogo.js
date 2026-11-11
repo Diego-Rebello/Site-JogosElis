@@ -8,6 +8,8 @@
  * L = alavanca, B = ponte, P = portão, X = obras, . = caminho e # = parede.
  */
 
+import { embaralhar } from '../../shared/texto.js';
+
 export const DIRECOES = Object.freeze({
   cima: Object.freeze({ linha: -1, coluna: 0, nome: 'para cima', tecla: 'ArrowUp' }),
   direita: Object.freeze({ linha: 0, coluna: 1, nome: 'para a direita', tecla: 'ArrowRight' }),
@@ -67,32 +69,43 @@ function encontrarTodos(layout, simbolo) {
   )));
 }
 
-/** Devolve os dez mapas antigos, para o adulto poder reduzir o desafio. */
-export function mapasClassicosDoNivel(nivel = 'normal') {
+/** Quantos mapas cada nível do Rael tem. */
+export const MAPAS_POR_NIVEL = 10;
+
+function mapaClassicoDoNivel(escolhido, indice) {
+  const id = `rael-classico-${escolhido}-${indice + 1}`;
+  const mapa = gerarLabirinto({ ...NIVEIS_LABIRINTO_RAEL_CLASSICO[escolhido], semente: id });
+  return {
+    ...mapa,
+    id,
+    nivel: escolhido,
+    layout: mapa.layout.map(linha => linha.replace('K', '*')),
+  };
+}
+
+/**
+ * Um mapa só, pelo índice (0 a MAPAS_POR_NIVEL - 1). A tela pede um de cada
+ * vez: gerar os dez de 25×25 de uma vez custa centenas de milissegundos na
+ * abertura da página, e a criança só joga um.
+ */
+export function mapaDoNivel(nivel = 'normal', indice = 0, { classico = false } = {}) {
   const escolhido = NIVEL_POR_ETAPA[nivel] || 'normal';
-  const configuracao = NIVEIS_LABIRINTO_RAEL_CLASSICO[escolhido];
-  return Array.from({ length: 10 }, (_, indice) => {
-    const id = `rael-classico-${escolhido}-${indice + 1}`;
-    const mapa = gerarLabirinto({ ...configuracao, semente: id });
-    return {
-      ...mapa,
-      id,
-      nivel: escolhido,
-      layout: mapa.layout.map(linha => linha.replace('K', '*')),
-    };
+  if (classico) return mapaClassicoDoNivel(escolhido, indice);
+  return gerarMapaDoRael(escolhido, {
+    ...NIVEIS_LABIRINTO_RAEL[escolhido],
+    indice,
+    semente: `rael-aventura-${escolhido}-${indice + 1}`,
   });
 }
 
+/** Devolve os dez mapas antigos, para o adulto poder reduzir o desafio. */
+export function mapasClassicosDoNivel(nivel = 'normal') {
+  return mapasDoNivel(nivel, { classico: true });
+}
+
 /** Devolve dez aventuras grandes, reproduzíveis e diferentes para o Rael. */
-export function mapasDoNivel(nivel = 'normal', { classico = false } = {}) {
-  if (classico) return mapasClassicosDoNivel(nivel);
-  const escolhido = NIVEL_POR_ETAPA[nivel] || 'normal';
-  const configuracao = NIVEIS_LABIRINTO_RAEL[escolhido];
-  return Array.from({ length: 10 }, (_, indice) => gerarMapaDoRael(escolhido, {
-    ...configuracao,
-    indice,
-    semente: `rael-aventura-${escolhido}-${indice + 1}`,
-  }));
+export function mapasDoNivel(nivel = 'normal', opcoes = {}) {
+  return Array.from({ length: MAPAS_POR_NIVEL }, (_, indice) => mapaDoNivel(nivel, indice, opcoes));
 }
 
 /** Lê e valida a representação compacta usada pelo banco de mapas. */
@@ -426,15 +439,6 @@ export function criarGerador(semente = Date.now()) {
   };
 }
 
-function embaralharCom(lista, aleatorio) {
-  const copia = [...lista];
-  for (let i = copia.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(aleatorio() * (i + 1));
-    [copia[i], copia[j]] = [copia[j], copia[i]];
-  }
-  return copia;
-}
-
 function vizinhosDaGrade(posicao, tamanho) {
   return Object.values(DIRECOES).map(delta => ({
     linha: posicao.linha + delta.linha,
@@ -483,7 +487,7 @@ export function gerarLabirinto({ tamanho = 7, itensObrigatorios = 1, semente = D
 
   while (pilha.length) {
     const atual = pilha[pilha.length - 1];
-    const livres = embaralharCom(vizinhosDaGrade(atual, tamanho), aleatorio)
+    const livres = embaralhar(vizinhosDaGrade(atual, tamanho), aleatorio)
       .filter(vizinho => !visitados.has(chave(vizinho)));
     if (!livres.length) { pilha.pop(); continue; }
     const proximo = livres[0];
@@ -497,7 +501,7 @@ export function gerarLabirinto({ tamanho = 7, itensObrigatorios = 1, semente = D
     linha: Math.floor(indice / tamanho), coluna: indice % tamanho,
   }));
   const destino = [...celulas].sort((a, b) => distancias.get(chave(b)) - distancias.get(chave(a)))[0];
-  const candidatas = embaralharCom(celulas.filter(item => chave(item) !== chave(inicio) && chave(item) !== chave(destino)), aleatorio);
+  const candidatas = embaralhar(celulas.filter(item => chave(item) !== chave(inicio) && chave(item) !== chave(destino)), aleatorio);
   const itens = candidatas.slice(0, itensObrigatorios);
   const simbolos = itensObrigatorios === 1 ? ['K'] : ['1', '2'];
   const layout = Array.from({ length: tamanho }, () => Array(tamanho).fill('.'));
@@ -556,7 +560,7 @@ function casaDeDesvio(mapa, barreira, rota, usadas, aleatorio) {
         && simboloNaPosicao(mapa, posicao) === '.') candidatas.push(posicao);
     }
   }
-  return embaralharCom(candidatas, aleatorio)[0]
+  return embaralhar(candidatas, aleatorio)[0]
     || rota.find(posicao => !usadas.has(chave(posicao)) && chave(posicao) !== chave(mapa.inicio));
 }
 
@@ -575,7 +579,7 @@ function adicionarObrasComDesvio(mapaRecebido, aleatorio) {
     if (mesmaPosicao(alternativa, atual) || simboloNaPosicao(mapa, alternativa) !== '.') continue;
     candidatas.push({ atual, anterior, proxima, alternativa });
   }
-  const escolhida = embaralharCom(candidatas, aleatorio)[0];
+  const escolhida = embaralhar(candidatas, aleatorio)[0];
   if (!escolhida) return mapaRecebido;
   const abrir = new Set([
     chaveAresta(escolhida.anterior, escolhida.alternativa),

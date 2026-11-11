@@ -332,18 +332,25 @@ function displayGoalMessage(message) {
 
 // --- Vaivem do goleiro do computador (com fintas e paradinhas imprevisíveis) ---
 
-function animarGoleiro() {
+/** Quanto tempo durou o último quadro, medido em quadros de 60 Hz (telas de 120 Hz dão ~0,5). */
+let ultimoQuadroDoGoleiro = 0;
+
+function animarGoleiro(agora = performance.now()) {
+  const quadros = ultimoQuadroDoGoleiro
+    ? Math.min(3, Math.max(0, (agora - ultimoQuadroDoGoleiro) / (1000 / 60)))
+    : 1;
+  ultimoQuadroDoGoleiro = agora;
   const { min: limiteMin, max: limiteMax } = limitesDoGoleiro();
   const posAtual = posicaoDe(goalkeeper);
 
   // Se estiver em paradinha / hesitação de leitura
   if (goleiroPausa > 0) {
-    goleiroPausa--;
+    goleiroPausa -= quadros;
     animacaoGoleiro = requestAnimationFrame(animarGoleiro);
     return;
   }
 
-  framesSemFinta++;
+  framesSemFinta += quadros;
 
   // Comportamento dinâmico e imprevisível na área central do gol
   const larguraBoca = Math.max(10, limiteMax - limiteMin);
@@ -351,7 +358,8 @@ function animarGoleiro() {
   const noMeio = distCentro < larguraBoca * 0.35;
 
   if (noMeio && framesSemFinta > 45) {
-    const sorteio = Math.random();
+    // As chances valem por quadro de 60 Hz; em telas mais rápidas cada quadro sorteia menos.
+    const sorteio = Math.random() / Math.max(quadros, 0.01);
     if (sorteio < 0.02) {
       // Paradinha: hesita na leitura do chute (~0.2s a 0.3s)
       goleiroPausa = Math.floor(10 + Math.random() * 8);
@@ -365,7 +373,7 @@ function animarGoleiro() {
     }
   }
 
-  const velocidade = velocidadeDoGoleiro(ordemDoPapel(modo, chute)) * velocidadeExtra;
+  const velocidade = velocidadeDoGoleiro(ordemDoPapel(modo, chute)) * velocidadeExtra * quadros;
 
   const passo = moverGoleiro({
     posicao: posAtual,
@@ -392,6 +400,7 @@ function pararGoleiro() {
 
 function comecarGoleiro() {
   pararGoleiro();
+  ultimoQuadroDoGoleiro = 0;
   animacaoGoleiro = requestAnimationFrame(animarGoleiro);
 }
 
@@ -672,6 +681,8 @@ async function encerrar() {
 
 // --- Controles: teclado (setas, A/D, Espaço) mais toque ---
 document.addEventListener('keydown', (event) => {
+  // Fora da partida o teclado é do navegador: Espaço e Enter acionam o botão em foco.
+  if (!jogando) return;
   if (event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar') {
     event.preventDefault();
     aoBotaoCentral();

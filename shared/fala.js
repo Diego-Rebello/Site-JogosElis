@@ -75,10 +75,6 @@ export function definirPreferencia(modo) {
   return preferencia;
 }
 
-export function preferenciaAtual() {
-  return preferencia;
-}
-
 function escolherVoz(sintese) {
   const vozes = typeof sintese?.getVoices === 'function' ? sintese.getVoices() : [];
   const idioma = voz => String(voz?.lang || '').replace('_', '-').toLowerCase();

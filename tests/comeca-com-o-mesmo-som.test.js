@@ -20,8 +20,8 @@ describe('Começa com o Mesmo Som (P05)', () => {
       expect(existsSync(resolve(RAIZ, item.audioSom.slice(1)))).toBe(true);
     });
     expect(SONS_INICIAIS).toHaveLength(12);
-    expect(readdirSync(resolve(RAIZ, 'audio/palavras')).filter(nome => nome.endsWith('.wav'))).toHaveLength(45);
-    expect(readdirSync(resolve(RAIZ, 'audio/sons-iniciais')).filter(nome => nome.endsWith('.wav'))).toHaveLength(12);
+    expect(readdirSync(resolve(RAIZ, 'audio/palavras')).filter(nome => nome.endsWith('.m4a'))).toHaveLength(45);
+    expect(readdirSync(resolve(RAIZ, 'audio/sons-iniciais')).filter(nome => nome.endsWith('.m4a'))).toHaveLength(12);
   });
 
   it('começa só pelas vogais e reserva oclusivas para o modo esperto', () => {

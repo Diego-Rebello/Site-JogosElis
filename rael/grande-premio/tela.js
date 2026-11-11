@@ -3,7 +3,7 @@
  * Derivado de Pixel Racer (https://github.com/Elomami1976/pixel-racer).
  * Copyright (c) 2026 Tarek Elomami — licença MIT. Cópia em LICENSE-pixel-racer.txt.
  *
- * Etapas 3 a 5 do PLANO-GRANDE-PREMIO-DO-RAEL.md: pista, rivais, posto, controles, loop,
+ * Etapas 3 a 5 do docs/planos/PLANO-GRANDE-PREMIO-DO-RAEL.md: pista, rivais, posto, controles, loop,
  * batida, largada com semáforo, narrador, aquecimento, ajudas, pausa, bandeirada, figurinha
  * e conquistas.
  */
@@ -1182,7 +1182,8 @@ function loopDoJogo(timestamp) {
   ultimoTempo = timestamp;
 
   atualizar(dt);
-  renderizar();
+  // Convite e fim escondem a pista: desenhar nela seria trabalho perdido.
+  if (!telas.corrida?.hidden) renderizar();
 
   requestAnimationFrame(loopDoJogo);
 }

@@ -4,8 +4,8 @@
  * inicial se aproxima do nome da letra (ELEFANTE, OVO; não ÉPOCA/ÓCULOS).
  */
 const palavra = (id, nome, som, letra, tipo) => ({
-  id, nome, som, letra, tipo, audio: `/audio/palavras/${id}.wav`,
-  audioSom: `/audio/sons-iniciais/${som}.wav`,
+  id, nome, som, letra, tipo, audio: `/audio/palavras/${id}.m4a`,
+  audioSom: `/audio/sons-iniciais/${som}.m4a`,
 });
 
 export const PALAVRAS_SOM = [

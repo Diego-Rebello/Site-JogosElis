@@ -18,7 +18,7 @@ import {
 } from '../../shared/fala.js';
 import { obterConfiguracoes, registrarRodada } from '../../shared/descobertas.js';
 import { anunciarConquistas } from '../../shared/conquistas-tela.js';
-import { caminhoDaFigura, figura, nomeComArtigo } from '../../shared/catalogo-figuras.js';
+import { caminhoDaFigura, figura } from '../../shared/catalogo-figuras.js';
 import { criarSessao } from '../../shared/rodada.js';
 
 import {
@@ -590,6 +590,7 @@ async function iniciarAjuda() {
 }
 
 async function concluirAjuda() {
+  const minhaGeracao = geracaoDaRodada;
   tocar('acerto');
   faseAtual = FASES.RETORNO;
   animacaoAjuda = null;
@@ -1262,7 +1263,8 @@ function loopDoJogo(timestamp) {
   lastTime = timestamp;
 
   atualizar(dt);
-  renderizar();
+  // Convite, demonstração e fim escondem a pista: desenhar nela seria trabalho perdido.
+  if (!telas.brincadeira?.hidden) renderizar();
 
   requestAnimationFrame(loopDoJogo);
 }

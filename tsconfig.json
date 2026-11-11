@@ -19,6 +19,7 @@
     "Games/*/components",
     "Games/*/lib",
     "shared/*.d.ts",
+    "shared/react",
     "tests"
   ]
 }

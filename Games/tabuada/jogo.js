@@ -1,3 +1,5 @@
+import { embaralhar } from '../../shared/texto.js';
+
 const inteiro = (minimo, maximo, aleatorio = Math.random) =>
   Math.floor(aleatorio() * (maximo - minimo + 1)) + minimo;
 
@@ -51,7 +53,7 @@ export function gerarOpcoes(resposta, aleatorio = Math.random) {
     const candidata = Math.max(0, Number(resposta) + inteiro(-distancia, distancia, aleatorio));
     certas.add(candidata);
   }
-  return [...certas].sort(() => aleatorio() - 0.5);
+  return embaralhar([...certas], aleatorio);
 }
 
 export function idDaTabuada(tabuada) {

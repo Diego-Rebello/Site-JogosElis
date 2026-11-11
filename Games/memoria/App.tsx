@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { CardData, GameState, ModoDasCartas, Player } from './types';
-import Cabecalho from './components/Cabecalho';
+import Cabecalho from '../../shared/react/Cabecalho';
 import { tocar } from '../../shared/sons.js';
 import { lancarConfete } from '../../shared/confete.js';
 import { calcularEstrelas as calcularEstrelasGeral, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
