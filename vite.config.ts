@@ -29,6 +29,7 @@ const paginas = {
   genius: 'Games/genius/index.html',
   sudoku: 'Games/sudoku/index.html',
   dinheirinho: 'Games/dinheirinho/index.html',
+  mercadinho: 'Games/mercadinho/index.html',
   quiz: 'Games/quiz/index.html',
   labirinto: 'Games/labirinto/index.html',
   memoria: 'Games/memoria/index.html',

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Faça as compras no mercado sem estourar o dinheiro e deixe a família feliz!">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Mercadinho — Jogos da Elis">
+  <meta property="og:description" content="Escolha marcas, compare preços, cuide do dinheiro e calcule o troco no mercadinho.">
+  <meta name="theme-color" content="#ff69b4">
+  <title>Mercadinho</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icones/icone-192.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="./mercadinho.css">
+  <script type="module" src="../../shared/pwa.js"></script>
+</head>
+<body class="pagina jogo-mercadinho">
+  <main class="pagina__conteudo pagina__conteudo--centro mercadinho-main">
+    <div id="anuncio-leitor" class="so-leitor" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- FASE 1: INÍCIO -->
+    <section id="fase-inicio" class="cartao tela tela--inicio" aria-labelledby="titulo-inicio">
+      <h2 id="titulo-inicio" class="titulo-jogo">🛒 MERCADINHO</h2>
+      <p class="subtitulo-inicio">Faça as compras sem estourar o dinheiro e deixe a família feliz!</p>
+
+      <div class="niveis" role="group" aria-label="Escolha o nível">
+        <button type="button" class="botao botao--neutro nivel" data-nivel="1" aria-pressed="false">
+          Revisão · 3 itens, mostra o total e escolhe o troco
+        </button>
+        <button type="button" class="botao botao--neutro nivel" data-nivel="2" aria-pressed="true">
+          Intermediário · 5 itens, 2 espiadas e calcula o troco
+        </button>
+        <button type="button" class="botao botao--neutro nivel" data-nivel="3" aria-pressed="false">
+          Desafio · 7 itens, preços de etiqueta e soma tudo
+        </button>
+      </div>
+
+      <p class="modo-etapa">📝 Lista rápida ativa (seções e prateleiras)</p>
+
+      <div class="acoes">
+        <button id="btn-comecar" type="button" class="botao botao--sucesso">COMEÇAR</button>
+      </div>
+
+      <p class="rodape-aviso">As marcas aparecem só para brincar de fazer compras. Os preços são inventados com base em 2026.</p>
+    </section>
+
+    <!-- FASE 2: MISSÃO -->
+    <section id="fase-missao" class="cartao tela tela--missao" aria-labelledby="missao-titulo" hidden>
+      <h2 id="missao-titulo" class="titulo-missao"></h2>
+      <p id="missao-convite" class="missao-convite"></p>
+      <h3 class="subtitulo-bloco">📝 Lista de hoje</h3>
+      <ul id="missao-lista" class="lista-missao"></ul>
+      <div class="acoes">
+        <button id="btn-ir-compras" type="button" class="botao botao--sucesso">Vamos às compras!</button>
+        <button id="btn-voltar-inicio" type="button" class="botao botao--neutro">Voltar</button>
+      </div>
+    </section>
+
+    <!-- FASE 3: LOJA (LISTA RÁPIDA) -->
+    <section id="fase-loja" class="cartao tela tela--loja" aria-label="Loja" hidden>
+      <div class="painel-fixo" aria-label="Painel da compra">
+        <div class="painel-fixo__grade">
+          <div id="loja-dinheiro" class="indicador indicador--dinheiro"></div>
+          <div id="loja-coracoes" class="indicador indicador--coracoes"></div>
+          <button id="btn-abrir-lista" type="button" class="botao botao--neutro botao-indicador"></button>
+          <button id="btn-abrir-carrinho" type="button" class="botao botao--secundario botao-indicador"></button>
+          <button id="btn-espiar" type="button" class="botao botao--neutro botao-indicador" hidden></button>
+        </div>
+
+        <div id="barra-nivel1" class="barra-nivel1" hidden>
+          <div id="barra-nivel1-texto" class="barra-nivel1__texto"></div>
+          <div class="barra-nivel1__trilho" aria-hidden="true">
+            <div id="barra-nivel1-preenchimento" class="barra-nivel1__preenchimento"></div>
+          </div>
+        </div>
+
+        <div id="espiada-aviso" class="espiada-aviso" aria-live="polite" hidden></div>
+      </div>
+
+      <div class="loja-cabecalho">
+        <div id="loja-secao-atual" class="loja-secao-atual"></div>
+        <button id="btn-voltar-secoes" type="button" class="botao botao--neutro botao-voltar-secoes" hidden>
+          ← Todas as seções
+        </button>
+      </div>
+
+      <div id="grade-secoes" class="grade-secoes" role="region" aria-label="Seções do mercado"></div>
+      <div id="lista-produtos" class="lista-produtos" role="region" aria-label="Produtos da seção" hidden></div>
+
+      <div class="acoes acoes--loja">
+        <button id="btn-ir-caixa" type="button" class="botao botao--sucesso">🧺 Ir para o caixa</button>
+        <button id="btn-sair-loja" type="button" class="botao botao--neutro">Trocar nível</button>
+      </div>
+    </section>
+
+    <!-- FASE 4: CAIXA -->
+    <section id="fase-caixa" class="cartao tela tela--caixa" aria-labelledby="caixa-titulo" hidden>
+      <h2 id="caixa-titulo" class="titulo-missao">🧾 Caixa</h2>
+
+      <div id="caixa-faltando" class="caixa-bloco" hidden>
+        <p id="caixa-faltando-texto" class="mensagem-caixa"></p>
+        <div class="acoes">
+          <button id="btn-voltar-faltando" type="button" class="botao botao--sucesso">Voltar às compras</button>
+        </div>
+      </div>
+
+      <div id="caixa-cupom" class="caixa-bloco" hidden>
+        <div class="cupom-topo">
+          <span class="cupom-rotulo">Cupom da compra</span>
+          <button id="btn-pular-cupom" type="button" class="botao botao--neutro" hidden>Pular</button>
+        </div>
+        <ul id="cupom-linhas" class="cupom-linhas"></ul>
+        <div id="cupom-total-revelado" class="cupom-total" hidden></div>
+      </div>
+
+      <div id="caixa-estouro" class="caixa-bloco feedback feedback--errado" hidden>
+        <p id="caixa-estouro-texto" class="mensagem-caixa"></p>
+        <div class="acoes">
+          <button id="btn-voltar-estouro" type="button" class="botao botao--sucesso">Voltar às compras</button>
+        </div>
+      </div>
+
+      <div id="caixa-conta" class="caixa-bloco" hidden>
+        <p id="caixa-pergunta" class="mensagem-caixa"></p>
+        <div id="caixa-alternativas" class="alternativas-troco" hidden></div>
+
+        <div id="caixa-teclado-bloco" class="teclado-bloco" hidden>
+          <div id="caixa-visor" class="caixa-visor" aria-live="polite" aria-label="Valor digitado">R$ 0,00</div>
+          <div id="teclado-numerico" class="teclado-numerico" role="group" aria-label="Teclado numérico"></div>
+        </div>
+
+        <div id="caixa-feedback" class="feedback" aria-live="polite"></div>
+        <pre id="caixa-conta-armada" class="conta-armada" hidden></pre>
+
+        <div class="acoes">
+          <button id="btn-continuar-caixa" type="button" class="botao botao--sucesso" hidden>Continuar</button>
+        </div>
+      </div>
+
+      <div id="caixa-rodape" class="acoes acoes--caixa-rodape">
+        <button id="btn-voltar-loja-caixa" type="button" class="botao botao--neutro">← Voltar à loja</button>
+      </div>
+    </section>
+
+    <!-- FASE 5: RESULTADO -->
+    <section id="fase-resultado" class="cartao tela tela--resultado" aria-labelledby="resultado-titulo" hidden>
+      <h2 id="resultado-titulo" class="titulo-missao"></h2>
+      <div id="resultado-estrelas" class="resultado-estrelas" role="img"></div>
+      <ul id="resultado-objetivos" class="resultado-objetivos"></ul>
+      <div id="resultado-resumo" class="resultado-resumo"></div>
+      <div class="acoes">
+        <button id="btn-jogar-de-novo" type="button" class="botao botao--sucesso">JOGAR DE NOVO</button>
+        <button id="btn-trocar-nivel" type="button" class="botao botao--neutro">TROCAR NÍVEL</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- PAINEL: PRATELEIRA / GULOSEIMA -->
+  <div id="painel-prateleira" class="painel-fundo" role="dialog" aria-modal="true" aria-labelledby="prateleira-titulo" hidden>
+    <div class="painel-caixa cartao" role="document">
+      <div class="painel-topo">
+        <div>
+          <h3 id="prateleira-titulo" class="painel-titulo"></h3>
+          <p id="prateleira-subtitulo" class="painel-subtitulo"></p>
+        </div>
+        <button id="btn-fechar-prateleira" type="button" class="botao botao--neutro botao-fechar" aria-label="Fechar painel">✕</button>
+      </div>
+
+      <p id="prateleira-aviso" class="prateleira-aviso" hidden></p>
+
+      <div id="prateleira-qtd-bloco" class="qtd-seletor" hidden>
+        <span class="qtd-seletor__rotulo">Quantidade:</span>
+        <div class="qtd-seletor__controles">
+          <button id="btn-qtd-menos" type="button" class="botao botao--neutro botao-qtd" aria-label="Diminuir quantidade">−</button>
+          <span id="prateleira-qtd-valor" class="qtd-seletor__valor" aria-live="polite">1</span>
+          <button id="btn-qtd-mais" type="button" class="botao botao--neutro botao-qtd" aria-label="Aumentar quantidade">+</button>
+        </div>
+      </div>
+
+      <div id="prateleira-opcoes" class="prateleira-opcoes"></div>
+    </div>
+  </div>
+
+  <!-- PAINEL: LISTA DE COMPRAS -->
+  <div id="painel-lista" class="painel-fundo" role="dialog" aria-modal="true" aria-labelledby="lista-painel-titulo" hidden>
+    <div class="painel-caixa cartao" role="document">
+      <div class="painel-topo">
+        <h3 id="lista-painel-titulo" class="painel-titulo">📝 Lista de compras</h3>
+        <button id="btn-fechar-lista" type="button" class="botao botao--neutro botao-fechar" aria-label="Fechar lista">✕</button>
+      </div>
+      <p id="lista-painel-meta" class="painel-subtitulo"></p>
+      <ul id="lista-painel-itens" class="lista-painel-itens"></ul>
+      <div id="lista-painel-guloseimas" class="lista-painel-guloseimas"></div>
+    </div>
+  </div>
+
+  <!-- PAINEL: CARRINHO -->
+  <div id="painel-carrinho" class="painel-fundo" role="dialog" aria-modal="true" aria-labelledby="carrinho-painel-titulo" hidden>
+    <div class="painel-caixa cartao" role="document">
+      <div class="painel-topo">
+        <h3 id="carrinho-painel-titulo" class="painel-titulo">🛒 Seu carrinho</h3>
+        <button id="btn-fechar-carrinho" type="button" class="botao botao--neutro botao-fechar" aria-label="Fechar carrinho">✕</button>
+      </div>
+      <div id="carrinho-painel-itens" class="carrinho-painel-itens"></div>
+      <div id="carrinho-painel-total" class="carrinho-painel-total" hidden></div>
+      <p class="carrinho-dica">Dica: arredonde! R$ 4,90 é quase R$ 5,00.</p>
+    </div>
+  </div>
+
+  <script type="module" src="./tela.js"></script>
+</body>
+</html>
