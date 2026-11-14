@@ -6,59 +6,99 @@ import {
   desenharProduto,
 } from './arte.js';
 
+const ESCALA_MAPA = 4;
+
 const PLACAS_SECAO = Object.freeze([
-  { id: 'laticinios', rotulo: 'Laticínios', x: 5.0, y: 0.5 },
-  { id: 'acougue', rotulo: 'Açougue', x: 12.5, y: 0.5 },
-  { id: 'bebidas', rotulo: 'Bebidas', x: 19.0, y: 0.5 },
-  { id: 'padaria', rotulo: 'Padaria', x: 5.5, y: 3.45 },
-  { id: 'mercearia', rotulo: 'Mercearia', x: 12.0, y: 3.45 },
-  { id: 'limpeza', rotulo: 'Limpeza', x: 18.0, y: 3.45 },
-  { id: 'hortifruti', rotulo: 'Hortifrúti', x: 3.4, y: 8.5 },
-  { id: 'guloseimas', rotulo: 'Guloseimas', x: 14.0, y: 10.45 },
-  { id: 'caixas', rotulo: 'Caixas', x: 12.0, y: 12.45 },
+  { id: 'laticinios', rotulo: 'Laticínios', cor: '#256fa8', x: 5.0, y: 0.45 },
+  { id: 'acougue', rotulo: 'Açougue', cor: '#d9383a', x: 12.5, y: 0.45 },
+  { id: 'bebidas', rotulo: 'Bebidas', cor: '#0e7c90', x: 19.0, y: 0.45 },
+  { id: 'padaria', rotulo: 'Padaria', cor: '#c67d3b', x: 5.5, y: 3.4 },
+  { id: 'mercearia', rotulo: 'Mercearia', cor: '#e07a24', x: 12.0, y: 3.4 },
+  { id: 'limpeza', rotulo: 'Limpeza', cor: '#7856c2', x: 18.0, y: 3.4 },
+  { id: 'hortifruti', rotulo: 'Hortifrúti', cor: '#2e9556', x: 3.4, y: 8.5 },
+  { id: 'guloseimas', rotulo: 'Guloseimas', cor: '#e44b86', x: 14.0, y: 10.4 },
+  { id: 'caixas', rotulo: 'Caixas', cor: '#455a64', x: 12.0, y: 12.35 },
 ]);
+
+function mesmoMovel(celulaA, x, y) {
+  if (x < 0 || y < 0 || x >= LARGURA || y >= ALTURA) return false;
+  const celulaB = celulaEm(x, y);
+  if (celulaA.tipo === 'produto') {
+    return celulaB.tipo === 'produto' && celulaB.secao === celulaA.secao;
+  }
+  if (celulaA.tipo === 'desejo') {
+    return celulaB.tipo === 'desejo';
+  }
+  return celulaB.tipo === celulaA.tipo;
+}
 
 function criarCanvasMapa() {
   const larguraMapa = LARGURA * TAMANHO_CASA;
   const alturaMapa = ALTURA * TAMANHO_CASA;
   const canvasMapa = document.createElement('canvas');
-  canvasMapa.width = larguraMapa;
-  canvasMapa.height = alturaMapa;
+  canvasMapa.width = larguraMapa * ESCALA_MAPA;
+  canvasMapa.height = alturaMapa * ESCALA_MAPA;
 
   const ctxMapa = canvasMapa.getContext('2d');
   if (!ctxMapa) return null;
 
+  ctxMapa.imageSmoothingEnabled = true;
+  ctxMapa.imageSmoothingQuality = 'high';
+  ctxMapa.save();
+  ctxMapa.scale(ESCALA_MAPA, ESCALA_MAPA);
+
+  const ent = entrada();
+
   for (let y = 0; y < ALTURA; y++) {
     for (let x = 0; x < LARGURA; x++) {
       const celula = celulaEm(x, y);
+      const acima = y > 0 ? celulaEm(x, y - 1) : null;
+      const acimaSolido = Boolean(
+        acima && (acima.tipo === 'parede' || acima.tipo === 'produto' || acima.tipo === 'desejo'),
+      );
+      const vizinhos = {
+        casaX: x,
+        casaY: y,
+        ultimaLinha: ALTURA - 1,
+        ehPortaEntrada: celula.tipo === 'parede' && y === ALTURA - 1 && Math.abs(x - ent.x) <= 1,
+        acimaSolido,
+        cima: mesmoMovel(celula, x, y - 1),
+        baixo: mesmoMovel(celula, x, y + 1),
+        esquerda: mesmoMovel(celula, x - 1, y),
+        direita: mesmoMovel(celula, x + 1, y),
+      };
+
       const px = x * TAMANHO_CASA;
       const py = y * TAMANHO_CASA;
-      desenharCasa(ctxMapa, celula, px, py);
+      desenharCasa(ctxMapa, celula, px, py, vizinhos);
       if (celula.tipo === 'produto' || celula.tipo === 'desejo') {
         desenharProduto(ctxMapa, celula.id, null, px, py);
       }
     }
   }
 
-  // Tapete da entrada e marco da porta na parede de baixo
-  const ent = entrada();
-  ctxMapa.fillStyle = '#f8bbd0';
-  ctxMapa.fillRect(ent.x * TAMANHO_CASA + 2, ent.y * TAMANHO_CASA + 3, 12, 10);
-  ctxMapa.strokeStyle = '#ad155c';
-  ctxMapa.lineWidth = 1;
-  ctxMapa.strokeRect(ent.x * TAMANHO_CASA + 2.5, ent.y * TAMANHO_CASA + 3.5, 11, 9);
+  // Tapete de boas-vindas na entrada interna do mercado
+  const matX = ent.x * TAMANHO_CASA + 1.5;
+  const matY = ent.y * TAMANHO_CASA + 3.5;
+  ctxMapa.fillStyle = '#e86898';
+  ctxMapa.beginPath();
+  if (typeof ctxMapa.roundRect === 'function') {
+    ctxMapa.roundRect(matX, matY, 13, 9.5, 1.4);
+  } else {
+    ctxMapa.rect(matX, matY, 13, 9.5);
+  }
+  ctxMapa.fill();
+  ctxMapa.strokeStyle = '#fff5f8';
+  ctxMapa.lineWidth = 0.7;
+  ctxMapa.stroke();
 
-  ctxMapa.fillStyle = '#ffeaf1';
-  ctxMapa.fillRect(ent.x * TAMANHO_CASA + 3, (ent.y + 1) * TAMANHO_CASA + 1, 10, 12);
-  ctxMapa.fillStyle = '#d81b7f';
-  ctxMapa.fillRect(ent.x * TAMANHO_CASA + 3, (ent.y + 1) * TAMANHO_CASA + 1, 10, 2);
-
+  ctxMapa.restore();
   return canvasMapa;
 }
 
 /**
- * Cria o renderizador do mapa em canvas com camada estática fora da tela,
- * escala inteira, devicePixelRatio e câmera presa aos limites da loja.
+ * Cria o renderizador do mapa em canvas de alta resolução com camada estática em 4×,
+ * devicePixelRatio e câmera presa aos limites da loja.
  * Retorna null se o contexto 2D do canvas não estiver disponível.
  */
 export function criarRenderizador(canvas) {
@@ -118,7 +158,8 @@ export function criarRenderizador(canvas) {
     canvas.dataset.casaPx = String(casaPx);
     canvas.dataset.larguraLogica = String(larguraLogica);
     canvas.dataset.alturaLogica = String(alturaLogica);
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     if (ultimoEstado) {
       calcularCamera(ultimoEstado.posX, ultimoEstado.posY);
@@ -142,33 +183,47 @@ export function criarRenderizador(canvas) {
     const tamFonte = 8 * escala;
     const alturaPill = Math.round(tamFonte * 1.25);
     const padX = Math.round(escala * 2.5);
+    const raioPonto = Math.max(3, Math.round(escala * 1.2));
 
     ctx.save();
     ctx.font = `400 ${tamFonte}px ${fonteCorpo}`;
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
     for (const placa of PLACAS_SECAO) {
       const px = Math.round((placa.x * TAMANHO_CASA - camX) * escala);
       const py = Math.round((placa.y * TAMANHO_CASA - camY) * escala);
       const larguraTexto = Math.ceil(ctx.measureText(placa.rotulo).width);
-      const larguraPill = larguraTexto + padX * 2;
+      const larguraPill = larguraTexto + padX * 2 + raioPonto * 2 + escala;
 
+      // Evita plaquinhas cortadas nas bordas verticais ou muito fora das bordas horizontais
+      const margemBorda = 6;
       if (
-        px + larguraPill / 2 < 0
-        || px - larguraPill / 2 > larguraCss
-        || py + alturaPill / 2 < 0
-        || py - alturaPill / 2 > alturaCss
+        px < -larguraPill * 0.4
+        || px > larguraCss + larguraPill * 0.4
+        || py - alturaPill / 2 < 2
+        || py + alturaPill / 2 > alturaCss - 2
       ) {
         continue;
       }
 
-      const x0 = Math.round(px - larguraPill / 2);
+      const xMax = Math.max(margemBorda, Math.round(larguraCss - larguraPill - margemBorda));
+      const x0 = Math.max(margemBorda, Math.min(xMax, Math.round(px - larguraPill / 2)));
       const y0 = Math.round(py - alturaPill / 2);
 
-      ctx.fillStyle = 'rgba(255, 251, 242, 0.9)';
-      ctx.strokeStyle = 'rgba(59, 45, 84, 0.65)';
-      ctx.lineWidth = Math.max(1, Math.floor(escala / 2));
+      // Sombra discreta sob a placa do corredor
+      ctx.fillStyle = 'rgba(55, 40, 30, 0.16)';
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(x0, y0 + Math.max(1, Math.round(escala * 0.45)), larguraPill, alturaPill, escala * 2);
+      } else {
+        ctx.rect(x0, y0 + 2, larguraPill, alturaPill);
+      }
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255, 253, 248, 0.94)';
+      ctx.strokeStyle = 'rgba(130, 108, 92, 0.45)';
+      ctx.lineWidth = Math.max(1, Math.floor(escala * 0.45));
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
         ctx.roundRect(x0, y0, larguraPill, alturaPill, escala * 2);
@@ -178,8 +233,13 @@ export function criarRenderizador(canvas) {
       ctx.fill();
       ctx.stroke();
 
+      ctx.fillStyle = placa.cor;
+      ctx.beginPath();
+      ctx.arc(x0 + padX + raioPonto, py, raioPonto, 0, Math.PI * 2);
+      ctx.fill();
+
       ctx.fillStyle = '#3b2d54';
-      ctx.fillText(placa.rotulo, px, py + 1);
+      ctx.fillText(placa.rotulo, x0 + padX + raioPonto * 2 + escala, py + 1);
     }
     ctx.restore();
   }
@@ -189,21 +249,26 @@ export function criarRenderizador(canvas) {
     ctx.save();
     for (const pos of casasDestaque) {
       const bx = pos.x * TAMANHO_CASA + 8;
-      const by = Math.max(5, pos.y * TAMANHO_CASA - 1);
+      const by = Math.max(5.5, pos.y * TAMANHO_CASA - 0.5);
 
-      ctx.fillStyle = '#ffd166';
-      ctx.strokeStyle = '#2b2b3a';
-      ctx.lineWidth = 1;
+      ctx.fillStyle = 'rgba(55, 40, 30, 0.22)';
       ctx.beginPath();
-      ctx.arc(bx, by, 4.5, 0, Math.PI * 2);
+      ctx.arc(bx, by + 0.6, 4.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffd43b';
+      ctx.strokeStyle = '#3b2d54';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.arc(bx, by, 4.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = '#2b2b3a';
-      ctx.font = 'bold 7px sans-serif';
+      ctx.fillStyle = '#3b2d54';
+      ctx.font = 'bold 6.2px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('!', bx, by + 0.5);
+      ctx.fillText('!', bx, by + 0.4);
     }
     ctx.restore();
   }
@@ -215,15 +280,16 @@ export function criarRenderizador(canvas) {
     calcularCamera(estado.posX, estado.posY);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, larguraCss, alturaCss);
 
     ctx.drawImage(
       canvasMapa,
-      camX,
-      camY,
-      larguraLogica,
-      alturaLogica,
+      camX * ESCALA_MAPA,
+      camY * ESCALA_MAPA,
+      larguraLogica * ESCALA_MAPA,
+      alturaLogica * ESCALA_MAPA,
       0,
       0,
       larguraCss,
@@ -237,17 +303,33 @@ export function criarRenderizador(canvas) {
     if (estado.destinoCaminhada) {
       const dx = estado.destinoCaminhada.x * TAMANHO_CASA;
       const dy = estado.destinoCaminhada.y * TAMANHO_CASA;
-      ctx.strokeStyle = 'rgba(216, 27, 127, 0.75)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(dx + 2.5, dy + 2.5, TAMANHO_CASA - 5, TAMANHO_CASA - 5);
+      ctx.fillStyle = 'rgba(216, 27, 127, 0.14)';
+      ctx.strokeStyle = 'rgba(216, 27, 127, 0.72)';
+      ctx.lineWidth = 0.75;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(dx + 2.2, dy + 2.2, TAMANHO_CASA - 4.4, TAMANHO_CASA - 4.4, 2.5);
+      } else {
+        ctx.rect(dx + 2.2, dy + 2.2, TAMANHO_CASA - 4.4, TAMANHO_CASA - 4.4);
+      }
+      ctx.fill();
+      ctx.stroke();
     }
 
     if (estado.destaqueCasa) {
       const hx = estado.destaqueCasa.x * TAMANHO_CASA;
       const hy = estado.destaqueCasa.y * TAMANHO_CASA;
-      ctx.strokeStyle = '#ffdf4d';
-      ctx.lineWidth = 1.2;
-      ctx.strokeRect(hx + 0.6, hy + 0.6, TAMANHO_CASA - 1.2, TAMANHO_CASA - 1.2);
+      ctx.fillStyle = 'rgba(255, 223, 77, 0.22)';
+      ctx.strokeStyle = '#ffca28';
+      ctx.lineWidth = 1.05;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(hx + 0.6, hy + 0.6, TAMANHO_CASA - 1.2, TAMANHO_CASA - 1.2, 1.8);
+      } else {
+        ctx.rect(hx + 0.6, hy + 0.6, TAMANHO_CASA - 1.2, TAMANHO_CASA - 1.2);
+      }
+      ctx.fill();
+      ctx.stroke();
     }
 
     desenharBaloesNivel1(estado.baloesNivel1);
@@ -265,6 +347,10 @@ export function criarRenderizador(canvas) {
       estado.quadro,
       estado.posX * TAMANHO_CASA,
       estado.posY * TAMANHO_CASA,
+      {
+        itensNoCarrinho: estado.itensNoCarrinho || 0,
+        fasePasso: estado.fasePasso,
+      },
     );
     ctx.restore();
 

@@ -118,6 +118,8 @@ const nav = {
   posRender: entrada(),
   direcao: 'cima',
   quadro: 0,
+  fasePasso: 0,
+  passosDados: 0,
   fila: [],
   destinoFinal: null,
   acaoAoChegar: null,
@@ -195,6 +197,8 @@ function resetarNavegacao() {
   nav.posRender = { ...inicio };
   nav.direcao = 'cima';
   nav.quadro = 0;
+  nav.fasePasso = 0;
+  nav.passosDados = 0;
   nav.ultimoAnuncioFrente = '';
 }
 
@@ -223,6 +227,7 @@ function pararMovimento(redesenhar = false) {
   nav.passoOrigem = null;
   nav.passoDestino = null;
   nav.quadro = 0;
+  nav.fasePasso = 0;
   nav.posRender = { ...nav.posicao };
   if (redesenhar && faseAtual === 'loja' && !usarListaRapida()) {
     desenharMapa();
@@ -290,6 +295,8 @@ function desenharMapa() {
     posY: nav.posRender.y,
     direcao: nav.direcao,
     quadro: nav.quadro,
+    fasePasso: nav.fasePasso,
+    itensNoCarrinho: contarTotalNoCarrinho(),
     destinoCaminhada: nav.destinoFinal,
     destaqueCasa: alvo ? { x: alvo.x, y: alvo.y } : null,
     baloesNivel1,
@@ -324,6 +331,7 @@ function concluirCaminhada() {
   nav.passoOrigem = null;
   nav.passoDestino = null;
   nav.quadro = 0;
+  nav.fasePasso = 0;
   nav.posRender = { ...nav.posicao };
   nav.destinoFinal = null;
 
@@ -374,8 +382,10 @@ function animarPasso(agora) {
     y: nav.passoOrigem.y + (nav.passoDestino.y - nav.passoOrigem.y) * t,
   };
   nav.quadro = Math.floor(t * 2);
+  nav.fasePasso = (nav.passosDados + t) * Math.PI;
 
   if (t >= 1) {
+    nav.passosDados += 1;
     nav.posicao = { ...nav.passoDestino };
     nav.posRender = { ...nav.posicao };
     nav.passoOrigem = null;

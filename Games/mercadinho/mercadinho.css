@@ -39,6 +39,7 @@
 .mercadinho-main {
   width: 100%;
   max-width: 820px;
+  margin-inline: auto;
 }
 
 .tela {
@@ -282,8 +283,6 @@
 .mapa-canvas {
   display: block;
   border: 0;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   touch-action: manipulation;
   cursor: pointer;
 }
