@@ -459,13 +459,25 @@ export function coresDaMarca(marca = '', indiceOpcao = 0) {
   return PALETA_RESERVA[(hash >>> 0) % PALETA_RESERVA.length];
 }
 
-function escurecerCor(hex, fator = 0.25) {
+function ajustarCor(hex, fator) {
   const limpo = String(hex || '').replace('#', '');
   if (!/^[0-9a-f]{6}$/i.test(limpo)) return '#607d8b';
-  const r = Math.max(0, Math.round(parseInt(limpo.slice(0, 2), 16) * (1 - fator)));
-  const g = Math.max(0, Math.round(parseInt(limpo.slice(2, 4), 16) * (1 - fator)));
-  const b = Math.max(0, Math.round(parseInt(limpo.slice(4, 6), 16) * (1 - fator)));
-  return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+  const canais = [0, 2, 4].map(i => {
+    const val = parseInt(limpo.slice(i, i + 2), 16);
+    const novo = fator >= 0
+      ? Math.min(255, Math.round(val + (255 - val) * fator))
+      : Math.max(0, Math.round(val * (1 + fator)));
+    return novo.toString(16).padStart(2, '0');
+  });
+  return `#${canais.join('')}`;
+}
+
+function escurecerCor(hex, fator = 0.25) {
+  return ajustarCor(hex, -Math.abs(fator));
+}
+
+function clarearCor(hex, fator = 0.25) {
+  return ajustarCor(hex, Math.abs(fator));
 }
 
 function resolverMarcaDoItem(item, opcaoId) {
@@ -476,6 +488,14 @@ function resolverMarcaDoItem(item, opcaoId) {
     return (escolhida || padrao)?.rotulo || item.nome;
   }
   return item.marca || item.nome;
+}
+
+function coresOpcoesDoItem(item, opcaoId) {
+  if (!item) return [PALETA_RESERVA[0]];
+  if (opcaoId || !item.opcoes?.length) {
+    return [coresDaMarca(resolverMarcaDoItem(item, opcaoId))];
+  }
+  return item.opcoes.map((op, i) => coresDaMarca(op.rotulo, i));
 }
 
 const PALETAS_GONDOLA = {
@@ -666,75 +686,69 @@ function desenharParede(ctx, x, y, vizinhos) {
   }
 }
 
-/**
- * Preenche uma prateleira com embalagens variadas (caixas, garrafas, latas e galões).
- */
-function desenharPacotinhos(ctx, x0, larg, yBase, paleta, semente) {
-  const passo = 2.45;
-  const inicio = x0 + 0.7;
-  const fim = x0 + larg - 2.15;
-  let idx = 0;
+const GONDOLA_ANDARES = [4.95, 9.35, 13.75];
+const GELADEIRA_ANDARES = [5.15, 9.25, 13.45];
+const HORTIFRUTI_CAIXAS = [
+  { cy: 2.55, h: 5.25 },
+  { cy: 8.55, h: 5.35 },
+];
 
-  for (let px = inicio; px <= fim; px += passo) {
-    const varIdx = semente + idx;
-    const cor = paleta.pacotes[(semente + idx * 3) % paleta.pacotes.length];
-    const corAcento = paleta.pacotes[(semente + idx * 3 + 1) % paleta.pacotes.length];
-    const formato = varIdx % 4;
+const TEMAS_GELADEIRA = {
+  laticinios: {
+    moldura: '#6b8299',
+    testaTop: '#1f5e92',
+    testaBase: '#2c7cb9',
+    led: '#90e0ef',
+    fundoTopo: '#e8f6ff',
+    fundoBase: '#c6e8fc',
+    prateleira: '#cfd8dc',
+    bordaPrat: '#90a4ae',
+    rodape: '#4a6070',
+  },
+  bebidas: {
+    moldura: '#1c6371',
+    testaTop: '#0b6b7d',
+    testaBase: '#1291a8',
+    led: '#80deea',
+    fundoTopo: '#e0f8fb',
+    fundoBase: '#b8ecf3',
+    prateleira: '#cfd8dc',
+    bordaPrat: '#78909c',
+    rodape: '#134e5a',
+  },
+};
 
-    if (formato === 0) {
-      // Caixa de cereal / biscoito com faixa frontal
-      const alt = 2.25 + (varIdx % 2) * 0.35;
-      ctx.fillStyle = cor;
-      retanguloArredondado(ctx, px, yBase - alt, 1.9, alt, 0.3);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255, 252, 245, 0.86)';
-      ctx.fillRect(px + 0.25, yBase - alt + 0.65, 1.4, alt * 0.42);
-      ctx.fillStyle = corAcento;
-      ctx.fillRect(px + 0.35, yBase - alt + 0.22, 1.2, 0.28);
-    } else if (formato === 1) {
-      // Garrafa / frasco com gargalo e tampa
-      const cx = px + 0.95;
-      const altCorpo = 1.65 + (varIdx % 2) * 0.2;
-      ctx.fillStyle = cor;
-      retanguloArredondado(ctx, cx - 0.68, yBase - altCorpo, 1.36, altCorpo, 0.35);
-      ctx.fill();
-      ctx.fillRect(cx - 0.26, yBase - altCorpo - 0.45, 0.52, 0.5);
-      ctx.fillStyle = corAcento;
-      retanguloArredondado(ctx, cx - 0.3, yBase - altCorpo - 0.7, 0.6, 0.28, 0.1);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
-      ctx.fillRect(cx - 0.5, yBase - altCorpo + 0.42, 1.0, 0.65);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
-      ctx.fillRect(cx - 0.5, yBase - altCorpo + 0.12, 0.24, altCorpo - 0.24);
-    } else if (formato === 2) {
-      // Lata cilíndrica com aro metálico superior e rótulo
-      const alt = 1.75 + (varIdx % 2) * 0.25;
-      ctx.fillStyle = cor;
-      retanguloArredondado(ctx, px + 0.15, yBase - alt, 1.6, alt, 0.28);
-      ctx.fill();
-      ctx.fillStyle = '#eceff1';
-      ctx.fillRect(px + 0.15, yBase - alt, 1.6, 0.26);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.68)';
-      ctx.fillRect(px + 0.22, yBase - alt + 0.58, 1.46, 0.52);
-    } else {
-      // Galão / embalagem com alça lateral e tampa deslocada
-      const alt = 2.15 + (varIdx % 2) * 0.25;
-      ctx.fillStyle = cor;
-      retanguloArredondado(ctx, px, yBase - alt, 1.95, alt, 0.4);
-      ctx.fill();
-      ctx.fillStyle = corAcento;
-      retanguloArredondado(ctx, px + 0.25, yBase - alt - 0.32, 0.58, 0.36, 0.12);
-      ctx.fill();
-      // Recorte sugerindo a alça e etiqueta central
-      ctx.fillStyle = paleta.fundo;
-      retanguloArredondado(ctx, px + 1.25, yBase - alt + 0.35, 0.42, 0.72, 0.18);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
-      retanguloArredondado(ctx, px + 0.22, yBase - alt + 0.75, 0.9, 0.95, 0.18);
-      ctx.fill();
-    }
-    idx++;
+const BASE_MOLDE_EMBALAGEM = {
+  'caixa-longa-vida': 0.89,
+  pacote: 0.90,
+  lata: 0.90,
+  garrafa: 0.89,
+  pote: 0.88,
+  'caixa-papelao': 0.89,
+  bandeja: 0.86,
+  frasco: 0.89,
+  barra: 0.77,
+  saquinho: 0.89,
+};
+
+function desenharToldoListrado(ctx, x0, larg, y, cor1, cor2, altura = 2.2) {
+  const larguraFaixa = 2.2;
+  for (let sx = 0; sx < larg; sx += larguraFaixa) {
+    const wFaixa = Math.min(larguraFaixa, larg - sx);
+    const par = Math.floor(sx / larguraFaixa) % 2 === 0;
+    ctx.fillStyle = par ? cor1 : cor2;
+    ctx.fillRect(x0 + sx, y, wFaixa + 0.05, altura - 0.35);
+
+    ctx.fillStyle = par ? escurecerCor(cor1, 0.14) : escurecerCor(cor2, 0.08);
+    ctx.beginPath();
+    ctx.arc(x0 + sx + wFaixa / 2, y + altura - 0.38, wFaixa / 2, 0, Math.PI);
+    ctx.fill();
   }
+  const sombra = ctx.createLinearGradient(x0, y + altura - 0.2, x0, y + altura + 0.65);
+  sombra.addColorStop(0, 'rgba(35, 22, 12, 0.28)');
+  sombra.addColorStop(1, 'rgba(35, 22, 12, 0)');
+  ctx.fillStyle = sombra;
+  ctx.fillRect(x0, y + altura - 0.2, larg, 0.85);
 }
 
 function desenharGondolaMercado(ctx, x, y, secao, vizinhos) {
@@ -742,43 +756,88 @@ function desenharGondolaMercado(ctx, x, y, secao, vizinhos) {
   const { x0, larg, esq, dir } = bordasHorizontais(x, vizinhos);
   const topo = semVizinho(vizinhos, 'cima');
   const baixo = semVizinho(vizinhos, 'baixo');
-  const casaX = vizinhos?.casaX ?? 0;
-  const casaY = vizinhos?.casaY ?? 0;
 
-  // Estrutura externa contínua da gôndola
-  ctx.fillStyle = '#9c8c7c';
+  // Colunas metálicas laterais e estrutura externa da gôndola
+  ctx.fillStyle = '#8b7c6e';
   ctx.fillRect(x0, y, larg, TAMANHO_CASA);
-
-  // Fundo interno das prateleiras
-  ctx.fillStyle = paleta.fundo;
-  ctx.fillRect(x0 + esq * 0.6, y + (topo ? 2.4 : 0), larg - (esq + dir) * 0.6, TAMANHO_CASA - (topo ? 2.4 : 0) - (baixo ? 1.5 : 0));
-
-  // Testa colorida no topo da gôndola
-  if (topo) {
-    ctx.fillStyle = paleta.tampo;
-    ctx.fillRect(x0, y, larg, 2.6);
-    ctx.fillStyle = paleta.tampoClaro;
-    ctx.fillRect(x0 + esq * 0.5, y + 0.35, larg - (esq + dir) * 0.5, 0.9);
+  if (esq) {
+    ctx.fillStyle = '#a89888';
+    ctx.fillRect(x0, y, 0.35, TAMANHO_CASA);
+  }
+  if (dir) {
+    ctx.fillStyle = '#6f6154';
+    ctx.fillRect(x0 + larg - 0.35, y, 0.35, TAMANHO_CASA);
   }
 
-  // 3 níveis de prateleiras abastecidas com mercadorias e etiquetas de preço amarelas
-  const alturasNiveis = [5.4, 9.6, 13.7];
-  alturasNiveis.forEach((offY, nivelIdx) => {
+  // Fundo slatwall texturizado
+  const yInicioFundo = y + (topo ? 2.05 : 0);
+  const yFimFundo = y + (baixo ? 14.9 : TAMANHO_CASA);
+  ctx.fillStyle = paleta.fundo;
+  ctx.fillRect(x0 + esq * 0.55, yInicioFundo, larg - (esq + dir) * 0.55, yFimFundo - yInicioFundo);
+
+  ctx.fillStyle = 'rgba(70, 52, 36, 0.07)';
+  for (let sy = yInicioFundo + 0.7; sy < yFimFundo; sy += 1.05) {
+    ctx.fillRect(x0 + esq * 0.55, sy, larg - (esq + dir) * 0.55, 0.22);
+  }
+
+  // Testeira superior em 2.5D com LED embutido
+  if (topo) {
+    const gradTampo = ctx.createLinearGradient(x0, y, x0, y + 2.05);
+    gradTampo.addColorStop(0, paleta.tampoClaro);
+    gradTampo.addColorStop(0.55, paleta.tampo);
+    gradTampo.addColorStop(1, escurecerCor(paleta.tampo, 0.18));
+    ctx.fillStyle = gradTampo;
+    ctx.fillRect(x0, y, larg, 2.05);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+    ctx.fillRect(x0 + esq * 0.4, y + 0.22, larg - (esq + dir) * 0.4, 0.26);
+
+    const led = ctx.createLinearGradient(x0, y + 2.05, x0, y + 2.75);
+    led.addColorStop(0, 'rgba(255, 248, 220, 0.65)');
+    led.addColorStop(1, 'rgba(255, 248, 220, 0)');
+    ctx.fillStyle = led;
+    ctx.fillRect(x0 + esq * 0.55, y + 2.05, larg - (esq + dir) * 0.55, 0.7);
+  }
+
+  // 3 prateleiras 2.5D com superfície de apoio, trilho amarelo e etiquetinhas de preço
+  const pxInner = x0 + esq * 0.4;
+  const wInner = larg - (esq + dir) * 0.4;
+  for (const offY of GONDOLA_ANDARES) {
     const yPrat = y + offY;
-    desenharPacotinhos(ctx, x0 + esq * 0.5, larg - (esq + dir) * 0.5, yPrat - 0.1, paleta, casaX * 5 + casaY * 3 + nivelIdx);
+
+    ctx.fillStyle = '#fdf9f2';
+    ctx.fillRect(pxInner, yPrat - 0.5, wInner, 0.5);
 
     ctx.fillStyle = paleta.prateleira;
-    ctx.fillRect(x0 + esq * 0.4, yPrat, larg - (esq + dir) * 0.4, 1.3);
-    // Faixa amarela porta-etiquetas
+    ctx.fillRect(pxInner, yPrat, wInner, 0.55);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.fillRect(pxInner, yPrat, wInner, 0.16);
+
+    // Trilho amarelo de preços com etiquetinhas brancas espaçadas
     ctx.fillStyle = '#ffd54f';
-    ctx.fillRect(x0 + esq * 0.4, yPrat + 0.55, larg - (esq + dir) * 0.4, 0.55);
+    ctx.fillRect(pxInner, yPrat + 0.48, wInner, 0.52);
     ctx.fillStyle = paleta.bordaPrat;
-    ctx.fillRect(x0 + esq * 0.4, yPrat + 1.1, larg - (esq + dir) * 0.4, 0.35);
-  });
+    ctx.fillRect(pxInner, yPrat + 0.98, wInner, 0.18);
+
+    for (let tx = x + 1.3; tx <= x + 13.0; tx += 3.45) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(tx, yPrat + 0.55, 1.45, 0.36);
+      ctx.fillStyle = '#5d4037';
+      ctx.fillRect(tx + 0.2, yPrat + 0.67, 1.05, 0.12);
+    }
+
+    const sombraPrat = ctx.createLinearGradient(x0, yPrat + 1.12, x0, yPrat + 1.82);
+    sombraPrat.addColorStop(0, 'rgba(55, 38, 24, 0.18)');
+    sombraPrat.addColorStop(1, 'rgba(55, 38, 24, 0)');
+    ctx.fillStyle = sombraPrat;
+    ctx.fillRect(pxInner, yPrat + 1.12, wInner, 0.7);
+  }
 
   if (baixo) {
     ctx.fillStyle = paleta.rodape;
-    ctx.fillRect(x0, y + 14.5, larg, 1.5);
+    ctx.fillRect(x0, y + 14.9, larg, 1.1);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+    ctx.fillRect(x0, y + 14.9, larg, 0.24);
   }
 }
 
@@ -786,165 +845,228 @@ function desenharHortifruti(ctx, x, y, vizinhos) {
   const { x0, larg, esq, dir } = bordasHorizontais(x, vizinhos);
   const topo = semVizinho(vizinhos, 'cima');
   const baixo = semVizinho(vizinhos, 'baixo');
-  const casaY = vizinhos?.casaY ?? 0;
 
-  // Estrutura em madeira de feira / banca inclinada
-  ctx.fillStyle = '#6d4019';
+  // Bancada rústica de madeira maciça com frisos
+  const gradMadeira = ctx.createLinearGradient(x0, y, x0 + larg, y);
+  gradMadeira.addColorStop(0, '#5a3112');
+  gradMadeira.addColorStop(0.5, '#7a441a');
+  gradMadeira.addColorStop(1, '#5a3112');
+  ctx.fillStyle = gradMadeira;
   ctx.fillRect(x0, y, larg, TAMANHO_CASA);
-  ctx.fillStyle = '#9e5d28';
-  ctx.fillRect(x0 + esq * 0.5, y + (topo ? 2.4 : 0), larg - (esq + dir) * 0.5, TAMANHO_CASA - (topo ? 2.4 : 0) - (baixo ? 1.4 : 0));
 
-  // Toldo listrado verde e creme no topo
-  if (topo) {
-    for (let sx = 0; sx < larg; sx += 2.6) {
-      ctx.fillStyle = Math.floor(sx / 2.6) % 2 === 0 ? '#2e9556' : '#fff8ec';
-      ctx.fillRect(x0 + sx, y, Math.min(2.6, larg - sx), 2.5);
-    }
+  ctx.fillStyle = '#8f5222';
+  ctx.fillRect(
+    x0 + esq * 0.55,
+    y + (topo ? 2.15 : 0),
+    larg - (esq + dir) * 0.55,
+    TAMANHO_CASA - (topo ? 2.15 : 0) - (baixo ? 1.25 : 0),
+  );
+
+  // Ripas horizontais discretas no fundo da banca
+  ctx.fillStyle = 'rgba(52, 26, 8, 0.22)';
+  for (let py = y + 1.4; py < y + 15.2; py += 2.1) {
+    ctx.fillRect(x0 + esq * 0.55, py, larg - (esq + dir) * 0.55, 0.18);
   }
 
-  // Caixotes de madeira com ripas e forro trançado
-  const caixasY = [2.8, 9.2];
-  caixasY.forEach((cy, idx) => {
-    ctx.fillStyle = '#d49a5c';
-    retanguloArredondado(ctx, x + 1.4, y + cy, TAMANHO_CASA - 2.8, 5.2, 0.7);
-    ctx.fill();
-    ctx.fillStyle = '#b47439';
-    ctx.fillRect(x + 1.8, y + cy + 2.3, TAMANHO_CASA - 3.6, 0.45);
-    ctx.fillStyle = '#e7c688';
-    retanguloArredondado(ctx, x + 2.1, y + cy + 0.6, TAMANHO_CASA - 4.2, 3.8, 0.4);
+  if (topo) {
+    desenharToldoListrado(ctx, x0, larg, y, '#218848', '#fff8ec', 2.2);
+  }
+
+  // Dois caixotes de madeira profundos com forro de juta e tabuleta de giz
+  for (const caixa of HORTIFRUTI_CAIXAS) {
+    const cy = y + caixa.cy;
+    ctx.fillStyle = 'rgba(35, 18, 6, 0.28)';
+    retanguloArredondado(ctx, x + 1.25, cy + 0.3, TAMANHO_CASA - 2.5, caixa.h, 0.65);
     ctx.fill();
 
-    // Frutas/legumes coloridos nos caixotes atrás da plaquinha do produto
-    const cores = idx === 0
-      ? ['#4caf50', '#ff7043', '#8bc34a']
-      : ['#ffa726', '#ef5350', '#fdd835'];
-    for (let f = 0; f < 4; f++) {
-      ctx.fillStyle = cores[(casaY + f) % cores.length];
-      ctx.beginPath();
-      ctx.arc(x + 3.6 + f * 2.9, y + cy + 2.4 + (f % 2) * 0.5, 1.15, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  });
+    // Borda chanfrada da caixa
+    ctx.fillStyle = '#c8894c';
+    retanguloArredondado(ctx, x + 1.25, cy, TAMANHO_CASA - 2.5, caixa.h, 0.6);
+    ctx.fill();
+
+    ctx.fillStyle = '#dfa466';
+    ctx.fillRect(x + 1.5, cy + 0.16, TAMANHO_CASA - 3.0, 0.35);
+
+    ctx.fillStyle = '#995e28';
+    ctx.fillRect(x + 1.45, cy + caixa.h - 0.85, TAMANHO_CASA - 2.9, 0.65);
+
+    // Interior escavado forrado com papel/juta clara
+    const fundoJuta = ctx.createLinearGradient(x, cy + 0.5, x, cy + caixa.h - 0.7);
+    fundoJuta.addColorStop(0, '#c29d63');
+    fundoJuta.addColorStop(0.28, '#e8cf9d');
+    fundoJuta.addColorStop(1, '#d8b77d');
+    ctx.fillStyle = fundoJuta;
+    retanguloArredondado(ctx, x + 1.75, cy + 0.45, TAMANHO_CASA - 3.5, caixa.h - 1.25, 0.38);
+    ctx.fill();
+
+    // Sombra interna da borda superior do caixote
+    const sombraInt = ctx.createLinearGradient(x, cy + 0.45, x, cy + 1.45);
+    sombraInt.addColorStop(0, 'rgba(58, 32, 10, 0.34)');
+    sombraInt.addColorStop(1, 'rgba(58, 32, 10, 0)');
+    ctx.fillStyle = sombraInt;
+    ctx.fillRect(x + 1.75, cy + 0.45, TAMANHO_CASA - 3.5, 1.0);
+
+    // Mini lousa de preço fixada na madeira da frente do caixote
+    ctx.fillStyle = '#26382c';
+    retanguloArredondado(ctx, x + 2.2, cy + caixa.h - 0.74, 4.9, 0.58, 0.14);
+    ctx.fill();
+    ctx.fillStyle = '#e8f5e9';
+    ctx.fillRect(x + 2.55, cy + caixa.h - 0.52, 2.7, 0.16);
+    ctx.fillStyle = '#ffd54f';
+    ctx.fillRect(x + 5.55, cy + caixa.h - 0.52, 1.15, 0.16);
+  }
 
   if (baixo) {
-    ctx.fillStyle = '#542f11';
-    ctx.fillRect(x0, y + 14.5, larg, 1.5);
+    ctx.fillStyle = '#47250c';
+    ctx.fillRect(x0, y + 14.8, larg, 1.2);
   }
 }
 
-function desenharGeladeiraLaticinios(ctx, x, y, vizinhos) {
+function desenharGeladeiraBase(ctx, x, y, vizinhos, tema) {
   const { x0, larg, esq, dir } = bordasHorizontais(x, vizinhos);
 
-  // Gabinete refrigerado comercial prateado/azul
-  ctx.fillStyle = '#6b8299';
+  ctx.fillStyle = tema.moldura;
   ctx.fillRect(x0, y, larg, TAMANHO_CASA);
 
-  // Testa superior iluminada azul fria
-  ctx.fillStyle = '#256fa8';
-  ctx.fillRect(x0, y, larg, 2.5);
-  ctx.fillStyle = '#74c0fc';
-  ctx.fillRect(x0 + esq * 0.4, y + 1.9, larg - (esq + dir) * 0.4, 0.6);
+  // Testeira iluminada superior
+  const testa = ctx.createLinearGradient(x0, y, x0, y + 2.25);
+  testa.addColorStop(0, tema.testaTop);
+  testa.addColorStop(1, tema.testaBase);
+  ctx.fillStyle = testa;
+  ctx.fillRect(x0, y, larg, 2.25);
+  ctx.fillStyle = tema.led;
+  ctx.fillRect(x0 + esq * 0.4, y + 1.78, larg - (esq + dir) * 0.4, 0.42);
 
-  // Interior LED frio atrás da porta de vidro
-  const led = ctx.createLinearGradient(x, y + 2.5, x, y + 14.2);
-  led.addColorStop(0, '#e3f6ff');
-  led.addColorStop(1, '#c3e7fa');
+  // Interior LED refrigerado
+  const led = ctx.createLinearGradient(x, y + 2.25, x, y + 14.2);
+  led.addColorStop(0, tema.fundoTopo);
+  led.addColorStop(1, tema.fundoBase);
   ctx.fillStyle = led;
-  ctx.fillRect(x0 + esq * 0.5, y + 2.5, larg - (esq + dir) * 0.5, 11.7);
+  ctx.fillRect(x0 + esq * 0.5, y + 2.25, larg - (esq + dir) * 0.5, 11.95);
 
-  // Prateleiras brancas com caixinhas de leite/iogurte
-  for (const py of [5.8, 9.4, 12.9]) {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x0 + 1.2, y + py - 2.1, 2.2, 2.0);
-    ctx.fillStyle = '#4dabf7';
-    ctx.fillRect(x0 + 4.1, y + py - 1.9, 1.9, 1.8);
-    ctx.fillStyle = '#ffd43b';
-    ctx.fillRect(x0 + 10.2, y + py - 1.8, 2.2, 1.7);
-    ctx.fillStyle = '#90a4ae';
-    ctx.fillRect(x0 + esq * 0.4, y + py, larg - (esq + dir) * 0.4, 0.7);
+  // Divisória metálica vertical entre portas adjacentes
+  ctx.fillStyle = 'rgba(65, 85, 102, 0.25)';
+  ctx.fillRect(x + 0.15, y + 2.25, 0.35, 11.95);
+  ctx.fillRect(x + TAMANHO_CASA - 0.5, y + 2.25, 0.35, 11.95);
+
+  // 3 prateleiras gradeadas metálicas
+  const pxInner = x0 + esq * 0.4;
+  const wInner = larg - (esq + dir) * 0.4;
+  for (const offY of GELADEIRA_ANDARES) {
+    const py = y + offY;
+    ctx.fillStyle = '#f4f9fc';
+    ctx.fillRect(pxInner, py - 0.4, wInner, 0.4);
+    ctx.fillStyle = tema.prateleira;
+    ctx.fillRect(pxInner, py, wInner, 0.48);
+    ctx.fillStyle = tema.bordaPrat;
+    ctx.fillRect(pxInner, py + 0.42, wInner, 0.16);
+    for (let tx = x + 1.4; tx <= x + 12.8; tx += 3.5) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(tx, py + 0.12, 1.35, 0.28);
+    }
   }
 
-  // Moldura da porta de vidro, puxador metálico e reflexo oblíquo
-  ctx.strokeStyle = '#90a4ae';
-  ctx.lineWidth = 0.7;
-  ctx.strokeRect(x + 0.8, y + 2.8, TAMANHO_CASA - 1.6, 11.1);
-  ctx.fillStyle = '#455a64';
-  ctx.fillRect(x + TAMANHO_CASA - 2.1, y + 6.5, 0.65, 3.8);
+  // Grade de ventilação inferior
+  ctx.fillStyle = tema.rodape;
+  ctx.fillRect(x0, y + 14.2, larg, 1.8);
+  ctx.fillStyle = 'rgba(15, 25, 32, 0.35)';
+  for (let vy = 14.55; vy <= 15.55; vy += 0.45) {
+    ctx.fillRect(x + 1.2, y + vy, TAMANHO_CASA - 2.4, 0.2);
+  }
+}
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+function desenharPortaVidroOverlay(ctx, x, y) {
+  ctx.save();
+  // Reflexos oblíquos translúcidos sobre os produtos refrigerados
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
   ctx.beginPath();
-  ctx.moveTo(x + 1.8, y + 3.0);
-  ctx.lineTo(x + 4.8, y + 3.0);
-  ctx.lineTo(x + 2.3, y + 13.5);
-  ctx.lineTo(x + 1.2, y + 13.5);
+  ctx.moveTo(x + 1.6, y + 2.65);
+  ctx.lineTo(x + 4.9, y + 2.65);
+  ctx.lineTo(x + 2.2, y + 13.75);
+  ctx.lineTo(x + 1.1, y + 13.75);
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = '#546e7a';
-  ctx.fillRect(x0, y + 14.2, larg, 1.8);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+  ctx.beginPath();
+  ctx.moveTo(x + 5.7, y + 2.65);
+  ctx.lineTo(x + 6.9, y + 2.65);
+  ctx.lineTo(x + 4.2, y + 13.75);
+  ctx.lineTo(x + 3.4, y + 13.75);
+  ctx.closePath();
+  ctx.fill();
+
+  // Moldura de alumínio escovado da porta e puxador vertical cromado
+  ctx.strokeStyle = 'rgba(120, 144, 156, 0.85)';
+  ctx.lineWidth = 0.55;
+  retanguloArredondado(ctx, x + 0.65, y + 2.55, TAMANHO_CASA - 1.3, 11.35, 0.45);
+  ctx.stroke();
+
+  ctx.fillStyle = '#455a64';
+  retanguloArredondado(ctx, x + 14.0, y + 5.7, 0.62, 4.4, 0.22);
+  ctx.fill();
+  ctx.fillStyle = '#eceff1';
+  ctx.fillRect(x + 14.12, y + 6.0, 0.22, 3.8);
+  ctx.restore();
+}
+
+function desenharGeladeiraLaticinios(ctx, x, y, vizinhos) {
+  desenharGeladeiraBase(ctx, x, y, vizinhos, TEMAS_GELADEIRA.laticinios);
+}
+
+function desenharBebidas(ctx, x, y, vizinhos) {
+  desenharGeladeiraBase(ctx, x, y, vizinhos, TEMAS_GELADEIRA.bebidas);
 }
 
 function desenharAcougue(ctx, x, y, vizinhos) {
   const { x0, larg, esq, dir } = bordasHorizontais(x, vizinhos);
 
-  ctx.fillStyle = '#9aa8b4';
+  ctx.fillStyle = '#90a4ae';
   ctx.fillRect(x0, y, larg, TAMANHO_CASA);
 
-  // Toldo listrado vermelho e branco clássico de açougue
-  for (let sx = 0; sx < larg; sx += 2.6) {
-    ctx.fillStyle = Math.floor(sx / 2.6) % 2 === 0 ? '#d9383a' : '#fffaf8';
-    ctx.fillRect(x0 + sx, y, Math.min(2.6, larg - sx), 2.8);
+  // Interior refrigerado em azulejo branco limpo e base inox inclinada
+  ctx.fillStyle = '#f8fbfd';
+  ctx.fillRect(x0 + esq * 0.45, y + 2.35, larg - (esq + dir) * 0.45, 9.35);
+
+  ctx.strokeStyle = 'rgba(144, 164, 174, 0.25)';
+  ctx.lineWidth = 0.18;
+  for (let gy = y + 3.8; gy < y + 11.2; gy += 1.6) {
+    ctx.beginPath();
+    ctx.moveTo(x0 + esq * 0.45, gy);
+    ctx.lineTo(x0 + larg - dir * 0.45, gy);
+    ctx.stroke();
+  }
+  for (let gx = x + 3.2; gx < x + 14; gx += 3.2) {
+    ctx.beginPath();
+    ctx.moveTo(gx, y + 2.35);
+    ctx.lineTo(gx, y + 9.5);
+    ctx.stroke();
   }
 
-  // Vitrine refrigerada com bandejas brancas e reflexo de vidro
-  ctx.fillStyle = '#fff5f5';
-  ctx.fillRect(x0 + esq * 0.5, y + 2.8, larg - (esq + dir) * 0.5, 8.8);
-  ctx.fillStyle = '#ef9a9a';
-  ctx.fillRect(x + 2.2, y + 4.4, 4.2, 2.8);
-  ctx.fillRect(x + 9.4, y + 4.8, 4.2, 2.5);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-  ctx.fillRect(x + 1.2, y + 3.2, TAMANHO_CASA - 2.4, 1.3);
+  // Plataforma inclinada em aço inox resfriado
+  const inoxDeck = ctx.createLinearGradient(x, y + 5.4, x, y + 11.7);
+  inoxDeck.addColorStop(0, '#cfd8dc');
+  inoxDeck.addColorStop(0.4, '#eceff1');
+  inoxDeck.addColorStop(1, '#b0bec5');
+  ctx.fillStyle = inoxDeck;
+  ctx.fillRect(x0 + esq * 0.45, y + 6.4, larg - (esq + dir) * 0.45, 5.3);
 
-  // Balcão frontal em inox e faixa vermelha
-  ctx.fillStyle = '#cfd8dc';
-  ctx.fillRect(x0, y + 11.6, larg, 2.7);
-  ctx.fillStyle = '#c94a4a';
-  ctx.fillRect(x0, y + 14.3, larg, 1.7);
-}
+  desenharToldoListrado(ctx, x0, larg, y, '#d32f2f', '#fffaf6', 2.45);
 
-function desenharBebidas(ctx, x, y, vizinhos) {
-  const { x0, larg, esq, dir } = bordasHorizontais(x, vizinhos);
+  // Parapeito frontal em aço inox e rodapé vermelho rubi
+  const inoxFront = ctx.createLinearGradient(x, y + 11.7, x, y + 14.0);
+  inoxFront.addColorStop(0, '#eceff1');
+  inoxFront.addColorStop(0.5, '#cfd8dc');
+  inoxFront.addColorStop(1, '#90a4ae');
+  ctx.fillStyle = inoxFront;
+  ctx.fillRect(x0, y + 11.7, larg, 2.3);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+  ctx.fillRect(x0, y + 11.9, larg, 0.28);
 
-  ctx.fillStyle = '#185b69';
-  ctx.fillRect(x0, y, larg, TAMANHO_CASA);
-
-  // Letreiro superior azul-turquesa
-  ctx.fillStyle = '#0e7c90';
-  ctx.fillRect(x0, y, larg, 2.5);
-  ctx.fillStyle = '#80deea';
-  ctx.fillRect(x0 + esq * 0.4, y + 1.8, larg - (esq + dir) * 0.4, 0.6);
-
-  // Interior resfriado
-  ctx.fillStyle = '#dff6fa';
-  ctx.fillRect(x0 + esq * 0.5, y + 2.5, larg - (esq + dir) * 0.5, 11.7);
-
-  // Fileiras de garrafas e latinhas coloridas
-  const coresGarrafas = ['#e53935', '#1e88e5', '#43a047', '#fb8c00', '#00acc1'];
-  for (const [linhaIdx, py] of [6.0, 9.8, 13.4].entries()) {
-    for (let px = x + 1.6; px <= x + 13.0; px += 2.2) {
-      const cor = coresGarrafas[(Math.round(px) + linhaIdx) % coresGarrafas.length];
-      ctx.fillStyle = cor;
-      retanguloArredondado(ctx, px, y + py - 2.4, 1.5, 2.2, 0.45);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(px + 0.45, y + py - 2.7, 0.6, 0.35);
-    }
-    ctx.fillStyle = '#607d8b';
-    ctx.fillRect(x0 + esq * 0.4, y + py, larg - (esq + dir) * 0.4, 0.65);
-  }
-
-  ctx.fillStyle = '#134e5a';
-  ctx.fillRect(x0, y + 14.2, larg, 1.8);
+  ctx.fillStyle = '#c63b3b';
+  ctx.fillRect(x0, y + 14.0, larg, 2.0);
+  ctx.fillStyle = '#8e2424';
+  ctx.fillRect(x0, y + 15.45, larg, 0.55);
 }
 
 function desenharPadaria(ctx, x, y, vizinhos) {
@@ -952,40 +1074,66 @@ function desenharPadaria(ctx, x, y, vizinhos) {
   const topo = semVizinho(vizinhos, 'cima');
   const baixo = semVizinho(vizinhos, 'baixo');
 
-  // Ilha de madeira dourada acolhedora
-  ctx.fillStyle = '#80471c';
+  // Expositor de madeira mel & nogueira com iluminação âmbar
+  ctx.fillStyle = '#683713';
   ctx.fillRect(x0, y, larg, TAMANHO_CASA);
-  ctx.fillStyle = '#b97338';
-  ctx.fillRect(x0 + esq * 0.5, y + (topo ? 2.4 : 0), larg - (esq + dir) * 0.5, TAMANHO_CASA - (topo ? 2.4 : 0) - (baixo ? 1.5 : 0));
+  const fundo = ctx.createLinearGradient(x, y, x + TAMANHO_CASA, y);
+  fundo.addColorStop(0, '#995724');
+  fundo.addColorStop(0.5, '#ad662d');
+  fundo.addColorStop(1, '#8c4e1f');
+  ctx.fillStyle = fundo;
+  ctx.fillRect(
+    x0 + esq * 0.55,
+    y + (topo ? 2.15 : 0),
+    larg - (esq + dir) * 0.55,
+    TAMANHO_CASA - (topo ? 2.15 : 0) - (baixo ? 1.25 : 0),
+  );
 
-  if (topo) {
-    ctx.fillStyle = '#d98a3f';
-    ctx.fillRect(x0, y, larg, 2.4);
-    ctx.fillStyle = '#ffdf9e';
-    ctx.fillRect(x0 + esq * 0.4, y + 1.8, larg - (esq + dir) * 0.4, 0.55);
+  // Ripas verticais sutis na traseira de madeira
+  ctx.fillStyle = 'rgba(65, 32, 10, 0.16)';
+  for (let rx = x + 3.2; rx < x + 14.5; rx += 3.2) {
+    ctx.fillRect(rx, y + (topo ? 2.15 : 0), 0.22, TAMANHO_CASA - (topo ? 2.15 : 0) - (baixo ? 1.25 : 0));
   }
 
-  // Cestas de vime com iluminação âmbar e pães ao fundo
-  for (const cy of [3.0, 9.0]) {
-    ctx.fillStyle = '#e7bd74';
-    retanguloArredondado(ctx, x + 1.3, y + cy, TAMANHO_CASA - 2.6, 5.1, 0.8);
-    ctx.fill();
-    ctx.fillStyle = '#fff3d6';
-    retanguloArredondado(ctx, x + 1.9, y + cy + 0.6, TAMANHO_CASA - 3.8, 3.8, 0.5);
+  if (topo) {
+    const testa = ctx.createLinearGradient(x0, y, x0, y + 2.15);
+    testa.addColorStop(0, '#e89d4c');
+    testa.addColorStop(1, '#c97627');
+    ctx.fillStyle = testa;
+    ctx.fillRect(x0, y, larg, 2.15);
+    ctx.fillStyle = '#ffe082';
+    ctx.fillRect(x0 + esq * 0.4, y + 1.65, larg - (esq + dir) * 0.4, 0.45);
+  }
+
+  // Duas bandejas/cestas trançadas de vime com pano creme iluminado
+  for (const caixa of HORTIFRUTI_CAIXAS) {
+    const cy = y + caixa.cy;
+    ctx.fillStyle = 'rgba(42, 20, 6, 0.25)';
+    retanguloArredondado(ctx, x + 1.25, cy + 0.3, TAMANHO_CASA - 2.5, caixa.h, 0.75);
     ctx.fill();
 
-    // Pãezinhos assados na cesta
-    ctx.fillStyle = '#d48b35';
-    for (let px = x + 3.2; px <= x + 12.2; px += 3.0) {
-      ctx.beginPath();
-      ctx.ellipse(px, y + cy + 2.5, 1.25, 0.85, 0.2, 0, Math.PI * 2);
-      ctx.fill();
+    ctx.fillStyle = '#dfb05c';
+    retanguloArredondado(ctx, x + 1.25, cy, TAMANHO_CASA - 2.5, caixa.h, 0.72);
+    ctx.fill();
+
+    // Detalhe trançado do vime na borda frontal
+    ctx.fillStyle = '#b9802c';
+    for (let wx = x + 2.0; wx <= x + 13.4; wx += 1.4) {
+      ctx.fillRect(wx, cy + caixa.h - 0.65, 0.75, 0.4);
     }
+
+    const linho = ctx.createLinearGradient(x, cy + 0.5, x, cy + caixa.h - 0.8);
+    linho.addColorStop(0, '#fae5ba');
+    linho.addColorStop(0.5, '#fff6e1');
+    linho.addColorStop(1, '#f3d9a4');
+    ctx.fillStyle = linho;
+    retanguloArredondado(ctx, x + 1.75, cy + 0.48, TAMANHO_CASA - 3.5, caixa.h - 1.25, 0.45);
+    ctx.fill();
   }
 
   if (baixo) {
-    ctx.fillStyle = '#633513';
-    ctx.fillRect(x0, y + 14.5, larg, 1.5);
+    ctx.fillStyle = '#532b0d';
+    ctx.fillRect(x0, y + 14.8, larg, 1.2);
   }
 }
 
@@ -993,63 +1141,87 @@ function desenharCaixa(ctx, x, y, vizinhos) {
   const casaX = vizinhos?.casaX ?? Math.floor(x / TAMANHO_CASA);
   const numeroCaixa = casaX <= 9 ? '1' : casaX <= 13 ? '2' : '3';
 
-  // Balcão moderno do caixa com esteira rolante e registradora
+  // Sombra suave do balcão no chão
+  ctx.fillStyle = 'rgba(45, 32, 20, 0.16)';
+  retanguloArredondado(ctx, x + 0.75, y + 1.3, TAMANHO_CASA - 1.5, 14.3, 1.3);
+  ctx.fill();
+
+  // Corpo externo em grafite-azulado e tampo em aço/quartzo claro
   ctx.fillStyle = '#455a64';
-  retanguloArredondado(ctx, x + 0.6, y + 1.0, TAMANHO_CASA - 1.2, 14.2, 1.2);
+  retanguloArredondado(ctx, x + 0.6, y + 0.9, TAMANHO_CASA - 1.2, 14.2, 1.2);
   ctx.fill();
 
-  // Tampo claro do balcão
-  ctx.fillStyle = '#eceff1';
-  retanguloArredondado(ctx, x + 1.2, y + 2.2, TAMANHO_CASA - 2.4, 10.6, 0.8);
+  ctx.fillStyle = '#f2f5f7';
+  retanguloArredondado(ctx, x + 1.2, y + 2.0, TAMANHO_CASA - 2.4, 10.9, 0.85);
   ctx.fill();
 
-  // Esteira preta com divisórias e separador vermelho
+  // Esteira rolante emborrachada com divisórias e separador de cliente
   ctx.fillStyle = '#263238';
-  retanguloArredondado(ctx, x + 2.0, y + 3.0, 5.4, 8.8, 0.5);
+  retanguloArredondado(ctx, x + 1.9, y + 2.8, 5.4, 9.1, 0.5);
   ctx.fill();
   ctx.fillStyle = '#37474f';
-  for (let ry = 4.2; ry < 11.2; ry += 1.6) {
-    ctx.fillRect(x + 2.3, y + ry, 4.8, 0.4);
+  for (let ry = 3.8; ry < 11.4; ry += 1.45) {
+    ctx.fillRect(x + 2.2, y + ry, 4.8, 0.35);
   }
   ctx.fillStyle = '#ef5350';
-  ctx.fillRect(x + 2.4, y + 6.9, 4.6, 0.75);
+  retanguloArredondado(ctx, x + 2.35, y + 6.95, 4.5, 0.75, 0.25);
+  ctx.fill();
 
-  // Leitor de código de barras (janela azul brilhante)
+  // Mini comprinhas sobre a esteira
+  ctx.fillStyle = '#ffa726';
+  retanguloArredondado(ctx, x + 2.7, y + 4.3, 1.6, 1.9, 0.3);
+  ctx.fill();
+  ctx.fillStyle = '#42a5f5';
+  retanguloArredondado(ctx, x + 4.8, y + 4.6, 1.5, 1.6, 0.3);
+  ctx.fill();
+
+  // Leitor óptico de código de barras (scanner luminoso)
+  ctx.fillStyle = '#546e7a';
+  retanguloArredondado(ctx, x + 7.7, y + 8.3, 2.7, 2.0, 0.3);
+  ctx.fill();
   ctx.fillStyle = '#80deea';
-  ctx.fillRect(x + 8.0, y + 8.5, 2.2, 1.6);
+  ctx.fillRect(x + 8.05, y + 8.65, 2.0, 1.3);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+  ctx.fillRect(x + 8.2, y + 8.85, 1.7, 0.24);
 
-  // Caixa registradora e visor verde
+  // Registradora com monitor e teclado
   ctx.fillStyle = '#f5f0e6';
-  retanguloArredondado(ctx, x + 9.4, y + 2.8, 4.8, 5.0, 0.5);
+  retanguloArredondado(ctx, x + 9.4, y + 2.7, 4.9, 5.1, 0.5);
   ctx.fill();
   ctx.fillStyle = '#1b4332';
-  ctx.fillRect(x + 10.0, y + 3.3, 3.6, 1.8);
+  retanguloArredondado(ctx, x + 9.95, y + 3.15, 3.8, 1.9, 0.25);
+  ctx.fill();
   ctx.fillStyle = '#52e088';
-  ctx.fillRect(x + 10.4, y + 3.7, 2.8, 0.9);
+  ctx.fillRect(x + 10.35, y + 3.55, 3.0, 0.95);
+  ctx.fillStyle = '#b0bec5';
+  ctx.fillRect(x + 10.0, y + 5.5, 3.7, 1.6);
 
-  // Atendente simpático atrás da bancada (cabeça e uniforme verde/rosa)
+  // Operador(a) simpático(a) atrás do caixa
   ctx.fillStyle = '#2e9556';
   ctx.beginPath();
-  ctx.arc(x + 11.8, y + 2.1, 2.4, Math.PI, 0);
+  ctx.arc(x + 11.8, y + 2.1, 2.35, Math.PI, 0);
   ctx.fill();
   ctx.fillStyle = '#f4b897';
   ctx.beginPath();
-  ctx.arc(x + 11.8, y + 1.8, 1.7, 0, Math.PI * 2);
+  ctx.arc(x + 11.8, y + 1.8, 1.65, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#1b5e20';
+  ctx.fillStyle = '#3e2723';
   ctx.beginPath();
-  ctx.arc(x + 11.8, y + 1.2, 1.75, Math.PI, 0);
+  ctx.arc(x + 11.8, y + 1.25, 1.7, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = '#2e9556';
+  retanguloArredondado(ctx, x + 10.2, y + 0.05, 3.2, 0.95, 0.4);
   ctx.fill();
 
-  // Plaquinha numérica do caixa (1, 2 ou 3)
+  // Plaquinha numérica do caixa
   ctx.fillStyle = '#2e9556';
-  retanguloArredondado(ctx, x + 8.4, y + 10.6, 5.8, 3.5, 0.7);
+  retanguloArredondado(ctx, x + 8.3, y + 10.75, 5.9, 3.45, 0.7);
   ctx.fill();
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 2.8px sans-serif';
+  ctx.font = 'bold 2.7px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`CX ${numeroCaixa}`, x + 11.3, y + 12.45);
+  ctx.fillText(`CX ${numeroCaixa}`, x + 11.25, y + 12.55);
 }
 
 const folhasCarregadas = {};
@@ -1106,8 +1278,524 @@ export async function carregarArte(baseUrl = urlBaseFiguras()) {
   };
 }
 
+function aplicarContorno25D(ctx, tamanho) {
+  ctx.strokeStyle = 'rgba(43, 43, 58, 0.85)';
+  ctx.lineWidth = Math.max(0.16, tamanho * 0.028);
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+function desenharCaixaLongaVida(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Sombra de contato
+  ctx.fillStyle = 'rgba(35, 25, 20, 0.16)';
+  ctx.beginPath();
+  ctx.ellipse(u(0.49), v(0.90), s * 0.30, s * 0.055, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Face frontal
+  const gradFrente = ctx.createLinearGradient(u(0.20), v(0.28), u(0.20), v(0.89));
+  gradFrente.addColorStop(0, clarearCor(corP, 0.12));
+  gradFrente.addColorStop(1, corP);
+  ctx.fillStyle = gradFrente;
+  ctx.beginPath();
+  ctx.rect(u(0.20), v(0.28), s * 0.44, s * 0.61);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Face lateral 3D sombreada
+  ctx.fillStyle = escurecerCor(corP, 0.28);
+  ctx.beginPath();
+  ctx.moveTo(u(0.64), v(0.28));
+  ctx.lineTo(u(0.79), v(0.21));
+  ctx.lineTo(u(0.79), v(0.81));
+  ctx.lineTo(u(0.64), v(0.89));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Topo inclinado em duas águas + aba soldada
+  ctx.fillStyle = clarearCor(corP, 0.22);
+  ctx.beginPath();
+  ctx.moveTo(u(0.20), v(0.28));
+  ctx.lineTo(u(0.31), v(0.13));
+  ctx.lineTo(u(0.71), v(0.13));
+  ctx.lineTo(u(0.64), v(0.28));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = escurecerCor(corP, 0.14);
+  ctx.beginPath();
+  ctx.moveTo(u(0.64), v(0.28));
+  ctx.lineTo(u(0.71), v(0.13));
+  ctx.lineTo(u(0.79), v(0.21));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = '#ffffff';
+  retanguloArredondado(ctx, u(0.31), v(0.085), s * 0.40, s * 0.05, s * 0.015);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Tampa rosca superior
+  ctx.fillStyle = corR;
+  ctx.beginPath();
+  ctx.ellipse(u(0.49), v(0.185), s * 0.075, s * 0.036, 0, 0, Math.PI * 2);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Faixa de rótulo frontal + brilho especular
+  ctx.fillStyle = corR;
+  ctx.fillRect(u(0.215), v(0.45), s * 0.41, s * 0.26);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+  ctx.fillRect(u(0.235), v(0.30), s * 0.065, s * 0.56);
+}
+
+function desenharPacote(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Abas frisadas superior e inferior
+  ctx.fillStyle = escurecerCor(corP, 0.2);
+  retanguloArredondado(ctx, u(0.18), v(0.09), s * 0.64, s * 0.10, s * 0.02);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  retanguloArredondado(ctx, u(0.18), v(0.81), s * 0.64, s * 0.10, s * 0.02);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Corpo almofadado em curva suave com gradiente cilíndrico
+  const grad = ctx.createLinearGradient(u(0.16), v(0.5), u(0.84), v(0.5));
+  grad.addColorStop(0, clarearCor(corP, 0.16));
+  grad.addColorStop(0.52, corP);
+  grad.addColorStop(1, escurecerCor(corP, 0.26));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(u(0.21), v(0.17));
+  ctx.lineTo(u(0.79), v(0.17));
+  ctx.quadraticCurveTo(u(0.87), v(0.50), u(0.79), v(0.83));
+  ctx.lineTo(u(0.21), v(0.83));
+  ctx.quadraticCurveTo(u(0.13), v(0.50), u(0.21), v(0.17));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Selo oval frontal na cor do rótulo + brilho
+  ctx.fillStyle = corR;
+  retanguloArredondado(ctx, u(0.26), v(0.35), s * 0.48, s * 0.30, s * 0.08);
+  ctx.fill();
+  ctx.strokeStyle = escurecerCor(corP, 0.3);
+  ctx.lineWidth = Math.max(0.12, s * 0.018);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+  ctx.beginPath();
+  ctx.ellipse(u(0.28), v(0.31), s * 0.04, s * 0.11, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function desenharLata(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Base metálica inferior arredondada
+  ctx.fillStyle = '#90a4ae';
+  ctx.beginPath();
+  ctx.ellipse(u(0.50), v(0.84), s * 0.30, s * 0.075, 0, 0, Math.PI * 2);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Corpo cilíndrico com brilho metálico vertical
+  const grad = ctx.createLinearGradient(u(0.20), v(0.5), u(0.80), v(0.5));
+  grad.addColorStop(0, escurecerCor(corP, 0.14));
+  grad.addColorStop(0.28, clarearCor(corP, 0.28));
+  grad.addColorStop(0.58, corP);
+  grad.addColorStop(1, escurecerCor(corP, 0.28));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(u(0.20), v(0.19));
+  ctx.lineTo(u(0.20), v(0.83));
+  ctx.ellipse(u(0.50), v(0.83), s * 0.30, s * 0.072, 0, Math.PI, 0, true);
+  ctx.lineTo(u(0.80), v(0.19));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Faixa do rótulo envolvente
+  ctx.fillStyle = corR;
+  ctx.beginPath();
+  ctx.moveTo(u(0.205), v(0.36));
+  ctx.quadraticCurveTo(u(0.50), v(0.43), u(0.795), v(0.36));
+  ctx.lineTo(u(0.795), v(0.67));
+  ctx.quadraticCurveTo(u(0.50), v(0.74), u(0.205), v(0.67));
+  ctx.closePath();
+  ctx.fill();
+
+  // Aro metálico superior e anel de abertura
+  ctx.fillStyle = '#eceff1';
+  ctx.beginPath();
+  ctx.ellipse(u(0.50), v(0.19), s * 0.30, s * 0.075, 0, 0, Math.PI * 2);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = '#cfd8dc';
+  ctx.beginPath();
+  ctx.ellipse(u(0.50), v(0.19), s * 0.23, s * 0.048, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.fillRect(u(0.29), v(0.27), s * 0.06, s * 0.52);
+}
+
+function desenharGarrafa(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Corpo contornado com ombros anatômicos e cintura leve
+  const grad = ctx.createLinearGradient(u(0.24), v(0.5), u(0.76), v(0.5));
+  grad.addColorStop(0, clarearCor(corP, 0.16));
+  grad.addColorStop(0.26, clarearCor(corP, 0.34));
+  grad.addColorStop(0.60, corP);
+  grad.addColorStop(1, escurecerCor(corP, 0.28));
+  ctx.fillStyle = grad;
+
+  ctx.beginPath();
+  ctx.moveTo(u(0.42), v(0.20));
+  ctx.lineTo(u(0.58), v(0.20));
+  ctx.lineTo(u(0.58), v(0.30));
+  ctx.bezierCurveTo(u(0.68), v(0.35), u(0.75), v(0.41), u(0.74), v(0.54));
+  ctx.quadraticCurveTo(u(0.70), v(0.63), u(0.74), v(0.74));
+  ctx.lineTo(u(0.74), v(0.86));
+  ctx.quadraticCurveTo(u(0.50), v(0.92), u(0.26), v(0.86));
+  ctx.lineTo(u(0.26), v(0.74));
+  ctx.quadraticCurveTo(u(0.30), v(0.63), u(0.26), v(0.54));
+  ctx.bezierCurveTo(u(0.25), v(0.41), u(0.32), v(0.35), u(0.42), v(0.30));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Rótulo central
+  ctx.fillStyle = corR;
+  ctx.beginPath();
+  ctx.moveTo(u(0.27), v(0.49));
+  ctx.quadraticCurveTo(u(0.50), v(0.53), u(0.73), v(0.49));
+  ctx.lineTo(u(0.73), v(0.71));
+  ctx.quadraticCurveTo(u(0.50), v(0.75), u(0.27), v(0.71));
+  ctx.closePath();
+  ctx.fill();
+
+  // Anel de lacre + tampa rosqueada
+  ctx.fillStyle = clarearCor(corR, 0.18);
+  retanguloArredondado(ctx, u(0.40), v(0.185), s * 0.20, s * 0.045, s * 0.015);
+  ctx.fill();
+  ctx.fillStyle = corR;
+  retanguloArredondado(ctx, u(0.41), v(0.08), s * 0.18, s * 0.12, s * 0.03);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Brilho vertical do vidro/PET
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.56)';
+  ctx.beginPath();
+  ctx.ellipse(u(0.35), v(0.41), s * 0.03, s * 0.075, 0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(u(0.31), v(0.52), s * 0.045, s * 0.30);
+}
+
+function desenharPote(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Corpo cônico
+  const grad = ctx.createLinearGradient(u(0.20), v(0.5), u(0.80), v(0.5));
+  grad.addColorStop(0, clarearCor(corP, 0.18));
+  grad.addColorStop(0.55, corP);
+  grad.addColorStop(1, escurecerCor(corP, 0.28));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(u(0.20), v(0.29));
+  ctx.lineTo(u(0.80), v(0.29));
+  ctx.lineTo(u(0.72), v(0.84));
+  ctx.quadraticCurveTo(u(0.50), v(0.90), u(0.28), v(0.84));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Rótulo curvo frontal
+  ctx.fillStyle = corR;
+  ctx.beginPath();
+  ctx.moveTo(u(0.23), v(0.43));
+  ctx.quadraticCurveTo(u(0.50), v(0.48), u(0.77), v(0.43));
+  ctx.lineTo(u(0.74), v(0.69));
+  ctx.quadraticCurveTo(u(0.50), v(0.74), u(0.26), v(0.69));
+  ctx.closePath();
+  ctx.fill();
+
+  // Sombra da aba da tampa
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+  ctx.fillRect(u(0.20), v(0.29), s * 0.60, s * 0.04);
+
+  // Tampa saliente arredondada
+  const gradTampa = ctx.createLinearGradient(u(0.15), v(0.14), u(0.15), v(0.29));
+  gradTampa.addColorStop(0, clarearCor(corR, 0.25));
+  gradTampa.addColorStop(1, corR);
+  ctx.fillStyle = gradTampa;
+  retanguloArredondado(ctx, u(0.15), v(0.14), s * 0.70, s * 0.15, s * 0.05);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.52)';
+  ctx.fillRect(u(0.20), v(0.165), s * 0.60, s * 0.03);
+}
+
+function desenharCaixaPapelao(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Frente
+  const grad = ctx.createLinearGradient(u(0.14), v(0.28), u(0.14), v(0.89));
+  grad.addColorStop(0, clarearCor(corP, 0.10));
+  grad.addColorStop(1, corP);
+  ctx.fillStyle = grad;
+  ctx.fillRect(u(0.14), v(0.28), s * 0.50, s * 0.61);
+  ctx.beginPath();
+  ctx.rect(u(0.14), v(0.28), s * 0.50, s * 0.61);
+  aplicarContorno25D(ctx, s);
+
+  // Lateral direita 3D
+  ctx.fillStyle = escurecerCor(corP, 0.28);
+  ctx.beginPath();
+  ctx.moveTo(u(0.64), v(0.28));
+  ctx.lineTo(u(0.85), v(0.17));
+  ctx.lineTo(u(0.85), v(0.77));
+  ctx.lineTo(u(0.64), v(0.89));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Topo 3D com vinco da aba
+  ctx.fillStyle = clarearCor(corP, 0.22);
+  ctx.beginPath();
+  ctx.moveTo(u(0.14), v(0.28));
+  ctx.lineTo(u(0.35), v(0.17));
+  ctx.lineTo(u(0.85), v(0.17));
+  ctx.lineTo(u(0.64), v(0.28));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = corR;
+  retanguloArredondado(ctx, u(0.18), v(0.41), s * 0.42, s * 0.30, s * 0.05);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.fillRect(u(0.16), v(0.30), s * 0.055, s * 0.55);
+}
+
+function desenharBandeja(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Base 3D da bandeja inclinada
+  ctx.fillStyle = '#d7ccc8';
+  retanguloArredondado(ctx, u(0.10), v(0.35), s * 0.80, s * 0.47, s * 0.11);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = '#f8f4ee';
+  retanguloArredondado(ctx, u(0.13), v(0.31), s * 0.74, s * 0.41, s * 0.09);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Cavidade interna e porções frescas na cor principal
+  ctx.fillStyle = clarearCor(corP, 0.16);
+  for (const [bx, by] of [[0.32, 0.50], [0.50, 0.47], [0.66, 0.52]]) {
+    ctx.beginPath();
+    ctx.ellipse(u(bx), v(by), s * 0.13, s * 0.10, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Camada superior das porções com brilho
+  for (const [bx, by] of [[0.32, 0.50], [0.50, 0.47], [0.66, 0.52]]) {
+    ctx.fillStyle = corP;
+    ctx.beginPath();
+    ctx.ellipse(u(bx), v(by), s * 0.115, s * 0.088, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+    ctx.beginPath();
+    ctx.ellipse(u(bx - 0.03), v(by - 0.025), s * 0.04, s * 0.022, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Brilho de filme PVC transparente sobre a bandeja
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.48)';
+  ctx.beginPath();
+  ctx.moveTo(u(0.22), v(0.33));
+  ctx.lineTo(u(0.40), v(0.33));
+  ctx.lineTo(u(0.24), v(0.68));
+  ctx.lineTo(u(0.16), v(0.68));
+  ctx.closePath();
+  ctx.fill();
+
+  // Etiqueta da marca colada no filme
+  ctx.fillStyle = corR;
+  retanguloArredondado(ctx, u(0.33), v(0.55), s * 0.34, s * 0.14, s * 0.03);
+  ctx.fill();
+  ctx.strokeStyle = escurecerCor(corP, 0.35);
+  ctx.lineWidth = Math.max(0.12, s * 0.016);
+  ctx.stroke();
+}
+
+function desenharFrasco(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Bico dosador e tampa
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(u(0.46), v(0.06));
+  ctx.lineTo(u(0.54), v(0.06));
+  ctx.lineTo(u(0.57), v(0.16));
+  ctx.lineTo(u(0.43), v(0.16));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = corR;
+  retanguloArredondado(ctx, u(0.40), v(0.145), s * 0.20, s * 0.10, s * 0.025);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Silhueta acinturada de detergente/frasco
+  const grad = ctx.createLinearGradient(u(0.22), v(0.5), u(0.78), v(0.5));
+  grad.addColorStop(0, clarearCor(corP, 0.18));
+  grad.addColorStop(0.35, corP);
+  grad.addColorStop(1, escurecerCor(corP, 0.26));
+  ctx.fillStyle = grad;
+
+  ctx.beginPath();
+  ctx.moveTo(u(0.37), v(0.24));
+  ctx.lineTo(u(0.63), v(0.24));
+  ctx.bezierCurveTo(u(0.76), v(0.30), u(0.78), v(0.42), u(0.71), v(0.54));
+  ctx.bezierCurveTo(u(0.69), v(0.64), u(0.77), v(0.74), u(0.74), v(0.87));
+  ctx.quadraticCurveTo(u(0.50), v(0.92), u(0.26), v(0.87));
+  ctx.bezierCurveTo(u(0.23), v(0.74), u(0.31), v(0.64), u(0.29), v(0.54));
+  ctx.bezierCurveTo(u(0.22), v(0.42), u(0.24), v(0.30), u(0.37), v(0.24));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = corR;
+  retanguloArredondado(ctx, u(0.31), v(0.45), s * 0.38, s * 0.29, s * 0.07);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.fillRect(u(0.31), v(0.31), s * 0.05, s * 0.48);
+}
+
+function desenharBarra(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Abas laterais serrilhadas
+  for (const lado of [0, 1]) {
+    ctx.fillStyle = escurecerCor(corP, 0.22);
+    ctx.beginPath();
+    if (lado === 0) {
+      ctx.moveTo(u(0.18), v(0.28));
+      ctx.lineTo(u(0.08), v(0.34));
+      ctx.lineTo(u(0.11), v(0.50));
+      ctx.lineTo(u(0.08), v(0.66));
+      ctx.lineTo(u(0.18), v(0.72));
+    } else {
+      ctx.moveTo(u(0.82), v(0.28));
+      ctx.lineTo(u(0.92), v(0.34));
+      ctx.lineTo(u(0.89), v(0.50));
+      ctx.lineTo(u(0.92), v(0.66));
+      ctx.lineTo(u(0.82), v(0.72));
+    }
+    ctx.closePath();
+    ctx.fill();
+    aplicarContorno25D(ctx, s);
+  }
+
+  // Corpo central chanfrado
+  const grad = ctx.createLinearGradient(u(0.5), v(0.24), u(0.5), v(0.76));
+  grad.addColorStop(0, clarearCor(corP, 0.20));
+  grad.addColorStop(0.5, corP);
+  grad.addColorStop(1, escurecerCor(corP, 0.25));
+  ctx.fillStyle = grad;
+  retanguloArredondado(ctx, u(0.17), v(0.24), s * 0.66, s * 0.52, s * 0.07);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  ctx.fillStyle = corR;
+  retanguloArredondado(ctx, u(0.27), v(0.33), s * 0.46, s * 0.34, s * 0.05);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.fillRect(u(0.22), v(0.27), s * 0.56, s * 0.045);
+}
+
+function desenharSaquinho(ctx, x, y, s, corP, corR) {
+  const u = f => x + f * s;
+  const v = f => y + f * s;
+
+  // Topo selado estilo stand-up pouch
+  ctx.fillStyle = corR;
+  retanguloArredondado(ctx, u(0.20), v(0.10), s * 0.60, s * 0.11, s * 0.025);
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Bolsa estufada para baixo
+  const grad = ctx.createLinearGradient(u(0.15), v(0.5), u(0.85), v(0.5));
+  grad.addColorStop(0, clarearCor(corP, 0.16));
+  grad.addColorStop(0.45, corP);
+  grad.addColorStop(1, escurecerCor(corP, 0.26));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(u(0.21), v(0.20));
+  ctx.lineTo(u(0.79), v(0.20));
+  ctx.quadraticCurveTo(u(0.86), v(0.56), u(0.83), v(0.84));
+  ctx.quadraticCurveTo(u(0.50), v(0.92), u(0.17), v(0.84));
+  ctx.quadraticCurveTo(u(0.14), v(0.56), u(0.21), v(0.20));
+  ctx.closePath();
+  ctx.fill();
+  aplicarContorno25D(ctx, s);
+
+  // Selo central circular / escudo
+  ctx.fillStyle = corR;
+  ctx.beginPath();
+  ctx.ellipse(u(0.50), v(0.54), s * 0.20, s * 0.16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = escurecerCor(corP, 0.28);
+  ctx.lineWidth = Math.max(0.12, s * 0.02);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.44)';
+  ctx.beginPath();
+  ctx.ellipse(u(0.27), v(0.45), s * 0.032, s * 0.16, 0.08, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+const DESENHO_MOLDES = {
+  'caixa-longa-vida': desenharCaixaLongaVida,
+  pacote: desenharPacote,
+  lata: desenharLata,
+  garrafa: desenharGarrafa,
+  pote: desenharPote,
+  'caixa-papelao': desenharCaixaPapelao,
+  bandeja: desenharBandeja,
+  frasco: desenharFrasco,
+  barra: desenharBarra,
+  saquinho: desenharSaquinho,
+};
+
 /**
- * Desenha um molde de embalagem 16×16 recolorido pelas cores da marca.
+ * Desenha o molde vetorial 2.5D de embalagem em alta resolução recolorido pelas cores da marca.
  * @param {CanvasRenderingContext2D} ctx
  * @param {string} moldeId
  * @param {[string, string]} cores
@@ -1117,56 +1805,33 @@ export async function carregarArte(baseUrl = urlBaseFiguras()) {
  * @param {string|null} [emoji]
  */
 export function desenharMoldeEmbalagem(ctx, moldeId, cores, x, y, tamanho, emoji = null) {
-  const matriz = MOLDES[moldeId] || MOLDES.pacote;
   const [corPrincipal, corRotulo] = Array.isArray(cores) && cores.length >= 2
     ? cores
     : PALETA_RESERVA[0];
-  const mapaCores = {
-    o: '#2b2b3a',
-    a: corPrincipal,
-    b: escurecerCor(corPrincipal, 0.25),
-    c: corRotulo,
-    w: '#ffffff',
-  };
-  const cel = tamanho / 16;
+  const fnMolde = DESENHO_MOLDES[moldeId] || desenharPacote;
 
   ctx.save();
-  for (let lin = 0; lin < 16; lin++) {
-    const textoLinha = matriz[lin] || '';
-    let col = 0;
-    while (col < 16) {
-      const ch = textoLinha[col] || '.';
-      if (ch === '.') {
-        col++;
-        continue;
-      }
-      let fim = col + 1;
-      while (fim < 16 && textoLinha[fim] === ch) {
-        fim++;
-      }
-      ctx.fillStyle = mapaCores[ch] || corPrincipal;
-      const rx = x + col * cel;
-      const ry = y + lin * cel;
-      const rw = (fim - col) * cel + (fim < 16 ? 0.02 * cel : 0);
-      const rh = cel + (lin < 15 ? 0.02 * cel : 0);
-      ctx.fillRect(rx, ry, rw, rh);
-      col = fim;
-    }
-  }
+  fnMolde(ctx, x, y, tamanho, corPrincipal, corRotulo);
 
   if (emoji) {
-    const raio = tamanho * 0.23;
+    const raio = tamanho * 0.21;
     const cx = x + tamanho * 0.74;
     const cy = y + tamanho * 0.74;
-    ctx.fillStyle = 'rgba(255, 253, 248, 0.94)';
-    ctx.strokeStyle = 'rgba(43, 43, 58, 0.32)';
-    ctx.lineWidth = Math.max(0.8, tamanho * 0.028);
+
+    ctx.fillStyle = 'rgba(35, 25, 20, 0.20)';
+    ctx.beginPath();
+    ctx.arc(cx, cy + tamanho * 0.025, raio, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 253, 248, 0.96)';
+    ctx.strokeStyle = corPrincipal;
+    ctx.lineWidth = Math.max(0.9, tamanho * 0.034);
     ctx.beginPath();
     ctx.arc(cx, cy, raio, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    ctx.font = `${Math.round(tamanho * 0.34)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.font = `${Math.round(tamanho * 0.30)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(emoji, cx, cy + tamanho * 0.015);
@@ -1218,39 +1883,489 @@ export function desenharCasa(ctx, celula, x, y, vizinhos = null) {
   desenharPiso(ctx, x, y, vizinhos);
 }
 
+function desenharFrutaEsferica(ctx, cx, cy, raio, corClara, corBase, corEscura, folha = true) {
+  ctx.fillStyle = 'rgba(42, 26, 12, 0.22)';
+  ctx.beginPath();
+  ctx.ellipse(cx + 0.08, cy + raio * 0.85, raio * 0.9, raio * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const grad = ctx.createRadialGradient(cx - raio * 0.32, cy - raio * 0.35, raio * 0.12, cx, cy, raio);
+  grad.addColorStop(0, corClara);
+  grad.addColorStop(0.55, corBase);
+  grad.addColorStop(1, corEscura);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, raio, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.48)';
+  ctx.beginPath();
+  ctx.ellipse(cx - raio * 0.35, cy - raio * 0.35, raio * 0.26, raio * 0.15, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (folha) {
+    ctx.fillStyle = '#43a047';
+    ctx.beginPath();
+    ctx.ellipse(cx + raio * 0.22, cy - raio * 0.86, raio * 0.42, raio * 0.22, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function desenharCaixaBananas(ctx, rx, ry, rw, rh) {
+  for (let i = 0; i < 3; i++) {
+    const bx = rx + 2.1 + i * 3.8;
+    const by = ry + rh * 0.54 + (i % 2 === 0 ? -0.15 : 0.2);
+    for (let f = 0; f < 3; f++) {
+      const oy = by - 0.55 + f * 0.58;
+      ctx.strokeStyle = f === 0 ? '#ffe066' : f === 1 ? '#fdd835' : '#f4b400';
+      ctx.lineWidth = 0.82;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(bx - 1.35, oy - 0.2);
+      ctx.quadraticCurveTo(bx - 0.1, oy + 0.68, bx + 1.35, oy - 0.25);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#5d4037';
+    ctx.fillRect(bx + 1.15, by - 0.65, 0.45, 0.95);
+  }
+}
+
+function desenharCaixaFrutasGrade(ctx, rx, ry, rw, rh, config) {
+  const cols = 4;
+  const rows = 2;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cx = rx + 1.45 + c * ((rw - 2.9) / (cols - 1)) + (r % 2 === 1 ? 0.35 : -0.2);
+      const cy = ry + 1.05 + r * (rh * 0.44);
+      desenharFrutaEsferica(ctx, cx, cy, config.raio, config.clara, config.base, config.escura, config.folha);
+      if (config.estrela) {
+        ctx.fillStyle = '#2e7d32';
+        ctx.fillRect(cx - 0.38, cy - config.raio - 0.05, 0.76, 0.22);
+        ctx.fillRect(cx - 0.11, cy - config.raio - 0.28, 0.22, 0.5);
+      }
+    }
+  }
+}
+
+function desenharCaixaAlface(ctx, rx, ry, rw) {
+  for (let i = 0; i < 3; i++) {
+    const cx = rx + 2.3 + i * ((rw - 4.6) / 2);
+    const cy = ry + 1.9 + (i % 2) * 0.2;
+    ctx.fillStyle = '#2e7d32';
+    for (let p = 0; p < 6; p++) {
+      const ang = (p * Math.PI) / 3;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(ang) * 0.75, cy + Math.sin(ang) * 0.55, 0.78, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#66bb6a';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 0.95, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#c5e1a5';
+    ctx.beginPath();
+    ctx.arc(cx - 0.1, cy - 0.1, 0.45, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function desenharCaixaCenouras(ctx, rx, ry, rw, rh) {
+  for (let i = 0; i < 5; i++) {
+    const cx = rx + 1.6 + i * ((rw - 3.2) / 4);
+    const cy = ry + rh * 0.52 + (i % 2 === 0 ? -0.25 : 0.25);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-0.42);
+    ctx.fillStyle = '#43a047';
+    ctx.beginPath();
+    ctx.moveTo(0, -1.3);
+    ctx.lineTo(-0.55, -2.15);
+    ctx.lineTo(0.45, -2.05);
+    ctx.closePath();
+    ctx.fill();
+    const grad = ctx.createLinearGradient(-0.6, -1.3, 0.6, 1.5);
+    grad.addColorStop(0, '#ffa726');
+    grad.addColorStop(1, '#e65100');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(-0.52, -1.3);
+    ctx.lineTo(0.52, -1.3);
+    ctx.lineTo(0.08, 1.55);
+    ctx.lineTo(-0.08, 1.55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function desenharCaixaBatatas(ctx, rx, ry, rw, rh) {
+  for (let r = 0; r < 2; r++) {
+    for (let c = 0; c < 4; c++) {
+      const cx = rx + 1.5 + c * ((rw - 3.0) / 3) + (r % 2) * 0.35;
+      const cy = ry + 1.05 + r * (rh * 0.44);
+      const grad = ctx.createRadialGradient(cx - 0.25, cy - 0.2, 0.1, cx, cy, 1.0);
+      grad.addColorStop(0, '#efe0b4');
+      grad.addColorStop(0.6, '#d2ab64');
+      grad.addColorStop(1, '#9b7236');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 1.02, 0.72, (c + r) * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(75, 48, 22, 0.42)';
+      ctx.fillRect(cx + 0.15, cy + 0.05, 0.16, 0.16);
+    }
+  }
+}
+
+function desenharCaixaMamao(ctx, rx, ry, rw) {
+  for (let i = 0; i < 3; i++) {
+    const cx = rx + 2.2 + i * ((rw - 4.4) / 2);
+    const cy = ry + 1.95;
+    if (i === 1) {
+      // Mamão aberto mostrando polpa coral e sementes
+      ctx.fillStyle = '#fb8c00';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 1.55, 1.02, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ff7043';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 1.25, 0.72, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#263238';
+      for (const sx of [-0.45, -0.15, 0.15, 0.45]) {
+        ctx.beginPath();
+        ctx.arc(cx + sx, cy, 0.14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      const grad = ctx.createRadialGradient(cx - 0.3, cy - 0.3, 0.15, cx, cy, 1.5);
+      grad.addColorStop(0, '#ffd54f');
+      grad.addColorStop(0.55, '#fb8c00');
+      grad.addColorStop(1, '#4e6f22');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 1.5, 0.98, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function desenharCaixaUvas(ctx, rx, ry, rw, corBase, corClara) {
+  for (let i = 0; i < 3; i++) {
+    const cx = rx + 2.3 + i * ((rw - 4.6) / 2);
+    const cy = ry + 1.05;
+    ctx.fillStyle = '#5d4037';
+    ctx.fillRect(cx - 0.12, cy - 0.35, 0.24, 0.45);
+    const bagos = [
+      [-0.65, 0.25], [0, 0.25], [0.65, 0.25],
+      [-0.35, 0.85], [0.35, 0.85],
+      [0, 1.45],
+    ];
+    for (const [dx, dy] of bagos) {
+      ctx.fillStyle = corBase;
+      ctx.beginPath();
+      ctx.arc(cx + dx, cy + dy, 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = corClara;
+      ctx.beginPath();
+      ctx.arc(cx + dx - 0.12, cy + dy - 0.12, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function desenharCaixaMorangos(ctx, rx, ry, rw) {
+  for (let p = 0; p < 2; p++) {
+    const bx = rx + 0.55 + p * (rw * 0.49);
+    ctx.fillStyle = '#aed581';
+    retanguloArredondado(ctx, bx, ry + 0.45, rw * 0.44, 3.0, 0.35);
+    ctx.fill();
+    ctx.fillStyle = '#8bc34a';
+    ctx.fillRect(bx + 0.3, ry + 2.4, rw * 0.44 - 0.6, 0.28);
+    for (let s = 0; s < 3; s++) {
+      const mx = bx + 1.15 + s * 1.4;
+      const my = ry + 1.55 + (s % 2) * 0.35;
+      ctx.fillStyle = '#e53935';
+      ctx.beginPath();
+      ctx.moveTo(mx - 0.55, my - 0.3);
+      ctx.lineTo(mx + 0.55, my - 0.3);
+      ctx.quadraticCurveTo(mx, my + 1.05, mx, my + 0.92);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#43a047';
+      ctx.fillRect(mx - 0.35, my - 0.52, 0.7, 0.26);
+      ctx.fillStyle = '#fff59d';
+      ctx.fillRect(mx - 0.18, my + 0.12, 0.14, 0.14);
+      ctx.fillRect(mx + 0.12, my + 0.28, 0.14, 0.14);
+    }
+  }
+}
+
+const DESENHO_HORTIFRUTI = {
+  banana: desenharCaixaBananas,
+  maca: (ctx, rx, ry, rw, rh) => desenharCaixaFrutasGrade(ctx, rx, ry, rw, rh, {
+    raio: 0.92,
+    clara: '#ff6e6e',
+    base: '#e53935',
+    escura: '#8e0000',
+    folha: true,
+  }),
+  laranja: (ctx, rx, ry, rw, rh) => desenharCaixaFrutasGrade(ctx, rx, ry, rw, rh, {
+    raio: 0.92,
+    clara: '#ffcc80',
+    base: '#fb8c00',
+    escura: '#d84315',
+    folha: true,
+  }),
+  tomate: (ctx, rx, ry, rw, rh) => desenharCaixaFrutasGrade(ctx, rx, ry, rw, rh, {
+    raio: 0.9,
+    clara: '#ff5252',
+    base: '#e53935',
+    escura: '#b71c1c',
+    folha: false,
+    estrela: true,
+  }),
+  alface: desenharCaixaAlface,
+  cenoura: desenharCaixaCenouras,
+  batata: desenharCaixaBatatas,
+  cebola: (ctx, rx, ry, rw, rh, idxCaixa) => desenharCaixaFrutasGrade(ctx, rx, ry, rw, rh, idxCaixa === 0
+    ? { raio: 0.88, clara: '#fff5dc', base: '#e2c58a', escura: '#9d793c', folha: false }
+    : { raio: 0.88, clara: '#ce93d8', base: '#8e24aa', escura: '#4a148c', folha: false }),
+  mamao: desenharCaixaMamao,
+  uva: (ctx, rx, ry, rw, _rh, idxCaixa) => (
+    idxCaixa === 0
+      ? desenharCaixaUvas(ctx, rx, ry, rw, '#7b1fa2', '#e1bee7')
+      : desenharCaixaUvas(ctx, rx, ry, rw, '#689f38', '#dcedc8')
+  ),
+  morango: desenharCaixaMorangos,
+};
+
+function desenharFileirasEmbalagens(ctx, moldeId, listaCores, x, y, andaresY, tamanhoItem = 3.25) {
+  const baseFrac = BASE_MOLDE_EMBALAGEM[moldeId] || 0.89;
+  const colunasX = [0.95, 4.35, 7.75, 11.15];
+
+  andaresY.forEach((andarY, idxAndar) => {
+    const py = y + andarY - baseFrac * tamanhoItem - 0.16;
+    colunasX.forEach((colX, idxCol) => {
+      const cores = listaCores[(idxAndar + idxCol) % listaCores.length];
+      desenharMoldeEmbalagem(ctx, moldeId, cores, x + colX, py, tamanhoItem);
+    });
+  });
+}
+
+function desenharCartelasOvos(ctx, listaCores, x, y) {
+  GELADEIRA_ANDARES.forEach((andarY, idxAndar) => {
+    const py = y + andarY - 2.35;
+    for (let c = 0; c < 3; c++) {
+      const [corCasca, corEmbalagem] = listaCores[(idxAndar + c) % listaCores.length];
+      const cx = x + 1.15 + c * 4.55;
+      ctx.fillStyle = '#d7ccc8';
+      retanguloArredondado(ctx, cx, py + 0.7, 3.9, 1.5, 0.3);
+      ctx.fill();
+      ctx.fillStyle = escurecerCor(corEmbalagem, 0.1);
+      retanguloArredondado(ctx, cx + 0.15, py + 0.35, 3.6, 0.65, 0.2);
+      ctx.fill();
+      for (let e = 0; e < 3; e++) {
+        ctx.fillStyle = corCasca;
+        ctx.beginPath();
+        ctx.ellipse(cx + 0.8 + e * 1.12, py + 1.25, 0.45, 0.56, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  });
+}
+
+function desenharPaesFrescos(ctx, produtoId, rx, ry, rw) {
+  if (produtoId === 'pao-de-forma') {
+    for (let i = 0; i < 3; i++) {
+      const bx = rx + 0.7 + i * 3.9;
+      ctx.fillStyle = '#c67a28';
+      retanguloArredondado(ctx, bx, ry + 0.85, 3.2, 2.35, 0.7);
+      ctx.fill();
+      ctx.fillStyle = '#f8e3b4';
+      retanguloArredondado(ctx, bx + 0.35, ry + 1.25, 2.5, 1.65, 0.45);
+      ctx.fill();
+      ctx.fillStyle = '#b96918';
+      ctx.fillRect(bx + 1.0, ry + 0.78, 1.2, 0.25);
+    }
+  } else if (produtoId === 'bisnaguinha') {
+    for (let i = 0; i < 4; i++) {
+      const cx = rx + 1.55 + i * ((rw - 3.1) / 3);
+      const cy = ry + 1.9 + (i % 2) * 0.25;
+      const grad = ctx.createRadialGradient(cx - 0.3, cy - 0.3, 0.15, cx, cy, 1.2);
+      grad.addColorStop(0, '#ffe09e');
+      grad.addColorStop(0.55, '#dfa045');
+      grad.addColorStop(1, '#a96218');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 1.18, 0.82, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.fillRect(cx - 0.3, cy - 0.35, 0.55, 0.18);
+    }
+  } else {
+    // Pão de hot-dog / baguetes
+    for (let i = 0; i < 3; i++) {
+      const cx = rx + 2.0 + i * ((rw - 4.0) / 2);
+      const cy = ry + 1.95;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(-0.32);
+      ctx.fillStyle = '#d78c34';
+      retanguloArredondado(ctx, -1.65, -0.68, 3.3, 1.36, 0.68);
+      ctx.fill();
+      ctx.fillStyle = '#f8ca7a';
+      ctx.fillRect(-0.95, -0.35, 0.55, 0.25);
+      ctx.fillRect(0.25, -0.35, 0.55, 0.25);
+      ctx.restore();
+    }
+  }
+}
+
+function desenharConteudoAcougue(ctx, produtoId, x, y) {
+  const bandejas = [
+    { bx: x + 1.15, by: y + 4.35, bw: 6.45, bh: 5.4 },
+    { bx: x + 8.35, by: y + 4.35, bw: 6.45, bh: 5.4 },
+  ];
+
+  for (const [bIdx, b] of bandejas.entries()) {
+    ctx.fillStyle = 'rgba(30, 45, 55, 0.22)';
+    retanguloArredondado(ctx, b.bx + 0.15, b.by + 0.3, b.bw, b.bh, 0.7);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    retanguloArredondado(ctx, b.bx, b.by, b.bw, b.bh, 0.65);
+    ctx.fill();
+    ctx.fillStyle = '#e1eff8';
+    retanguloArredondado(ctx, b.bx + 0.45, b.by + 0.45, b.bw - 0.9, b.bh - 0.9, 0.45);
+    ctx.fill();
+
+    if (produtoId === 'frango') {
+      for (let f = 0; f < 3; f++) {
+        ctx.fillStyle = f % 2 === 0 ? '#ffccbc' : '#ffb8a0';
+        ctx.beginPath();
+        ctx.ellipse(b.bx + 1.9 + f * 1.35, b.by + 2.6 + (f % 2) * 0.3, 1.05, 1.35, 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.36)';
+        ctx.beginPath();
+        ctx.arc(b.bx + 1.65 + f * 1.35, b.by + 2.1 + (f % 2) * 0.3, 0.28, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (produtoId === 'carne-moida') {
+      const grad = ctx.createRadialGradient(b.bx + 2.8, b.by + 2.3, 0.2, b.bx + 3.2, b.by + 2.7, 2.2);
+      grad.addColorStop(0, '#ef5350');
+      grad.addColorStop(0.65, '#c62828');
+      grad.addColorStop(1, '#8e1515');
+      ctx.fillStyle = grad;
+      retanguloArredondado(ctx, b.bx + 0.9, b.by + 1.0, b.bw - 1.8, b.bh - 2.0, 0.95);
+      ctx.fill();
+      ctx.fillStyle = '#ffcdd2';
+      for (const [dx, dy] of [[1.7, 1.9], [2.9, 2.4], [4.2, 2.0], [2.2, 3.2], [3.8, 3.3]]) {
+        ctx.fillRect(b.bx + dx, b.by + dy, 0.42, 0.22);
+      }
+    } else {
+      for (let g = 0; g < 3; g++) {
+        ctx.fillStyle = g === 1 ? '#e64a19' : '#d84315';
+        retanguloArredondado(ctx, b.bx + 0.95, b.by + 1.05 + g * 1.18, b.bw - 1.9, 0.85, 0.42);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255, 240, 220, 0.38)';
+        ctx.fillRect(b.bx + 1.3, b.by + 1.2 + g * 1.18, b.bw - 2.6, 0.18);
+      }
+    }
+
+    // Raminho verde de salsinha decorativa
+    ctx.fillStyle = '#43a047';
+    ctx.beginPath();
+    ctx.arc(b.bx + b.bw - 1.05 - bIdx * 0.2, b.by + 1.15, 0.42, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Brilho da vitrine curva de vidro sobre o açougue
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+  ctx.fillRect(x + 0.8, y + 3.0, TAMANHO_CASA - 1.6, 1.15);
+  ctx.beginPath();
+  ctx.moveTo(x + 2.0, y + 4.15);
+  ctx.lineTo(x + 4.6, y + 4.15);
+  ctx.lineTo(x + 2.4, y + 11.2);
+  ctx.lineTo(x + 1.2, y + 11.2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function desenharSeloCantinho(ctx, item, x, y, corBorda) {
+  const cx = x + 12.85;
+  const cy = y + 12.85;
+  const raio = 2.15;
+
+  ctx.fillStyle = 'rgba(42, 28, 16, 0.25)';
+  ctx.beginPath();
+  ctx.arc(cx, cy + 0.32, raio, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255, 253, 248, 0.96)';
+  ctx.strokeStyle = corBorda;
+  ctx.lineWidth = 0.42;
+  ctx.beginPath();
+  ctx.arc(cx, cy, raio, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = '3.25px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(item.emoji, cx, cy + 0.14);
+}
+
 /**
- * Desenha a mini-embalagem colorida e o medalhão do produto sobre a prateleira/vitrine.
+ * Abastece a prateleira/banca/geladeira com ilustrações específicas do produto e suas marcas,
+ * sobrepondo vidro nas geladeiras e selo compacto de identificação no canto inferior direito.
  */
-export function desenharProduto(ctx, produtoId, opcaoId, x, y) {
+export function desenharProduto(ctx, produtoId, opcaoId, x, y, vizinhos = null) {
   const item = itemPorId.get(produtoId);
   if (!item) return;
 
   const moldeId = MOLDE_DO_PRODUTO[produtoId] || 'pacote';
-  const marca = resolverMarcaDoItem(item, opcaoId);
-  const cores = coresDaMarca(marca);
+  const listaCores = coresOpcoesDoItem(item, opcaoId);
+  const corBorda = listaCores[0][0];
 
   ctx.save();
-  // Mini-embalagem genérica com a cor principal do produto ao lado do medalhão
-  desenharMoldeEmbalagem(ctx, moldeId, cores, x + 1.4, y + 6.9, 5.6);
+  if (item.secao === 'hortifruti') {
+    const fnFruta = DESENHO_HORTIFRUTI[produtoId];
+    if (fnFruta) {
+      HORTIFRUTI_CAIXAS.forEach((caixa, idxCaixa) => {
+        fnFruta(ctx, x + 1.9, y + caixa.cy + 0.55, 12.2, caixa.h - 1.35, idxCaixa);
+      });
+    }
+  } else if (item.secao === 'acougue') {
+    desenharConteudoAcougue(ctx, produtoId, x, y);
+  } else if (item.secao === 'laticinios' || item.secao === 'bebidas') {
+    if (produtoId === 'ovos') {
+      desenharCartelasOvos(ctx, listaCores, x, y);
+    } else {
+      desenharFileirasEmbalagens(ctx, moldeId, listaCores, x, y, GELADEIRA_ANDARES, 3.05);
+    }
+    desenharPortaVidroOverlay(ctx, x, y);
+  } else if (item.secao === 'padaria') {
+    if (produtoId === 'pao-de-forma' || produtoId === 'bisnaguinha' || produtoId === 'pao-de-hot-dog') {
+      desenharPaesFrescos(ctx, produtoId, x + 1.9, y + HORTIFRUTI_CAIXAS[0].cy + 0.55, 12.2);
+      desenharFileirasEmbalagens(ctx, moldeId, listaCores, x, y, [HORTIFRUTI_CAIXAS[1].cy + 4.15], 3.45);
+    } else {
+      desenharFileirasEmbalagens(
+        ctx,
+        moldeId,
+        listaCores,
+        x,
+        y,
+        [HORTIFRUTI_CAIXAS[0].cy + 4.05, HORTIFRUTI_CAIXAS[1].cy + 4.15],
+        3.45,
+      );
+    }
+  } else {
+    // Gôndolas de mercearia, limpeza e guloseimas (3 andares abastecidos com o molde/marca real)
+    desenharFileirasEmbalagens(ctx, moldeId, listaCores, x, y, GONDOLA_ANDARES, 3.22);
+  }
 
-  // Medalhão translúcido compacto sobre a prateleira para leitura imediata sem tampar o móvel
-  ctx.fillStyle = 'rgba(55, 40, 30, 0.22)';
-  ctx.beginPath();
-  ctx.arc(x + 10.2, y + 9.2, 4.0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(255, 253, 248, 0.95)';
-  ctx.strokeStyle = cores[0];
-  ctx.lineWidth = 0.55;
-  ctx.beginPath();
-  ctx.arc(x + 10.2, y + 8.7, 3.85, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.font = '6.4px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(item.emoji, x + 10.2, y + 8.9);
+  desenharSeloCantinho(ctx, item, x, y, corBorda);
   ctx.restore();
 }
 
@@ -1760,8 +2875,8 @@ export function criarIcone(produtoId, opcaoId = null, escala = 2) {
     const canvas = document.createElement('canvas');
     const ctx = typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
     if (ctx) {
-      const tamanhoCss = Math.max(36, Math.round(TAMANHO_CASA * escala));
-      const dpr = Math.max(1, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+      const tamanhoCss = Math.max(52, Math.round(TAMANHO_CASA * escala * 1.4));
+      const dpr = Math.max(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 2);
       aplicarAtributos(canvas);
       canvas.width = Math.round(tamanhoCss * dpr);
       canvas.height = Math.round(tamanhoCss * dpr);
@@ -1770,8 +2885,9 @@ export function criarIcone(produtoId, opcaoId = null, escala = 2) {
 
       ctx.save();
       ctx.scale(dpr, dpr);
-      ctx.imageSmoothingEnabled = false;
-      desenharMoldeEmbalagem(ctx, moldeId, cores, 0, 0, tamanhoCss, emoji);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      desenharMoldeEmbalagem(ctx, moldeId, cores, 2, 2, tamanhoCss - 4, emoji);
       ctx.restore();
       return canvas;
     }

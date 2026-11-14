@@ -6,7 +6,7 @@ import {
   desenharProduto,
 } from './arte.js';
 
-const ESCALA_MAPA = 4;
+const ESCALA_MAPA = 8;
 
 const PLACAS_SECAO = Object.freeze([
   { id: 'laticinios', rotulo: 'Laticínios', cor: '#256fa8', x: 5.0, y: 0.45 },
@@ -15,7 +15,7 @@ const PLACAS_SECAO = Object.freeze([
   { id: 'padaria', rotulo: 'Padaria', cor: '#c67d3b', x: 5.5, y: 3.4 },
   { id: 'mercearia', rotulo: 'Mercearia', cor: '#e07a24', x: 12.0, y: 3.4 },
   { id: 'limpeza', rotulo: 'Limpeza', cor: '#7856c2', x: 18.0, y: 3.4 },
-  { id: 'hortifruti', rotulo: 'Hortifrúti', cor: '#2e9556', x: 3.4, y: 8.5 },
+  { id: 'hortifruti', rotulo: 'Hortifrúti', cor: '#2e9556', x: 2.35, y: 8.2 },
   { id: 'guloseimas', rotulo: 'Guloseimas', cor: '#e44b86', x: 14.0, y: 10.4 },
   { id: 'caixas', rotulo: 'Caixas', cor: '#455a64', x: 12.0, y: 12.35 },
 ]);
@@ -72,7 +72,7 @@ function criarCanvasMapa() {
       const py = y * TAMANHO_CASA;
       desenharCasa(ctxMapa, celula, px, py, vizinhos);
       if (celula.tipo === 'produto' || celula.tipo === 'desejo') {
-        desenharProduto(ctxMapa, celula.id, null, px, py);
+        desenharProduto(ctxMapa, celula.id, null, px, py, vizinhos);
       }
     }
   }
@@ -97,7 +97,7 @@ function criarCanvasMapa() {
 }
 
 /**
- * Cria o renderizador do mapa em canvas de alta resolução com camada estática em 4×,
+ * Cria o renderizador do mapa em canvas de alta resolução com camada estática em 8×,
  * devicePixelRatio e câmera presa aos limites da loja.
  * Retorna null se o contexto 2D do canvas não estiver disponível.
  */
@@ -130,17 +130,17 @@ export function criarRenderizador(canvas) {
     if (larguraMoldura > 0) {
       return Math.max(240, larguraMoldura - 6);
     }
-    return Math.max(240, Math.min(760, (window.innerWidth || 360) - 48));
+    return Math.max(240, Math.min(860, (window.innerWidth || 360) - 48));
   }
 
   function ajustarTamanho() {
     const larguraDisponivel = obterLarguraDisponivel();
-    escala = Math.max(3, Math.min(5, Math.floor(larguraDisponivel / 144)));
+    escala = Math.max(3, Math.min(5, Math.floor(larguraDisponivel / 145)));
     casaPx = TAMANHO_CASA * escala;
 
     larguraLogica = Math.min(larguraMapaLogica, Math.floor(larguraDisponivel / escala));
     const alturaJanela = window.innerHeight || 640;
-    const alturaMaxCss = Math.min(Math.floor(alturaJanela * 0.6), 8 * casaPx);
+    const alturaMaxCss = Math.min(Math.floor(alturaJanela * 0.62), 8 * casaPx);
     alturaLogica = Math.min(
       alturaMapaLogica,
       Math.max(5 * TAMANHO_CASA, Math.floor(alturaMaxCss / escala)),
@@ -180,10 +180,11 @@ export function criarRenderizador(canvas) {
   function desenharPlacas() {
     const fonteCorpo = getComputedStyle(document.body).getPropertyValue('--fonte-corpo').trim()
       || 'Fredoka One, Trebuchet MS, system-ui, sans-serif';
-    const tamFonte = 8 * escala;
-    const alturaPill = Math.round(tamFonte * 1.25);
-    const padX = Math.round(escala * 2.5);
-    const raioPonto = Math.max(3, Math.round(escala * 1.2));
+    const tamFonte = Math.round(escala * 4.4);
+    const alturaPill = Math.round(tamFonte * 1.48);
+    const padX = Math.round(tamFonte * 0.52);
+    const raioPonto = Math.max(2.5, Math.round(tamFonte * 0.17));
+    const gapPonto = Math.round(tamFonte * 0.35);
 
     ctx.save();
     ctx.font = `400 ${tamFonte}px ${fonteCorpo}`;
@@ -194,7 +195,7 @@ export function criarRenderizador(canvas) {
       const px = Math.round((placa.x * TAMANHO_CASA - camX) * escala);
       const py = Math.round((placa.y * TAMANHO_CASA - camY) * escala);
       const larguraTexto = Math.ceil(ctx.measureText(placa.rotulo).width);
-      const larguraPill = larguraTexto + padX * 2 + raioPonto * 2 + escala;
+      const larguraPill = larguraTexto + padX * 2 + raioPonto * 2 + gapPonto;
 
       // Evita plaquinhas cortadas nas bordas verticais ou muito fora das bordas horizontais
       const margemBorda = 6;
@@ -211,19 +212,19 @@ export function criarRenderizador(canvas) {
       const x0 = Math.max(margemBorda, Math.min(xMax, Math.round(px - larguraPill / 2)));
       const y0 = Math.round(py - alturaPill / 2);
 
-      // Sombra discreta sob a placa do corredor
-      ctx.fillStyle = 'rgba(55, 40, 30, 0.16)';
+      // Placa suspensa de corredor com sombra, faixa superior colorida e marcador
+      ctx.fillStyle = 'rgba(45, 32, 20, 0.2)';
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(x0, y0 + Math.max(1, Math.round(escala * 0.45)), larguraPill, alturaPill, escala * 2);
+        ctx.roundRect(x0, y0 + Math.max(1.5, Math.round(escala * 0.5)), larguraPill, alturaPill, escala * 2);
       } else {
         ctx.rect(x0, y0 + 2, larguraPill, alturaPill);
       }
       ctx.fill();
 
-      ctx.fillStyle = 'rgba(255, 253, 248, 0.94)';
-      ctx.strokeStyle = 'rgba(130, 108, 92, 0.45)';
-      ctx.lineWidth = Math.max(1, Math.floor(escala * 0.45));
+      ctx.fillStyle = 'rgba(255, 253, 248, 0.96)';
+      ctx.strokeStyle = placa.cor;
+      ctx.lineWidth = Math.max(1.2, Math.round(escala * 0.45));
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
         ctx.roundRect(x0, y0, larguraPill, alturaPill, escala * 2);
@@ -239,7 +240,7 @@ export function criarRenderizador(canvas) {
       ctx.fill();
 
       ctx.fillStyle = '#3b2d54';
-      ctx.fillText(placa.rotulo, x0 + padX + raioPonto * 2 + escala, py + 1);
+      ctx.fillText(placa.rotulo, x0 + padX + raioPonto * 2 + gapPonto, py + 0.5);
     }
     ctx.restore();
   }

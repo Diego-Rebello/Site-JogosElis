@@ -38,7 +38,7 @@
 
 .mercadinho-main {
   width: 100%;
-  max-width: 820px;
+  max-width: 900px;
   margin-inline: auto;
 }
 
@@ -273,10 +273,10 @@
 }
 
 .mapa-borda {
-  border: 3px solid rgba(59, 45, 84, 0.25);
-  border-radius: 14px;
+  border: 3px solid rgba(90, 68, 52, 0.28);
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(45, 32, 20, 0.12);
   background: #faf6ed;
 }
 
@@ -506,15 +506,19 @@
 }
 
 canvas.icone-produto {
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 span.icone-produto {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.opcao-cartao .icone-produto {
+  border-radius: 10px;
 }
 
 .opcao-cartao__emoji {

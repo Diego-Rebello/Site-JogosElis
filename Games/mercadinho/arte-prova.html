@@ -171,7 +171,7 @@
       <h3>2. Personagem Elis com carrinho nas 4 direções (parada e em passo)</h3>
       <div id="grade-personagem" class="prova-grade-personagem"></div>
 
-      <h3>3. Os 10 moldes genéricos de embalagem (16 × 16) em 3 cores cada</h3>
+      <h3>3. Os 10 moldes genéricos de embalagem (alta resolução 2.5D) em 3 cores cada</h3>
       <div id="grade-moldes" class="prova-moldes-grid"></div>
 
       <h3>4. Catálogo completo: 49 produtos (136 opções) + 12 guloseimas</h3>
@@ -232,7 +232,7 @@
 
     function desenharLojaCompleta() {
       const canvas = document.getElementById('canvas-loja-completa');
-      const escala = 3;
+      const escala = 5;
       canvas.width = LARGURA * TAMANHO_CASA * escala;
       canvas.height = ALTURA * TAMANHO_CASA * escala;
       const ctx = canvas.getContext('2d');
@@ -264,7 +264,7 @@
           const py = y * TAMANHO_CASA;
           desenharCasa(ctx, celula, px, py, vizinhos);
           if (celula.tipo === 'produto' || celula.tipo === 'desejo') {
-            desenharProduto(ctx, celula.id, null, px, py);
+            desenharProduto(ctx, celula.id, null, px, py, vizinhos);
           }
         }
       }
@@ -361,14 +361,15 @@
           box.style.gap = '4px';
 
           const c = document.createElement('canvas');
-          c.width = 48;
-          c.height = 48;
-          c.style.width = '48px';
-          c.style.height = '48px';
-          c.style.imageRendering = 'pixelated';
+          c.width = 128;
+          c.height = 128;
+          c.style.width = '64px';
+          c.style.height = '64px';
           const ctx = c.getContext('2d');
-          ctx.imageSmoothingEnabled = false;
-          desenharMoldeEmbalagem(ctx, moldeId, cores, 0, 0, 48);
+          ctx.scale(2, 2);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          desenharMoldeEmbalagem(ctx, moldeId, cores, 4, 4, 56);
 
           const legenda = document.createElement('code');
           legenda.style.fontSize = '0.7rem';
