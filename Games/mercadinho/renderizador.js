@@ -1,441 +1,407 @@
-import { ALTURA, LARGURA, celulaEm, entrada } from './mapa.js';
 import {
-  TAMANHO_CASA,
-  desenharCasa,
-  desenharPersonagem,
-  desenharProduto,
-} from './arte.js';
+  FIGURA_DO_PRODUTO,
+  SECOES_VISUAIS,
+  criarFigura,
+  criarIconeUi,
+  misturar,
+} from './figuras.js';
+import { ALTURA, LARGURA, MAPA, celulaEm, entrada } from './mapa.js';
 
-/**
- * Teto da resolução da camada estática (pixels de tela por pixel lógico).
- * A camada é dimensionada por ceil(escala × devicePixelRatio) e nunca passa disto,
- * para não estourar memória em telas densas (8× = 3072×2048, ~25 MB).
- */
-const ESCALA_MAPA_MAXIMA = 8;
-const FONTE_PADRAO = 'Fredoka One, Trebuchet MS, system-ui, sans-serif';
-
-const PLACAS_SECAO = Object.freeze([
-  { id: 'laticinios', rotulo: 'Laticínios', cor: '#256fa8', x: 5.0, y: 0.45 },
-  { id: 'acougue', rotulo: 'Açougue', cor: '#d9383a', x: 12.5, y: 0.45 },
-  { id: 'bebidas', rotulo: 'Bebidas', cor: '#0e7c90', x: 19.0, y: 0.45 },
-  { id: 'padaria', rotulo: 'Padaria', cor: '#c67d3b', x: 5.5, y: 3.4 },
-  { id: 'mercearia', rotulo: 'Mercearia', cor: '#e07a24', x: 12.0, y: 3.4 },
-  { id: 'limpeza', rotulo: 'Limpeza', cor: '#7856c2', x: 18.0, y: 3.4 },
-  { id: 'hortifruti', rotulo: 'Hortifrúti', cor: '#2e9556', x: 2.35, y: 8.2 },
-  { id: 'guloseimas', rotulo: 'Guloseimas', cor: '#e44b86', x: 14.0, y: 10.4 },
-  { id: 'caixas', rotulo: 'Caixas', cor: '#455a64', x: 12.0, y: 12.35 },
-]);
-
-function mesmoMovel(celulaA, x, y) {
-  if (x < 0 || y < 0 || x >= LARGURA || y >= ALTURA) return false;
-  const celulaB = celulaEm(x, y);
-  if (celulaA.tipo === 'produto') {
-    return celulaB.tipo === 'produto' && celulaB.secao === celulaA.secao;
-  }
-  if (celulaA.tipo === 'desejo') {
-    return celulaB.tipo === 'desejo';
-  }
-  return celulaB.tipo === celulaA.tipo;
+function arredondarPixelAparelho(valor) {
+  const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+  return Math.round(valor * dpr) / dpr;
 }
 
-function criarCanvasMapa(escalaCamada) {
-  const larguraMapa = LARGURA * TAMANHO_CASA;
-  const alturaMapa = ALTURA * TAMANHO_CASA;
-  const canvasMapa = document.createElement('canvas');
-  canvasMapa.width = larguraMapa * escalaCamada;
-  canvasMapa.height = alturaMapa * escalaCamada;
+function tipoParede(x, y, portaX) {
+  if (y === 0) return 'topo';
+  if (y === ALTURA - 1) {
+    return Math.abs(x - portaX) <= 1 ? 'porta' : 'fundo';
+  }
+  return 'lado';
+}
 
-  const ctxMapa = canvasMapa.getContext('2d');
-  if (!ctxMapa) return null;
-
-  ctxMapa.imageSmoothingEnabled = true;
-  ctxMapa.imageSmoothingQuality = 'high';
-  ctxMapa.save();
-  ctxMapa.scale(escalaCamada, escalaCamada);
-
-  const ent = entrada();
+function agruparBlocosSecoes() {
+  const visitados = Array.from({ length: ALTURA }, () => Array(LARGURA).fill(false));
+  const blocos = [];
 
   for (let y = 0; y < ALTURA; y++) {
     for (let x = 0; x < LARGURA; x++) {
-      const celula = celulaEm(x, y);
-      const acima = y > 0 ? celulaEm(x, y - 1) : null;
-      const acimaSolido = Boolean(
-        acima && (acima.tipo === 'parede' || acima.tipo === 'produto' || acima.tipo === 'desejo'),
-      );
-      const vizinhos = {
-        casaX: x,
-        casaY: y,
-        ultimaLinha: ALTURA - 1,
-        ehPortaEntrada: celula.tipo === 'parede' && y === ALTURA - 1 && Math.abs(x - ent.x) <= 1,
-        acimaSolido,
-        cima: mesmoMovel(celula, x, y - 1),
-        baixo: mesmoMovel(celula, x, y + 1),
-        esquerda: mesmoMovel(celula, x - 1, y),
-        direita: mesmoMovel(celula, x + 1, y),
-      };
+      const letra = MAPA[y][x];
+      if (!SECOES_VISUAIS[letra] || visitados[y][x]) continue;
 
-      const px = x * TAMANHO_CASA;
-      const py = y * TAMANHO_CASA;
-      desenharCasa(ctxMapa, celula, px, py, vizinhos);
-      if (celula.tipo === 'produto' || celula.tipo === 'desejo') {
-        desenharProduto(ctxMapa, celula.id, null, px, py, vizinhos);
+      const fila = [[x, y]];
+      const casas = [];
+      visitados[y][x] = true;
+
+      while (fila.length) {
+        const [cx, cy] = fila.shift();
+        casas.push([cx, cy]);
+        for (const [dx, dy] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ]) {
+          const nx = cx + dx;
+          const ny = cy + dy;
+          if (
+            ny >= 0
+            && ny < ALTURA
+            && nx >= 0
+            && nx < LARGURA
+            && !visitados[ny][nx]
+            && MAPA[ny][nx] === letra
+          ) {
+            visitados[ny][nx] = true;
+            fila.push([nx, ny]);
+          }
+        }
       }
+
+      blocos.push({ letra, casas });
     }
   }
 
-  // Tapete de boas-vindas na entrada interna do mercado
-  const matX = ent.x * TAMANHO_CASA + 1.5;
-  const matY = ent.y * TAMANHO_CASA + 3.5;
-  ctxMapa.fillStyle = '#e86898';
-  ctxMapa.beginPath();
-  if (typeof ctxMapa.roundRect === 'function') {
-    ctxMapa.roundRect(matX, matY, 13, 9.5, 1.4);
-  } else {
-    ctxMapa.rect(matX, matY, 13, 9.5);
-  }
-  ctxMapa.fill();
-  ctxMapa.strokeStyle = '#fff5f8';
-  ctxMapa.lineWidth = 0.7;
-  ctxMapa.stroke();
-
-  ctxMapa.restore();
-  return canvasMapa;
+  return blocos;
 }
 
-/**
- * Cria o renderizador do mapa com devicePixelRatio e câmera presa aos limites da loja.
- * A camada estática (gôndolas, embalagens, piso) só é desenhada no primeiro quadro,
- * na resolução da tela — quem joga na lista rápida nunca paga esse custo.
- * Retorna null se o contexto 2D do canvas não estiver disponível.
- */
-export function criarRenderizador(canvas) {
-  if (!canvas || typeof canvas.getContext !== 'function') return null;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
+export function criarRenderizador(janela) {
+  if (!janela) return null;
 
-  let canvasMapa = null;
-  let escalaCamada = 0;
-  let fonteCorpo = null;
-
-  const larguraMapaLogica = LARGURA * TAMANHO_CASA;
-  const alturaMapaLogica = ALTURA * TAMANHO_CASA;
-
-  let escala = 3;
-  let casaPx = TAMANHO_CASA * escala;
-  let larguraLogica = 104;
-  let alturaLogica = 128;
-  let larguraCss = larguraLogica * escala;
-  let alturaCss = alturaLogica * escala;
-  let dpr = 1;
+  let casa = 52;
   let camX = 0;
   let camY = 0;
   let quadrosDesenhados = 0;
-  let ultimoEstado = null;
 
-  function obterLarguraDisponivel() {
-    const moldura = canvas.closest('.mapa-moldura') || canvas.parentElement;
-    const larguraMoldura = moldura?.clientWidth || 0;
-    if (larguraMoldura > 0) {
-      return Math.max(240, larguraMoldura - 6);
+  let elMapa = null;
+  let elDestino = null;
+  let elPeao = null;
+  let elConta = null;
+
+  const nichosPorChave = new Map();
+  const caixasPorChave = new Map();
+
+  let ultimoMapaTransform = '';
+  let ultimoPeaoTransform = '';
+  let ultimaLadoEsquerdo = false;
+  let ultimoItensCarrinho = -1;
+  let ultimoDestinoChave = '';
+  let ultimoDestaqueChave = '';
+  let baloesAtivos = new Set();
+
+  function calcularCasa() {
+    const largura = janela.clientWidth || 0;
+    if (!largura) return casa;
+    if (largura >= 1152) {
+      return Math.min(64, Math.floor(largura / LARGURA));
     }
-    return Math.max(240, Math.min(860, (window.innerWidth || 360) - 48));
+    return Math.max(48, Math.min(64, Math.floor(largura / 7)));
+  }
+
+  function montarMapa(novaCasa) {
+    casa = novaCasa;
+    nichosPorChave.clear();
+    caixasPorChave.clear();
+    baloesAtivos = new Set();
+    ultimoMapaTransform = '';
+    ultimoPeaoTransform = '';
+    ultimaLadoEsquerdo = false;
+    ultimoItensCarrinho = -1;
+    ultimoDestinoChave = '';
+    ultimoDestaqueChave = '';
+
+    const ent = entrada();
+    let iCaixa = 0;
+    const em = (x, y) => (x < 0 || y < 0 || x >= LARGURA || y >= ALTURA ? '#' : MAPA[y][x]);
+
+    const mapa = document.createElement('div');
+    mapa.className = 'mapa';
+    mapa.setAttribute('aria-hidden', 'true');
+    mapa.style.setProperty('--casa', `${casa}px`);
+
+    // 1. Tapete na entrada
+    const tapete = document.createElement('div');
+    tapete.className = 'tapete';
+    tapete.style.left = `${ent.x * casa + 5}px`;
+    tapete.style.top = `${ent.y * casa + 12}px`;
+    tapete.style.width = `${Math.max(12, casa - 10)}px`;
+    tapete.style.height = `${Math.max(12, casa - 20)}px`;
+    mapa.append(tapete);
+
+    const pinos = [];
+
+    // 2. Paredes, nichos e caixas
+    for (let y = 0; y < ALTURA; y++) {
+      for (let x = 0; x < LARGURA; x++) {
+        const s = MAPA[y][x];
+        if (s === '.') continue;
+
+        if (s === '#') {
+          const parede = document.createElement('div');
+          parede.className = `casa parede parede--${tipoParede(x, y, ent.x)}`;
+          parede.style.left = `${x * casa}px`;
+          parede.style.top = `${y * casa}px`;
+          mapa.append(parede);
+          continue;
+        }
+
+        if (SECOES_VISUAIS[s]) {
+          const sec = SECOES_VISUAIS[s];
+          const cel = celulaEm(x, y);
+          if (!cel || (cel.tipo !== 'produto' && cel.tipo !== 'desejo')) continue;
+
+          const nicho = document.createElement('div');
+          const classes = ['casa', 'nicho', `nicho--${sec.movel}`];
+          if (em(x, y - 1) !== s) classes.push('b-cima');
+          if (em(x, y + 1) !== s) classes.push('b-baixo');
+          if (em(x - 1, y) !== s) classes.push('b-esq');
+          if (em(x + 1, y) !== s) classes.push('b-dir');
+
+          nicho.className = classes.join(' ');
+          nicho.style.left = `${x * casa}px`;
+          nicho.style.top = `${y * casa}px`;
+          nicho.style.setProperty('--sec', sec.cor);
+          nicho.style.setProperty('--sec-escura', misturar(sec.cor, '#000000', 0.18));
+          nicho.style.setProperty('--sec-fundo', misturar(sec.cor, '#ffffff', 0.86));
+
+          const solto = FIGURA_DO_PRODUTO[cel.id]?.[0] === 'solto';
+          const larg = Math.round(casa * (solto ? 0.72 : 0.68));
+          nicho.append(criarFigura(cel.id, null, larg, { marca: false }));
+          mapa.append(nicho);
+
+          // Pino fora da caixa de z-index do nicho para ficar sempre acima das placas
+          const pino = document.createElement('span');
+          pino.className = 'pino';
+          pino.textContent = '!';
+          pino.style.left = `${x * casa + casa / 2}px`;
+          pino.style.top = `${y * casa - 12}px`;
+          pino.hidden = true;
+          pinos.push(pino);
+
+          nichosPorChave.set(`${x},${y}`, { el: nicho, pino });
+          continue;
+        }
+
+        if (s === 'K') {
+          iCaixa += 1;
+          const caixa = document.createElement('div');
+          caixa.className = 'casa caixa-reg';
+          caixa.style.left = `${x * casa}px`;
+          caixa.style.top = `${y * casa}px`;
+
+          const etiqueta = document.createElement('i');
+          etiqueta.textContent = `Caixa ${iCaixa}`;
+
+          caixa.append(criarIconeUi('cupom', Math.max(22, Math.round(casa * 0.58))), etiqueta);
+          mapa.append(caixa);
+          caixasPorChave.set(`${x},${y}`, caixa);
+        }
+      }
+    }
+
+    // 3. Marcador de destino
+    const destino = document.createElement('div');
+    destino.className = 'destino';
+    destino.hidden = true;
+    mapa.append(destino);
+
+    // 4. Placas de seção
+    for (const { letra, casas } of agruparBlocosSecoes()) {
+      const sec = SECOES_VISUAIS[letra];
+      const minY = Math.min(...casas.map(c => c[1]));
+      const topo = casas.filter(c => c[1] === minY).map(c => c[0]);
+      const cx = (Math.min(...topo) + Math.max(...topo) + 1) / 2;
+      const xPx = letra === 'H' ? cx * casa + casa * 0.55 : cx * casa;
+      const yPx = minY === 1 ? casa * 0.78 : minY * casa;
+
+      const placa = document.createElement('div');
+      placa.className = 'placa';
+      placa.style.left = `${xPx}px`;
+      placa.style.top = `${yPx}px`;
+      placa.style.setProperty('--sec', sec.cor);
+      placa.append(criarIconeUi(sec.icone, 20), document.createTextNode(sec.nome));
+      mapa.append(placa);
+    }
+
+    // 5. Pinos (!) acima das placas
+    for (const pino of pinos) {
+      mapa.append(pino);
+    }
+
+    // 6. Peão
+    const peao = document.createElement('div');
+    peao.className = 'peao';
+
+    const rosto = document.createElement('span');
+    rosto.className = 'peao__rosto';
+    rosto.append(criarIconeUi('menina', 32));
+
+    const carrinho = document.createElement('span');
+    carrinho.className = 'peao__carrinho';
+    carrinho.append(criarIconeUi('carrinho', 18));
+
+    const conta = document.createElement('span');
+    conta.className = 'peao__conta';
+    conta.hidden = true;
+
+    peao.append(rosto, carrinho, conta);
+    mapa.append(peao);
+
+    elMapa = mapa;
+    elDestino = destino;
+    elPeao = peao;
+    elConta = conta;
+
+    janela.replaceChildren(mapa);
   }
 
   function ajustarTamanho() {
-    const larguraDisponivel = obterLarguraDisponivel();
-    escala = Math.max(3, Math.min(5, Math.floor(larguraDisponivel / 145)));
-    casaPx = TAMANHO_CASA * escala;
-
-    larguraLogica = Math.min(larguraMapaLogica, Math.floor(larguraDisponivel / escala));
-    const alturaJanela = window.innerHeight || 640;
-    const alturaMaxCss = Math.min(Math.floor(alturaJanela * 0.62), 8 * casaPx);
-    alturaLogica = Math.min(
-      alturaMapaLogica,
-      Math.max(5 * TAMANHO_CASA, Math.floor(alturaMaxCss / escala)),
-    );
-
-    larguraCss = larguraLogica * escala;
-    alturaCss = alturaLogica * escala;
-    dpr = Math.max(1, window.devicePixelRatio || 1);
-
-    canvas.width = Math.round(larguraCss * dpr);
-    canvas.height = Math.round(alturaCss * dpr);
-    canvas.style.width = `${larguraCss}px`;
-    canvas.style.height = `${alturaCss}px`;
-    canvas.dataset.escala = String(escala);
-    canvas.dataset.casaPx = String(casaPx);
-    canvas.dataset.larguraLogica = String(larguraLogica);
-    canvas.dataset.alturaLogica = String(alturaLogica);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    // Se a densidade mudou (zoom, troca de monitor, rotação), a camada é refeita no próximo quadro
-    if (canvasMapa && escalaDesejada() !== escalaCamada) {
-      canvasMapa = null;
-      escalaCamada = 0;
+    const novaCasa = calcularCasa();
+    if (!elMapa || novaCasa !== casa) {
+      montarMapa(novaCasa);
     }
-
-    if (ultimoEstado) {
-      calcularCamera(ultimoEstado.posX, ultimoEstado.posY);
-    }
-  }
-
-  function escalaDesejada() {
-    return Math.max(1, Math.min(ESCALA_MAPA_MAXIMA, Math.ceil(escala * dpr)));
-  }
-
-  /** Desenha a camada estática na primeira vez que for preciso (ou após mudar a densidade). */
-  function garantirCamadaEstatica() {
-    if (canvasMapa) return canvasMapa;
-    // Se faltar memória para a resolução desejada, tenta resoluções menores
-    for (let k = escalaDesejada(); k >= 1; k = k > 2 ? Math.floor(k / 2) : k - 1) {
-      const camada = criarCanvasMapa(k);
-      if (camada) {
-        canvasMapa = camada;
-        escalaCamada = k;
-        return canvasMapa;
-      }
-    }
-    return null;
-  }
-
-  function obterFonteCorpo() {
-    if (fonteCorpo === null) {
-      fonteCorpo = getComputedStyle(document.body).getPropertyValue('--fonte-corpo').trim()
-        || FONTE_PADRAO;
-    }
-    return fonteCorpo;
-  }
-
-  function calcularCamera(posX, posY) {
-    const centroX = (posX + 0.5) * TAMANHO_CASA;
-    const centroY = (posY + 0.5) * TAMANHO_CASA;
-
-    const maxCamX = Math.max(0, larguraMapaLogica - larguraLogica);
-    const maxCamY = Math.max(0, alturaMapaLogica - alturaLogica);
-
-    camX = Math.max(0, Math.min(maxCamX, Math.round(centroX - larguraLogica / 2)));
-    camY = Math.max(0, Math.min(maxCamY, Math.round(centroY - alturaLogica / 2)));
-  }
-
-  function desenharPlacas() {
-    const tamFonte = Math.round(escala * 4.4);
-    const alturaPill = Math.round(tamFonte * 1.48);
-    const padX = Math.round(tamFonte * 0.52);
-    const raioPonto = Math.max(2.5, Math.round(tamFonte * 0.17));
-    const gapPonto = Math.round(tamFonte * 0.35);
-
-    ctx.save();
-    ctx.font = `400 ${tamFonte}px ${obterFonteCorpo()}`;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-
-    for (const placa of PLACAS_SECAO) {
-      const px = Math.round((placa.x * TAMANHO_CASA - camX) * escala);
-      const py = Math.round((placa.y * TAMANHO_CASA - camY) * escala);
-      const larguraTexto = Math.ceil(ctx.measureText(placa.rotulo).width);
-      const larguraPill = larguraTexto + padX * 2 + raioPonto * 2 + gapPonto;
-
-      // Evita plaquinhas cortadas nas bordas verticais ou muito fora das bordas horizontais
-      const margemBorda = 6;
-      if (
-        px < -larguraPill * 0.4
-        || px > larguraCss + larguraPill * 0.4
-        || py - alturaPill / 2 < 2
-        || py + alturaPill / 2 > alturaCss - 2
-      ) {
-        continue;
-      }
-
-      const xMax = Math.max(margemBorda, Math.round(larguraCss - larguraPill - margemBorda));
-      const x0 = Math.max(margemBorda, Math.min(xMax, Math.round(px - larguraPill / 2)));
-      const y0 = Math.round(py - alturaPill / 2);
-
-      // Placa suspensa de corredor com sombra, faixa superior colorida e marcador
-      ctx.fillStyle = 'rgba(45, 32, 20, 0.2)';
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(x0, y0 + Math.max(1.5, Math.round(escala * 0.5)), larguraPill, alturaPill, escala * 2);
-      } else {
-        ctx.rect(x0, y0 + 2, larguraPill, alturaPill);
-      }
-      ctx.fill();
-
-      ctx.fillStyle = 'rgba(255, 253, 248, 0.96)';
-      ctx.strokeStyle = placa.cor;
-      ctx.lineWidth = Math.max(1.2, Math.round(escala * 0.45));
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(x0, y0, larguraPill, alturaPill, escala * 2);
-      } else {
-        ctx.rect(x0, y0, larguraPill, alturaPill);
-      }
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = placa.cor;
-      ctx.beginPath();
-      ctx.arc(x0 + padX + raioPonto, py, raioPonto, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#3b2d54';
-      ctx.fillText(placa.rotulo, x0 + padX + raioPonto * 2 + gapPonto, py + 0.5);
-    }
-    ctx.restore();
-  }
-
-  function desenharBaloesNivel1(casasDestaque) {
-    if (!casasDestaque?.length) return;
-    ctx.save();
-    for (const pos of casasDestaque) {
-      const bx = pos.x * TAMANHO_CASA + 8;
-      const by = Math.max(5.5, pos.y * TAMANHO_CASA - 0.5);
-
-      ctx.fillStyle = 'rgba(55, 40, 30, 0.22)';
-      ctx.beginPath();
-      ctx.arc(bx, by + 0.6, 4.3, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffd43b';
-      ctx.strokeStyle = '#3b2d54';
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.arc(bx, by, 4.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#3b2d54';
-      ctx.font = 'bold 6.2px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('!', bx, by + 0.4);
-    }
-    ctx.restore();
+    janela.dataset.casaPx = String(casa);
   }
 
   function desenhar(estado) {
-    ultimoEstado = estado;
+    if (!estado) return;
+    if (!elMapa || (janela.clientWidth > 0 && calcularCasa() !== casa)) {
+      ajustarTamanho();
+    }
+    if (!elMapa) return;
+
     quadrosDesenhados += 1;
 
-    calcularCamera(estado.posX, estado.posY);
+    const larguraJanela = janela.clientWidth || casa * 7;
+    const alturaJanela = janela.clientHeight || casa * 9;
+    const larguraMapa = LARGURA * casa;
+    const alturaMapa = ALTURA * casa;
 
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, larguraCss, alturaCss);
+    let brutoCamX = larguraMapa <= larguraJanela
+      ? -(larguraJanela - larguraMapa) / 2
+      : (estado.posX + 0.5) * casa - larguraJanela / 2;
+    let brutoCamY = alturaMapa <= alturaJanela
+      ? -(alturaJanela - alturaMapa) / 2
+      : (estado.posY + 0.5) * casa - alturaJanela / 2;
 
-    const camada = garantirCamadaEstatica();
-    if (camada) {
-      // Com a camada na resolução da tela a cópia é 1:1 (ou quase): reamostragem barata
-      ctx.imageSmoothingEnabled = escalaCamada !== escala * dpr;
-      ctx.imageSmoothingQuality = 'low';
-      ctx.drawImage(
-        camada,
-        camX * escalaCamada,
-        camY * escalaCamada,
-        larguraLogica * escalaCamada,
-        alturaLogica * escalaCamada,
-        0,
-        0,
-        larguraCss,
-        alturaCss,
-      );
+    if (larguraMapa > larguraJanela) {
+      brutoCamX = Math.max(0, Math.min(larguraMapa - larguraJanela, brutoCamX));
     }
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    if (alturaMapa > alturaJanela) {
+      brutoCamY = Math.max(0, Math.min(alturaMapa - alturaJanela, brutoCamY));
+    }
 
-    ctx.save();
-    ctx.scale(escala, escala);
-    ctx.translate(-camX, -camY);
+    camX = arredondarPixelAparelho(brutoCamX);
+    camY = arredondarPixelAparelho(brutoCamY);
 
-    if (estado.destinoCaminhada) {
-      const dx = estado.destinoCaminhada.x * TAMANHO_CASA;
-      const dy = estado.destinoCaminhada.y * TAMANHO_CASA;
-      ctx.fillStyle = 'rgba(216, 27, 127, 0.14)';
-      ctx.strokeStyle = 'rgba(216, 27, 127, 0.72)';
-      ctx.lineWidth = 0.75;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(dx + 2.2, dy + 2.2, TAMANHO_CASA - 4.4, TAMANHO_CASA - 4.4, 2.5);
-      } else {
-        ctx.rect(dx + 2.2, dy + 2.2, TAMANHO_CASA - 4.4, TAMANHO_CASA - 4.4);
+    const mapaTransform = `translate3d(${-camX}px, ${-camY}px, 0)`;
+    if (mapaTransform !== ultimoMapaTransform) {
+      elMapa.style.transform = mapaTransform;
+      ultimoMapaTransform = mapaTransform;
+    }
+
+    const reduzido = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+    const pulo = reduzido ? 0 : Math.abs(Math.sin(estado.fasePasso || 0)) * 4;
+    const peaoX = arredondarPixelAparelho(estado.posX * casa);
+    const peaoY = arredondarPixelAparelho(estado.posY * casa - 6 - pulo);
+    const peaoTransform = `translate3d(${peaoX}px, ${peaoY}px, 0)`;
+    if (peaoTransform !== ultimoPeaoTransform) {
+      elPeao.style.transform = peaoTransform;
+      ultimoPeaoTransform = peaoTransform;
+    }
+
+    if (estado.direcao === 'esquerda' || estado.direcao === 'direita') {
+      const ladoEsquerdo = estado.direcao === 'esquerda';
+      if (ladoEsquerdo !== ultimaLadoEsquerdo) {
+        elPeao.classList.toggle('peao--esquerda', ladoEsquerdo);
+        ultimaLadoEsquerdo = ladoEsquerdo;
       }
-      ctx.fill();
-      ctx.stroke();
     }
 
-    if (estado.destaqueCasa) {
-      const hx = estado.destaqueCasa.x * TAMANHO_CASA;
-      const hy = estado.destaqueCasa.y * TAMANHO_CASA;
-      ctx.fillStyle = 'rgba(255, 223, 77, 0.22)';
-      ctx.strokeStyle = '#ffca28';
-      ctx.lineWidth = 1.05;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(hx + 0.6, hy + 0.6, TAMANHO_CASA - 1.2, TAMANHO_CASA - 1.2, 1.8);
+    const itens = Number(estado.itensNoCarrinho) || 0;
+    if (itens !== ultimoItensCarrinho) {
+      elConta.hidden = itens <= 0;
+      elConta.textContent = itens > 0 ? String(itens) : '';
+      ultimoItensCarrinho = itens;
+    }
+
+    const dest = estado.destinoCaminhada;
+    const destinoChave = dest ? `${dest.x},${dest.y}` : '';
+    if (destinoChave !== ultimoDestinoChave) {
+      if (dest) {
+        elDestino.hidden = false;
+        elDestino.style.transform = `translate3d(${dest.x * casa}px, ${dest.y * casa}px, 0)`;
       } else {
-        ctx.rect(hx + 0.6, hy + 0.6, TAMANHO_CASA - 1.2, TAMANHO_CASA - 1.2);
+        elDestino.hidden = true;
       }
-      ctx.fill();
-      ctx.stroke();
+      ultimoDestinoChave = destinoChave;
     }
 
-    desenharBaloesNivel1(estado.baloesNivel1);
-    ctx.restore();
+    const dist = estado.destaqueCasa;
+    const destaqueChave = dist ? `${dist.x},${dist.y}` : '';
+    if (destaqueChave !== ultimoDestaqueChave) {
+      if (ultimoDestaqueChave) {
+        nichosPorChave.get(ultimoDestaqueChave)?.el.classList.remove('nicho--destaque');
+        caixasPorChave.get(ultimoDestaqueChave)?.classList.remove('caixa-reg--destaque');
+      }
+      if (destaqueChave) {
+        nichosPorChave.get(destaqueChave)?.el.classList.add('nicho--destaque');
+        caixasPorChave.get(destaqueChave)?.classList.add('caixa-reg--destaque');
+      }
+      ultimoDestaqueChave = destaqueChave;
+    }
 
-    // Placas das seções desenhadas antes da personagem para nunca escondê-la
-    desenharPlacas();
+    const novosBaloes = new Set((estado.baloesNivel1 || []).map(c => `${c.x},${c.y}`));
+    for (const chave of baloesAtivos) {
+      if (!novosBaloes.has(chave)) {
+        const reg = nichosPorChave.get(chave);
+        if (reg) {
+          reg.el.classList.remove('nicho--na-lista');
+          reg.pino.hidden = true;
+        }
+      }
+    }
+    for (const chave of novosBaloes) {
+      if (!baloesAtivos.has(chave)) {
+        const reg = nichosPorChave.get(chave);
+        if (reg) {
+          reg.el.classList.add('nicho--na-lista');
+          reg.pino.hidden = false;
+        }
+      }
+    }
+    baloesAtivos = novosBaloes;
 
-    ctx.save();
-    ctx.scale(escala, escala);
-    ctx.translate(-camX, -camY);
-    desenharPersonagem(
-      ctx,
-      estado.direcao,
-      estado.quadro,
-      estado.posX * TAMANHO_CASA,
-      estado.posY * TAMANHO_CASA,
-      {
-        itensNoCarrinho: estado.itensNoCarrinho || 0,
-        fasePasso: estado.fasePasso,
-      },
-    );
-    ctx.restore();
-
-    canvas.dataset.camX = String(camX);
-    canvas.dataset.camY = String(camY);
-    canvas.dataset.quadros = String(quadrosDesenhados);
-    canvas.dataset.posX = String(estado.posX);
-    canvas.dataset.posY = String(estado.posY);
-    canvas.dataset.direcao = String(estado.direcao);
-    canvas.dataset.quadro = String(estado.quadro);
+    janela.dataset.casaPx = String(casa);
+    janela.dataset.camX = String(camX);
+    janela.dataset.camY = String(camY);
+    janela.dataset.posX = String(estado.posX);
+    janela.dataset.posY = String(estado.posY);
+    janela.dataset.direcao = String(estado.direcao);
   }
 
   function eventoParaCasa(evento) {
-    const rect = canvas.getBoundingClientRect();
-    if (!rect.width || !rect.height) return null;
-    const xCss = ((evento.clientX - rect.left) / rect.width) * larguraCss;
-    const yCss = ((evento.clientY - rect.top) / rect.height) * alturaCss;
-    const xLog = xCss / escala + camX;
-    const yLog = yCss / escala + camY;
-    const x = Math.floor(xLog / TAMANHO_CASA);
-    const y = Math.floor(yLog / TAMANHO_CASA);
+    const rect = janela.getBoundingClientRect();
+    if (!rect.width || !rect.height || !casa) return null;
+    const xCss = evento.clientX - rect.left - janela.clientLeft + camX;
+    const yCss = evento.clientY - rect.top - janela.clientTop + camY;
+    const x = Math.floor(xCss / casa);
+    const y = Math.floor(yCss / casa);
     if (x < 0 || y < 0 || x >= LARGURA || y >= ALTURA) return null;
     return { x, y };
   }
 
   function obterMetricas() {
     return {
-      escala,
-      casaPx,
-      larguraCss,
-      alturaCss,
-      larguraLogica,
-      alturaLogica,
+      escala: 1,
+      casaPx: casa,
+      larguraCss: janela.clientWidth,
+      alturaCss: janela.clientHeight,
       camX,
       camY,
-      larguraMapaLogica,
-      alturaMapaLogica,
+      larguraMapaPx: LARGURA * casa,
+      alturaMapaPx: ALTURA * casa,
       quadrosDesenhados,
-      escalaCamada,
     };
   }
 

@@ -16,6 +16,12 @@
 > previsto ou falha de verificação, deve parar no fim da etapa atual, registrar as evidências e
 > pedir decisão ao Diego.
 
+> **Aviso (2026-11-14): a parte de arte deste plano foi substituída.** A loja em pixel art, a
+> seção 1.1, os parágrafos "Visão" e "Tamanho na tela" da 2.5, a seção 4.7 e os critérios de arte
+> da Etapa 4 **não valem mais**. Vale o `docs/planos/PLANO-MERCADINHO-ARTE.md`, que tem na
+> seção 3 a lista exata do que mudou. Regras do jogo, dados, gerador, caixa e protocolo
+> continuam valendo como estão aqui.
+
 ---
 
 ## Resumo para o Diego

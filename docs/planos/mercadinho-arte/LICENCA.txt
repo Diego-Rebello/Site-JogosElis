@@ -1,0 +1,122 @@
+Ícones do Mercadinho (Jogos da Elis) — pasta docs/planos/mercadinho-arte/icones
+===============================================================================
+
+Todos os arquivos .svg desta pasta, MENOS mamao.svg, são do projeto Fluent Emoji,
+variante "Color", sem nenhuma alteração no desenho (só o nome do arquivo mudou).
+
+  Fluent Emoji — Copyright (c) Microsoft Corporation
+  https://github.com/microsoft/fluentui-emoji
+  Licença: MIT — https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE
+  Data do download: 2026-11-14 (ramo main)
+
+A licença MIT permite usar, copiar, modificar e redistribuir, desde que o aviso de
+copyright e o texto da licença acompanhem as cópias. Por isso este arquivo (ou um
+equivalente) precisa ir junto dos ícones para public/figuras/mercadinho/.
+
+  MIT License
+
+  Copyright (c) Microsoft Corporation.
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+mamao.svg é desenho próprio dos Jogos da Elis (não existe emoji de mamão), feito
+para combinar com o conjunto.
+
+Origem de cada arquivo
+----------------------
+Endereço de cada original:
+  https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/<Pasta>/Color/<arquivo>_color.svg
+(menina.svg vem de assets/Girl/Default/Color/girl_color_default.svg)
+
+  arquivo aqui              pasta no Fluent Emoji
+  banana.svg                Banana
+  maca.svg                  Red apple
+  laranja.svg               Tangerine
+  tomate.svg                Tomato
+  alface.svg                Leafy green
+  cenoura.svg               Carrot
+  batata.svg                Potato
+  cebola.svg                Onion
+  melao.svg                 Melon
+  manga.svg                 Mango
+  uva.svg                   Grapes
+  morango.svg               Strawberry
+  pao-de-forma.svg          Bread
+  croissant.svg             Croissant
+  baguete.svg               Baguette bread
+  biscoito.svg              Cookie
+  waffle.svg                Waffle
+  barra-de-chocolate.svg    Chocolate bar
+  cafe.svg                  Hot beverage
+  copo-de-leite.svg         Glass of milk
+  manteiga.svg              Butter
+  queijo.svg                Cheese wedge
+  bacon.svg                 Bacon
+  pernil.svg                Meat on bone
+  ovo.svg                   Egg
+  arroz.svg                 Cooked rice
+  feijao.svg                Beans
+  espaguete.svg             Spaghetti
+  lata.svg                  Canned food
+  colher.svg                Spoon
+  trigo.svg                 Sheaf of rice
+  cupcake.svg               Cupcake
+  pudim.svg                 Custard
+  milho.svg                 Ear of corn
+  coxa-de-frango.svg        Poultry leg
+  carne.svg                 Cut of meat
+  cachorro-quente.svg       Hot dog
+  suco-caixinha.svg         Beverage box
+  copo-com-canudo.svg       Cup with straw
+  gota.svg                  Droplet
+  frasco.svg                Lotion bottle
+  bolhas.svg                Bubbles
+  esponja.svg               Sponge
+  cesto.svg                 Basket
+  papel-higienico.svg       Roll of paper
+  escova-de-dentes.svg      Toothbrush
+  dente.svg                 Tooth
+  sabonete.svg              Soap
+  bala.svg                  Candy
+  pirulito.svg              Lollipop
+  sorvete.svg               Ice cream
+  casquinha.svg             Soft ice cream
+  batata-frita.svg          French fries
+  livro.svg                 Open book
+  camiseta.svg              T-shirt
+  girassol.svg              Sunflower
+  carrinho.svg              Shopping cart
+  sacolas.svg               Shopping bags
+  saco-de-dinheiro.svg      Money bag
+  coracao.svg               Red heart
+  coracao-vazio.svg         White heart
+  cupom.svg                 Receipt
+  lista.svg                 Memo
+  olhos.svg                 Eyes
+  alfinete.svg              Round pushpin
+  estrela.svg               Star
+  moeda.svg                 Coin
+  menina.svg                Girl (Default)
+  mercado.svg               Convenience store
+  lixeira.svg               Wastebasket
+  confirmado.svg            Check mark button
+  mochila.svg               Backpack
+  arvore.svg                Deciduous tree
+  bule.svg                  Teapot
+  bolo.svg                  Birthday cake

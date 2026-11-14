@@ -1,33 +1,113 @@
-Figuras do Mercadinho (Jogos da Elis)
-=====================================
+Ícones do Mercadinho (Jogos da Elis) — pasta public/figuras/mercadinho/icones
+=============================================================================
 
-Todos os arquivos .png desta pasta são folhas de tiles (spritesheets) da série
-Roguelike e RPG Urban da Kenney, em domínio público (Creative Commons CC0 1.0):
+Todos os arquivos .svg desta pasta, MENOS mamao.svg, são do projeto Fluent Emoji,
+variante "Color", sem nenhuma alteração no desenho (só o nome do arquivo mudou).
 
-  Autor: Kenney (Kenney Vleugels — https://kenney.nl)
-  Licença: Creative Commons Zero v1.0 Universal (CC0 1.0 Public Domain Dedication)
-           https://creativecommons.org/publicdomain/zero/1.0/
+  Fluent Emoji — Copyright (c) Microsoft Corporation
+  https://github.com/microsoft/fluentui-emoji
+  Licença: MIT — https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE
+  Data do download: 2026-11-14 (ramo main)
 
-Arquivos incluídos (copiados sem edição, apenas renomeados):
+A licença MIT permite usar, copiar, modificar e redistribuir, desde que o aviso de
+copyright e o texto da licença acompanhem as cópias.
 
-1. kenney-cidade.png
-   - Pacote: Roguelike Modern City
-   - URL oficial: https://kenney.nl/assets/roguelike-modern-city
-   - Arquivo original no pacote: Tilemap/tilemap.png
-   - Data do download: 2026-11-14
+  MIT License
 
-2. kenney-interiores.png
-   - Pacote: Roguelike Indoors
-   - URL oficial: https://kenney.nl/assets/roguelike-indoors
-   - Arquivo original no pacote: Tilesheets/roguelikeIndoor_transparent.png
-   - Data do download: 2026-11-14
+  Copyright (c) Microsoft Corporation.
 
-3. kenney-urbano.png
-   - Pacote: RPG Urban Pack
-   - URL oficial: https://kenney.nl/assets/rpg-urban-pack
-   - Arquivo original no pacote: Tilemap/tilemap.png
-   - Data do download: 2026-11-14
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-Grade dos arquivos: tiles de 16 x 16 px com espaçamento de 1 px (passo de 17 px).
-Os desenhos das embalagens por marca e o cenário em alta resolução do jogo são
-gerados por código em Games/mercadinho/arte.js, sem uso de logotipos reais.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+mamao.svg é desenho próprio dos Jogos da Elis (não existe emoji de mamão), feito
+para combinar com o conjunto.
+
+Origem de cada arquivo
+----------------------
+Endereço de cada original:
+  https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/<Pasta>/Color/<arquivo>_color.svg
+(menina.svg vem de assets/Girl/Default/Color/girl_color_default.svg)
+
+  arquivo aqui              pasta no Fluent Emoji
+  banana.svg                Banana
+  maca.svg                  Red apple
+  laranja.svg               Tangerine
+  tomate.svg                Tomato
+  alface.svg                Leafy green
+  cenoura.svg               Carrot
+  batata.svg                Potato
+  cebola.svg                Onion
+  mamao.svg                 (desenho próprio dos Jogos da Elis)
+  uva.svg                   Grapes
+  morango.svg               Strawberry
+  pao-de-forma.svg          Bread
+  baguete.svg               Baguette bread
+  biscoito.svg              Cookie
+  waffle.svg                Waffle
+  barra-de-chocolate.svg    Chocolate bar
+  cafe.svg                  Hot beverage
+  copo-de-leite.svg         Glass of milk
+  manteiga.svg              Butter
+  queijo.svg                Cheese wedge
+  pernil.svg                Meat on bone
+  ovo.svg                   Egg
+  arroz.svg                 Cooked rice
+  feijao.svg                Beans
+  espaguete.svg             Spaghetti
+  colher.svg                Spoon
+  trigo.svg                 Sheaf of rice
+  cupcake.svg               Cupcake
+  pudim.svg                 Custard
+  milho.svg                 Ear of corn
+  coxa-de-frango.svg        Poultry leg
+  carne.svg                 Cut of meat
+  cachorro-quente.svg       Hot dog
+  suco-caixinha.svg         Beverage box
+  copo-com-canudo.svg       Cup with straw
+  gota.svg                  Droplet
+  bolhas.svg                Bubbles
+  esponja.svg               Sponge
+  cesto.svg                 Basket
+  papel-higienico.svg       Roll of paper
+  escova-de-dentes.svg      Toothbrush
+  sabonete.svg              Soap
+  bala.svg                  Candy
+  pirulito.svg              Lollipop
+  sorvete.svg               Ice cream
+  livro.svg                 Open book
+  camiseta.svg              T-shirt
+  girassol.svg              Sunflower
+  carrinho.svg              Shopping cart
+  sacolas.svg               Shopping bags
+  saco-de-dinheiro.svg      Money bag
+  coracao.svg               Red heart
+  coracao-vazio.svg         White heart
+  cupom.svg                 Receipt
+  lista.svg                 Memo
+  olhos.svg                 Eyes
+  alfinete.svg              Round pushpin
+  estrela.svg               Star
+  moeda.svg                 Coin
+  menina.svg                Girl (Default)
+  mercado.svg               Convenience store
+  lixeira.svg               Wastebasket
+  confirmado.svg            Check mark button
+  mochila.svg               Backpack
+  bolo.svg                  Birthday cake
+  arvore.svg                Deciduous tree
+  bule.svg                  Teapot

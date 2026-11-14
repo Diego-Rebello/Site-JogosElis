@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mercadinho — referência de arte (v2)</title>
+<!--
+  REFERÊNCIA VISUAL do plano docs/planos/PLANO-MERCADINHO-ARTE.md.
+  Não é o jogo: é o alvo de aparência. O executor copia medidas, cores e CSS daqui.
+  Abrir por http://localhost:5173/docs/planos/mercadinho-arte/referencia.html (npm run dev)
+  para carregar a fonte do site; por arquivo local a fonte cai na reserva do sistema.
+  Ícones: Fluent Emoji (Microsoft, licença MIT) em ./icones — ver ./LICENCA.txt.
+-->
+<style>
+@font-face { font-family: 'Fredoka One'; font-weight: 400; src: url('../../../shared/fontes/fredoka-one-400.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-weight: 400 700; src: url('../../../shared/fontes/nunito-var.woff2') format('woff2'); }
+@font-face { font-family: 'Pacifico'; font-weight: 400; src: url('../../../shared/fontes/pacifico-400.woff2') format('woff2'); }
+
+:root {
+  --fonte-corpo: 'Fredoka One', 'Trebuchet MS', system-ui, sans-serif;
+  --fonte-leitura: 'Nunito', system-ui, sans-serif;
+  --cor-texto: #5e3a50;
+  --cor-principal-escura: #d81b7f;
+  --cor-certo: #1b7a45;
+
+  /* ---- fichas do Mercadinho (copiar para mercadinho.css) ---- */
+  --m-piso: #fbf5ea;
+  --m-piso-linha: #efe3d0;
+  --m-parede: #f4e7d3;
+  --m-parede-rodape: #d8c2a1;
+  --m-tinta: #3b2d54;            /* texto escuro sobre claro */
+  --m-etiqueta: #ffe45c;         /* etiqueta de preço */
+  --m-etiqueta-borda: #d9b400;
+  --m-madeira: #c9925a;
+  --m-madeira-escura: #a06a38;
+  --m-sombra: 0 6px 0 rgba(74, 52, 32, .16);
+  --casa: 52px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px; background: #efe9f2; color: var(--cor-texto); font-family: var(--fonte-leitura); }
+h1, h2, h3 { font-family: var(--fonte-corpo); font-weight: 400; margin: 0 0 8px; }
+h1 { font-size: 26px; } h2 { font-size: 20px; margin-top: 36px; }
+p.nota { max-width: 900px; margin: 0 0 16px; font-size: 15px; line-height: 1.45; }
+.fila { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+.quadro { display: grid; gap: 8px; }
+.quadro > figcaption, .legenda { font: 400 14px var(--fonte-corpo); }
+
+/* ---------- moldura de celular 390 × 844 ---------- */
+.celular { width: 390px; height: 844px; background: linear-gradient(135deg, #fce3ec, #ffc4e1); border-radius: 28px; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,.18); font-family: var(--fonte-corpo); }
+.cabecalho { height: 52px; background: #f8f8ff; border-bottom: 3px solid #ffb6c1; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; flex: none; }
+.cabecalho b { font: 400 22px 'Pacifico', cursive; color: #ad155c; }
+.cabecalho span { border: 2px solid #ffb6c1; border-radius: 12px; padding: 4px 10px; font-size: 14px; color: #ad155c; background: #fff; }
+
+/* ---------- painel da compra (HUD) compacto ---------- */
+.hud { flex: none; display: grid; grid-template-columns: 1.5fr 1fr; gap: 6px; padding: 8px 8px 6px; }
+.hud__linha2 { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ficha { min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; background: #fff; border: 2px solid #f3d3de; border-radius: 14px; font-size: 16px; color: var(--m-tinta); padding: 0 6px; white-space: nowrap; min-width: 0; }
+.ficha img { width: 22px; height: 22px; flex: none; }
+.ficha small { font: 700 12px var(--fonte-leitura); color: #6b5060; }
+.ficha--botao { border-color: #ffb6c1; box-shadow: 0 3px 0 #ffb6c1; }
+.ficha--destaque { background: #ffe1ea; }
+
+/* ---------- mapa ---------- */
+.janela-mapa { position: relative; flex: 1; margin: 0 8px; border-radius: 18px; overflow: hidden; border: 3px solid #d8c2a1; background: var(--m-piso); }
+.mapa { position: absolute; left: 0; top: 0; width: calc(var(--casa) * 24); height: calc(var(--casa) * 16);
+  background-color: var(--m-piso);
+  background-image: linear-gradient(var(--m-piso-linha) 2px, transparent 2px), linear-gradient(90deg, var(--m-piso-linha) 2px, transparent 2px);
+  background-size: var(--casa) var(--casa); }
+.casa { position: absolute; width: var(--casa); height: var(--casa); }
+
+.parede { background: var(--m-parede); }
+.parede--topo { background: linear-gradient(#fffaf0 0 46%, #ff9fc0 46% 58%, #fdf1df 58% 100%); border-bottom: 6px solid var(--m-parede-rodape); }
+.parede--lado { background: linear-gradient(90deg, #e9d8be, #f4e7d3); }
+.parede--fundo { background: linear-gradient(#cfe9f7, #eaf6fd); border-top: 6px solid #9fb6c4; box-shadow: inset 3px 0 0 #9fb6c4, inset -3px 0 0 #9fb6c4; }
+.parede--porta { background: linear-gradient(#bfe6d0, #e3f6ea); border-top: 6px solid #2e9556; }
+.tapete { position: absolute; border-radius: 10px; background: #f06a9b; border: 3px solid #fff; opacity: .9; }
+
+/* nicho = uma casa de prateleira com UM produto grande */
+.nicho { background: var(--sec-fundo); border: 0 solid var(--sec-escura); cursor: pointer; }
+.nicho.b-cima { border-top-width: 3px; } .nicho.b-baixo { border-bottom-width: 3px; }
+.nicho.b-esq { border-left-width: 3px; } .nicho.b-dir { border-right-width: 3px; }
+.nicho.b-cima.b-esq { border-top-left-radius: 12px; } .nicho.b-cima.b-dir { border-top-right-radius: 12px; }
+.nicho.b-baixo.b-esq { border-bottom-left-radius: 12px; } .nicho.b-baixo.b-dir { border-bottom-right-radius: 12px; }
+.nicho.b-baixo { box-shadow: var(--m-sombra); }
+.nicho::after { /* tábua com etiqueta de preço */
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 9px;
+  background: linear-gradient(90deg, transparent calc(50% - 7px), var(--m-etiqueta) calc(50% - 7px) calc(50% + 7px), transparent calc(50% + 7px)) center 2px / 100% 5px no-repeat, var(--sec-escura); }
+.nicho .fig { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); filter: drop-shadow(0 2px 1px rgba(60, 40, 20, .25)); }
+.nicho--geladeira { background: linear-gradient(#ffffff 0 14%, #e3f3fc 14% 100%); }
+.nicho--banca { background: repeating-linear-gradient(0deg, #f3d6ab 0 11px, #e9c592 11px 13px); }
+.nicho--balcao { background: linear-gradient(#ffffff, #ffe9ea); }
+.nicho--na-lista { outline: 4px solid #ffc928; outline-offset: -4px; z-index: 3; }
+.pino { position: absolute; left: 50%; top: -12px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: #ffc928; border: 3px solid #fff; color: var(--m-tinta); font: 400 16px/20px var(--fonte-corpo); text-align: center; box-shadow: 0 2px 0 rgba(0,0,0,.2); z-index: 7; }
+
+/* caixa registradora */
+.caixa-reg { background: #5d6b78; border-radius: 10px; border: 3px solid #3d4852; box-shadow: var(--m-sombra); display: grid; place-items: center; }
+.caixa-reg img { width: 30px; height: 30px; }
+.caixa-reg i { position: absolute; left: 50%; bottom: -3px; transform: translate(-50%, 50%); background: #2e9556; color: #fff; font: 400 11px var(--fonte-corpo); padding: 1px 6px; border-radius: 8px; border: 2px solid #fff; white-space: nowrap; }
+
+/* placa de seção: pendurada, presa ao topo do móvel */
+.placa { position: absolute; transform: translate(-50%, -86%); display: flex; align-items: center; gap: 5px; padding: 3px 10px 3px 6px; border-radius: 12px; background: var(--sec); color: #fff; font: 400 14px var(--fonte-corpo); border: 2px solid #fff; box-shadow: 0 3px 0 rgba(0,0,0,.18); white-space: nowrap; z-index: 6; pointer-events: none; }
+.placa img { width: 20px; height: 20px; background: #fff; border-radius: 50%; padding: 2px; }
+
+/* personagem = peão */
+.peao { position: absolute; width: var(--casa); height: var(--casa); z-index: 9; pointer-events: none; }
+.peao::before { content: ''; position: absolute; left: 22%; right: 22%; bottom: 3px; height: 9px; border-radius: 50%; background: rgba(60,40,20,.22); }
+.peao__rosto { position: absolute; left: 50%; top: 0; width: 42px; height: 42px; margin-left: -21px; border-radius: 50%; background: #fff; border: 3px solid var(--cor-principal-escura); box-shadow: 0 3px 0 rgba(140, 15, 74, .35); display: grid; place-items: center; }
+.peao__rosto img { width: 32px; height: 32px; }
+.peao__carrinho { position: absolute; right: -4px; bottom: 2px; width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 2px solid #c9b8a0; display: grid; place-items: center; }
+.peao__carrinho img { width: 18px; height: 18px; }
+.peao__conta { position: absolute; right: -8px; top: 12px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--cor-principal-escura); color: #fff; font: 400 12px/18px var(--fonte-corpo); text-align: center; padding: 0 4px; }
+.destino { position: absolute; width: var(--casa); height: var(--casa); z-index: 1; }
+.destino::after { content: ''; position: absolute; inset: 12px; border-radius: 50%; border: 3px dashed var(--cor-principal-escura); opacity: .7; }
+
+.selo-onde { position: absolute; left: 8px; top: 8px; z-index: 9; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,.94); border: 2px solid #f3d3de; border-radius: 12px; padding: 4px 10px 4px 6px; font: 400 14px var(--fonte-corpo); color: var(--m-tinta); }
+.selo-onde img { width: 20px; height: 20px; }
+.selo-modo { position: absolute; right: 8px; bottom: 8px; z-index: 9; background: rgba(255,255,255,.94); border: 2px solid #ffb6c1; box-shadow: 0 3px 0 #ffb6c1; border-radius: 12px; padding: 4px 10px; font: 400 14px var(--fonte-corpo); color: var(--m-tinta); display: flex; gap: 5px; align-items: center; }
+.selo-modo img { width: 20px; height: 20px; }
+
+.barra-baixo { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; }
+.botao { min-height: 48px; border-radius: 16px; border: 0; font: 400 17px var(--fonte-corpo); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; }
+.botao img { width: 24px; height: 24px; }
+.botao--sucesso { background: #1b7a45; color: #fff; box-shadow: 0 4px 0 #0f4f2c; }
+.botao--neutro { background: #fff; color: var(--m-tinta); border: 2px solid #ffb6c1; box-shadow: 0 4px 0 #ffb6c1; }
+
+/* ---------- figura do produto (embalagem + ícone + marca) ---------- */
+.fig { position: relative; display: block; flex: none; }
+.fig > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.fig__rotulo { position: absolute; background: #fff; border-radius: 9%; display: grid; place-items: center; overflow: hidden; }
+.fig__rotulo img, .fig__solto { width: 88%; height: 88%; object-fit: contain; }
+.fig__rotulo b { font: 400 1em/1 var(--fonte-corpo); letter-spacing: .02em; text-transform: uppercase; }
+.fig__marca { position: absolute; display: grid; place-items: center; text-align: center; font-family: var(--fonte-corpo); line-height: .95; overflow: hidden; }
+.fig--solto img { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* ---------- gôndola de frente (painel da seção) ---------- */
+.folha { position: absolute; inset: 60px 0 0 0; background: #fffdf9; border-radius: 22px 22px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -6px 24px rgba(0,0,0,.25); }
+.fundo-escuro { position: absolute; inset: 0; background: rgba(59, 45, 84, .5); }
+.folha__topo { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--sec); color: #fff; font: 400 20px var(--fonte-corpo); }
+.folha__topo img { width: 30px; height: 30px; background: #fff; border-radius: 50%; padding: 3px; }
+.folha__topo small { display: block; font: 700 12px var(--fonte-leitura); opacity: .95; }
+.folha__fechar { margin-left: auto; width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.95); color: var(--m-tinta); display: grid; place-items: center; font-size: 20px; }
+.gondola { flex: 1; overflow: auto; padding: 14px 10px 18px; background: linear-gradient(#f7efe2, #f1e6d4); }
+.gondola--geladeira { background: linear-gradient(#e9f6fd, #d8eefa); }
+.andar { display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: 14px; }
+.vaga { display: grid; justify-items: center; align-content: end; padding: 0 3px; position: relative; }
+.vaga .fig { margin-bottom: -2px; filter: drop-shadow(0 4px 2px rgba(60,40,20,.22)); z-index: 1; }
+.vaga__tabua { grid-column: 1 / -1; width: calc(100% + 6px); margin: 0 -3px; height: 12px; background: linear-gradient(var(--m-madeira), var(--m-madeira-escura)); box-shadow: 0 4px 0 rgba(74,52,32,.18); }
+.gondola--geladeira .vaga__tabua { background: linear-gradient(#f5fbff, #b9d3e2); }
+.vaga:first-child .vaga__tabua { border-radius: 6px 0 0 6px; } .vaga:last-child .vaga__tabua { border-radius: 0 6px 6px 0; }
+.etq { margin-top: 5px; width: 100%; min-height: 50px; background: #fff; border: 2px solid #e6d9c6; border-radius: 10px; padding: 4px 4px 5px; text-align: center; font: 400 14px/1.1 var(--fonte-corpo); color: var(--m-tinta); display: grid; align-content: center; gap: 2px; }
+.etq small { font: 700 12px var(--fonte-leitura); color: #6b5060; }
+.vaga--na-lista .etq { border-color: #ffc928; background: #fff8dc; }
+.vaga__chip { position: absolute; top: 0; right: 4px; z-index: 2; background: #ffc928; color: var(--m-tinta); border: 2px solid #fff; border-radius: 10px; font: 400 12px var(--fonte-corpo); padding: 1px 7px; box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+.vaga--feito .vaga__chip { background: #1b7a45; color: #fff; }
+
+/* ---------- painel do produto: marcas lado a lado na tábua ---------- */
+.produto { flex: 1; overflow: auto; padding: 10px 10px 14px; display: flex; flex-direction: column; gap: 10px; }
+.produto__aviso { background: #fff8dc; border: 2px solid #ffc928; border-radius: 12px; padding: 6px 10px; font: 400 15px var(--fonte-corpo); color: var(--m-tinta); display: flex; align-items: center; gap: 6px; }
+.produto__aviso img { width: 22px; height: 22px; }
+.opcoes { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 6px; background: linear-gradient(#e9f6fd, #d8eefa); border-radius: 14px; padding: 14px 6px 0; }
+.opcao { display: grid; justify-items: center; align-content: end; }
+.opcao .fig { filter: drop-shadow(0 4px 2px rgba(60,40,20,.22)); margin-bottom: -2px; z-index: 1; }
+.opcoes__tabua { grid-column: 1 / -1; height: 12px; margin: 0 -6px; background: linear-gradient(#f5fbff, #b9d3e2); box-shadow: 0 4px 0 rgba(74,52,32,.18); }
+.opcoes__pes { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 6px; padding: 10px 0 12px; }
+.pe { display: grid; justify-items: center; gap: 6px; }
+.preco { background: var(--m-etiqueta); border: 2px solid var(--m-etiqueta-borda); border-radius: 8px; padding: 2px 8px 3px; font: 400 21px var(--fonte-corpo); color: #2b2118; box-shadow: 0 2px 0 rgba(0,0,0,.12); white-space: nowrap; }
+.preco small { font-size: 13px; margin-right: 2px; }
+.pe__marca { font: 400 15px/1.05 var(--fonte-corpo); color: var(--m-tinta); text-align: center; min-height: 32px; display: grid; align-content: center; }
+.coracoes { display: flex; gap: 2px; } .coracoes img { width: 22px; height: 22px; }
+.pe .botao { width: 100%; min-height: 44px; font-size: 15px; }
+.pe--escolhida .botao { background: #fff; color: var(--cor-certo); border: 2px solid var(--cor-certo); box-shadow: none; }
+.qtd { display: flex; align-items: center; justify-content: center; gap: 14px; font: 400 17px var(--fonte-corpo); color: var(--m-tinta); }
+.qtd b { font-weight: 400; font-size: 26px; min-width: 28px; text-align: center; }
+.qtd span.r { width: 48px; height: 48px; border-radius: 14px; border: 2px solid #ffb6c1; box-shadow: 0 3px 0 #ffb6c1; background: #fff; display: grid; place-items: center; font-size: 26px; }
+.voltar { font: 400 15px var(--fonte-corpo); color: #ad155c; padding: 4px 2px; }
+
+/* ---------- folhas de prova ---------- */
+.prova { background: #fffdf9; border-radius: 16px; padding: 16px; display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: flex-end; max-width: 1340px; }
+.prova figure { margin: 0; display: grid; justify-items: center; gap: 4px; font: 700 12px var(--fonte-leitura); width: 96px; text-align: center; }
+.desk { width: calc(52px * 24 + 6px); height: calc(52px * 16 + 6px); position: relative; border: 3px solid #d8c2a1; border-radius: 18px; overflow: hidden; }
+</style>
+</head>
+<body>
+<h1>Mercadinho — referência de arte (v2)</h1>
+<p class="nota">Regra da marca: o nome da marca só aparece na embalagem dentro do painel do produto (tela C) e no carrinho. No mapa e na gôndola a figura representa o produto, sem marca.</p>
+<p class="nota">Alvo visual do <b>PLANO-MERCADINHO-ARTE.md</b>. Três telas de celular (390 × 844), a folha de embalagens, o mapa inteiro de computador e o catálogo dos 61 itens. Tudo aqui é HTML/CSS + ícones SVG: nada é desenhado por coordenada em canvas.</p>
+
+<div class="fila" id="telas">
+  <figure class="quadro"><div class="celular" id="tela-a"></div><figcaption>A · Loja: uma figura grande por prateleira</figcaption></figure>
+  <figure class="quadro"><div class="celular" id="tela-b"></div><figcaption>B · Gôndola de frente: a seção inteira com nomes</figcaption></figure>
+  <figure class="quadro"><div class="celular" id="tela-c"></div><figcaption>C · Produto: as marcas lado a lado na prateleira</figcaption></figure>
+</div>
+
+<h2>Folha de embalagens — os 10 moldes e o item solto, em 104 px (painel do produto) e em 30 px (sem marca, como no mapa)</h2>
+<div class="prova" id="folha-moldes"></div>
+
+<h2>Mapa inteiro no computador (casa de 52 px)</h2>
+<div class="desk"><div id="mapa-desk"></div></div>
+
+<h2>Catálogo — os 61 itens em 72 px (primeira opção de cada um)</h2>
+<div class="prova" id="catalogo"></div>
+
+<script>
+const DADOS = {"produtos":[{"id":"banana","nome":"Banana","secao":"hortifruti","medida":"1 kg","opcoes":[{"rotulo":"Nanica","preco":599,"coracoes":1,"cores":["#fdd835","#fffde7"]},{"rotulo":"Prata","preco":799,"coracoes":2,"cores":["#fbc02d","#5d4037"]},{"rotulo":"Orgânica","preco":1099,"coracoes":3,"cores":["#558b2f","#f1f8e9"]}]},{"id":"maca","nome":"Maçã","secao":"hortifruti","medida":"1 kg","opcoes":[{"rotulo":"Gala","preco":999,"coracoes":2,"cores":["#e53935","#fff8e1"]},{"rotulo":"Fuji","preco":1199,"coracoes":3,"cores":["#c62828","#ffebee"]}]},{"id":"laranja","nome":"Laranja","secao":"hortifruti","medida":"1 kg","opcoes":[{"rotulo":"Pera","preco":499,"coracoes":2,"cores":["#fb8c00","#fff3e0"]},{"rotulo":"Lima","preco":699,"coracoes":2,"cores":["#9ccc65","#fffde7"]},{"rotulo":"Baía","preco":799,"coracoes":3,"cores":["#ef6c00","#ffe082"]}]},{"id":"tomate","nome":"Tomate","secao":"hortifruti","medida":"1 kg","opcoes":[{"rotulo":"Salada","preco":799,"coracoes":1,"cores":["#ef5350","#ffffff"]},{"rotulo":"Italiano","preco":949,"coracoes":2,"cores":["#b71c1c","#e8f5e9"]},{"rotulo":"Orgânico","preco":1399,"coracoes":3,"cores":["#43a047","#fff9c4"]}]},{"id":"alface","nome":"Alface","secao":"hortifruti","medida":"1 unidade","opcoes":[{"rotulo":"Crespa","preco":349,"coracoes":2,"cores":["#66bb6a","#ffffff"]},{"rotulo":"Americana","preco":499,"coracoes":2,"cores":["#2e7d32","#dcedc8"]},{"rotulo":"Hidropônica","preco":549,"coracoes":3,"cores":["#00897b","#e0f2f1"]}]},{"id":"cenoura","nome":"Cenoura","secao":"hortifruti","medida":"1 kg","opcoes":[{"rotulo":"Comum","preco":599,"coracoes":2,"cores":["#f57c00","#fff3e0"]},{"rotulo":"Orgânica","preco":999,"coracoes":3,"cores":["#558b2f","#f1f8e9"]}]},{"id":"batata","nome":"Batata","secao":"hortifruti","medida":"1 kg","opcoes":[{"rotulo":"Lavada","preco":819,"coracoes":2,"cores":["#d7b878","#fff8e1"]},{"rotulo":"Asterix","preco":999,"coracoes":3,"cores":["#c25e68","#fce4ec"]}]},{"id":"cebola","nome":"Cebola","secao":"hortifruti","medida":"1 kg","opcoes":[{"rotulo":"Branca","preco":789,"coracoes":2,"cores":["#e6d3a7","#6d4c41"]},{"rotulo":"Roxa","preco":1099,"coracoes":3,"cores":["#7b1fa2","#f3e5f5"]}]},{"id":"mamao","nome":"Mamão","secao":"hortifruti","medida":"1 unidade","opcoes":[{"rotulo":"Papaia","preco":599,"coracoes":2,"cores":["#ff8f00","#e8f5e9"]},{"rotulo":"Formosa","preco":899,"coracoes":3,"cores":["#e65100","#fff8e1"]}]},{"id":"uva","nome":"Uva","secao":"hortifruti","medida":"bandeja 500 g","opcoes":[{"rotulo":"Niágara","preco":899,"coracoes":2,"cores":["#8e24aa","#f3e5f5"]},{"rotulo":"Sem semente","preco":1199,"coracoes":3,"cores":["#7cb342","#e8f5e9"]}]},{"id":"morango","nome":"Morango","secao":"hortifruti","medida":"bandeja","opcoes":[{"rotulo":"Comum","preco":999,"coracoes":2,"cores":["#f57c00","#fff3e0"]},{"rotulo":"Orgânico","preco":1499,"coracoes":3,"cores":["#43a047","#fff9c4"]}]},{"id":"pao-de-forma","nome":"Pão de forma","secao":"padaria","medida":"500 g","opcoes":[{"rotulo":"Panco","preco":649,"coracoes":1,"cores":["#e53935","#fff59d"]},{"rotulo":"Pullman","preco":799,"coracoes":2,"cores":["#1565c0","#ffca28"]},{"rotulo":"Wickbold","preco":949,"coracoes":3,"cores":["#2e7d32","#fff8e1"]}]},{"id":"bisnaguinha","nome":"Bisnaguinha","secao":"padaria","medida":"pacote","opcoes":[{"rotulo":"Panco","preco":699,"coracoes":2,"cores":["#e53935","#fff59d"]},{"rotulo":"Seven Boys","preco":749,"coracoes":2,"cores":["#ef6c00","#ffffff"]},{"rotulo":"Pullman","preco":849,"coracoes":3,"cores":["#1565c0","#ffca28"]}]},{"id":"pao-de-hot-dog","nome":"Pão de hot-dog","secao":"padaria","medida":"pacote","opcoes":[{"rotulo":"Panco","preco":629,"coracoes":2,"cores":["#e53935","#fff59d"]},{"rotulo":"Pullman","preco":749,"coracoes":3,"cores":["#1565c0","#ffca28"]}]},{"id":"biscoito-recheado","nome":"Biscoito recheado","secao":"padaria","medida":"pacote","opcoes":[{"rotulo":"Passatempo","preco":329,"coracoes":2,"cores":["#1e88e5","#ffeb3b"]},{"rotulo":"Trakinas","preco":379,"coracoes":3,"cores":["#e53935","#ffca28"]},{"rotulo":"Oreo","preco":449,"coracoes":3,"cores":["#0d47a1","#ffffff"]}]},{"id":"cream-cracker","nome":"Biscoito cream cracker","secao":"padaria","medida":"200 g","opcoes":[{"rotulo":"Marilan","preco":299,"coracoes":1,"cores":["#d32f2f","#ffffff"]},{"rotulo":"Bauducco","preco":399,"coracoes":2,"cores":["#f9a825","#4e342e"]},{"rotulo":"Piraquê","preco":479,"coracoes":3,"cores":["#ad1457","#fffde7"]}]},{"id":"achocolatado","nome":"Achocolatado em pó","secao":"padaria","medida":"pote","opcoes":[{"rotulo":"Toddy","preco":749,"coracoes":2,"cores":["#d84315","#ffeb3b"]},{"rotulo":"Nescau","preco":849,"coracoes":3,"cores":["#e53935","#6d4c41"]},{"rotulo":"Ovomaltine","preco":1290,"coracoes":3,"cores":["#ef6c00","#1e88e5"]}]},{"id":"cafe","nome":"Café em pó","secao":"padaria","medida":"250 g","opcoes":[{"rotulo":"Caboclo","preco":1149,"coracoes":1,"cores":["#6d4c41","#ffe0b2"]},{"rotulo":"Pilão","preco":1299,"coracoes":2,"cores":["#c62828","#fffde7"]},{"rotulo":"Melitta","preco":1399,"coracoes":3,"cores":["#2e7d32","#ffca28"]}]},{"id":"leite","nome":"Leite","secao":"laticinios","medida":"1 litro","opcoes":[{"rotulo":"Italac","preco":529,"coracoes":1,"cores":["#d62828","#ffffff"]},{"rotulo":"Piracanjuba","preco":589,"coracoes":2,"cores":["#ef6c00","#fff9c4"]},{"rotulo":"Ninho","preco":749,"coracoes":3,"cores":["#f9a825","#c62828"]}]},{"id":"iogurte","nome":"Iogurte de morango","secao":"laticinios","medida":"garrafinha","opcoes":[{"rotulo":"Batavo","preco":279,"coracoes":1,"cores":["#1565c0","#ffebee"]},{"rotulo":"Nestlé","preco":329,"coracoes":2,"cores":["#c62828","#ffe082"]},{"rotulo":"Danone","preco":399,"coracoes":3,"cores":["#ec407a","#ffffff"]}]},{"id":"manteiga","nome":"Manteiga","secao":"laticinios","medida":"200 g","opcoes":[{"rotulo":"Italac","preco":1090,"coracoes":1,"cores":["#d62828","#ffffff"]},{"rotulo":"Itambé","preco":1249,"coracoes":2,"cores":["#1976d2","#fff8e1"]},{"rotulo":"Aviação","preco":1490,"coracoes":3,"cores":["#d84315","#fff3e0"]}]},{"id":"margarina","nome":"Margarina","secao":"laticinios","medida":"500 g","opcoes":[{"rotulo":"Primor","preco":549,"coracoes":1,"cores":["#ef5350","#fffde7"]},{"rotulo":"Delícia","preco":699,"coracoes":2,"cores":["#00897b","#fff59d"]},{"rotulo":"Qualy","preco":849,"coracoes":3,"cores":["#fdd835","#1565c0"]}]},{"id":"queijo","nome":"Queijo muçarela fatiado","secao":"laticinios","medida":"150 g","opcoes":[{"rotulo":"Seara","preco":849,"coracoes":1,"cores":["#b71c1c","#ffccbc"]},{"rotulo":"Sadia","preco":979,"coracoes":2,"cores":["#d84315","#ffca28"]},{"rotulo":"Tirolez","preco":1149,"coracoes":3,"cores":["#1565c0","#ffd54f"]}]},{"id":"presunto","nome":"Presunto fatiado","secao":"laticinios","medida":"200 g","opcoes":[{"rotulo":"Seara","preco":649,"coracoes":2,"cores":["#b71c1c","#ffccbc"]},{"rotulo":"Perdigão","preco":729,"coracoes":2,"cores":["#1976d2","#ffeb3b"]},{"rotulo":"Sadia","preco":849,"coracoes":3,"cores":["#d84315","#ffca28"]}]},{"id":"requeijao","nome":"Requeijão","secao":"laticinios","medida":"copo 200 g","opcoes":[{"rotulo":"Itambé","preco":749,"coracoes":1,"cores":["#1976d2","#fff8e1"]},{"rotulo":"Vigor","preco":849,"coracoes":2,"cores":["#0277bd","#ffffff"]},{"rotulo":"Catupiry","preco":1190,"coracoes":3,"cores":["#c62828","#fff8e1"]}]},{"id":"ovos","nome":"Ovos","secao":"laticinios","medida":"dúzia","opcoes":[{"rotulo":"Brancos","preco":1079,"coracoes":2,"cores":["#f5efe6","#8d6e63"]},{"rotulo":"Vermelhos","preco":1249,"coracoes":2,"cores":["#d79c6d","#fff8e1"]},{"rotulo":"Caipiras","preco":1690,"coracoes":3,"cores":["#7cb342","#fff8e1"]}]},{"id":"arroz","nome":"Arroz","secao":"mercearia","medida":"1 kg","opcoes":[{"rotulo":"Camil","preco":549,"coracoes":2,"cores":["#d32f2f","#fff3e0"]},{"rotulo":"Prato Fino","preco":649,"coracoes":2,"cores":["#6a1b9a","#fff8e1"]},{"rotulo":"Tio João","preco":749,"coracoes":3,"cores":["#fbc02d","#b71c1c"]}]},{"id":"feijao","nome":"Feijão carioca","secao":"mercearia","medida":"1 kg","opcoes":[{"rotulo":"Kicaldo","preco":799,"coracoes":2,"cores":["#2e7d32","#fff9c4"]},{"rotulo":"Camil","preco":899,"coracoes":3,"cores":["#d32f2f","#fff3e0"]},{"rotulo":"Broto Legal","preco":949,"coracoes":3,"cores":["#8d6e63","#e8f5e9"]}]},{"id":"macarrao","nome":"Macarrão espaguete","secao":"mercearia","medida":"500 g","opcoes":[{"rotulo":"Galo","preco":329,"coracoes":1,"cores":["#1e88e5","#ffd54f"]},{"rotulo":"Adria","preco":429,"coracoes":2,"cores":["#e53935","#fff8e1"]},{"rotulo":"Barilla","preco":699,"coracoes":3,"cores":["#0d47a1","#e53935"]}]},{"id":"molho-de-tomate","nome":"Molho de tomate","secao":"mercearia","medida":"sachê 300 g","opcoes":[{"rotulo":"Quero","preco":279,"coracoes":1,"cores":["#e53935","#ffe082"]},{"rotulo":"Pomarola","preco":399,"coracoes":2,"cores":["#c62828","#66bb6a"]},{"rotulo":"Heinz","preco":549,"coracoes":3,"cores":["#b71c1c","#ffffff"]}]},{"id":"oleo","nome":"Óleo de soja","secao":"mercearia","medida":"900 ml","opcoes":[{"rotulo":"Coamo","preco":699,"coracoes":2,"cores":["#2e7d32","#fffde7"]},{"rotulo":"Soya","preco":739,"coracoes":2,"cores":["#fbc02d","#2e7d32"]},{"rotulo":"Liza","preco":789,"coracoes":2,"cores":["#f57c00","#fff8e1"]}]},{"id":"acucar","nome":"Açúcar","secao":"mercearia","medida":"1 kg","opcoes":[{"rotulo":"Caravelas","preco":399,"coracoes":2,"cores":["#0288d1","#ffffff"]},{"rotulo":"Guarani","preco":429,"coracoes":2,"cores":["#43a047","#fffde7"]},{"rotulo":"União","preco":499,"coracoes":2,"cores":["#1565c0","#e53935"]}]},{"id":"farinha","nome":"Farinha de trigo","secao":"mercearia","medida":"1 kg","opcoes":[{"rotulo":"Sol","preco":419,"coracoes":2,"cores":["#f9a825","#ffffff"]},{"rotulo":"Renata","preco":499,"coracoes":2,"cores":["#1976d2","#ffeb3b"]},{"rotulo":"Dona Benta","preco":599,"coracoes":3,"cores":["#c62828","#fff3e0"]}]},{"id":"fermento","nome":"Fermento em pó","secao":"mercearia","medida":"lata 100 g","opcoes":[{"rotulo":"Dona Benta","preco":379,"coracoes":2,"cores":["#c62828","#fff3e0"]},{"rotulo":"Royal","preco":449,"coracoes":3,"cores":["#d32f2f","#ffca28"]}]},{"id":"leite-condensado","nome":"Leite condensado","secao":"mercearia","medida":"caixinha 395 g","opcoes":[{"rotulo":"Italac","preco":549,"coracoes":2,"cores":["#d62828","#ffffff"]},{"rotulo":"Piracanjuba","preco":599,"coracoes":2,"cores":["#ef6c00","#fff9c4"]},{"rotulo":"Moça","preco":799,"coracoes":3,"cores":["#fff8e1","#1565c0"]}]},{"id":"queijo-ralado","nome":"Queijo ralado","secao":"mercearia","medida":"pacote 50 g","opcoes":[{"rotulo":"Vigor","preco":699,"coracoes":2,"cores":["#0277bd","#ffffff"]},{"rotulo":"Faixa Azul","preco":999,"coracoes":3,"cores":["#1a237e","#ffca28"]}]},{"id":"milho","nome":"Milho verde","secao":"mercearia","medida":"lata","opcoes":[{"rotulo":"Predilecta","preco":329,"coracoes":2,"cores":["#388e3c","#ffca28"]},{"rotulo":"Quero","preco":349,"coracoes":2,"cores":["#e53935","#ffe082"]},{"rotulo":"Bonduelle","preco":549,"coracoes":3,"cores":["#00796b","#fff59d"]}]},{"id":"frango","nome":"Filé de frango","secao":"acougue","medida":"1 kg","opcoes":[{"rotulo":"Seara","preco":1990,"coracoes":2,"cores":["#b71c1c","#ffccbc"]},{"rotulo":"Perdigão","preco":2190,"coracoes":2,"cores":["#1976d2","#ffeb3b"]},{"rotulo":"Sadia","preco":2490,"coracoes":3,"cores":["#d84315","#ffca28"]}]},{"id":"carne-moida","nome":"Carne moída","secao":"acougue","medida":"500 g","opcoes":[{"rotulo":"Acém","preco":1699,"coracoes":2,"cores":["#c62828","#ffe0e0"]},{"rotulo":"Patinho","preco":2399,"coracoes":3,"cores":["#8e2424","#fff8e1"]}]},{"id":"salsicha","nome":"Salsicha","secao":"acougue","medida":"500 g","opcoes":[{"rotulo":"Seara","preco":699,"coracoes":1,"cores":["#b71c1c","#ffccbc"]},{"rotulo":"Perdigão","preco":799,"coracoes":2,"cores":["#1976d2","#ffeb3b"]},{"rotulo":"Sadia","preco":949,"coracoes":3,"cores":["#d84315","#ffca28"]}]},{"id":"suco","nome":"Suco de caixa","secao":"bebidas","medida":"1 litro","opcoes":[{"rotulo":"Maguary","preco":649,"coracoes":1,"cores":["#6a1b9a","#fff59d"]},{"rotulo":"Del Valle","preco":799,"coracoes":2,"cores":["#43a047","#ffffff"]},{"rotulo":"Natural One","preco":1290,"coracoes":3,"cores":["#fb8c00","#2e7d32"]}]},{"id":"suco-caixinha","nome":"Suco de caixinha","secao":"bebidas","medida":"200 ml","opcoes":[{"rotulo":"Kapo","preco":229,"coracoes":2,"cores":["#00897b","#fff59d"]},{"rotulo":"Maguary","preco":279,"coracoes":2,"cores":["#6a1b9a","#fff59d"]},{"rotulo":"Tial","preco":399,"coracoes":3,"cores":["#e65100","#fff8e1"]}]},{"id":"refrigerante","nome":"Refrigerante","secao":"bebidas","medida":"2 litros","opcoes":[{"rotulo":"Dolly","preco":549,"coracoes":1,"cores":["#2e7d32","#ffffff"]},{"rotulo":"Guaraná Antarctica","preco":849,"coracoes":3,"cores":["#1b5e20","#ffca28"]},{"rotulo":"Coca-Cola","preco":1099,"coracoes":3,"cores":["#c62828","#ffffff"]}]},{"id":"agua","nome":"Água mineral","secao":"bebidas","medida":"1,5 litro","opcoes":[{"rotulo":"Crystal","preco":299,"coracoes":2,"cores":["#29b6f6","#ffffff"]},{"rotulo":"Bonafont","preco":349,"coracoes":2,"cores":["#ec407a","#e1f5fe"]},{"rotulo":"Minalba","preco":379,"coracoes":2,"cores":["#1565c0","#e3f2fd"]}]},{"id":"detergente","nome":"Detergente","secao":"limpeza","medida":"500 ml","opcoes":[{"rotulo":"Limpol","preco":229,"coracoes":2,"cores":["#fdd835","#0288d1"]},{"rotulo":"Minuano","preco":239,"coracoes":2,"cores":["#00acc1","#ffffff"]},{"rotulo":"Ypê","preco":249,"coracoes":2,"cores":["#2e7d32","#fff176"]}]},{"id":"sabao-em-po","nome":"Sabão em pó","secao":"limpeza","medida":"800 g","opcoes":[{"rotulo":"Tixan Ypê","preco":990,"coracoes":1,"cores":["#1e88e5","#ffeb3b"]},{"rotulo":"Brilhante","preco":1290,"coracoes":2,"cores":["#00838f","#fff8e1"]},{"rotulo":"Omo","preco":1690,"coracoes":3,"cores":["#1565c0","#ef5350"]}]},{"id":"papel-higienico","nome":"Papel higiênico","secao":"limpeza","medida":"4 rolos","opcoes":[{"rotulo":"Mili","preco":549,"coracoes":1,"cores":["#29b6f6","#fffde7"]},{"rotulo":"Personal","preco":699,"coracoes":2,"cores":["#ab47bc","#ffffff"]},{"rotulo":"Neve","preco":949,"coracoes":3,"cores":["#0277bd","#e1f5fe"]}]},{"id":"creme-dental","nome":"Creme dental","secao":"limpeza","medida":"90 g","opcoes":[{"rotulo":"Sorriso","preco":399,"coracoes":1,"cores":["#e53935","#ffffff"]},{"rotulo":"Colgate","preco":549,"coracoes":2,"cores":["#c62828","#ffe0e0"]},{"rotulo":"Oral-B","preco":699,"coracoes":3,"cores":["#1565c0","#80deea"]}]},{"id":"sabonete","nome":"Sabonete","secao":"limpeza","medida":"1 unidade","opcoes":[{"rotulo":"Lux","preco":229,"coracoes":2,"cores":["#ec407a","#fce4ec"]},{"rotulo":"Protex","preco":329,"coracoes":2,"cores":["#0288d1","#ffffff"]},{"rotulo":"Dove","preco":449,"coracoes":3,"cores":["#1976d2","#fff8e1"]}]}],"desejos":[{"id":"batom","nome":"Chocolate Batom","marca":"Garoto","preco":199,"coracoes":1,"cores":["#6d4c41","#ffca28"]},{"id":"toddynho","nome":"Toddynho","marca":"Toddy","preco":249,"coracoes":1,"cores":["#d84315","#ffeb3b"]},{"id":"trident","nome":"Chiclete Trident","marca":"Trident","preco":299,"coracoes":1,"cores":["#00acc1","#ffffff"]},{"id":"kitkat","nome":"KitKat","marca":"Nestlé","preco":399,"coracoes":1,"cores":["#c62828","#ffe082"]},{"id":"mms","nome":"M&M's","marca":"M&M's","preco":449,"coracoes":1,"cores":["#fbc02d","#5d4037"]},{"id":"picole","nome":"Picolé Fruttare","marca":"Kibon","preco":549,"coracoes":2,"cores":["#e53935","#ffffff"]},{"id":"fini","nome":"Balas de gelatina","marca":"Fini","preco":649,"coracoes":2,"cores":["#e91e63","#ffeb3b"]},{"id":"lacta","nome":"Chocolate ao leite","marca":"Lacta","preco":699,"coracoes":2,"cores":["#1565c0","#ffffff"]},{"id":"bis","nome":"Bis","marca":"Lacta","preco":749,"coracoes":2,"cores":["#1565c0","#ffffff"]},{"id":"ruffles","nome":"Batata Ruffles","marca":"Elma Chips","preco":899,"coracoes":2,"cores":["#0277bd","#ffd54f"]},{"id":"gibi","nome":"Gibi da Turma da Mônica","marca":"Panini","preco":990,"coracoes":3,"cores":["#e53935","#ffeb3b"]},{"id":"kinder-ovo","nome":"Kinder Ovo","marca":"Kinder","preco":999,"coracoes":2,"cores":["#d84315","#ffffff"]}],"mapa":["########################","#LLLLLLLL..AAA...BBBB..#","#......................#","#H.....................#","#H...PP..MM..MM..ZZ....#","#H...PP..MM..M...ZZ....#","#H...PP..MM......Z.....#","#H...P...MM............#","#H.....................#","#H.....................#","#H.....................#","#H.....GGGGGG..GGGGGG..#","#H.....................#","#H......K...K...K......#","#..E...................#","########################"]};
+const IC = 'icones/';
+const ic = nome => `<img src="${IC}${nome}.svg" alt="">`;
+
+/* ---------- seções ---------- */
+const SECOES = {
+  H: { id: 'hortifruti', nome: 'Hortifrúti', icone: 'maca', cor: '#247a45', movel: 'banca' },
+  P: { id: 'padaria', nome: 'Padaria', icone: 'pao-de-forma', cor: '#a05a1f', movel: 'gondola' },
+  L: { id: 'laticinios', nome: 'Laticínios', icone: 'copo-de-leite', cor: '#256fa8', movel: 'geladeira' },
+  M: { id: 'mercearia', nome: 'Mercearia', icone: 'arroz', cor: '#b4530f', movel: 'gondola' },
+  A: { id: 'acougue', nome: 'Açougue', icone: 'carne', cor: '#c5303a', movel: 'balcao' },
+  B: { id: 'bebidas', nome: 'Bebidas', icone: 'copo-com-canudo', cor: '#0e7c90', movel: 'geladeira' },
+  Z: { id: 'limpeza', nome: 'Limpeza', icone: 'bolhas', cor: '#7856c2', movel: 'gondola' },
+  G: { id: 'guloseimas', nome: 'Guloseimas', icone: 'pirulito', cor: '#c92f6f', movel: 'gondola' },
+};
+
+/* ---------- produto → molde + ícone do conteúdo ---------- */
+const FIGURA = {
+  banana: ['solto', 'banana'], maca: ['solto', 'maca'], laranja: ['solto', 'laranja'], tomate: ['solto', 'tomate'],
+  alface: ['solto', 'alface'], cenoura: ['solto', 'cenoura'], batata: ['solto', 'batata'], cebola: ['solto', 'cebola'],
+  mamao: ['solto', 'mamao'], uva: ['solto', 'uva'], morango: ['solto', 'morango'],
+  'pao-de-forma': ['pacote', 'pao-de-forma'], bisnaguinha: ['pacote', 'baguete'], 'pao-de-hot-dog': ['pacote', 'cachorro-quente'],
+  'biscoito-recheado': ['saquinho', 'biscoito'], 'cream-cracker': ['caixa-papelao', 'waffle'], achocolatado: ['pote', 'barra-de-chocolate'], cafe: ['pacote', 'cafe'],
+  leite: ['caixa', 'copo-de-leite'], iogurte: ['garrafa', 'morango'], manteiga: ['caixa-papelao', 'manteiga'], margarina: ['pote', 'manteiga'],
+  queijo: ['bandeja', 'queijo'], presunto: ['bandeja', 'pernil'], requeijao: ['pote', 'queijo'], ovos: ['bandeja', 'ovo'],
+  arroz: ['pacote', 'arroz'], feijao: ['pacote', 'feijao'], macarrao: ['pacote', 'espaguete'], 'molho-de-tomate': ['saquinho', 'tomate'],
+  oleo: ['garrafa', 'girassol'], acucar: ['pacote', 'colher'], farinha: ['pacote', 'trigo'], fermento: ['lata', 'cupcake'],
+  'leite-condensado': ['caixa', 'pudim'], 'queijo-ralado': ['saquinho', 'queijo'], milho: ['lata', 'milho'],
+  frango: ['bandeja', 'coxa-de-frango'], 'carne-moida': ['bandeja', 'carne'], salsicha: ['bandeja', 'cachorro-quente'],
+  suco: ['caixa', 'laranja'], 'suco-caixinha': ['solto', 'suco-caixinha'], refrigerante: ['garrafa', 'copo-com-canudo'], agua: ['garrafa', 'gota'],
+  detergente: ['frasco', 'esponja'], 'sabao-em-po': ['caixa-papelao', 'camiseta'], 'papel-higienico': ['solto', 'papel-higienico'],
+  'creme-dental': ['caixa-papelao', 'escova-de-dentes'], sabonete: ['solto', 'sabonete'],
+  batom: ['barra', 'barra-de-chocolate'], toddynho: ['caixa', 'copo-de-leite'], trident: ['barra', 'bala'], kitkat: ['barra', 'waffle'],
+  mms: ['saquinho', 'bala'], picole: ['solto', 'sorvete'], fini: ['saquinho', 'pirulito'], lacta: ['barra', 'barra-de-chocolate'],
+  bis: ['caixa-papelao', 'barra-de-chocolate'], ruffles: ['saquinho', 'batata-frita'], gibi: ['solto', 'livro'], 'kinder-ovo': ['saquinho', 'ovo'],
+};
+
+/* ---------- cores ---------- */
+function rgb(hex) { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function misturar(a, b, t) { const A = rgb(a), B = rgb(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
+function clara(hex) { const [r, g, b] = rgb(hex); return (r * 299 + g * 587 + b * 114) / 1000 > 165; }
+
+/* ---------- moldes: caixa de desenho 100 × 120 ----------
+   svg(c): c.cor, c.escura (cor 72% + preto), c.clarinha (cor 55% + branco), c.tampa
+   rotulo: [x, y, largura, altura] da janela branca com o ícone
+   marca:  [x, y, largura, altura] da faixa onde vai o nome da marca            */
+const MOLDES = {
+  caixa: {
+    svg: c => `<path d="M27 6h46l9 18H18z" fill="${c.escura}"/><rect x="18" y="24" width="64" height="92" rx="5" fill="${c.cor}"/><path d="M70 24h7a5 5 0 0 1 5 5v82a5 5 0 0 1-5 5h-7z" fill="${c.escura}" opacity=".5"/><rect x="18" y="24" width="64" height="4" fill="#fff" opacity=".35"/><circle cx="58" cy="15" r="5.500" fill="#fff"/><circle cx="58" cy="15" r="3" fill="${c.clarinha}"/>`,
+    rotulo: [22, 34, 46, 50], marca: [19, 87, 62, 25] },
+  pacote: {
+    svg: c => `<path d="M15 16h70c5 30 5 58 0 88H15c-5-30-5-58 0-88z" fill="${c.cor}"/><rect x="15" y="8" width="70" height="10" rx="2" fill="${c.escura}"/><rect x="15" y="102" width="70" height="10" rx="2" fill="${c.escura}"/><path d="M15 13h70M15 107h70" stroke="#fff" stroke-opacity=".35" stroke-width="1.500" stroke-dasharray="3 3"/><path d="M21 26c-3 24-3 44 0 68" stroke="#fff" stroke-opacity=".4" stroke-width="4" stroke-linecap="round" fill="none"/>`,
+    rotulo: [25, 24, 50, 50], marca: [17, 77, 66, 23] },
+  lata: {
+    svg: c => `<rect x="19" y="14" width="62" height="98" rx="7" fill="#b9c0c9"/><rect x="19" y="25" width="62" height="76" fill="${c.cor}"/><ellipse cx="50" cy="15" rx="31" ry="7" fill="#e8ebef"/><ellipse cx="50" cy="15" rx="24" ry="4.500" fill="#cfd5dc"/><rect x="19" y="25" width="9" height="76" fill="#fff" opacity=".25"/><rect x="72" y="25" width="9" height="76" fill="#000" opacity=".14"/>`,
+    rotulo: [27, 30, 46, 44], marca: [21, 76, 58, 23] },
+  garrafa: {
+    svg: c => `<rect x="40" y="4" width="20" height="11" rx="3" fill="${c.tampa}"/><path d="M43 15h14v7c0 9 21 13 21 30v56a8 8 0 0 1-8 8H30a8 8 0 0 1-8-8V52c0-17 21-21 21-30z" fill="${c.cor}"/><path d="M29 56v50" stroke="#fff" stroke-opacity=".45" stroke-width="5" stroke-linecap="round"/><rect x="22" y="56" width="56" height="48" fill="#fff"/>`,
+    rotulo: [30, 57, 40, 28], marca: [23, 85, 54, 18], marcaNoRotulo: true },
+  pote: {
+    svg: c => `<path d="M16 46h68l-6 60a9 9 0 0 1-9 8H31a9 9 0 0 1-9-8z" fill="${c.cor}"/><rect x="11" y="32" width="78" height="16" rx="6" fill="${c.tampa}"/><rect x="11" y="32" width="78" height="5" rx="2.500" fill="#fff" opacity=".3"/><path d="M24 54l4 46" stroke="#fff" stroke-opacity=".4" stroke-width="4" stroke-linecap="round"/>`,
+    rotulo: [30, 51, 40, 36], marca: [23, 88, 54, 21] },
+  'caixa-papelao': {
+    svg: c => `<path d="M12 24l9-10h68l-9 10z" fill="${c.clarinha}"/><path d="M80 24l9-10v92l-9 10z" fill="${c.escura}"/><rect x="12" y="24" width="68" height="92" rx="3" fill="${c.cor}"/>`,
+    rotulo: [20, 31, 52, 52], marca: [14, 86, 64, 25] },
+  bandeja: {
+    svg: c => `<rect x="5" y="30" width="90" height="76" rx="15" fill="#dfe5eb"/><rect x="10" y="34" width="80" height="66" rx="11" fill="#fbfcfd"/><path d="M18 40h22L24 94H14z" fill="#fff" opacity=".0"/>`,
+    rotulo: [20, 34, 60, 48], marca: [14, 80, 72, 21], rotuloSemMarca: [18, 36, 64, 62], rotuloTransparente: true, marcaEtiqueta: true },
+  frasco: {
+    svg: c => `<rect x="44" y="3" width="12" height="10" rx="3" fill="${c.tampa}"/><rect x="39" y="11" width="22" height="11" rx="3" fill="${c.tampa}"/><path d="M40 22h20c0 10 15 13 15 28v58a8 8 0 0 1-8 8H33a8 8 0 0 1-8-8V50c0-15 15-18 15-28z" fill="${c.cor}"/><path d="M32 54v50" stroke="#fff" stroke-opacity=".45" stroke-width="4.500" stroke-linecap="round"/>`,
+    rotulo: [32, 48, 36, 34], marca: [26, 85, 48, 21] },
+  barra: {
+    svg: c => `<path d="M4 44l5 4-5 5 5 4-5 5 5 4-5 5 5 4-5 5 5 4-5 4h12V40H4z" fill="${c.escura}"/><path d="M96 44l-5 4 5 5-5 4 5 5-5 4 5 5-5 4 5 5-5 4 5 4H84V40h12z" fill="${c.escura}"/><rect x="12" y="36" width="76" height="60" rx="5" fill="${c.cor}"/><rect x="12" y="36" width="76" height="6" rx="3" fill="#fff" opacity=".3"/>`,
+    rotulo: [17, 42, 30, 30], marca: [15, 74, 70, 20], rotuloSemMarca: [22, 42, 56, 48] },
+  saquinho: {
+    svg: c => `<path d="M16 14h68l3 10c3 28 3 48 0 76l-3 10H16l-3-10c-3-28-3-48 0-76z" fill="${c.cor}"/><path d="M16 14l4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5z" fill="${c.cor}"/><path d="M16 110l4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5 4.250 5 4.250-5z" fill="${c.cor}"/><path d="M15 20h70M15 104h70" stroke="${c.escura}" stroke-width="2" stroke-opacity=".7"/><path d="M21 30c-2 22-2 40 0 60" stroke="#fff" stroke-opacity=".4" stroke-width="4" stroke-linecap="round" fill="none"/>`,
+    rotulo: [25, 27, 50, 46], marca: [17, 76, 66, 24] },
+};
+
+/* figura(produto, opção, largura em px, { marca: mostrar o nome da marca na embalagem }) */
+function figura(prod, opcao, largura, { marca = true } = {}) {
+  const [moldeId, icone] = FIGURA[prod.id];
+  if (moldeId === 'solto') {
+    if (!marca || !prod.opcoes) {
+      return `<span class="fig fig--solto" style="width:${largura}px;height:${largura}px">${ic(icone)}</span>`;
+    }
+    // fruta, verdura ou item avulso com variedades: o mesmo desenho e uma plaquinha com o nome da opção
+    const u = largura / 100, nome = opcao.rotulo, cor = opcao.cores[0];
+    const fonte = Math.min(15 * u, (84 * u * .94) / (nome.length * .66));
+    return `<span class="fig" style="width:${largura}px;height:${largura * 1.2}px"><img src="${IC}${icone}.svg" alt="" style="position:absolute;left:${6 * u}px;top:${2 * u}px;width:${88 * u}px;height:${88 * u}px">
+      <span class="fig__marca" style="left:${8 * u}px;top:${93 * u}px;width:${84 * u}px;height:${24 * u}px;font-size:${fonte}px;background:${cor};color:${clara(cor) ? '#2b2118' : '#fff'};border-radius:${6 * u}px;border:${2 * u}px solid #fff;box-shadow:0 ${2 * u}px 0 rgba(0,0,0,.15)">${nome}</span></span>`;
+  }
+  const m = MOLDES[moldeId];
+  const cores = opcao.cores;
+  const c = { cor: cores[0], escura: misturar(cores[0], '#000000', .28), clarinha: misturar(cores[0], '#ffffff', .45), tampa: clara(cores[1]) ? misturar(cores[0], '#000000', .38) : cores[1] };
+  const altura = largura * 1.2, u = largura / 100;
+  const [mx, my, mw, mh] = m.marca;
+  const [rx, ry, rw, rh] = marca ? m.rotulo : (m.rotuloSemMarca || [m.rotulo[0], m.rotulo[1], m.rotulo[2], my + mh - m.rotulo[1] - 2]);
+  const nome = opcao.rotulo || opcao.marca;
+  const linhas = nome.length > 11 && nome.includes(' ') ? 2 : 1;
+  const maior = linhas === 2 ? Math.max(...nome.split(' ').map(p => p.length)) : nome.length;
+  const fonte = Math.min(mh * u * (linhas === 2 ? .46 : .78), (mw * u * .94) / (maior * .66));
+  const corTexto = m.marcaNoRotulo ? misturar(cores[0], '#000000', .45) : m.marcaEtiqueta ? (clara(cores[0]) ? '#2b2118' : '#fff') : (clara(cores[0]) ? misturar(cores[0], '#000000', .62) : '#fff');
+  const fundoMarca = m.marcaEtiqueta ? `background:${cores[0]};border-radius:${4 * u}px;border:${1.5 * u}px solid #fff;` : '';
+  const textoMarca = marca && fonte >= 6.5
+    ? `<span class="fig__marca" style="left:${mx * u}px;top:${my * u}px;width:${mw * u}px;height:${mh * u}px;font-size:${fonte}px;color:${corTexto};${fundoMarca}">${nome}</span>`
+    : '';
+  return `<span class="fig" style="width:${largura}px;height:${altura}px">
+    <svg viewBox="0 0 100 120" aria-hidden="true">${m.svg(c)}</svg>
+    <span class="fig__rotulo" style="left:${rx * u}px;top:${ry * u}px;width:${rw * u}px;height:${rh * u}px;${m.rotuloTransparente ? 'background:none;' : ''}">${ic(icone)}</span>
+    ${textoMarca}</span>`;
+}
+const dinheiro = centavos => `<small>R$</small>${Math.floor(centavos / 100)},${String(centavos % 100).padStart(2, '0')}`;
+
+/* ---------- mapa ---------- */
+const porSecao = {};
+for (const p of DADOS.produtos) (porSecao[p.secao] ||= []).push(p);
+function montarMapa(alvo, { casa, cam = [0, 0], peao, naLista = [], destino, carrinho = 0 }) {
+  const M = DADOS.mapa, L = M[0].length, A = M.length;
+  const cont = {}; let iDesejo = 0, iCaixa = 0;
+  const em = (x, y) => (x < 0 || y < 0 || x >= L || y >= A) ? '#' : M[y][x];
+  let h = '';
+  const blocos = {};
+  for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
+    const s = M[y][x], pos = `left:${x * casa}px;top:${y * casa}px`;
+    if (s === '#') {
+      const tipo = y === 0 ? 'topo' : y === A - 1 ? (Math.abs(x - 3) <= 1 ? 'porta' : 'fundo') : 'lado';
+      h += `<div class="casa parede parede--${tipo}" style="${pos}"></div>`;
+    } else if (SECOES[s]) {
+      const sec = SECOES[s];
+      let prod, opcao;
+      if (s === 'G') { const d = DADOS.desejos[iDesejo++]; prod = d; opcao = d; }
+      else { cont[s] = (cont[s] || 0); prod = porSecao[sec.id][cont[s]++]; opcao = prod.opcoes[0]; }
+      const b = (dx, dy) => em(x + dx, y + dy) !== s;
+      const cls = ['casa', 'nicho', `nicho--${sec.movel}`, b(0, -1) && 'b-cima', b(0, 1) && 'b-baixo', b(-1, 0) && 'b-esq', b(1, 0) && 'b-dir', naLista.includes(prod.id) && 'nicho--na-lista'].filter(Boolean).join(' ');
+      const solto = FIGURA[prod.id][0] === 'solto';
+      const larg = solto ? casa * .72 : casa * .68;
+      h += `<div class="${cls}" title="${prod.nome}" style="${pos};--sec:${sec.cor};--sec-escura:${misturar(sec.cor, '#000000', .18)};--sec-fundo:${misturar(sec.cor, '#ffffff', .86)}">${figura(prod, opcao, larg, { marca: false })}${naLista.includes(prod.id) ? '<span class="pino">!</span>' : ''}</div>`;
+      // bloco contíguo (para a placa): agrupa por letra + componente simples por proximidade
+      const chave = Object.keys(blocos).find(k => k[0] === s && blocos[k].some(([bx, by]) => Math.abs(bx - x) + Math.abs(by - y) === 1));
+      if (chave) blocos[chave].push([x, y]); else blocos[s + x + '_' + y] = [[x, y]];
+    } else if (s === 'K') {
+      iCaixa++;
+      h += `<div class="casa caixa-reg" style="${pos}">${ic('cupom')}<i>Caixa ${iCaixa}</i></div>`;
+    }
+  }
+  h += `<div class="tapete" style="left:${3 * casa + 5}px;top:${14 * casa + 12}px;width:${casa - 10}px;height:${casa - 20}px"></div>`;
+  for (const [k, casas] of Object.entries(blocos)) {
+    const sec = SECOES[k[0]];
+    const minY = Math.min(...casas.map(c => c[1]));
+    const topo = casas.filter(c => c[1] === minY).map(c => c[0]);
+    const cx = (Math.min(...topo) + Math.max(...topo) + 1) / 2;
+    const xPx = k[0] === 'H' ? cx * casa + casa * .55 : cx * casa;
+    const yPx = minY === 1 ? casa * .78 : minY * casa;
+    h += `<div class="placa" style="left:${xPx}px;top:${yPx}px;--sec:${sec.cor}">${ic(sec.icone)}${sec.nome}</div>`;
+  }
+  if (destino) h += `<div class="destino" style="left:${destino[0] * casa}px;top:${destino[1] * casa}px"></div>`;
+  if (peao) h += `<div class="peao" style="left:${peao[0] * casa}px;top:${peao[1] * casa - 6}px"><span class="peao__rosto">${ic('menina')}</span><span class="peao__carrinho">${ic('carrinho')}</span>${carrinho ? `<span class="peao__conta">${carrinho}</span>` : ''}</div>`;
+  alvo.innerHTML = `<div class="mapa" style="--casa:${casa}px;transform:translate(${-cam[0]}px,${-cam[1]}px)">${h}</div>`;
+}
+
+const cab = `<div class="cabecalho"><span>🏠 Início</span><b>Mercadinho</b><span>🔊</span></div>`;
+const hud = `<div class="hud">
+  <div class="ficha">${ic('saco-de-dinheiro')}<small>Você tem</small> R$ 60,00</div>
+  <div class="ficha">${ic('coracao')} 4 <small>de 13</small></div>
+  <div class="hud__linha2">
+    <div class="ficha ficha--botao">${ic('lista')} Lista <small>1 de 5</small></div>
+    <div class="ficha ficha--botao ficha--destaque">${ic('carrinho')} Carrinho <small>2</small></div>
+    <div class="ficha ficha--botao">${ic('olhos')} Espiar <small>2</small></div>
+  </div></div>`;
+
+/* Tela A */
+document.getElementById('tela-a').innerHTML = `${cab}${hud}
+  <div class="janela-mapa" id="janela-a">
+    <div class="selo-modo">${ic('lista')} Lista rápida</div>
+  </div>
+  <div class="barra-baixo"><div class="botao botao--sucesso">Ver: Leite</div><div class="botao botao--neutro">${ic('cupom')} Ir para o caixa</div></div>`;
+{
+  const j = document.getElementById('janela-a');
+  const d = document.createElement('div'); j.prepend(d);
+  montarMapa(d, { casa: 52, cam: [0, 14], peao: [1, 2], naLista: ['leite', 'pao-de-forma', 'mamao'], destino: [4, 3], carrinho: 2 });
+}
+
+/* Tela B: gôndola de Laticínios */
+{
+  const sec = SECOES.L, lista = { leite: 2, ovos: 1 }, feito = { ovos: true };
+  const prods = porSecao.laticinios;
+  let andares = '';
+  for (let i = 0; i < prods.length; i += 3) {
+    const grupo = prods.slice(i, i + 3);
+    andares += `<div class="andar">` + grupo.map(p => `<div class="vaga ${lista[p.id] ? 'vaga--na-lista' : ''} ${feito[p.id] ? 'vaga--feito' : ''}">
+        ${lista[p.id] ? `<span class="vaga__chip">${feito[p.id] ? '✓ Pegou' : 'Lista: ' + lista[p.id]}</span>` : ''}
+        ${figura(p, p.opcoes[0], FIGURA[p.id][0] === 'solto' ? 80 : 78, { marca: false })}
+      </div>`).join('') + '<div style="grid-column:1/-1;height:12px;border-radius:6px" class="vaga__tabua"></div>'
+      + grupo.map(p => `<div class="vaga ${lista[p.id] ? 'vaga--na-lista' : ''}"><div class="etq">${p.nome.replace(' fatiado', '').replace(' de morango', '')}<small>${p.medida}</small></div></div>`).join('') + `</div>`;
+  }
+  document.getElementById('tela-b').innerHTML = `${cab}${hud}<div class="fundo-escuro"></div>
+    <div class="folha" style="--sec:${sec.cor}">
+      <div class="folha__topo">${ic(sec.icone)}<div>Laticínios e frios<small>Toque num produto para ver as marcas</small></div><div class="folha__fechar">✕</div></div>
+      <div class="gondola gondola--geladeira">${andares}</div>
+    </div>`;
+}
+
+/* Tela C: produto Leite */
+{
+  const p = DADOS.produtos.find(x => x.id === 'leite'), sec = SECOES.L;
+  const cor = n => Array.from({ length: 3 }, (_, i) => ic(i < n ? 'coracao' : 'coracao-vazio')).join('');
+  document.getElementById('tela-c').innerHTML = `${cab}${hud}<div class="fundo-escuro"></div>
+    <div class="folha" style="--sec:${sec.cor}">
+      <div class="folha__topo">${ic('copo-de-leite')}<div>Leite · 1 litro<small>Laticínios e frios</small></div><div class="folha__fechar">✕</div></div>
+      <div class="produto">
+        <div class="produto__aviso">${ic('lista')} Na lista: 2 caixas de leite</div>
+        <div class="opcoes">
+          ${p.opcoes.map(o => `<div class="opcao">${figura(p, o, 100)}</div>`).join('')}
+          <div class="opcoes__tabua"></div>
+          <div class="opcoes__pes">${p.opcoes.map((o, i) => `<div class="pe ${i === 1 ? 'pe--escolhida' : ''}">
+            <div class="preco">${dinheiro(Math.round(o.preco / 10) * 10)}</div>
+            <div class="pe__marca">${o.rotulo}</div>
+            <div class="coracoes" aria-label="${o.coracoes} de 3 corações">${cor(o.coracoes)}</div>
+            <div class="botao botao--sucesso">${i === 1 ? '✓ Pegou' : 'Pegar'}</div></div>`).join('')}</div>
+        </div>
+        <div class="qtd">Quantidade <span class="r">−</span><b>2</b><span class="r">+</span></div>
+        <div class="voltar">‹ Ver toda a gôndola de Laticínios</div>
+      </div>
+    </div>`;
+}
+
+/* Folha de moldes */
+{
+  const exemplos = { caixa: 'leite', pacote: 'arroz', lata: 'milho', garrafa: 'agua', pote: 'margarina', 'caixa-papelao': 'sabao-em-po', bandeja: 'frango', frasco: 'detergente', barra: 'lacta', saquinho: 'ruffles', solto: 'banana' };
+  let h = '';
+  for (const [molde, id] of Object.entries(exemplos)) {
+    const p = DADOS.produtos.find(x => x.id === id) || DADOS.desejos.find(x => x.id === id);
+    const ops = p.opcoes || [p];
+    for (const o of ops) h += `<figure>${figura(p, o, 104)}${figura(p, o, 30, { marca: false })}<span>${molde}<br>${o.rotulo || o.marca}</span></figure>`;
+  }
+  document.getElementById('folha-moldes').innerHTML = h;
+}
+
+/* Mapa de computador e catálogo */
+montarMapa(document.getElementById('mapa-desk'), { casa: 52, peao: [3, 14], naLista: [] });
+document.getElementById('catalogo').innerHTML = [...DADOS.produtos, ...DADOS.desejos].map(p => {
+  const o = p.opcoes ? p.opcoes[0] : p;
+  return `<figure>${figura(p, o, 72)}<span>${p.nome}<br>${FIGURA[p.id][0]}</span></figure>`;
+}).join('');
+</script>
+</body>
+</html>

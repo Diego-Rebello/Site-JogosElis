@@ -22,7 +22,7 @@
 
     <!-- FASE 1: INÍCIO -->
     <section id="fase-inicio" class="cartao tela tela--inicio" aria-labelledby="titulo-inicio">
-      <h2 id="titulo-inicio" class="titulo-jogo">🛒 MERCADINHO</h2>
+      <h2 id="titulo-inicio" class="titulo-jogo"><span data-icone="carrinho" data-tamanho="34"></span> MERCADINHO</h2>
       <p class="subtitulo-inicio">Faça as compras sem estourar o dinheiro e deixe a família feliz!</p>
 
       <div class="niveis" role="group" aria-label="Escolha o nível">
@@ -39,10 +39,10 @@
 
       <div class="modos-compra" role="group" aria-label="Como você quer fazer as compras?">
         <button id="btn-modo-andar" type="button" class="botao botao--neutro modo-compra" data-modo="andar" aria-pressed="true">
-          🚶 Andar pelo mercado
+          <span data-icone="mercado" data-tamanho="24"></span> Andar pelo mercado
         </button>
         <button id="btn-modo-lista" type="button" class="botao botao--neutro modo-compra" data-modo="lista" aria-pressed="false">
-          📝 Lista rápida
+          <span data-icone="lista" data-tamanho="24"></span> Lista rápida
         </button>
       </div>
 
@@ -57,7 +57,7 @@
     <section id="fase-missao" class="cartao tela tela--missao" aria-labelledby="missao-titulo" hidden>
       <h2 id="missao-titulo" class="titulo-missao"></h2>
       <p id="missao-convite" class="missao-convite"></p>
-      <h3 class="subtitulo-bloco">📝 Lista de hoje</h3>
+      <h3 class="subtitulo-bloco"><span data-icone="lista" data-tamanho="22"></span> Lista de hoje</h3>
       <ul id="missao-lista" class="lista-missao"></ul>
       <div class="acoes">
         <button id="btn-ir-compras" type="button" class="botao botao--sucesso">Vamos às compras!</button>
@@ -67,13 +67,17 @@
 
     <!-- FASE 3: LOJA -->
     <section id="fase-loja" class="cartao tela tela--loja" aria-label="Loja" hidden>
-      <div class="painel-fixo" aria-label="Painel da compra">
-        <div class="painel-fixo__grade">
-          <div id="loja-dinheiro" class="indicador indicador--dinheiro"></div>
-          <div id="loja-coracoes" class="indicador indicador--coracoes"></div>
-          <button id="btn-abrir-lista" type="button" class="botao botao--neutro botao-indicador"></button>
-          <button id="btn-abrir-carrinho" type="button" class="botao botao--secundario botao-indicador"></button>
-          <button id="btn-espiar" type="button" class="botao botao--neutro botao-indicador" hidden></button>
+      <div id="painel-fixo" class="painel-fixo" aria-label="Painel da compra">
+        <div id="hud-linha1" class="hud__linha1">
+          <div id="loja-dinheiro" class="indicador indicador--dinheiro ficha"></div>
+          <div id="loja-coracoes" class="indicador indicador--coracoes ficha"></div>
+          <button id="btn-sair-loja" type="button" class="botao botao--neutro ficha ficha--sair" aria-label="Trocar nível">Sair</button>
+        </div>
+
+        <div id="hud-linha2" class="hud__linha2">
+          <button id="btn-abrir-lista" type="button" class="botao botao--neutro botao-indicador ficha ficha--botao"></button>
+          <button id="btn-abrir-carrinho" type="button" class="botao botao--secundario botao-indicador ficha ficha--botao ficha--destaque"></button>
+          <button id="btn-espiar" type="button" class="botao botao--neutro botao-indicador ficha ficha--botao" hidden></button>
         </div>
 
         <div id="barra-nivel1" class="barra-nivel1" hidden>
@@ -86,47 +90,42 @@
         <div id="espiada-aviso" class="espiada-aviso" aria-live="polite" hidden></div>
       </div>
 
-      <div class="loja-cabecalho">
+      <div id="loja-cabecalho" class="loja-cabecalho">
         <div id="loja-secao-atual" class="loja-secao-atual"></div>
-        <div class="loja-cabecalho__botoes">
+        <div id="loja-cabecalho-botoes" class="loja-cabecalho__botoes">
           <button id="btn-voltar-secoes" type="button" class="botao botao--neutro botao-voltar-secoes" hidden>
             ← Todas as seções
           </button>
           <button id="btn-alternar-modo-loja" type="button" class="botao botao--neutro botao-alternar-modo">
-            📝 Lista rápida
+            <span data-icone="lista" data-tamanho="20"></span> Lista rápida
           </button>
         </div>
       </div>
 
       <div id="loja-mapa-bloco" class="loja-mapa-bloco">
-        <div class="mapa-moldura">
-          <div class="mapa-borda">
-            <canvas
-              id="mapa-canvas"
-              class="mapa-canvas"
-              role="img"
-              aria-label="Mapa do mercado. Toque numa casa ou use as setas do teclado para andar."
-              tabindex="0"
-            ></canvas>
-          </div>
-        </div>
-        <div class="mapa-interacao">
-          <button id="btn-interagir-mapa" type="button" class="botao botao--sucesso botao-interagir-mapa" hidden></button>
-        </div>
+        <div
+          id="mapa-janela"
+          class="janela-mapa"
+          role="img"
+          aria-label="Mapa do mercado. Toque numa casa ou use as setas do teclado para andar."
+          tabindex="0"
+        ></div>
       </div>
 
       <div id="grade-secoes" class="grade-secoes" role="region" aria-label="Seções do mercado" hidden></div>
       <div id="lista-produtos" class="lista-produtos" role="region" aria-label="Produtos da seção" hidden></div>
 
-      <div class="acoes acoes--loja">
-        <button id="btn-ir-caixa" type="button" class="botao botao--sucesso">🧺 Ir para o caixa</button>
-        <button id="btn-sair-loja" type="button" class="botao botao--neutro">Trocar nível</button>
+      <div id="acoes-loja" class="barra-baixo acoes acoes--loja">
+        <button id="btn-interagir-mapa" type="button" class="botao botao--neutro botao-interagir-mapa" disabled>
+          Toque numa prateleira
+        </button>
+        <button id="btn-ir-caixa" type="button" class="botao botao--sucesso">Ir para o caixa</button>
       </div>
     </section>
 
     <!-- FASE 4: CAIXA -->
     <section id="fase-caixa" class="cartao tela tela--caixa" aria-labelledby="caixa-titulo" hidden>
-      <h2 id="caixa-titulo" class="titulo-missao">🧾 Caixa</h2>
+      <h2 id="caixa-titulo" class="titulo-missao"><span data-icone="cupom" data-tamanho="30"></span> Caixa</h2>
 
       <div id="caixa-faltando" class="caixa-bloco" hidden>
         <p id="caixa-faltando-texto" class="mensagem-caixa"></p>
@@ -187,28 +186,49 @@
   </main>
 
   <!-- PAINEL: PRATELEIRA / GULOSEIMA -->
-  <div id="painel-prateleira" class="painel-fundo" role="dialog" aria-modal="true" aria-labelledby="prateleira-titulo" hidden>
-    <div class="painel-caixa cartao" role="document">
-      <div class="painel-topo">
-        <div>
-          <h3 id="prateleira-titulo" class="painel-titulo"></h3>
-          <p id="prateleira-subtitulo" class="painel-subtitulo"></p>
+  <div id="painel-prateleira" class="painel-fundo painel-fundo--folha" role="dialog" aria-modal="true" aria-labelledby="prateleira-titulo" hidden>
+    <div class="folha" role="document">
+      <div id="prateleira-topo" class="folha__topo">
+        <span id="prateleira-icone" class="folha__icone" aria-hidden="true"></span>
+        <div class="folha__titulos">
+          <h3 id="prateleira-titulo" class="folha__titulo"></h3>
+          <small id="prateleira-subtitulo" class="folha__subtitulo"></small>
         </div>
-        <button id="btn-fechar-prateleira" type="button" class="botao botao--neutro botao-fechar" aria-label="Fechar painel">✕</button>
+        <button id="btn-fechar-prateleira" type="button" class="folha__fechar" aria-label="Fechar painel">✕</button>
       </div>
 
-      <p id="prateleira-aviso" class="prateleira-aviso" hidden></p>
+      <div class="produto">
+        <p id="prateleira-aviso" class="produto__aviso" hidden></p>
 
-      <div id="prateleira-qtd-bloco" class="qtd-seletor" hidden>
-        <span class="qtd-seletor__rotulo">Quantidade:</span>
-        <div class="qtd-seletor__controles">
-          <button id="btn-qtd-menos" type="button" class="botao botao--neutro botao-qtd" aria-label="Diminuir quantidade">−</button>
-          <span id="prateleira-qtd-valor" class="qtd-seletor__valor" aria-live="polite">1</span>
-          <button id="btn-qtd-mais" type="button" class="botao botao--neutro botao-qtd" aria-label="Aumentar quantidade">+</button>
+        <div id="prateleira-qtd-bloco" class="qtd" hidden>
+          <span class="qtd__rotulo">Quantidade:</span>
+          <div class="qtd__controles">
+            <button id="btn-qtd-menos" type="button" class="botao botao--neutro qtd__btn" aria-label="Diminuir quantidade">−</button>
+            <b id="prateleira-qtd-valor" class="qtd__valor" aria-live="polite">1</b>
+            <button id="btn-qtd-mais" type="button" class="botao botao--neutro qtd__btn" aria-label="Aumentar quantidade">+</button>
+          </div>
         </div>
+
+        <div id="prateleira-opcoes" class="opcoes"></div>
+
+        <button id="btn-ver-gondola" type="button" class="voltar" hidden></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL: GÔNDOLA DA SEÇÃO -->
+  <div id="painel-gondola" class="painel-fundo painel-fundo--folha" role="dialog" aria-modal="true" aria-labelledby="gondola-titulo" hidden>
+    <div class="folha" role="document">
+      <div id="gondola-topo" class="folha__topo">
+        <span id="gondola-icone" class="folha__icone" aria-hidden="true"></span>
+        <div class="folha__titulos">
+          <h3 id="gondola-titulo" class="folha__titulo"></h3>
+          <small id="gondola-subtitulo" class="folha__subtitulo"></small>
+        </div>
+        <button id="btn-fechar-gondola" type="button" class="folha__fechar" aria-label="Fechar gôndola">✕</button>
       </div>
 
-      <div id="prateleira-opcoes" class="prateleira-opcoes"></div>
+      <div id="gondola-lista" class="gondola"></div>
     </div>
   </div>
 
@@ -216,7 +236,7 @@
   <div id="painel-lista" class="painel-fundo" role="dialog" aria-modal="true" aria-labelledby="lista-painel-titulo" hidden>
     <div class="painel-caixa cartao" role="document">
       <div class="painel-topo">
-        <h3 id="lista-painel-titulo" class="painel-titulo">📝 Lista de compras</h3>
+        <h3 id="lista-painel-titulo" class="painel-titulo"><span data-icone="lista" data-tamanho="24"></span> Lista de compras</h3>
         <button id="btn-fechar-lista" type="button" class="botao botao--neutro botao-fechar" aria-label="Fechar lista">✕</button>
       </div>
       <p id="lista-painel-meta" class="painel-subtitulo"></p>
@@ -229,7 +249,7 @@
   <div id="painel-carrinho" class="painel-fundo" role="dialog" aria-modal="true" aria-labelledby="carrinho-painel-titulo" hidden>
     <div class="painel-caixa cartao" role="document">
       <div class="painel-topo">
-        <h3 id="carrinho-painel-titulo" class="painel-titulo">🛒 Seu carrinho</h3>
+        <h3 id="carrinho-painel-titulo" class="painel-titulo"><span data-icone="carrinho" data-tamanho="24"></span> Seu carrinho</h3>
         <button id="btn-fechar-carrinho" type="button" class="botao botao--neutro botao-fechar" aria-label="Fechar carrinho">✕</button>
       </div>
       <div id="carrinho-painel-itens" class="carrinho-painel-itens"></div>

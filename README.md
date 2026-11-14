@@ -89,7 +89,8 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── manifest.webmanifest         Nome, cores e ícones do app instalável (Elis)
 │   ├── rael.webmanifest             O mesmo para os Jogos do Rael, com start_url /rael/
 │   ├── figuras/                     SVGs do OpenMoji usados nas Primeiras Descobertas
-│   │   └── corrida/                 Carro de corrida, bandeira e bomba das duas corridas (fora do catálogo)
+│   │   ├── corrida/                 Carro de corrida, bandeira e bomba das duas corridas (fora do catálogo)
+│   │   └── mercadinho/              67 ícones Fluent Emoji (SVG) e `LICENCA.txt` do Mercadinho
 │   ├── audio/                       Palavras e sons iniciais locais do Rael
 │   └── icones/                      icone-*.png e rael-*.png (192 e 512) mais os .svg
 ├── shared/                          Biblioteca compartilhada (sem dependências externas)
@@ -140,8 +141,9 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
     ├── dinheirinho/                 index.html + jogo.js + tela.js + dados.js
     ├── quiz/                         index.html + jogo.js + tela.js + dados.js
     ├── labirinto/                    index.html + jogo.js + tela.js + CSS; motor compartilhado com P07
-    ├── memoria/                     index.html + main.tsx + App.tsx + components/ + lib/
-    └── velha/                       index.html + main.tsx + App.tsx + components/ + lib/
+    ├── mercadinho/                   dados.js + jogo.js + mapa.js + figuras.js + renderizador.js + tela.js + CSS
+    ├── memoria/                      index.html + main.tsx + App.tsx + components/ + lib/
+    └── velha/                        index.html + main.tsx + App.tsx + components/ + lib/
 ```
 
 Nenhuma subpasta tem `package.json`, `node_modules` ou `vite.config.ts` própria: são só
@@ -484,6 +486,8 @@ No convite a criança escolhe **Fácil** (a corrida de sempre), **Médio** (cruz
 A perspectiva adapta conceitos de projeção e desenho de segmentos de [javascript-racer](https://github.com/jakesgordon/javascript-racer), de Jake Gordon e colaboradores, revisão `3e8a060b5900755db27f899612a74a77427c853e` (licença MIT integral em `rael/corrida-3d/LICENSE-javascript-racer.txt`). A tela e a entrada também adaptam o Grande Prêmio/Pixel Racer (licença MIT em `rael/corrida-3d/LICENSE-pixel-racer.txt`). Todos os carros, pista, posto e efeitos em movimento são desenhos locais; **nenhuma imagem ou música do javascript-racer ou de OutRun foi copiada**. Os SVGs do painel e cartões são os OpenMoji locais já atribuídos abaixo.
 
 **Figuras do OpenMoji** em `public/figuras/corrida/` (`carro-de-corrida.svg` = 1F3CE, `bandeira-quadriculada.svg` = 1F3C1, `bomba-de-gasolina.svg` = 26FD), sob CC BY-SA 4.0, sem edição. A atribuição e o commit do OpenMoji usado estão em `public/figuras/corrida/LICENCA.txt`. Ficam numa subpasta para não entrarem no catálogo dos jogos de palavras.
+
+**Ícones do Mercadinho (Fluent Emoji)** em `public/figuras/mercadinho/icones/`: 66 arquivos SVG da variante "Color" do [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (Microsoft Corporation, licença MIT) sem alterações no desenho, mais `mamao.svg` autoral em estilo compatível. A cópia integral da licença MIT e o mapeamento de cada arquivo estão em `public/figuras/mercadinho/LICENCA.txt`. As embalagens dos produtos são geradas localmente em SVG em `Games/mercadinho/figuras.js`.
 
 ---
 

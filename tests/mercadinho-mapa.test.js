@@ -1,11 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import {
-  MOLDES,
-  MOLDE_DO_PRODUTO,
-  RECORTES,
-  carregarArte,
-  coresDaMarca,
-} from '../Games/mercadinho/arte.js';
 import { desejos, produtos } from '../Games/mercadinho/dados.js';
 import {
   ALTURA,
@@ -135,87 +128,5 @@ describe('Mercadinho — mapa da loja', () => {
     expect(secaoMaisProxima({ x: 20, y: 2 })).toEqual(SECOES.B);
     expect(secaoMaisProxima({ x: 10, y: 12 })).toEqual(AREAS_EXTRAS.G);
     expect(secaoMaisProxima({ x: 12, y: 14 })).toEqual(AREAS_EXTRAS.K);
-  });
-});
-
-describe('Mercadinho — arte, moldes e cores por marca (Etapa 4)', () => {
-  it('define exatamente os 10 moldes 16×16 válidos no formato .oabcw', () => {
-    const chavesEsperadas = [
-      'caixa-longa-vida',
-      'pacote',
-      'lata',
-      'garrafa',
-      'pote',
-      'caixa-papelao',
-      'bandeja',
-      'frasco',
-      'barra',
-      'saquinho',
-    ].sort();
-    expect(Object.keys(MOLDES).sort()).toEqual(chavesEsperadas);
-
-    for (const matriz of Object.values(MOLDES)) {
-      expect(matriz).toHaveLength(16);
-      for (const linha of matriz) {
-        expect(linha).toHaveLength(16);
-        expect(linha).toMatch(/^[.oabcw]{16}$/);
-      }
-    }
-  });
-
-  it('mapeia todos os 49 produtos e todas as 12 guloseimas para moldes existentes', () => {
-    const todosIds = [...produtos.map(p => p.id), ...desejos.map(d => d.id)];
-    for (const id of todosIds) {
-      const molde = MOLDE_DO_PRODUTO[id];
-      expect(molde).toBeTruthy();
-      expect(MOLDES[molde]).toBeDefined();
-    }
-    expect(Object.keys(MOLDE_DO_PRODUTO)).toHaveLength(61);
-  });
-
-  it('devolve pares de cores hexadecimais válidas e distintas entre opções do mesmo produto', () => {
-    for (const prod of produtos) {
-      const pares = new Set();
-      for (const op of prod.opcoes) {
-        const cores = coresDaMarca(op.rotulo);
-        expect(cores).toHaveLength(2);
-        expect(cores[0]).toMatch(/^#[0-9a-f]{6}$/i);
-        expect(cores[1]).toMatch(/^#[0-9a-f]{6}$/i);
-        pares.add(cores.join('|'));
-      }
-      expect(pares.size).toBe(prod.opcoes.length);
-    }
-
-    for (const des of desejos) {
-      const cores = coresDaMarca(des.marca);
-      expect(cores).toHaveLength(2);
-      expect(cores[0]).toMatch(/^#[0-9a-f]{6}$/i);
-      expect(cores[1]).toMatch(/^#[0-9a-f]{6}$/i);
-    }
-
-    const fallbackA = coresDaMarca('Marca Inexistente Alfa');
-    const fallbackB = coresDaMarca('Marca Inexistente Alfa');
-    expect(fallbackA).toEqual(fallbackB);
-    expect(fallbackA[0]).toMatch(/^#[0-9a-f]{6}$/i);
-    expect(fallbackA[1]).toMatch(/^#[0-9a-f]{6}$/i);
-  });
-
-  it('expõe os recortes esperados e resolve carregarArte() sem erro em ambiente sem PNGs', async () => {
-    expect(Object.keys(RECORTES).sort()).toEqual([
-      'balcao',
-      'banca',
-      'caixa',
-      'geladeira',
-      'gondola',
-      'guloseimas',
-      'parede',
-      'personagem',
-      'piso',
-      'porta',
-    ]);
-
-    const info = await carregarArte();
-    expect(info.altaResolucao).toBe(true);
-    expect(info.folhasCarregadas).toBe(false);
   });
 });

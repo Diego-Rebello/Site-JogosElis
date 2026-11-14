@@ -2,7 +2,7 @@ import { montarCabecalho } from '../../shared/cabecalho.js';
 import { animar, lancarConfete } from '../../shared/confete.js';
 import { nomeDaCrianca, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 import { tocar } from '../../shared/sons.js';
-import { criarIcone } from './arte.js';
+import { FIGURA_DO_PRODUTO, ICONE_DO_TEMA, SECOES_VISUAIS, criarFigura, criarIconeUi } from './figuras.js';
 import { desejos, produtos, temas } from './dados.js';
 import {
   SECOES,
@@ -56,10 +56,11 @@ const produtoPorId = Object.fromEntries(produtos.map(p => [p.id, p]));
 const desejoPorId = Object.fromEntries(desejos.map(d => [d.id, d]));
 const temaPorId = Object.fromEntries(temas.map(t => [t.id, t]));
 const secaoPorId = Object.fromEntries(Object.values(SECOES).map(s => [s.id, s]));
+const secaoVisualPorId = Object.fromEntries(Object.values(SECOES_VISUAIS).map(s => [s.id, s]));
 
 const SECOES_LISTA_RAPIDA = [
   ...Object.values(SECOES),
-  { id: 'guloseimas', nome: 'Guloseimas', emoji: '🍬' },
+  { id: 'guloseimas', nome: 'Guloseimas' },
 ];
 
 const ROTULOS_POSICAO = {
@@ -78,6 +79,7 @@ const FASES = {
 
 const PAINEIS = {
   prateleira: $('painel-prateleira'),
+  gondola: $('painel-gondola'),
   lista: $('painel-lista'),
   carrinho: $('painel-carrinho'),
 };
@@ -111,9 +113,8 @@ let partidaRegistrada = false;
 let estadoCaixa = resetarEstadoCaixa();
 
 let modoListaPreferido = lerPreferenciaModoLista();
-// A arte do mapa é toda vetorial (canvas). Sem contexto 2D o renderizador vem null e o jogo
-// cai na lista rápida. A camada estática do mapa só é desenhada na primeira entrada na loja.
-const renderizador = criarRenderizador($('mapa-canvas'));
+// Sem a janela do mapa (ex.: ambiente sem DOM), o renderizador vem null e o jogo cai na lista rápida.
+const renderizador = criarRenderizador($('mapa-janela'));
 
 const nav = {
   posicao: entrada(),
@@ -251,19 +252,23 @@ function atualizarIndicacaoMapa({ anunciarSeMudou = false } = {}) {
   if (!compra || usarListaRapida()) return;
 
   const secao = secaoMaisProxima(nav.posicao);
-  $('loja-secao-atual').textContent = `📍 Você está em: ${secao.nome}`;
+  $('loja-secao-atual').textContent = `Você está em: ${secao.nome}`;
 
   const alvo = alvoAdjacenteAtual();
   const btn = $('btn-interagir-mapa');
+  btn.hidden = false;
+
   if (!alvo) {
-    btn.hidden = true;
-    btn.textContent = '';
+    btn.disabled = true;
+    btn.className = 'botao botao--neutro botao-interagir-mapa';
+    btn.textContent = 'Toque numa prateleira';
     nav.ultimoAnuncioFrente = '';
     return;
   }
 
   const nome = nomeDoAlvo(alvo);
-  btn.hidden = false;
+  btn.disabled = false;
+  btn.className = 'botao botao--sucesso botao-interagir-mapa';
   btn.textContent = `Ver: ${nome}`;
 
   const chave = `${alvo.tipo}:${alvo.id}`;
@@ -341,7 +346,7 @@ function concluirCaminhada() {
   atualizarIndicacaoMapa({ anunciarSeMudou: !acao });
 
   if (acao) {
-    executarAcaoCelula(acao, $('mapa-canvas'));
+    executarAcaoCelula(acao, $('mapa-janela'));
   }
 }
 
@@ -539,7 +544,7 @@ function interagirComCasa(x, y) {
     nav.quadro = 0;
     desenharMapa();
     atualizarIndicacaoMapa({ anunciarSeMudou: false });
-    executarAcaoCelula(alvo, $('mapa-canvas'));
+    executarAcaoCelula(alvo, $('mapa-janela'));
     return;
   }
 
@@ -589,10 +594,70 @@ function juntarComE(partes) {
 
 function criarCoracoesElemento(qtd) {
   const span = document.createElement('span');
+  span.className = 'coracoes';
   span.setAttribute('role', 'img');
   span.setAttribute('aria-label', `${qtd} de 3 corações`);
-  span.textContent = '❤️'.repeat(qtd) + '🤍'.repeat(3 - qtd);
+  for (let i = 0; i < 3; i++) {
+    span.append(criarIconeUi(i < qtd ? 'coracao' : 'coracao-vazio', 22));
+  }
   return span;
+}
+
+function criarIconeInline(nome) {
+  const img = criarIconeUi(nome, 0);
+  img.classList.add('icone-texto');
+  return img;
+}
+
+function criarCaixaCheckVazio() {
+  const caixa = document.createElement('span');
+  caixa.className = 'caixa-check-vazio';
+  caixa.setAttribute('aria-hidden', 'true');
+  return caixa;
+}
+
+function hidratarIconesEstaticos() {
+  document.querySelectorAll('[data-icone]').forEach(el => {
+    const nome = el.dataset.icone;
+    const tamanho = Number(el.dataset.tamanho) || 24;
+    if (nome) {
+      el.replaceChildren(criarIconeUi(nome, tamanho));
+    }
+  });
+}
+
+function animarItemParaOCarrinho(origemEl) {
+  const btnCarrinho = $('btn-abrir-carrinho');
+  if (!btnCarrinho) return;
+
+  if (!querMenosMovimento() && origemEl) {
+    const rOrig = origemEl.getBoundingClientRect();
+    const rDest = btnCarrinho.getBoundingClientRect();
+    if (rOrig.width > 0 && rOrig.height > 0 && rDest.width > 0 && rDest.height > 0) {
+      const clone = origemEl.cloneNode(true);
+      clone.classList.add('fig-voadora');
+      clone.style.left = `${rOrig.left}px`;
+      clone.style.top = `${rOrig.top}px`;
+      clone.style.width = `${rOrig.width}px`;
+      clone.style.height = `${rOrig.height}px`;
+      document.body.append(clone);
+
+      const dx = (rDest.left + rDest.width / 2) - (rOrig.left + rOrig.width / 2);
+      const dy = (rDest.top + rDest.height / 2) - (rOrig.top + rOrig.height / 2);
+
+      requestAnimationFrame(() => {
+        clone.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(0.32)`;
+        clone.style.opacity = '0.15';
+      });
+      setTimeout(() => clone.remove(), 310);
+    }
+  }
+
+  if (!querMenosMovimento()) {
+    animar(btnCarrinho, 'pular', 350);
+    const contaPeao = document.querySelector('.peao__conta');
+    if (contaPeao) animar(contaPeao, 'pular', 350);
+  }
 }
 
 function limparEspiada() {
@@ -612,6 +677,11 @@ function limparCupomTimer() {
   }
 }
 
+function atualizarModoViewportLoja() {
+  const modoMapa = Boolean(faseAtual === 'loja' && compra && !usarListaRapida());
+  document.body.classList.toggle('jogo-mercadinho--mapa', modoMapa);
+}
+
 function mostrarFase(nome) {
   limparEspiada();
   limparCupomTimer();
@@ -622,12 +692,14 @@ function mostrarFase(nome) {
   for (const [chave, secao] of Object.entries(FASES)) {
     secao.hidden = chave !== nome;
   }
+  atualizarModoViewportLoja();
 
   if (nome === 'loja' && !usarListaRapida() && renderizador) {
+    renderizarLoja();
     renderizador.ajustarTamanho();
     atualizarIndicacaoMapa({ anunciarSeMudou: false });
     desenharMapa();
-    $('mapa-canvas').focus();
+    $('mapa-janela').focus();
     return;
   }
 
@@ -675,7 +747,10 @@ function iniciarNovaMissao() {
 function renderizarMissao() {
   const { missao } = compra;
   const tema = temaPorId[missao.temaId] || temas[0];
-  $('missao-titulo').textContent = `${tema.emoji} ${missao.titulo}`;
+  $('missao-titulo').replaceChildren(
+    criarIconeInline(ICONE_DO_TEMA[missao.temaId] || 'cesto'),
+    document.createTextNode(missao.titulo),
+  );
 
   const convite = $('missao-convite');
   convite.replaceChildren();
@@ -684,17 +759,21 @@ function renderizarMissao() {
   strongDinheiro.textContent = formatarDinheiro(missao.orcamento);
   convite.append(strongDinheiro, document.createTextNode('. A família fica feliz com '));
   const strongCoracoes = document.createElement('strong');
-  strongCoracoes.textContent = `${missao.metaCoracoes} ❤️`;
-  convite.append(strongCoracoes, document.createTextNode(' ou mais.'));
+  strongCoracoes.append(document.createTextNode(`${missao.metaCoracoes} `), criarIconeInline('coracao'));
+  convite.append(strongCoracoes, document.createTextNode('ou mais.'));
 
   const lista = $('missao-lista');
   lista.replaceChildren();
   for (const item of missao.itens) {
     const produto = produtoPorId[item.produtoId];
     const secao = secaoPorId[produto.secao];
+    const iconeItem = FIGURA_DO_PRODUTO[produto.id]?.[1] || 'cesto';
     const li = document.createElement('li');
     li.className = 'lista-missao__item';
-    li.textContent = `${produto.emoji} ${item.quantidade} × ${produto.nome} (${produto.medida}) · ${secao.nome}`;
+    li.append(
+      criarIconeInline(iconeItem),
+      document.createTextNode(`${item.quantidade} × ${produto.nome} (${produto.medida}) · ${secao.nome}`),
+    );
     lista.append(li);
   }
 }
@@ -720,29 +799,82 @@ function secaoTemItemFaltando(secaoId) {
   });
 }
 
+function preencherFichaHud(el, iconeNome, principal, detalhe, ariaTexto, { detalheAntes = false } = {}) {
+  const nos = [criarIconeUi(iconeNome, 22)];
+  const span = document.createElement('span');
+  span.className = 'ficha__valor';
+  span.textContent = principal;
+  if (detalhe) {
+    const small = document.createElement('small');
+    small.textContent = detalhe;
+    if (detalheAntes) {
+      nos.push(small, span);
+    } else {
+      nos.push(span, small);
+    }
+  } else {
+    nos.push(span);
+  }
+  el.replaceChildren(...nos);
+  el.setAttribute('aria-label', ariaTexto);
+}
+
 function renderizarPainelFixo() {
   const { missao } = compra;
   const nivel = missao.nivel;
+  const valorOrcamento = formatarDinheiro(missao.orcamento);
 
-  $('loja-dinheiro').textContent = `💰 Você tem ${formatarDinheiro(missao.orcamento)}`;
+  preencherFichaHud(
+    $('loja-dinheiro'),
+    'saco-de-dinheiro',
+    valorOrcamento,
+    'Você tem',
+    `Você tem ${valorOrcamento}`,
+    { detalheAntes: true },
+  );
 
   const coracoes = coracoesDoCarrinho(compra);
   const metaBatida = coracoes >= missao.metaCoracoes;
   const elCoracoes = $('loja-coracoes');
-  elCoracoes.textContent = `❤️ ${coracoes} de ${missao.metaCoracoes}${metaBatida ? ' ✓' : ''}`;
+  preencherFichaHud(
+    elCoracoes,
+    'coracao',
+    String(coracoes),
+    `de ${missao.metaCoracoes}${metaBatida ? ' ✓' : ''}`,
+    `${coracoes} de ${missao.metaCoracoes} corações${metaBatida ? ', meta atingida' : ''}`,
+  );
   elCoracoes.classList.toggle('meta-batida', metaBatida);
 
   const completos = contarItensCompletos();
   const totalLista = missao.itens.length;
-  $('btn-abrir-lista').textContent =
-    `📝 Lista (${completos} de ${totalLista}${completos === totalLista ? ' ✓' : ''})`;
+  const seloListaCompleto = completos === totalLista ? ' ✓' : '';
+  preencherFichaHud(
+    $('btn-abrir-lista'),
+    'lista',
+    'Lista',
+    `${completos} de ${totalLista}${seloListaCompleto}`,
+    `Lista (${completos} de ${totalLista}${seloListaCompleto})`,
+  );
 
-  $('btn-abrir-carrinho').textContent = `🛒 Carrinho (${contarTotalNoCarrinho()})`;
+  const totalItensCarrinho = contarTotalNoCarrinho();
+  preencherFichaHud(
+    $('btn-abrir-carrinho'),
+    'carrinho',
+    'Carrinho',
+    String(totalItensCarrinho),
+    `Carrinho (${totalItensCarrinho})`,
+  );
 
   const btnEspiar = $('btn-espiar');
   if (NIVEIS[nivel].espiadas > 0) {
     btnEspiar.hidden = false;
-    btnEspiar.textContent = `👀 Espiar o total (${compra.espiadasRestantes})`;
+    preencherFichaHud(
+      btnEspiar,
+      'olhos',
+      'Espiar',
+      String(compra.espiadasRestantes),
+      `Espiar o total (${compra.espiadasRestantes})`,
+    );
   } else {
     btnEspiar.hidden = true;
   }
@@ -770,6 +902,7 @@ function renderizarPainelFixo() {
 
 function renderizarLoja() {
   renderizarPainelFixo();
+  atualizarModoViewportLoja();
 
   const listaAtiva = usarListaRapida();
   const cabSecao = $('loja-secao-atual');
@@ -778,51 +911,79 @@ function renderizarLoja() {
   const mapaBloco = $('loja-mapa-bloco');
   const gradeSecoes = $('grade-secoes');
   const listaProdutos = $('lista-produtos');
+  const btnInteragirMapa = $('btn-interagir-mapa');
   const btnIrCaixa = $('btn-ir-caixa');
+  const btnSairLoja = $('btn-sair-loja');
 
   if (btnAlternarModo) {
     btnAlternarModo.hidden = !renderizador;
-    btnAlternarModo.textContent = listaAtiva ? '🚶 Ver no mapa' : '📝 Lista rápida';
   }
-  btnIrCaixa.hidden = !listaAtiva;
+
+  btnIrCaixa.hidden = false;
+  btnIrCaixa.replaceChildren(criarIconeUi('cupom', 24), 'Ir para o caixa');
 
   if (!listaAtiva) {
+    if (btnAlternarModo) {
+      btnAlternarModo.className = 'botao selo-modo';
+      btnAlternarModo.replaceChildren(criarIconeUi('lista', 20), 'Lista rápida');
+      btnAlternarModo.setAttribute('aria-label', 'Mudar para lista rápida');
+      mapaBloco.append(btnAlternarModo);
+    }
+    mapaBloco.append($('espiada-aviso'));
+    $('hud-linha1').append(btnSairLoja);
+    btnSairLoja.className = 'botao botao--neutro ficha ficha--sair';
+    btnSairLoja.textContent = 'Sair';
+    btnIrCaixa.className = 'botao botao--neutro';
+
     mapaBloco.hidden = false;
     btnVoltarSecoes.hidden = true;
     gradeSecoes.hidden = true;
     listaProdutos.hidden = true;
     atualizarIndicacaoMapa({ anunciarSeMudou: false });
-    // O tamanho do canvas só muda em mostrarFase, no resize e ao alternar o modo.
     if (faseAtual === 'loja') desenharMapa();
     return;
   }
 
+  if (btnAlternarModo) {
+    btnAlternarModo.className = 'botao botao--neutro botao-alternar-modo';
+    btnAlternarModo.replaceChildren(criarIconeUi('mercado', 20), 'Ver no mapa');
+    btnAlternarModo.setAttribute('aria-label', 'Voltar a andar pelo mercado');
+    $('loja-cabecalho-botoes').append(btnAlternarModo);
+  }
+  $('painel-fixo').append($('espiada-aviso'));
+  $('acoes-loja').append(btnSairLoja);
+  btnSairLoja.className = 'botao botao--neutro';
+  btnSairLoja.textContent = 'Trocar nível';
+  btnInteragirMapa.hidden = true;
+  btnIrCaixa.className = 'botao botao--sucesso';
+
   mapaBloco.hidden = true;
 
   if (!secaoAberta) {
-    cabSecao.textContent = '📍 Escolha uma seção';
+    cabSecao.replaceChildren(criarIconeInline('alfinete'), document.createTextNode('Escolha uma seção'));
     btnVoltarSecoes.hidden = true;
     gradeSecoes.hidden = false;
     listaProdutos.hidden = true;
 
     gradeSecoes.replaceChildren();
     for (const sec of SECOES_LISTA_RAPIDA) {
+      const secVisual = secaoVisualPorId[sec.id] || SECOES_VISUAIS.M;
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'botao botao--neutro botao-secao';
       btn.dataset.secao = sec.id;
 
-      const emoji = document.createElement('span');
-      emoji.className = 'botao-secao__emoji';
-      emoji.setAttribute('aria-hidden', 'true');
-      emoji.textContent = sec.emoji;
+      const icone = document.createElement('span');
+      icone.className = 'botao-secao__icone';
+      icone.setAttribute('aria-hidden', 'true');
+      icone.append(criarIconeUi(secVisual.icone, 40));
 
       const nome = document.createElement('span');
       nome.className = 'botao-secao__nome';
       const dicaNivel1 = compra.missao.nivel === 1 && secaoTemItemFaltando(sec.id) ? ' (!)' : '';
       nome.textContent = `${sec.nome}${dicaNivel1}`;
 
-      btn.append(emoji, nome);
+      btn.append(icone, nome);
       btn.addEventListener('click', () => {
         tocar('clique');
         secaoAberta = sec.id;
@@ -836,87 +997,113 @@ function renderizarLoja() {
   }
 
   const infoSecao = SECOES_LISTA_RAPIDA.find(s => s.id === secaoAberta);
-  cabSecao.textContent = `📍 ${infoSecao.emoji} ${infoSecao.nome}`;
+  cabSecao.replaceChildren(criarIconeInline('alfinete'), document.createTextNode(infoSecao.nome));
   btnVoltarSecoes.hidden = false;
   gradeSecoes.hidden = true;
   listaProdutos.hidden = false;
-  listaProdutos.replaceChildren();
+  montarGondola(secaoAberta, listaProdutos);
+}
 
-  if (secaoAberta === 'guloseimas') {
+function montarGondola(secaoId, recipiente) {
+  recipiente.classList.add('gondola');
+  recipiente.classList.toggle('gondola--geladeira', secaoId === 'laticinios' || secaoId === 'bebidas');
+  recipiente.replaceChildren();
+
+  const grade = document.createElement('div');
+  grade.className = 'gondola__grade';
+  recipiente.append(grade);
+
+  if (secaoId === 'guloseimas') {
     const limite = NIVEIS[compra.missao.nivel].maximoDeDesejos;
+    const limiteAtingido = compra.desejos.length >= limite;
+
     for (const desejo of desejos) {
       const jaNoCarrinho = compra.desejos.includes(desejo.id);
       const preco = precoNoNivel(desejo.preco, compra.missao.nivel);
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = `botao botao--neutro cartao-produto${jaNoCarrinho ? ' cartao-produto--no-carrinho' : ''}`;
-      card.dataset.guloseimaId = desejo.id;
 
-      const emoji = document.createElement('span');
-      emoji.className = 'cartao-produto__emoji';
-      emoji.setAttribute('aria-hidden', 'true');
-      emoji.textContent = desejo.emoji;
+      const vaga = document.createElement('button');
+      vaga.type = 'button';
+      vaga.className = `vaga${jaNoCarrinho ? ' vaga--feito' : limiteAtingido ? ' vaga--limite' : ''}`;
+      vaga.dataset.guloseimaId = desejo.id;
+      vaga.setAttribute(
+        'aria-label',
+        `${desejo.nome} (${desejo.marca}), ${formatarDinheiro(preco)}${jaNoCarrinho ? ', no carrinho' : limiteAtingido ? ', limite de guloseimas atingido' : ''}`,
+      );
 
-      const corpo = document.createElement('span');
-      corpo.className = 'cartao-produto__corpo';
+      if (jaNoCarrinho || limiteAtingido) {
+        const chip = document.createElement('span');
+        chip.className = 'vaga__chip';
+        chip.textContent = jaNoCarrinho ? '✓ Pegou' : 'Limite';
+        vaga.append(chip);
+      }
 
-      const titulo = document.createElement('span');
-      titulo.className = 'cartao-produto__nome';
-      titulo.textContent = `${desejo.nome} (${desejo.marca})`;
+      const fig = criarFigura(desejo.id, null, 78, { marca: false });
 
-      const detalhe = document.createElement('span');
-      detalhe.className = 'cartao-produto__detalhe';
-      detalhe.textContent = jaNoCarrinho
-        ? `${formatarDinheiro(preco)} · No carrinho (${compra.desejos.length}/${limite})`
-        : `${formatarDinheiro(preco)} · ${'❤️'.repeat(desejo.coracoes)}`;
+      const tabua = document.createElement('span');
+      tabua.className = 'vaga__tabua';
+      tabua.setAttribute('aria-hidden', 'true');
 
-      corpo.append(titulo, detalhe);
-      card.append(emoji, corpo);
-      card.addEventListener('click', () => {
+      const etq = document.createElement('span');
+      etq.className = 'etq';
+      const nome = document.createElement('span');
+      nome.textContent = desejo.nome;
+      const detalhe = document.createElement('small');
+      detalhe.textContent = `${formatarDinheiro(preco)} · ${desejo.marca}`;
+      etq.append(nome, detalhe);
+
+      vaga.append(fig, tabua, etq);
+      vaga.addEventListener('click', () => {
         tocar('clique');
-        abrirPrateleiraGuloseima(desejo.id, card);
+        abrirPrateleiraGuloseima(desejo.id, vaga);
       });
-      listaProdutos.append(card);
+      grade.append(vaga);
     }
     return;
   }
 
-  const itensDaSecao = produtos.filter(p => p.secao === secaoAberta);
+  const itensDaSecao = produtos.filter(p => p.secao === secaoId);
   for (const produto of itensDaSecao) {
     const entrada = compra.carrinho[produto.id];
     const itemMissao = compra.missao.itens.find(i => i.produtoId === produto.id);
-    const card = document.createElement('button');
-    card.type = 'button';
-    card.className = `botao botao--neutro cartao-produto${entrada ? ' cartao-produto--no-carrinho' : ''}`;
-    card.dataset.produtoId = produto.id;
+    const naLista = Boolean(itemMissao);
+    const completo = naLista ? (entrada?.quantidade || 0) >= itemMissao.quantidade : Boolean(entrada);
 
-    const emoji = document.createElement('span');
-    emoji.className = 'cartao-produto__emoji';
-    emoji.setAttribute('aria-hidden', 'true');
-    emoji.textContent = produto.emoji;
+    const vaga = document.createElement('button');
+    vaga.type = 'button';
+    vaga.className = `vaga${naLista ? ' vaga--na-lista' : ''}${completo ? ' vaga--feito' : ''}`;
+    vaga.dataset.produtoId = produto.id;
+    vaga.setAttribute(
+      'aria-label',
+      `${produto.nome}, ${produto.medida}${itemMissao ? `, na lista: ${itemMissao.quantidade}` : ''}${entrada ? `, no carrinho: ${entrada.quantidade}` : ''}`,
+    );
 
-    const corpo = document.createElement('span');
-    corpo.className = 'cartao-produto__corpo';
+    if (completo || naLista) {
+      const chip = document.createElement('span');
+      chip.className = 'vaga__chip';
+      chip.textContent = completo ? '✓ Pegou' : `Lista: ${itemMissao.quantidade}`;
+      vaga.append(chip);
+    }
 
+    const fig = criarFigura(produto.id, null, 78, { marca: false });
+
+    const tabua = document.createElement('span');
+    tabua.className = 'vaga__tabua';
+    tabua.setAttribute('aria-hidden', 'true');
+
+    const etq = document.createElement('span');
+    etq.className = 'etq';
     const nome = document.createElement('span');
-    nome.className = 'cartao-produto__nome';
-    const faltaNoCarrinho = itemMissao && (entrada?.quantidade || 0) < itemMissao.quantidade;
-    const marcaListaNivel1 = compra.missao.nivel === 1 && faltaNoCarrinho ? ' (!)' : '';
-    nome.textContent = `${produto.nome}${marcaListaNivel1}`;
+    nome.textContent = produto.nome;
+    const medida = document.createElement('small');
+    medida.textContent = produto.medida;
+    etq.append(nome, medida);
 
-    const detalhe = document.createElement('span');
-    detalhe.className = 'cartao-produto__detalhe';
-    detalhe.textContent = entrada
-      ? `${produto.medida} · No carrinho: ${entrada.quantidade}`
-      : produto.medida;
-
-    corpo.append(nome, detalhe);
-    card.append(emoji, corpo);
-    card.addEventListener('click', () => {
+    vaga.append(fig, tabua, etq);
+    vaga.addEventListener('click', () => {
       tocar('clique');
-      abrirPrateleiraProduto(produto.id, card);
+      abrirPrateleiraProduto(produto.id, vaga);
     });
-    listaProdutos.append(card);
+    grade.append(vaga);
   }
 }
 
@@ -961,10 +1148,54 @@ function fecharPainel(devolverFoco = true) {
   }
 }
 
+function configurarCabecalhoFolha(prefixo, secVisual, tituloTexto, subtituloTexto) {
+  $(`${prefixo}-topo`).style.setProperty('--sec', secVisual.cor);
+  $(`${prefixo}-icone`).replaceChildren(criarIconeUi(secVisual.icone, 22));
+  $(`${prefixo}-titulo`).textContent = tituloTexto;
+  $(`${prefixo}-subtitulo`).textContent = subtituloTexto;
+}
+
+function criarEtiquetaPreco(centavos) {
+  const el = document.createElement('div');
+  el.className = 'preco';
+  const simbolo = document.createElement('small');
+  simbolo.textContent = 'R$';
+  const valor = document.createTextNode(formatarDinheiro(centavos).replace(/^R\$\s*/, ''));
+  el.append(simbolo, valor);
+  return el;
+}
+
+function abrirPainelGondola(secaoId, gatilho) {
+  const secVisual = secaoVisualPorId[secaoId] || SECOES_VISUAIS.M;
+  const nomeSecao = secaoPorId[secaoId]?.nome || secVisual.nome;
+  configurarCabecalhoFolha('gondola', secVisual, nomeSecao, 'Todos os produtos da seção');
+  montarGondola(secaoId, $('gondola-lista'));
+  abrirPainel(PAINEIS.gondola, gatilho);
+}
+
+function configurarAtalhoGondola(secaoId, secVisual) {
+  const btnVerGondola = $('btn-ver-gondola');
+  if (usarListaRapida()) {
+    btnVerGondola.hidden = true;
+    btnVerGondola.onclick = null;
+    return;
+  }
+  btnVerGondola.hidden = false;
+  btnVerGondola.textContent = `‹ Ver toda a gôndola de ${secVisual.nome}`;
+  btnVerGondola.onclick = () => {
+    tocar('clique');
+    const retorno = gatilhoDoPainel && !gatilhoDoPainel.closest('#painel-gondola')
+      ? gatilhoDoPainel
+      : ($('btn-interagir-mapa').hidden ? $('mapa-janela') : $('btn-interagir-mapa'));
+    abrirPainelGondola(secaoId, retorno);
+  };
+}
+
 function abrirPrateleiraProduto(produtoId, gatilho) {
   const noCarrinho = compra.carrinho[produtoId]?.quantidade;
   quantidadePrateleira = Math.max(1, Math.min(6, noCarrinho || 1));
-  abrirPainel(PAINEIS.prateleira, gatilho, { tipo: 'produto', id: produtoId }, renderizarPrateleiraProduto);
+  const gatilhoEstavel = gatilho?.closest?.('#painel-gondola') ? gatilhoDoPainel : gatilho;
+  abrirPainel(PAINEIS.prateleira, gatilhoEstavel, { tipo: 'produto', id: produtoId }, renderizarPrateleiraProduto);
 }
 
 function renderizarPrateleiraProduto() {
@@ -973,84 +1204,98 @@ function renderizarPrateleiraProduto() {
   const nivel = compra.missao.nivel;
   const itemMissao = compra.missao.itens.find(i => i.produtoId === produto.id);
   const entrada = compra.carrinho[produto.id];
+  const secVisual = secaoVisualPorId[produto.secao] || SECOES_VISUAIS.M;
 
-  $('prateleira-titulo').textContent = `${produto.emoji} ${produto.nome} · ${produto.medida}`;
-  if (itemMissao) {
-    $('prateleira-subtitulo').textContent = entrada
-      ? `Na lista: ${itemMissao.quantidade} · No carrinho: ${entrada.quantidade}`
-      : `Na lista: ${itemMissao.quantidade}`;
-  } else {
-    $('prateleira-subtitulo').textContent = 'Comparação de preços';
-  }
+  const subtitulo = itemMissao
+    ? (entrada
+        ? `${secVisual.nome} · Na lista: ${itemMissao.quantidade} · No carrinho: ${entrada.quantidade}`
+        : `${secVisual.nome} · Na lista: ${itemMissao.quantidade}`)
+    : `${secVisual.nome} · Comparação de preços`;
+  configurarCabecalhoFolha('prateleira', secVisual, `${produto.nome} · ${produto.medida}`, subtitulo);
 
   const aviso = $('prateleira-aviso');
   const qtdBloco = $('prateleira-qtd-bloco');
   if (itemMissao) {
     aviso.hidden = true;
+    aviso.replaceChildren();
     qtdBloco.hidden = false;
     atualizarControlesQuantidade();
   } else {
     aviso.hidden = false;
-    aviso.textContent = 'Hoje isto não está na lista.';
+    aviso.replaceChildren(criarIconeUi('olhos', 22), 'Hoje isto não está na lista.');
     qtdBloco.hidden = true;
   }
 
   const container = $('prateleira-opcoes');
+  container.className = `opcoes${produto.secao === 'laticinios' || produto.secao === 'bebidas' ? ' opcoes--geladeira' : ''}`;
   container.replaceChildren();
 
   const opcoes = [...opcoesNoNivel(produto, nivel)].sort((a, b) => a.preco - b.preco);
+  const sufixoCols = opcoes.length === 1 ? 'uma' : opcoes.length === 2 ? 'duas' : '';
+
+  const gradeFigs = document.createElement('div');
+  gradeFigs.className = `opcoes__figuras${sufixoCols ? ` opcoes__figuras--${sufixoCols}` : ''}`;
+  gradeFigs.style.setProperty('--cols', String(opcoes.length));
+
+  const tabua = document.createElement('div');
+  tabua.className = 'opcoes__tabua';
+  tabua.setAttribute('aria-hidden', 'true');
+
+  const gradePes = document.createElement('div');
+  gradePes.className = `opcoes__pes${sufixoCols ? ` opcoes__pes--${sufixoCols}` : ''}`;
+  gradePes.style.setProperty('--cols', String(opcoes.length));
+
+  const larguraFig = window.innerWidth >= 600 ? 120 : 100;
+
   for (const opcao of opcoes) {
     const selecionada = entrada?.opcaoId === opcao.id;
-    const cartao = document.createElement('div');
-    cartao.className = `opcao-cartao${selecionada ? ' opcao-cartao--selecionada' : ''}`;
-    cartao.dataset.opcaoId = opcao.id;
 
-    const cabeca = document.createElement('div');
-    cabeca.className = 'opcao-cartao__cabeca';
+    const slotFig = document.createElement('div');
+    slotFig.className = 'opcao';
+    const figEl = criarFigura(produto.id, opcao.id, larguraFig, { marca: true });
+    slotFig.append(figEl);
+    gradeFigs.append(slotFig);
 
-    const ident = document.createElement('div');
-    ident.className = 'opcao-cartao__identidade';
+    const pe = document.createElement('div');
+    const mesmaOpcaoEMesmaQtd = selecionada && entrada.quantidade === quantidadePrateleira;
+    pe.className = `pe${mesmaOpcaoEMesmaQtd ? ' pe--escolhida' : ''}`;
+    pe.dataset.opcaoId = opcao.id;
 
-    const icone = criarIcone(produto.id, opcao.id, 2);
-    icone.classList.add('opcao-cartao__emoji');
+    pe.append(criarEtiquetaPreco(opcao.preco));
 
-    const marca = document.createElement('strong');
-    marca.className = 'opcao-cartao__marca';
-    marca.textContent = opcao.rotulo;
-
-    const preco = document.createElement('span');
-    preco.className = 'opcao-cartao__preco';
-    preco.textContent = formatarDinheiro(opcao.preco);
-
-    ident.append(icone, marca);
-    cabeca.append(ident, preco);
-
-    const rodape = document.createElement('div');
-    rodape.className = 'opcao-cartao__rodape';
-    rodape.append(criarCoracoesElemento(opcao.coracoes));
-
-    if (itemMissao) {
+    if (itemMissao && nivel === 1) {
       const calc = document.createElement('span');
-      calc.className = 'opcao-cartao__calculo';
+      calc.className = 'pe__calculo';
       calc.dataset.preco = String(opcao.preco);
       calc.textContent = formatarEtiquetaQuantidade(quantidadePrateleira, opcao.preco, nivel);
-      rodape.append(calc);
+      pe.append(calc);
     }
 
-    cartao.append(cabeca, rodape);
+    const marca = document.createElement('strong');
+    marca.className = 'pe__marca';
+    marca.textContent = opcao.rotulo;
+    pe.append(marca, criarCoracoesElemento(opcao.coracoes));
 
     if (itemMissao) {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'botao botao--sucesso opcao-cartao__botao';
       if (!entrada) {
-        btn.textContent = 'Colocar no carrinho';
-      } else if (entrada.opcaoId !== opcao.id) {
-        btn.textContent = 'Trocar por esta';
+        btn.className = 'botao botao--sucesso pe__botao';
+        btn.textContent = 'Pegar';
+        btn.setAttribute('aria-label', `Colocar ${produto.nome} ${opcao.rotulo} no carrinho`);
+      } else if (!selecionada) {
+        btn.className = 'botao botao--sucesso pe__botao';
+        btn.textContent = 'Trocar';
+        btn.setAttribute('aria-label', `Trocar para ${produto.nome} ${opcao.rotulo}`);
       } else if (entrada.quantidade === quantidadePrateleira) {
-        btn.textContent = 'No carrinho ✓ (manter)';
+        btn.className = 'botao botao--neutro pe__botao';
+        btn.textContent = '✓ Pegou';
+        btn.disabled = true;
+        btn.setAttribute('aria-label', `${produto.nome} ${opcao.rotulo} no carrinho (${quantidadePrateleira})`);
       } else {
-        btn.textContent = 'Atualizar quantidade';
+        btn.className = 'botao botao--sucesso pe__botao';
+        btn.textContent = 'Atualizar';
+        btn.setAttribute('aria-label', `Atualizar quantidade de ${produto.nome} ${opcao.rotulo} para ${quantidadePrateleira}`);
       }
 
       btn.addEventListener('click', () => {
@@ -1063,17 +1308,21 @@ function renderizarPrateleiraProduto() {
         tocar('acerto');
         anunciar(`${produto.nome} ${opcao.rotulo} no carrinho (${quantidadePrateleira})`);
         renderizarLoja();
+        animarItemParaOCarrinho(figEl);
         if (usarListaRapida()) {
           gatilhoDoPainel = $('lista-produtos').querySelector(`[data-produto-id="${produto.id}"]`) || gatilhoDoPainel;
         }
         fecharPainel();
       });
 
-      cartao.append(btn);
+      pe.append(btn);
     }
 
-    container.append(cartao);
+    gradePes.append(pe);
   }
+
+  container.append(gradeFigs, tabua, gradePes);
+  configurarAtalhoGondola(produto.secao, secVisual);
 }
 
 function formatarEtiquetaQuantidade(qtd, precoUnitario, nivel) {
@@ -1101,8 +1350,8 @@ function alterarQuantidadePrateleira(delta) {
   const entrada = compra.carrinho[produto.id];
   const nivel = compra.missao.nivel;
 
-  $('prateleira-opcoes').querySelectorAll('.opcao-cartao').forEach(cartao => {
-    const calc = cartao.querySelector('.opcao-cartao__calculo');
+  $('prateleira-opcoes').querySelectorAll('.pe').forEach(pe => {
+    const calc = pe.querySelector('.pe__calculo');
     if (calc) {
       calc.textContent = formatarEtiquetaQuantidade(
         quantidadePrateleira,
@@ -1110,19 +1359,29 @@ function alterarQuantidadePrateleira(delta) {
         nivel,
       );
     }
-    if (entrada && entrada.opcaoId === cartao.dataset.opcaoId) {
-      const btn = cartao.querySelector('.opcao-cartao__botao');
+    if (entrada && entrada.opcaoId === pe.dataset.opcaoId) {
+      const btn = pe.querySelector('.pe__botao');
       if (btn) {
-        btn.textContent = entrada.quantidade === quantidadePrateleira
-          ? 'No carrinho ✓ (manter)'
-          : 'Atualizar quantidade';
+        const opcao = opcoesNoNivel(produto, nivel).find(o => o.id === entrada.opcaoId);
+        const mesmaQtd = entrada.quantidade === quantidadePrateleira;
+        pe.classList.toggle('pe--escolhida', mesmaQtd);
+        btn.disabled = mesmaQtd;
+        btn.className = `botao ${mesmaQtd ? 'botao--neutro' : 'botao--sucesso'} pe__botao`;
+        btn.textContent = mesmaQtd ? '✓ Pegou' : 'Atualizar';
+        btn.setAttribute(
+          'aria-label',
+          mesmaQtd
+            ? `${produto.nome} ${opcao?.rotulo || ''} no carrinho (${quantidadePrateleira})`
+            : `Atualizar quantidade de ${produto.nome} ${opcao?.rotulo || ''} para ${quantidadePrateleira}`,
+        );
       }
     }
   });
 }
 
 function abrirPrateleiraGuloseima(desejoId, gatilho) {
-  abrirPainel(PAINEIS.prateleira, gatilho, { tipo: 'guloseima', id: desejoId }, renderizarPrateleiraGuloseima);
+  const gatilhoEstavel = gatilho?.closest?.('#painel-gondola') ? gatilhoDoPainel : gatilho;
+  abrirPainel(PAINEIS.prateleira, gatilhoEstavel, { tipo: 'guloseima', id: desejoId }, renderizarPrateleiraGuloseima);
 }
 
 function renderizarPrateleiraGuloseima() {
@@ -1133,51 +1392,53 @@ function renderizarPrateleiraGuloseima() {
   const jaLevada = compra.desejos.includes(desejo.id);
   const limiteAtingido = compra.desejos.length >= limite;
   const preco = precoNoNivel(desejo.preco, nivel);
+  const secVisual = SECOES_VISUAIS.G;
 
-  $('prateleira-titulo').textContent = `${desejo.emoji} ${desejo.nome}`;
-  $('prateleira-subtitulo').textContent = `Guloseima · ${desejo.marca}`;
+  configurarCabecalhoFolha('prateleira', secVisual, desejo.nome, `${secVisual.nome} · ${desejo.marca}`);
   $('prateleira-qtd-bloco').hidden = true;
 
   const aviso = $('prateleira-aviso');
   aviso.hidden = false;
-  aviso.textContent = `Hoje pode levar até ${limite} ${limite === 1 ? 'guloseima' : 'guloseimas'}.`;
+  aviso.replaceChildren(
+    criarIconeUi('alfinete', 22),
+    `Hoje pode levar até ${limite} ${limite === 1 ? 'guloseima' : 'guloseimas'}.`,
+  );
 
   const container = $('prateleira-opcoes');
+  container.className = 'opcoes';
   container.replaceChildren();
 
-  const cartao = document.createElement('div');
-  cartao.className = `opcao-cartao${jaLevada ? ' opcao-cartao--selecionada' : ''}`;
+  const gradeFigs = document.createElement('div');
+  gradeFigs.className = 'opcoes__figuras opcoes__figuras--uma';
 
-  const cabeca = document.createElement('div');
-  cabeca.className = 'opcao-cartao__cabeca';
+  const tabua = document.createElement('div');
+  tabua.className = 'opcoes__tabua';
+  tabua.setAttribute('aria-hidden', 'true');
 
-  const ident = document.createElement('div');
-  ident.className = 'opcao-cartao__identidade';
+  const gradePes = document.createElement('div');
+  gradePes.className = 'opcoes__pes opcoes__pes--uma';
 
-  const icone = criarIcone(desejo.id, null, 2);
-  icone.classList.add('opcao-cartao__emoji');
+  const larguraFig = window.innerWidth >= 600 ? 120 : 100;
+  const slotFig = document.createElement('div');
+  slotFig.className = 'opcao';
+  const figEl = criarFigura(desejo.id, null, larguraFig, { marca: true });
+  slotFig.append(figEl);
+  gradeFigs.append(slotFig);
+
+  const pe = document.createElement('div');
+  pe.className = `pe${jaLevada ? ' pe--escolhida' : ''}`;
 
   const marca = document.createElement('strong');
-  marca.className = 'opcao-cartao__marca';
+  marca.className = 'pe__marca';
   marca.textContent = desejo.marca;
-
-  const elPreco = document.createElement('span');
-  elPreco.className = 'opcao-cartao__preco';
-  elPreco.textContent = formatarDinheiro(preco);
-
-  ident.append(icone, marca);
-  cabeca.append(ident, elPreco);
-
-  const rodape = document.createElement('div');
-  rodape.className = 'opcao-cartao__rodape';
-  rodape.append(criarCoracoesElemento(desejo.coracoes));
 
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = `botao ${jaLevada ? 'botao--neutro' : 'botao--sucesso'} opcao-cartao__botao`;
+  btn.className = `botao ${jaLevada ? 'botao--neutro' : 'botao--sucesso'} pe__botao`;
 
   if (jaLevada) {
     btn.textContent = 'Devolver';
+    btn.setAttribute('aria-label', `Devolver ${desejo.nome} (${desejo.marca})`);
     btn.addEventListener('click', () => {
       compra = devolverDesejo(compra, desejo.id).compra;
       tocar('clique');
@@ -1189,7 +1450,8 @@ function renderizarPrateleiraGuloseima() {
       fecharPainel();
     });
   } else {
-    btn.textContent = 'Levar';
+    btn.textContent = limiteAtingido ? 'Limite' : 'Levar';
+    btn.setAttribute('aria-label', `Levar ${desejo.nome} (${desejo.marca})`);
     if (limiteAtingido) {
       btn.disabled = true;
       btn.setAttribute('aria-disabled', 'true');
@@ -1205,6 +1467,7 @@ function renderizarPrateleiraGuloseima() {
       tocar('acerto');
       anunciar(`${desejo.nome} no carrinho.`);
       renderizarLoja();
+      animarItemParaOCarrinho(figEl);
       if (usarListaRapida()) {
         gatilhoDoPainel = $('lista-produtos').querySelector(`[data-guloseima-id="${desejo.id}"]`) || gatilhoDoPainel;
       }
@@ -1212,15 +1475,19 @@ function renderizarPrateleiraGuloseima() {
     });
   }
 
-  cartao.append(cabeca, rodape, btn);
-  container.append(cartao);
+  pe.append(criarEtiquetaPreco(preco), marca, criarCoracoesElemento(desejo.coracoes), btn);
+  gradePes.append(pe);
+  container.append(gradeFigs, tabua, gradePes);
+  configurarAtalhoGondola('guloseimas', secVisual);
 }
 
 function abrirPainelLista(gatilho) {
   const { missao } = compra;
-  const tema = temaPorId[missao.temaId] || temas[0];
-  $('lista-painel-meta').textContent =
-    `${tema.emoji} ${missao.titulo} · Você tem ${formatarDinheiro(missao.orcamento)} · Meta: ${missao.metaCoracoes} ❤️`;
+  $('lista-painel-meta').replaceChildren(
+    criarIconeInline(ICONE_DO_TEMA[missao.temaId] || 'cesto'),
+    document.createTextNode(`${missao.titulo} · Você tem ${formatarDinheiro(missao.orcamento)} · Meta: ${missao.metaCoracoes} `),
+    criarIconeInline('coracao'),
+  );
 
   const ul = $('lista-painel-itens');
   ul.replaceChildren();
@@ -1232,22 +1499,25 @@ function abrirPainelLista(gatilho) {
     const li = document.createElement('li');
     li.className = 'lista-painel__item';
 
-    let texto = `${completo ? '✅' : '⬜'} ${produto.emoji} ${produto.nome} · ${secao.nome} — pedir ${item.quantidade} (${produto.medida})`;
+    const checkEl = completo ? criarIconeInline('confirmado') : criarCaixaCheckVazio();
+    const iconeItem = FIGURA_DO_PRODUTO[produto.id]?.[1] || 'cesto';
+    let texto = `${produto.nome} · ${secao.nome} — pedir ${item.quantidade} (${produto.medida})`;
     if (entrada) {
       const op = opcoesNoNivel(produto, missao.nivel).find(o => o.id === entrada.opcaoId);
       texto += ` · no carrinho: ${entrada.quantidade} (${op.rotulo})`;
     }
-    li.textContent = texto;
+    li.append(checkEl, criarIconeInline(iconeItem), document.createTextNode(texto));
     ul.append(li);
   }
 
   const boxGuloseimas = $('lista-painel-guloseimas');
+  const iconeGuloseima = criarIconeInline(SECOES_VISUAIS.G.icone);
   if (compra.desejos.length) {
     const nomes = compra.desejos.map(id => desejoPorId[id].nome);
-    boxGuloseimas.textContent = `🍬 Guloseimas no carrinho: ${juntarComE(nomes)}.`;
+    boxGuloseimas.replaceChildren(iconeGuloseima, document.createTextNode(`Guloseimas no carrinho: ${juntarComE(nomes)}.`));
   } else {
     const limite = NIVEIS[missao.nivel].maximoDeDesejos;
-    boxGuloseimas.textContent = `🍬 Guloseimas: nenhuma (pode levar até ${limite}).`;
+    boxGuloseimas.replaceChildren(iconeGuloseima, document.createTextNode(`Guloseimas: nenhuma (pode levar até ${limite}).`));
   }
 
   abrirPainel(PAINEIS.lista, gatilho);
@@ -1278,9 +1548,13 @@ function renderizarPainelCarrinho(focoDesejado = null) {
     const linha = document.createElement('div');
     linha.className = 'carrinho-linha';
 
+    const topo = document.createElement('div');
+    topo.className = 'carrinho-linha__topo';
+    const fig = criarFigura(produtoId, entrada.opcaoId, 44, { marca: true });
     const info = document.createElement('div');
     info.className = 'carrinho-linha__info';
-    info.textContent = `${produto.emoji} ${produto.nome} (${opcao.rotulo}) — ${formatarEtiquetaQuantidade(entrada.quantidade, opcao.preco, nivel)}`;
+    info.textContent = `${produto.nome} (${opcao.rotulo}) — ${formatarEtiquetaQuantidade(entrada.quantidade, opcao.preco, nivel)}`;
+    topo.append(fig, info);
 
     const controles = document.createElement('div');
     controles.className = 'carrinho-linha__controles';
@@ -1322,7 +1596,7 @@ function renderizarPainelCarrinho(focoDesejado = null) {
     btnRemover.dataset.itemId = produtoId;
     btnRemover.dataset.acao = 'remover';
     btnRemover.setAttribute('aria-label', `Remover ${produto.nome}`);
-    btnRemover.textContent = '🗑️';
+    btnRemover.replaceChildren(criarIconeUi('lixeira', 20));
     btnRemover.addEventListener('click', () => {
       compra = mudarQuantidade(compra, produtoId, 0).compra;
       tocar('clique');
@@ -1331,7 +1605,7 @@ function renderizarPainelCarrinho(focoDesejado = null) {
     });
 
     controles.append(btnMenos, btnMais, btnRemover);
-    linha.append(info, controles);
+    linha.append(topo, controles);
     container.append(linha);
   }
 
@@ -1341,9 +1615,13 @@ function renderizarPainelCarrinho(focoDesejado = null) {
     const linha = document.createElement('div');
     linha.className = 'carrinho-linha';
 
+    const topo = document.createElement('div');
+    topo.className = 'carrinho-linha__topo';
+    const fig = criarFigura(desejoId, null, 44, { marca: true });
     const info = document.createElement('div');
     info.className = 'carrinho-linha__info';
-    info.textContent = `${desejo.emoji} ${desejo.nome} (${desejo.marca}) — ${formatarDinheiro(preco)}`;
+    info.textContent = `${desejo.nome} (${desejo.marca}) — ${formatarDinheiro(preco)}`;
+    topo.append(fig, info);
 
     const controles = document.createElement('div');
     controles.className = 'carrinho-linha__controles';
@@ -1352,7 +1630,7 @@ function renderizarPainelCarrinho(focoDesejado = null) {
     btnRemover.type = 'button';
     btnRemover.className = 'botao botao--neutro';
     btnRemover.setAttribute('aria-label', `Devolver ${desejo.nome}`);
-    btnRemover.textContent = '🗑️ Devolver';
+    btnRemover.replaceChildren(criarIconeInline('lixeira'), document.createTextNode('Devolver'));
     btnRemover.addEventListener('click', () => {
       compra = devolverDesejo(compra, desejoId).compra;
       tocar('clique');
@@ -1361,7 +1639,7 @@ function renderizarPainelCarrinho(focoDesejado = null) {
     });
 
     controles.append(btnRemover);
-    linha.append(info, controles);
+    linha.append(topo, controles);
     container.append(linha);
   }
 
@@ -1498,7 +1776,8 @@ function montarLinhasDoCupom() {
     const precoItem = opcao.preco * entrada.quantidade;
     valores.push(precoItem);
     linhas.push({
-      esquerda: `${produto.emoji} ${produto.nome} (${opcao.rotulo})`,
+      icone: FIGURA_DO_PRODUTO[produto.id]?.[1] || 'cesto',
+      esquerda: `${produto.nome} (${opcao.rotulo})`,
       direita: formatarEtiquetaQuantidade(entrada.quantidade, opcao.preco, nivel),
     });
   }
@@ -1508,7 +1787,8 @@ function montarLinhasDoCupom() {
     const preco = precoNoNivel(desejo.preco, nivel);
     valores.push(preco);
     linhas.push({
-      esquerda: `${desejo.emoji} ${desejo.nome} (${desejo.marca})`,
+      icone: FIGURA_DO_PRODUTO[desejo.id]?.[1] || 'pirulito',
+      esquerda: `${desejo.nome} (${desejo.marca})`,
       direita: formatarEtiquetaQuantidade(1, preco, nivel),
     });
   }
@@ -1574,7 +1854,10 @@ function acrescentarLinhaCupom(linha) {
   const li = document.createElement('li');
   li.className = 'cupom-linha';
   const esq = document.createElement('span');
-  esq.textContent = linha.esquerda;
+  if (linha.icone) {
+    esq.append(criarIconeInline(linha.icone));
+  }
+  esq.append(document.createTextNode(linha.esquerda));
   const dir = document.createElement('span');
   dir.textContent = linha.direita;
   li.append(esq, dir);
@@ -1782,20 +2065,30 @@ function renderizarResultado(res) {
   $('resultado-titulo').textContent = frase;
 
   const estrelasEl = $('resultado-estrelas');
-  estrelasEl.textContent = '⭐'.repeat(res.estrelas) + '☆'.repeat(3 - res.estrelas);
+  estrelasEl.replaceChildren();
+  for (let i = 0; i < 3; i++) {
+    const estrela = criarIconeUi('estrela', 36);
+    if (i >= res.estrelas) {
+      estrela.classList.add('estrela-apagada');
+    }
+    estrelasEl.append(estrela);
+  }
   estrelasEl.setAttribute('aria-label', `${res.estrelas} de 3 estrelas`);
 
   const objetivos = $('resultado-objetivos');
   objetivos.replaceChildren();
   const itensObjetivo = [
-    `${res.objetivos.missaoCumprida ? '✅' : '⬜'} Missão cumprida · Compra paga dentro do orçamento`,
-    `${res.objetivos.familiaFeliz ? '✅' : '⬜'} Família feliz · ${res.coracoes} de ${compra.missao.metaCoracoes} corações`,
-    `${res.objetivos.contasCertas ? '✅' : '⬜'} Contas certas · Sem estouros e acertou de primeira`,
+    { ok: res.objetivos.missaoCumprida, texto: 'Missão cumprida · Compra paga dentro do orçamento' },
+    { ok: res.objetivos.familiaFeliz, texto: `Família feliz · ${res.coracoes} de ${compra.missao.metaCoracoes} corações` },
+    { ok: res.objetivos.contasCertas, texto: 'Contas certas · Sem estouros e acertou de primeira' },
   ];
-  for (const texto of itensObjetivo) {
+  for (const item of itensObjetivo) {
     const li = document.createElement('li');
     li.className = 'resultado-objetivos__item';
-    li.textContent = texto;
+    li.append(
+      item.ok ? criarIconeInline('confirmado') : criarCaixaCheckVazio(),
+      document.createTextNode(item.texto),
+    );
     objetivos.append(li);
   }
 
@@ -1844,6 +2137,7 @@ function renderizarResultado(res) {
 
 selecionarNivel(nivelSelecionado);
 atualizarBotoesModoInicio();
+hidratarIconesEstaticos();
 
 document.querySelectorAll('.nivel[data-nivel]').forEach(botao => {
   botao.addEventListener('click', () => {
@@ -1894,7 +2188,7 @@ $('btn-alternar-modo-loja').addEventListener('click', () => {
   if (!usarListaRapida()) {
     renderizador.ajustarTamanho();
     desenharMapa();
-    $('mapa-canvas').focus();
+    $('mapa-janela').focus();
     anunciar('Modo mapa ativado.');
   } else {
     anunciar('Lista rápida ativada.');
@@ -1905,7 +2199,7 @@ $('btn-interagir-mapa').addEventListener('click', () => {
   acionarInteracaoAdjacente($('btn-interagir-mapa'));
 });
 
-$('mapa-canvas').addEventListener('click', evento => {
+$('mapa-janela').addEventListener('click', evento => {
   if (!renderizador || faseAtual !== 'loja' || painelAtivo || usarListaRapida()) return;
   const casa = renderizador.eventoParaCasa(evento);
   if (!casa) return;
@@ -2015,6 +2309,10 @@ $('btn-fechar-prateleira').addEventListener('click', () => {
   tocar('clique');
   fecharPainel();
 });
+$('btn-fechar-gondola').addEventListener('click', () => {
+  tocar('clique');
+  fecharPainel();
+});
 $('btn-fechar-lista').addEventListener('click', () => {
   tocar('clique');
   fecharPainel();
@@ -2104,7 +2402,7 @@ document.addEventListener('keydown', evento => {
       && alvoAdjacenteAtual()
     ) {
       evento.preventDefault();
-      acionarInteracaoAdjacente($('mapa-canvas'));
+      acionarInteracaoAdjacente($('mapa-janela'));
       return;
     }
   }
