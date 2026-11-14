@@ -42,6 +42,7 @@ const $ = id => document.getElementById(id);
 const produtoPorId = Object.fromEntries(produtos.map(p => [p.id, p]));
 const desejoPorId = Object.fromEntries(desejos.map(d => [d.id, d]));
 const temaPorId = Object.fromEntries(temas.map(t => [t.id, t]));
+const secaoPorId = Object.fromEntries(Object.values(SECOES).map(s => [s.id, s]));
 
 const SECOES_LISTA_RAPIDA = [
   ...Object.values(SECOES),
@@ -214,9 +215,10 @@ function renderizarMissao() {
   lista.replaceChildren();
   for (const item of missao.itens) {
     const produto = produtoPorId[item.produtoId];
+    const secao = secaoPorId[produto.secao];
     const li = document.createElement('li');
     li.className = 'lista-missao__item';
-    li.textContent = `${produto.emoji} ${item.quantidade} × ${produto.nome} (${produto.medida})`;
+    li.textContent = `${produto.emoji} ${item.quantidade} × ${produto.nome} (${produto.medida}) · ${secao.nome}`;
     lista.append(li);
   }
 }
@@ -399,7 +401,8 @@ function renderizarLoja() {
 
     const nome = document.createElement('span');
     nome.className = 'cartao-produto__nome';
-    const marcaListaNivel1 = compra.missao.nivel === 1 && itemMissao ? ' (!)' : '';
+    const faltaNoCarrinho = itemMissao && (entrada?.quantidade || 0) < itemMissao.quantidade;
+    const marcaListaNivel1 = compra.missao.nivel === 1 && faltaNoCarrinho ? ' (!)' : '';
     nome.textContent = `${produto.nome}${marcaListaNivel1}`;
 
     const detalhe = document.createElement('span');
@@ -718,12 +721,13 @@ function abrirPainelLista(gatilho) {
   ul.replaceChildren();
   for (const item of missao.itens) {
     const produto = produtoPorId[item.produtoId];
+    const secao = secaoPorId[produto.secao];
     const entrada = compra.carrinho[item.produtoId];
     const completo = (entrada?.quantidade || 0) >= item.quantidade;
     const li = document.createElement('li');
     li.className = 'lista-painel__item';
 
-    let texto = `${completo ? '✅' : '⬜'} ${produto.emoji} ${produto.nome} — pedir ${item.quantidade} (${produto.medida})`;
+    let texto = `${completo ? '✅' : '⬜'} ${produto.emoji} ${produto.nome} · ${secao.nome} — pedir ${item.quantidade} (${produto.medida})`;
     if (entrada) {
       const op = opcoesNoNivel(produto, missao.nivel).find(o => o.id === entrada.opcaoId);
       texto += ` · no carrinho: ${entrada.quantidade} (${op.rotulo})`;
@@ -999,7 +1003,7 @@ function renderizarBlocosCaixa() {
   $('caixa-cupom').hidden = etapa === 'faltando';
   $('caixa-estouro').hidden = etapa !== 'estourou';
   $('caixa-conta').hidden = !['conta-total', 'conta-troco', 'armada'].includes(etapa);
-  $('caixa-rodape').hidden = ['faltando', 'estourou', 'armada'].includes(etapa);
+  $('caixa-rodape').hidden = etapa !== 'cupom';
 }
 
 function montarLinhasDoCupom() {
@@ -1050,7 +1054,6 @@ function entrarNoCaixa() {
     });
     const texto = `Ainda falta: ${juntarComE(nomes)}.`;
     $('caixa-faltando-texto').textContent = texto;
-    tocar('erro');
     anunciar(texto);
     $('btn-voltar-faltando').focus();
     return;
@@ -1433,6 +1436,7 @@ $('btn-voltar-estouro').addEventListener('click', () => {
 });
 
 $('btn-voltar-loja-caixa').addEventListener('click', () => {
+  if (estadoCaixa.etapa !== 'cupom') return;
   tocar('clique');
   renderizarLoja();
   mostrarFase('loja');

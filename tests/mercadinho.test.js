@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { desejos, produtos, sonhos, temas } from '../Games/mercadinho/dados.js';
 import {
+  MISSAO_RESERVA,
   NIVEIS,
   aMais,
   alternativasDeTroco,
@@ -307,6 +308,40 @@ describe('Mercadinho — gerador de missões', () => {
       }
     }
   });
+
+  it('mantém MISSAO_RESERVA válida nos três níveis e a devolve quando temaId é inválido', () => {
+    for (const nivel of [1, 2, 3]) {
+      const cfg = NIVEIS[nivel];
+      const reserva = MISSAO_RESERVA[nivel];
+      expect(reserva).toBeDefined();
+      expect(reserva.nivel).toBe(nivel);
+      expect(reserva.itens).toHaveLength(cfg.itens);
+      expect(new Set(reserva.itens.map(i => i.produtoId)).size).toBe(cfg.itens);
+      for (const item of reserva.itens) {
+        expect(porId[item.produtoId]).toBeDefined();
+        if (nivel === 1) {
+          expect(item.quantidade).toBe(1);
+        } else {
+          expect(porId[item.produtoId].quantidades).toContain(item.quantidade);
+        }
+      }
+      expect(reserva.orcamento % 100).toBe(0);
+      expect(reserva.custoMinimo).toBeLessThan(reserva.orcamento);
+      expect(reserva.orcamento).toBeLessThan(reserva.custoDoMelhor);
+      expect(reserva.custoDaMeta).toBeLessThanOrEqual(reserva.orcamento);
+      expect(reserva.coracoesDaCestaBarata).toBeLessThan(reserva.metaCoracoes);
+      expect(reserva.metaCoracoes).toBeLessThanOrEqual(reserva.maximoCoracoes);
+
+      const fb = forcaBrutaMissao(reserva);
+      expect(fb.custoMinimo).toBe(reserva.custoMinimo);
+      expect(fb.maximoCoracoes).toBe(reserva.maximoCoracoes);
+      expect(fb.custoDaMeta).toBe(reserva.custoDaMeta);
+
+      const retornada = gerarMissao({ nivel, semente: 1, temaId: 'inexistente' });
+      expect(retornada).toEqual(reserva);
+      expect(retornada).not.toBe(reserva);
+    }
+  });
 });
 
 describe('Mercadinho — compra e caixa', () => {
@@ -494,10 +529,26 @@ describe('Mercadinho — simulações (300 sementes por nível)', () => {
         let eco = preencherCarrinho(missao, ops => ops[0]);
         const cxEco = chegarAoCaixa(eco);
         expect(cxEco.situacao).toBe('ok');
-        eco = pagar(cxEco.compra);
+        const ecoSemContas = pagar(cxEco.compra);
+        const resEcoSemContas = resultadoDaCompra(ecoSemContas);
+        expect(resEcoSemContas.estrelas).toBe(1);
+        expect(resEcoSemContas.objetivos).toEqual({
+          missaoCumprida: true,
+          familiaFeliz: false,
+          contasCertas: false,
+        });
+
+        eco = cxEco.compra;
+        if (nivel === 3) eco = responderConta(eco, 'total', cxEco.total, 1).compra;
+        eco = responderConta(eco, 'troco', cxEco.troco, 1).compra;
+        eco = pagar(eco);
         const resEco = resultadoDaCompra(eco);
-        expect(resEco.objetivos.missaoCumprida).toBe(true);
-        expect(resEco.objetivos.familiaFeliz).toBe(false);
+        expect(resEco.estrelas).toBe(2);
+        expect(resEco.objetivos).toEqual({
+          missaoCumprida: true,
+          familiaFeliz: false,
+          contasCertas: true,
+        });
 
         // Comprador exagerado: sempre a de mais corações
         const exag = preencherCarrinho(missao, ops => ops.at(-1));

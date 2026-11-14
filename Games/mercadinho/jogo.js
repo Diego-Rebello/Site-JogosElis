@@ -486,10 +486,15 @@ export function resultadoDaCompra(compra) {
     && faltando(compra).length === 0
     && total <= compra.missao.orcamento;
   const familiaFeliz = missaoCumprida && coracoes >= compra.missao.metaCoracoes;
+  const contasEsperadas = compra.missao.nivel === 3 ? 2 : 1;
   const acertos = compra.contas.filter(c => c.certaDePrimeira).length;
   const errosDeConta = compra.contas.filter(c => !c.certaDePrimeira).length;
   const erros = errosDeConta + compra.estouros;
-  const contasCertas = missaoCumprida && compra.estouros === 0 && errosDeConta === 0;
+  const contasCertas =
+    missaoCumprida
+    && compra.estouros === 0
+    && errosDeConta === 0
+    && acertos >= contasEsperadas;
   const estrelas = (missaoCumprida ? 1 : 0) + (familiaFeliz ? 1 : 0) + (contasCertas ? 1 : 0);
 
   const escolhas = compra.missao.itens
