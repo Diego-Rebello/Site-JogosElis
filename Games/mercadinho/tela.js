@@ -2,8 +2,20 @@ import { montarCabecalho } from '../../shared/cabecalho.js';
 import { animar, lancarConfete } from '../../shared/confete.js';
 import { nomeDaCrianca, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 import { tocar } from '../../shared/sons.js';
+import { carregarArte, criarIcone } from './arte.js';
 import { desejos, produtos, temas } from './dados.js';
-import { SECOES } from './mapa.js';
+import {
+  SECOES,
+  caminho,
+  celulaEm,
+  entrada,
+  podeAndar,
+  prateleirasVizinhas,
+  secaoMaisProxima,
+  vizinhaLivre,
+  casasDe,
+} from './mapa.js';
+import { criarRenderizador } from './renderizador.js';
 import {
   NIVEIS,
   alternativasDeTroco,
@@ -69,6 +81,16 @@ const PAINEIS = {
   carrinho: $('painel-carrinho'),
 };
 
+const CHAVE_ESTADO_MERCADINHO = 'jogos-elis:mercadinho';
+const PASSO_MS = 1000 / 6;
+const ATRASO_REDUZIDO_MS = 150;
+const DELTAS_DIRECAO = {
+  cima: { dx: 0, dy: -1 },
+  baixo: { dx: 0, dy: 1 },
+  esquerda: { dx: -1, dy: 0 },
+  direita: { dx: 1, dy: 0 },
+};
+
 let nivelSelecionado = Number(obterConfiguracoes().niveis?.mercadinho) || 2;
 if (![1, 2, 3].includes(nivelSelecionado)) nivelSelecionado = 2;
 
@@ -86,6 +108,447 @@ let timerCupom = null;
 let partidaRegistrada = false;
 
 let estadoCaixa = resetarEstadoCaixa();
+
+let modoListaPreferido = lerPreferenciaModoLista();
+let arteFalhou = false;
+let renderizador = criarRenderizador($('mapa-canvas'));
+
+const nav = {
+  posicao: entrada(),
+  posRender: entrada(),
+  direcao: 'cima',
+  quadro: 0,
+  fila: [],
+  destinoFinal: null,
+  acaoAoChegar: null,
+  direcaoAoChegar: null,
+  passoOrigem: null,
+  passoDestino: null,
+  passoInicioMs: 0,
+  rafId: null,
+  timerReduzido: null,
+  ultimoAnuncioFrente: '',
+};
+
+carregarArte().catch(() => {
+  arteFalhou = true;
+  renderizador = null;
+  atualizarBotoesModoInicio();
+  if (faseAtual === 'loja' && compra) {
+    renderizarLoja();
+  }
+});
+
+function lerPreferenciaModoLista() {
+  try {
+    const bruto = localStorage.getItem(CHAVE_ESTADO_MERCADINHO);
+    if (!bruto) return false;
+    const dados = JSON.parse(bruto);
+    return dados?.versao === 1 && dados.modoLista === true;
+  } catch {
+    return false;
+  }
+}
+
+function salvarPreferenciaModoLista(valor) {
+  try {
+    const bruto = localStorage.getItem(CHAVE_ESTADO_MERCADINHO);
+    const parsed = bruto ? JSON.parse(bruto) : null;
+    const base = parsed && typeof parsed === 'object' && parsed.versao === 1
+      ? parsed
+      : {
+          versao: 1,
+          cofrinho: 0,
+          sonhoAtual: null,
+          sonhosRealizados: [],
+          compras: 0,
+          tutorialVisto: false,
+        };
+    localStorage.setItem(CHAVE_ESTADO_MERCADINHO, JSON.stringify({ ...base, modoLista: Boolean(valor) }));
+  } catch {
+    /* armazenamento indisponível: preferência fica só nesta sessão */
+  }
+}
+
+function usarListaRapida() {
+  return modoListaPreferido || arteFalhou || !renderizador;
+}
+
+function atualizarBotoesModoInicio() {
+  const mapaDisponivel = !arteFalhou && Boolean(renderizador);
+  const listaAtiva = usarListaRapida();
+  const btnAndar = $('btn-modo-andar');
+  const btnLista = $('btn-modo-lista');
+  if (btnAndar) {
+    btnAndar.disabled = !mapaDisponivel;
+    btnAndar.setAttribute('aria-pressed', String(!listaAtiva));
+  }
+  if (btnLista) {
+    btnLista.setAttribute('aria-pressed', String(listaAtiva));
+  }
+}
+
+function resetarNavegacao() {
+  pararMovimento();
+  const inicio = entrada();
+  nav.posicao = { ...inicio };
+  nav.posRender = { ...inicio };
+  nav.direcao = 'cima';
+  nav.quadro = 0;
+  nav.ultimoAnuncioFrente = '';
+}
+
+function direcaoEntre(de, para) {
+  const dx = para.x - de.x;
+  const dy = para.y - de.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? 'direita' : 'esquerda';
+  }
+  return dy >= 0 ? 'baixo' : 'cima';
+}
+
+function pararMovimento(redesenhar = false) {
+  if (nav.rafId !== null) {
+    cancelAnimationFrame(nav.rafId);
+    nav.rafId = null;
+  }
+  if (nav.timerReduzido !== null) {
+    clearTimeout(nav.timerReduzido);
+    nav.timerReduzido = null;
+  }
+  nav.fila = [];
+  nav.destinoFinal = null;
+  nav.acaoAoChegar = null;
+  nav.direcaoAoChegar = null;
+  nav.passoOrigem = null;
+  nav.passoDestino = null;
+  nav.quadro = 0;
+  nav.posRender = { ...nav.posicao };
+  if (redesenhar && faseAtual === 'loja' && !usarListaRapida()) {
+    desenharMapa();
+  }
+}
+
+function nomeDoAlvo(celula) {
+  if (!celula) return '';
+  if (celula.tipo === 'produto') return produtoPorId[celula.id]?.nome || 'Produto';
+  if (celula.tipo === 'desejo') return desejoPorId[celula.id]?.nome || 'Guloseima';
+  if (celula.tipo === 'caixa') return 'Caixa';
+  return '';
+}
+
+function alvoAdjacenteAtual() {
+  const delta = DELTAS_DIRECAO[nav.direcao] || DELTAS_DIRECAO.cima;
+  const fx = nav.posicao.x + delta.dx;
+  const fy = nav.posicao.y + delta.dy;
+  const frontal = celulaEm(fx, fy);
+  if (frontal.tipo === 'produto' || frontal.tipo === 'desejo' || frontal.tipo === 'caixa') {
+    return { x: fx, y: fy, ...frontal };
+  }
+  const vizinhos = prateleirasVizinhas(nav.posicao);
+  return vizinhos[0] || null;
+}
+
+function atualizarIndicacaoMapa({ anunciarSeMudou = false } = {}) {
+  if (!compra || usarListaRapida()) return;
+
+  const secao = secaoMaisProxima(nav.posicao);
+  $('loja-secao-atual').textContent = `📍 Você está em: ${secao.nome}`;
+
+  const alvo = alvoAdjacenteAtual();
+  const btn = $('btn-interagir-mapa');
+  if (!alvo) {
+    btn.hidden = true;
+    btn.textContent = '';
+    nav.ultimoAnuncioFrente = '';
+    return;
+  }
+
+  const nome = nomeDoAlvo(alvo);
+  btn.hidden = false;
+  btn.textContent = `Ver: ${nome}`;
+
+  const chave = `${alvo.tipo}:${alvo.id}`;
+  if (anunciarSeMudou && chave !== nav.ultimoAnuncioFrente) {
+    nav.ultimoAnuncioFrente = chave;
+    anunciar(`Você está em frente a: ${nome}`);
+  }
+}
+
+function desenharMapa() {
+  if (!renderizador || !compra || usarListaRapida()) return;
+  const baloesNivel1 = compra.missao.nivel === 1
+    ? compra.missao.itens
+        .filter(item => (compra.carrinho[item.produtoId]?.quantidade || 0) < item.quantidade)
+        .map(item => casasDe(item.produtoId))
+        .filter(Boolean)
+    : [];
+
+  const alvo = alvoAdjacenteAtual();
+  renderizador.desenhar({
+    posX: nav.posRender.x,
+    posY: nav.posRender.y,
+    direcao: nav.direcao,
+    quadro: nav.quadro,
+    destinoCaminhada: nav.destinoFinal,
+    destaqueCasa: alvo ? { x: alvo.x, y: alvo.y } : null,
+    baloesNivel1,
+  });
+}
+
+function executarAcaoCelula(celula, gatilho) {
+  if (!celula) return;
+  if (celula.tipo === 'produto') {
+    tocar('clique');
+    abrirPrateleiraProduto(celula.id, gatilho);
+  } else if (celula.tipo === 'desejo') {
+    tocar('clique');
+    abrirPrateleiraGuloseima(celula.id, gatilho);
+  } else if (celula.tipo === 'caixa') {
+    tocar('clique');
+    entrarNoCaixa();
+  }
+}
+
+function acionarInteracaoAdjacente(gatilho = $('btn-interagir-mapa')) {
+  const alvo = alvoAdjacenteAtual();
+  if (!alvo) return;
+  pararMovimento(false);
+  nav.direcao = direcaoEntre(nav.posicao, alvo);
+  desenharMapa();
+  executarAcaoCelula(alvo, gatilho);
+}
+
+function concluirCaminhada() {
+  nav.rafId = null;
+  nav.passoOrigem = null;
+  nav.passoDestino = null;
+  nav.quadro = 0;
+  nav.posRender = { ...nav.posicao };
+  nav.destinoFinal = null;
+
+  const acao = nav.acaoAoChegar;
+  const dirFinal = nav.direcaoAoChegar;
+  nav.acaoAoChegar = null;
+  nav.direcaoAoChegar = null;
+
+  if (dirFinal) {
+    nav.direcao = dirFinal;
+  }
+
+  desenharMapa();
+  atualizarIndicacaoMapa({ anunciarSeMudou: !acao });
+
+  if (acao) {
+    executarAcaoCelula(acao, $('mapa-canvas'));
+  }
+}
+
+function avancarProximoPasso(agora) {
+  if (!nav.fila.length) return false;
+  const proximo = nav.fila.shift();
+  nav.passoOrigem = { ...nav.posicao };
+  nav.passoDestino = proximo;
+  nav.passoInicioMs = agora;
+  nav.direcao = direcaoEntre(nav.posicao, proximo);
+  return true;
+}
+
+function animarPasso(agora) {
+  nav.rafId = null;
+  if (faseAtual !== 'loja' || painelAtivo || usarListaRapida() || document.hidden) {
+    pararMovimento();
+    return;
+  }
+
+  if (!nav.passoDestino) {
+    if (!avancarProximoPasso(agora)) {
+      concluirCaminhada();
+      return;
+    }
+  }
+
+  const t = Math.min(1, (agora - nav.passoInicioMs) / PASSO_MS);
+  nav.posRender = {
+    x: nav.passoOrigem.x + (nav.passoDestino.x - nav.passoOrigem.x) * t,
+    y: nav.passoOrigem.y + (nav.passoDestino.y - nav.passoOrigem.y) * t,
+  };
+  nav.quadro = Math.floor(t * 2);
+
+  if (t >= 1) {
+    nav.posicao = { ...nav.passoDestino };
+    nav.posRender = { ...nav.posicao };
+    nav.passoOrigem = null;
+    nav.passoDestino = null;
+    atualizarIndicacaoMapa({ anunciarSeMudou: nav.fila.length === 0 });
+
+    if (!avancarProximoPasso(agora)) {
+      concluirCaminhada();
+      return;
+    }
+  }
+
+  desenharMapa();
+  nav.rafId = requestAnimationFrame(animarPasso);
+}
+
+function andarPara(destino, { acaoAoChegar = null, direcaoAoChegar = null } = {}) {
+  if (!podeAndar(destino.x, destino.y)) return;
+
+  if (querMenosMovimento()) {
+    if (nav.timerReduzido !== null) {
+      clearTimeout(nav.timerReduzido);
+      nav.timerReduzido = null;
+    }
+    if (nav.rafId !== null) {
+      cancelAnimationFrame(nav.rafId);
+      nav.rafId = null;
+    }
+    nav.passoOrigem = null;
+    nav.passoDestino = null;
+    nav.quadro = 0;
+    nav.posRender = { ...nav.posicao };
+
+    if (nav.posicao.x === destino.x && nav.posicao.y === destino.y) {
+      nav.acaoAoChegar = acaoAoChegar;
+      nav.direcaoAoChegar = direcaoAoChegar;
+      concluirCaminhada();
+      return;
+    }
+
+    const rota = caminho(nav.posicao, destino);
+    if (!rota) return;
+
+    nav.destinoFinal = { ...destino };
+    nav.acaoAoChegar = acaoAoChegar;
+    nav.direcaoAoChegar = direcaoAoChegar;
+    nav.timerReduzido = setTimeout(() => {
+      nav.timerReduzido = null;
+      if (faseAtual !== 'loja' || painelAtivo || usarListaRapida()) return;
+      const penultimo = rota.length >= 2 ? rota[rota.length - 2] : nav.posicao;
+      nav.posicao = { ...destino };
+      nav.posRender = { ...destino };
+      nav.direcao = direcaoAoChegar || direcaoEntre(penultimo, destino);
+      nav.quadro = 0;
+      concluirCaminhada();
+    }, ATRASO_REDUZIDO_MS);
+    return;
+  }
+
+  const base = nav.passoDestino || nav.posicao;
+  const rota = caminho(base, destino);
+  if (rota === null) return;
+
+  nav.fila = rota;
+  nav.destinoFinal = { ...destino };
+  nav.acaoAoChegar = acaoAoChegar;
+  nav.direcaoAoChegar = direcaoAoChegar;
+
+  if (!nav.passoDestino && rota.length === 0) {
+    concluirCaminhada();
+    return;
+  }
+
+  if (nav.rafId === null) {
+    if (!nav.passoDestino) {
+      avancarProximoPasso(performance.now());
+      desenharMapa();
+    }
+    nav.rafId = requestAnimationFrame(animarPasso);
+  }
+}
+
+function andarUmaCasa(direcao) {
+  if (faseAtual !== 'loja' || painelAtivo || usarListaRapida()) return;
+  const delta = DELTAS_DIRECAO[direcao];
+  if (!delta) return;
+
+  if (nav.timerReduzido !== null) {
+    clearTimeout(nav.timerReduzido);
+    nav.timerReduzido = null;
+  }
+  nav.acaoAoChegar = null;
+  nav.direcaoAoChegar = null;
+
+  // Se já está animando um passo, atualiza a fila a partir da casa de chegada ou bloqueia se não for andar
+  if (nav.passoDestino) {
+    const prox = { x: nav.passoDestino.x + delta.dx, y: nav.passoDestino.y + delta.dy };
+    if (podeAndar(prox.x, prox.y)) {
+      nav.fila = [prox];
+      nav.destinoFinal = prox;
+    } else {
+      nav.fila = [];
+      nav.destinoFinal = { ...nav.passoDestino };
+    }
+    return;
+  }
+
+  const nx = nav.posicao.x + delta.dx;
+  const ny = nav.posicao.y + delta.dy;
+  if (!podeAndar(nx, ny)) {
+    nav.direcao = direcao;
+    nav.quadro = 0;
+    nav.destinoFinal = null;
+    desenharMapa();
+    atualizarIndicacaoMapa({ anunciarSeMudou: true });
+    return;
+  }
+
+  if (querMenosMovimento()) {
+    nav.posicao = { x: nx, y: ny };
+    nav.posRender = { ...nav.posicao };
+    nav.direcao = direcao;
+    nav.quadro = 0;
+    nav.destinoFinal = null;
+    desenharMapa();
+    atualizarIndicacaoMapa({ anunciarSeMudou: true });
+    return;
+  }
+
+  nav.fila = [{ x: nx, y: ny }];
+  nav.destinoFinal = { x: nx, y: ny };
+  avancarProximoPasso(performance.now());
+  desenharMapa();
+  nav.rafId = requestAnimationFrame(animarPasso);
+}
+
+function interagirComCasa(x, y) {
+  if (faseAtual !== 'loja' || painelAtivo || usarListaRapida()) return;
+  const celula = celulaEm(x, y);
+
+  if (celula.tipo === 'parede') return;
+  if (celula.tipo === 'piso') {
+    andarPara({ x, y });
+    return;
+  }
+
+  const ehInterativa = celula.tipo === 'produto' || celula.tipo === 'desejo' || celula.tipo === 'caixa';
+  if (!ehInterativa) return;
+
+  const alvo = { ...celula, x, y };
+  const paradaAdjacente =
+    !nav.passoDestino
+    && nav.timerReduzido === null
+    && Math.abs(nav.posicao.x - x) + Math.abs(nav.posicao.y - y) === 1;
+
+  if (paradaAdjacente) {
+    nav.direcao = direcaoEntre(nav.posicao, alvo);
+    nav.quadro = 0;
+    desenharMapa();
+    atualizarIndicacaoMapa({ anunciarSeMudou: false });
+    executarAcaoCelula(alvo, $('mapa-canvas'));
+    return;
+  }
+
+  const base = nav.passoDestino || nav.posicao;
+  const vizinha = vizinhaLivre(base, alvo);
+  if (!vizinha) return;
+
+  andarPara(vizinha, {
+    acaoAoChegar: alvo,
+    direcaoAoChegar: direcaoEntre(vizinha, alvo),
+  });
+}
 
 function resetarEstadoCaixa() {
   return {
@@ -149,11 +612,20 @@ function limparCupomTimer() {
 function mostrarFase(nome) {
   limparEspiada();
   limparCupomTimer();
+  pararMovimento(false);
   fecharPainel(false);
 
   faseAtual = nome;
   for (const [chave, secao] of Object.entries(FASES)) {
     secao.hidden = chave !== nome;
+  }
+
+  if (nome === 'loja' && !usarListaRapida() && renderizador) {
+    renderizador.ajustarTamanho();
+    atualizarIndicacaoMapa({ anunciarSeMudou: false });
+    desenharMapa();
+    $('mapa-canvas').focus();
+    return;
   }
 
   const alvoFoco = FASES[nome].querySelector('h2, button:not([disabled]):not([hidden])');
@@ -191,6 +663,7 @@ function iniciarNovaMissao() {
   secaoAberta = null;
   partidaRegistrada = false;
   estadoCaixa = resetarEstadoCaixa();
+  resetarNavegacao();
   renderizarMissao();
   mostrarFase('missao');
   anunciar(`Nova missão: ${missao.titulo}. Orçamento ${formatarDinheiro(missao.orcamento)}.`);
@@ -295,10 +768,35 @@ function renderizarPainelFixo() {
 function renderizarLoja() {
   renderizarPainelFixo();
 
+  const listaAtiva = usarListaRapida();
   const cabSecao = $('loja-secao-atual');
   const btnVoltarSecoes = $('btn-voltar-secoes');
+  const btnAlternarModo = $('btn-alternar-modo-loja');
+  const mapaBloco = $('loja-mapa-bloco');
   const gradeSecoes = $('grade-secoes');
   const listaProdutos = $('lista-produtos');
+  const btnIrCaixa = $('btn-ir-caixa');
+
+  if (btnAlternarModo) {
+    btnAlternarModo.hidden = arteFalhou || !renderizador;
+    btnAlternarModo.textContent = listaAtiva ? '🚶 Ver no mapa' : '📝 Lista rápida';
+  }
+  btnIrCaixa.hidden = !listaAtiva;
+
+  if (!listaAtiva) {
+    mapaBloco.hidden = false;
+    btnVoltarSecoes.hidden = true;
+    gradeSecoes.hidden = true;
+    listaProdutos.hidden = true;
+    atualizarIndicacaoMapa({ anunciarSeMudou: false });
+    if (faseAtual === 'loja' && renderizador) {
+      renderizador.ajustarTamanho();
+      desenharMapa();
+    }
+    return;
+  }
+
+  mapaBloco.hidden = true;
 
   if (!secaoAberta) {
     cabSecao.textContent = '📍 Escolha uma seção';
@@ -430,6 +928,7 @@ function elementosFocaveis(container) {
 }
 
 function abrirPainel(elPainel, gatilho) {
+  pararMovimento(false);
   fecharPainel(false);
   painelAtivo = elPainel;
   gatilhoDoPainel = gatilho || document.activeElement;
@@ -506,10 +1005,8 @@ function renderizarPrateleiraProduto() {
     const ident = document.createElement('div');
     ident.className = 'opcao-cartao__identidade';
 
-    const emoji = document.createElement('span');
-    emoji.className = 'opcao-cartao__emoji';
-    emoji.setAttribute('aria-hidden', 'true');
-    emoji.textContent = produto.emoji;
+    const icone = criarIcone(produto.id, opcao.id, 2);
+    icone.classList.add('opcao-cartao__emoji');
 
     const marca = document.createElement('strong');
     marca.className = 'opcao-cartao__marca';
@@ -519,7 +1016,7 @@ function renderizarPrateleiraProduto() {
     preco.className = 'opcao-cartao__preco';
     preco.textContent = formatarDinheiro(opcao.preco);
 
-    ident.append(emoji, marca);
+    ident.append(icone, marca);
     cabeca.append(ident, preco);
 
     const rodape = document.createElement('div');
@@ -560,7 +1057,9 @@ function renderizarPrateleiraProduto() {
         tocar('acerto');
         anunciar(`${produto.nome} ${opcao.rotulo} no carrinho (${quantidadePrateleira})`);
         renderizarLoja();
-        gatilhoDoPainel = $('lista-produtos').querySelector(`[data-produto-id="${produto.id}"]`) || gatilhoDoPainel;
+        if (usarListaRapida()) {
+          gatilhoDoPainel = $('lista-produtos').querySelector(`[data-produto-id="${produto.id}"]`) || gatilhoDoPainel;
+        }
         fecharPainel();
       });
 
@@ -651,10 +1150,8 @@ function renderizarPrateleiraGuloseima() {
   const ident = document.createElement('div');
   ident.className = 'opcao-cartao__identidade';
 
-  const emoji = document.createElement('span');
-  emoji.className = 'opcao-cartao__emoji';
-  emoji.setAttribute('aria-hidden', 'true');
-  emoji.textContent = desejo.emoji;
+  const icone = criarIcone(desejo.id, null, 2);
+  icone.classList.add('opcao-cartao__emoji');
 
   const marca = document.createElement('strong');
   marca.className = 'opcao-cartao__marca';
@@ -664,7 +1161,7 @@ function renderizarPrateleiraGuloseima() {
   elPreco.className = 'opcao-cartao__preco';
   elPreco.textContent = formatarDinheiro(preco);
 
-  ident.append(emoji, marca);
+  ident.append(icone, marca);
   cabeca.append(ident, elPreco);
 
   const rodape = document.createElement('div');
@@ -682,7 +1179,9 @@ function renderizarPrateleiraGuloseima() {
       tocar('clique');
       anunciar(`${desejo.nome} devolvida.`);
       renderizarLoja();
-      gatilhoDoPainel = $('lista-produtos').querySelector(`[data-guloseima-id="${desejo.id}"]`) || gatilhoDoPainel;
+      if (usarListaRapida()) {
+        gatilhoDoPainel = $('lista-produtos').querySelector(`[data-guloseima-id="${desejo.id}"]`) || gatilhoDoPainel;
+      }
       fecharPainel();
     });
   } else {
@@ -702,7 +1201,9 @@ function renderizarPrateleiraGuloseima() {
       tocar('acerto');
       anunciar(`${desejo.nome} no carrinho.`);
       renderizarLoja();
-      gatilhoDoPainel = $('lista-produtos').querySelector(`[data-guloseima-id="${desejo.id}"]`) || gatilhoDoPainel;
+      if (usarListaRapida()) {
+        gatilhoDoPainel = $('lista-produtos').querySelector(`[data-guloseima-id="${desejo.id}"]`) || gatilhoDoPainel;
+      }
       fecharPainel();
     });
   }
@@ -1364,12 +1865,28 @@ function renderizarResultado(res) {
 /* ---------------- Eventos ---------------- */
 
 selecionarNivel(nivelSelecionado);
+atualizarBotoesModoInicio();
 
 document.querySelectorAll('.nivel[data-nivel]').forEach(botao => {
   botao.addEventListener('click', () => {
     tocar('clique');
     selecionarNivel(botao.dataset.nivel);
   });
+});
+
+$('btn-modo-andar').addEventListener('click', () => {
+  if (!renderizador || arteFalhou) return;
+  tocar('clique');
+  modoListaPreferido = false;
+  salvarPreferenciaModoLista(false);
+  atualizarBotoesModoInicio();
+});
+
+$('btn-modo-lista').addEventListener('click', () => {
+  tocar('clique');
+  modoListaPreferido = true;
+  salvarPreferenciaModoLista(true);
+  atualizarBotoesModoInicio();
 });
 
 $('btn-comecar').addEventListener('click', () => {
@@ -1381,7 +1898,53 @@ $('btn-ir-compras').addEventListener('click', () => {
   tocar('clique');
   renderizarLoja();
   mostrarFase('loja');
-  anunciar('Você entrou no mercado. Escolha uma seção.');
+  anunciar(
+    usarListaRapida()
+      ? 'Você entrou no mercado. Escolha uma seção.'
+      : 'Você entrou no mercado. Toque no mapa ou use as setas para andar.',
+  );
+});
+
+$('btn-alternar-modo-loja').addEventListener('click', () => {
+  if (!renderizador || arteFalhou) return;
+  tocar('clique');
+  pararMovimento(false);
+  modoListaPreferido = !modoListaPreferido;
+  salvarPreferenciaModoLista(modoListaPreferido);
+  atualizarBotoesModoInicio();
+  renderizarLoja();
+  if (!usarListaRapida()) {
+    renderizador.ajustarTamanho();
+    desenharMapa();
+    $('mapa-canvas').focus();
+    anunciar('Modo mapa ativado.');
+  } else {
+    anunciar('Lista rápida ativada.');
+  }
+});
+
+$('btn-interagir-mapa').addEventListener('click', () => {
+  acionarInteracaoAdjacente($('btn-interagir-mapa'));
+});
+
+$('mapa-canvas').addEventListener('click', evento => {
+  if (!renderizador || faseAtual !== 'loja' || painelAtivo || usarListaRapida()) return;
+  const casa = renderizador.eventoParaCasa(evento);
+  if (!casa) return;
+  interagirComCasa(casa.x, casa.y);
+});
+
+window.addEventListener('resize', () => {
+  if (faseAtual === 'loja' && !usarListaRapida() && renderizador) {
+    renderizador.ajustarTamanho();
+    desenharMapa();
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    pararMovimento(true);
+  }
 });
 
 $('btn-voltar-inicio').addEventListener('click', () => {
@@ -1527,6 +2090,45 @@ document.addEventListener('keydown', evento => {
       }
     }
     return;
+  }
+
+  if (
+    faseAtual === 'loja'
+    && !usarListaRapida()
+    && !evento.ctrlKey
+    && !evento.metaKey
+    && !evento.altKey
+  ) {
+    const mapaDirecoes = {
+      ArrowUp: 'cima',
+      w: 'cima',
+      W: 'cima',
+      ArrowDown: 'baixo',
+      s: 'baixo',
+      S: 'baixo',
+      ArrowLeft: 'esquerda',
+      a: 'esquerda',
+      A: 'esquerda',
+      ArrowRight: 'direita',
+      d: 'direita',
+      D: 'direita',
+    };
+    const direcao = mapaDirecoes[evento.key];
+    if (direcao) {
+      evento.preventDefault();
+      andarUmaCasa(direcao);
+      return;
+    }
+
+    if (
+      (evento.key === 'Enter' || evento.key === ' ')
+      && !evento.target?.closest?.('button, a, input, select, textarea')
+      && alvoAdjacenteAtual()
+    ) {
+      evento.preventDefault();
+      acionarInteracaoAdjacente($('mapa-canvas'));
+      return;
+    }
   }
 
   if (

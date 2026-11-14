@@ -37,7 +37,14 @@
         </button>
       </div>
 
-      <p class="modo-etapa">📝 Lista rápida ativa (seções e prateleiras)</p>
+      <div class="modos-compra" role="group" aria-label="Como você quer fazer as compras?">
+        <button id="btn-modo-andar" type="button" class="botao botao--neutro modo-compra" data-modo="andar" aria-pressed="true">
+          🚶 Andar pelo mercado
+        </button>
+        <button id="btn-modo-lista" type="button" class="botao botao--neutro modo-compra" data-modo="lista" aria-pressed="false">
+          📝 Lista rápida
+        </button>
+      </div>
 
       <div class="acoes">
         <button id="btn-comecar" type="button" class="botao botao--sucesso">COMEÇAR</button>
@@ -58,7 +65,7 @@
       </div>
     </section>
 
-    <!-- FASE 3: LOJA (LISTA RÁPIDA) -->
+    <!-- FASE 3: LOJA -->
     <section id="fase-loja" class="cartao tela tela--loja" aria-label="Loja" hidden>
       <div class="painel-fixo" aria-label="Painel da compra">
         <div class="painel-fixo__grade">
@@ -81,12 +88,34 @@
 
       <div class="loja-cabecalho">
         <div id="loja-secao-atual" class="loja-secao-atual"></div>
-        <button id="btn-voltar-secoes" type="button" class="botao botao--neutro botao-voltar-secoes" hidden>
-          ← Todas as seções
-        </button>
+        <div class="loja-cabecalho__botoes">
+          <button id="btn-voltar-secoes" type="button" class="botao botao--neutro botao-voltar-secoes" hidden>
+            ← Todas as seções
+          </button>
+          <button id="btn-alternar-modo-loja" type="button" class="botao botao--neutro botao-alternar-modo">
+            📝 Lista rápida
+          </button>
+        </div>
       </div>
 
-      <div id="grade-secoes" class="grade-secoes" role="region" aria-label="Seções do mercado"></div>
+      <div id="loja-mapa-bloco" class="loja-mapa-bloco">
+        <div class="mapa-moldura">
+          <div class="mapa-borda">
+            <canvas
+              id="mapa-canvas"
+              class="mapa-canvas"
+              role="img"
+              aria-label="Mapa do mercado. Toque numa casa ou use as setas do teclado para andar."
+              tabindex="0"
+            ></canvas>
+          </div>
+        </div>
+        <div class="mapa-interacao">
+          <button id="btn-interagir-mapa" type="button" class="botao botao--sucesso botao-interagir-mapa" hidden></button>
+        </div>
+      </div>
+
+      <div id="grade-secoes" class="grade-secoes" role="region" aria-label="Seções do mercado" hidden></div>
       <div id="lista-produtos" class="lista-produtos" role="region" aria-label="Produtos da seção" hidden></div>
 
       <div class="acoes acoes--loja">

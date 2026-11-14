@@ -86,15 +86,23 @@
   padding: 12px 16px;
 }
 
-.nivel[aria-pressed='true'] {
+.nivel[aria-pressed='true'],
+.modo-compra[aria-pressed='true'] {
   background: var(--cor-principal-profunda);
   border-color: var(--cor-principal-profunda);
   color: #fff;
 }
 
-.modo-etapa {
-  color: var(--cor-suave);
-  margin-bottom: 16px;
+.modos-compra {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.modo-compra {
+  width: 100%;
+  padding: 12px 14px;
 }
 
 .rodape-aviso {
@@ -228,7 +236,7 @@
   font-size: 1.125rem;
 }
 
-/* Loja rápida */
+/* Loja navegável e lista rápida */
 .loja-cabecalho {
   display: flex;
   flex-wrap: wrap;
@@ -239,9 +247,58 @@
   text-align: left;
 }
 
+.loja-cabecalho__botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .loja-secao-atual {
   font-weight: 700;
   font-size: 1.2rem;
+}
+
+.loja-mapa-bloco {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.mapa-moldura {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.mapa-borda {
+  border: 3px solid rgba(59, 45, 84, 0.25);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: #faf6ed;
+}
+
+.mapa-canvas {
+  display: block;
+  border: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.mapa-interacao {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  justify-content: center;
+}
+
+.botao-interagir-mapa {
+  width: min(100%, 420px);
+  min-height: 48px;
+  font-size: 1.125rem;
 }
 
 .grade-secoes {
