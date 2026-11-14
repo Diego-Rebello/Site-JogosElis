@@ -6,7 +6,13 @@ import {
   desenharProduto,
 } from './arte.js';
 
-const ESCALA_MAPA = 8;
+/**
+ * Teto da resolução da camada estática (pixels de tela por pixel lógico).
+ * A camada é dimensionada por ceil(escala × devicePixelRatio) e nunca passa disto,
+ * para não estourar memória em telas densas (8× = 3072×2048, ~25 MB).
+ */
+const ESCALA_MAPA_MAXIMA = 8;
+const FONTE_PADRAO = 'Fredoka One, Trebuchet MS, system-ui, sans-serif';
 
 const PLACAS_SECAO = Object.freeze([
   { id: 'laticinios', rotulo: 'Laticínios', cor: '#256fa8', x: 5.0, y: 0.45 },
@@ -32,12 +38,12 @@ function mesmoMovel(celulaA, x, y) {
   return celulaB.tipo === celulaA.tipo;
 }
 
-function criarCanvasMapa() {
+function criarCanvasMapa(escalaCamada) {
   const larguraMapa = LARGURA * TAMANHO_CASA;
   const alturaMapa = ALTURA * TAMANHO_CASA;
   const canvasMapa = document.createElement('canvas');
-  canvasMapa.width = larguraMapa * ESCALA_MAPA;
-  canvasMapa.height = alturaMapa * ESCALA_MAPA;
+  canvasMapa.width = larguraMapa * escalaCamada;
+  canvasMapa.height = alturaMapa * escalaCamada;
 
   const ctxMapa = canvasMapa.getContext('2d');
   if (!ctxMapa) return null;
@@ -45,7 +51,7 @@ function criarCanvasMapa() {
   ctxMapa.imageSmoothingEnabled = true;
   ctxMapa.imageSmoothingQuality = 'high';
   ctxMapa.save();
-  ctxMapa.scale(ESCALA_MAPA, ESCALA_MAPA);
+  ctxMapa.scale(escalaCamada, escalaCamada);
 
   const ent = entrada();
 
@@ -97,8 +103,9 @@ function criarCanvasMapa() {
 }
 
 /**
- * Cria o renderizador do mapa em canvas de alta resolução com camada estática em 8×,
- * devicePixelRatio e câmera presa aos limites da loja.
+ * Cria o renderizador do mapa com devicePixelRatio e câmera presa aos limites da loja.
+ * A camada estática (gôndolas, embalagens, piso) só é desenhada no primeiro quadro,
+ * na resolução da tela — quem joga na lista rápida nunca paga esse custo.
  * Retorna null se o contexto 2D do canvas não estiver disponível.
  */
 export function criarRenderizador(canvas) {
@@ -106,8 +113,9 @@ export function criarRenderizador(canvas) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  const canvasMapa = criarCanvasMapa();
-  if (!canvasMapa) return null;
+  let canvasMapa = null;
+  let escalaCamada = 0;
+  let fonteCorpo = null;
 
   const larguraMapaLogica = LARGURA * TAMANHO_CASA;
   const alturaMapaLogica = ALTURA * TAMANHO_CASA;
@@ -161,9 +169,42 @@ export function criarRenderizador(canvas) {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
+    // Se a densidade mudou (zoom, troca de monitor, rotação), a camada é refeita no próximo quadro
+    if (canvasMapa && escalaDesejada() !== escalaCamada) {
+      canvasMapa = null;
+      escalaCamada = 0;
+    }
+
     if (ultimoEstado) {
       calcularCamera(ultimoEstado.posX, ultimoEstado.posY);
     }
+  }
+
+  function escalaDesejada() {
+    return Math.max(1, Math.min(ESCALA_MAPA_MAXIMA, Math.ceil(escala * dpr)));
+  }
+
+  /** Desenha a camada estática na primeira vez que for preciso (ou após mudar a densidade). */
+  function garantirCamadaEstatica() {
+    if (canvasMapa) return canvasMapa;
+    // Se faltar memória para a resolução desejada, tenta resoluções menores
+    for (let k = escalaDesejada(); k >= 1; k = k > 2 ? Math.floor(k / 2) : k - 1) {
+      const camada = criarCanvasMapa(k);
+      if (camada) {
+        canvasMapa = camada;
+        escalaCamada = k;
+        return canvasMapa;
+      }
+    }
+    return null;
+  }
+
+  function obterFonteCorpo() {
+    if (fonteCorpo === null) {
+      fonteCorpo = getComputedStyle(document.body).getPropertyValue('--fonte-corpo').trim()
+        || FONTE_PADRAO;
+    }
+    return fonteCorpo;
   }
 
   function calcularCamera(posX, posY) {
@@ -178,8 +219,6 @@ export function criarRenderizador(canvas) {
   }
 
   function desenharPlacas() {
-    const fonteCorpo = getComputedStyle(document.body).getPropertyValue('--fonte-corpo').trim()
-      || 'Fredoka One, Trebuchet MS, system-ui, sans-serif';
     const tamFonte = Math.round(escala * 4.4);
     const alturaPill = Math.round(tamFonte * 1.48);
     const padX = Math.round(tamFonte * 0.52);
@@ -187,7 +226,7 @@ export function criarRenderizador(canvas) {
     const gapPonto = Math.round(tamFonte * 0.35);
 
     ctx.save();
-    ctx.font = `400 ${tamFonte}px ${fonteCorpo}`;
+    ctx.font = `400 ${tamFonte}px ${obterFonteCorpo()}`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
@@ -281,21 +320,27 @@ export function criarRenderizador(canvas) {
     calcularCamera(estado.posX, estado.posY);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, larguraCss, alturaCss);
 
-    ctx.drawImage(
-      canvasMapa,
-      camX * ESCALA_MAPA,
-      camY * ESCALA_MAPA,
-      larguraLogica * ESCALA_MAPA,
-      alturaLogica * ESCALA_MAPA,
-      0,
-      0,
-      larguraCss,
-      alturaCss,
-    );
+    const camada = garantirCamadaEstatica();
+    if (camada) {
+      // Com a camada na resolução da tela a cópia é 1:1 (ou quase): reamostragem barata
+      ctx.imageSmoothingEnabled = escalaCamada !== escala * dpr;
+      ctx.imageSmoothingQuality = 'low';
+      ctx.drawImage(
+        camada,
+        camX * escalaCamada,
+        camY * escalaCamada,
+        larguraLogica * escalaCamada,
+        alturaLogica * escalaCamada,
+        0,
+        0,
+        larguraCss,
+        alturaCss,
+      );
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     ctx.save();
     ctx.scale(escala, escala);
@@ -390,6 +435,7 @@ export function criarRenderizador(canvas) {
       larguraMapaLogica,
       alturaMapaLogica,
       quadrosDesenhados,
+      escalaCamada,
     };
   }
 

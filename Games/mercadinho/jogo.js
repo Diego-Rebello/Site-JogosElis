@@ -161,8 +161,9 @@ export function tabelaDeCustos(itens, nivel) {
   let somenteLista = new Map([[0, 0]]);
   for (const item of itens) {
     const proxima = new Map();
+    const opcoes = opcoesNoNivel(porId[item.produtoId], nivel);
     for (const [coracoes, custo] of somenteLista) {
-      for (const opcao of opcoesNoNivel(porId[item.produtoId], nivel)) {
+      for (const opcao of opcoes) {
         guardarMenor(proxima, coracoes + opcao.coracoes, custo + opcao.preco * item.quantidade);
       }
     }
@@ -457,7 +458,10 @@ export function responderConta(compra, tipo, valor, tentativa = 1) {
   const total = totalDoCarrinho(compra);
   const respostaCerta = tipo === 'total' ? total : compra.missao.orcamento - total;
   const certa = valor === respostaCerta;
-  const contas = tentativa === 1
+  // Só a primeira resposta de cada tipo conta: no nível 3 a criança pode responder o total,
+  // estourar, voltar à loja e responder de novo — isso não pode inflar acertos nem erros.
+  const jaRespondida = compra.contas.some(c => c.tipo === tipo);
+  const contas = tentativa === 1 && !jaRespondida
     ? [...compra.contas, { tipo, certaDePrimeira: certa }]
     : compra.contas;
   return {
@@ -535,24 +539,33 @@ export function alternativasDeTroco(troco, rnd = criarGerador(1)) {
   return embaralhar([certo, certo + 100, terceira], rnd);
 }
 
-function formatarNumeroVirgula(centavos) {
+export function formatarNumeroVirgula(centavos) {
   const valor = Math.max(0, Math.trunc(Number(centavos) || 0));
   return `${Math.floor(valor / 100)},${String(valor % 100).padStart(2, '0')}`;
 }
 
-export function contaArmada(a, b, operacao = '-') {
-  const sinal = operacao === '+' ? '+' : '−';
-  const resultado = operacao === '+' ? a + b : a - b;
-  const strA = formatarNumeroVirgula(a);
-  const strB = formatarNumeroVirgula(b);
+/** Monta as linhas de uma conta armada com N parcelas (o sinal vai na última). */
+function armarConta(parcelas, resultado, sinal) {
+  const textos = parcelas.map(formatarNumeroVirgula);
   const strR = formatarNumeroVirgula(resultado);
-  const largura = Math.max(strA.length + 2, strB.length + 2, strR.length);
+  const largura = Math.max(...textos.map(t => t.length + 2), strR.length);
+  const ultima = textos.length - 1;
   return [
-    strA.padStart(largura, ' '),
-    `${sinal} ${strB.padStart(largura - 2, ' ')}`,
+    ...textos.map((texto, idx) => (
+      idx === ultima ? `${sinal} ${texto.padStart(largura - 2, ' ')}` : texto.padStart(largura, ' ')
+    )),
     '─'.repeat(largura),
     strR.padStart(largura, ' '),
   ];
+}
+
+export function contaArmada(a, b, operacao = '-') {
+  return operacao === '+' ? somaArmada([a, b]) : armarConta([a, b], a - b, '−');
+}
+
+/** Conta armada de adição com qualquer número de parcelas. */
+export function somaArmada(valores) {
+  return armarConta(valores, somarCentavos(valores), '+');
 }
 
 export function conferirDados() {

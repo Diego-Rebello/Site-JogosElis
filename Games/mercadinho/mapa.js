@@ -32,6 +32,12 @@ export const SECOES = Object.freeze({
   Z: Object.freeze({ id: 'limpeza', nome: 'Limpeza e higiene', emoji: '🧴' }),
 });
 
+/** Áreas sem produto da lista, usadas só pelo indicador "Você está em". */
+export const AREAS_EXTRAS = Object.freeze({
+  G: Object.freeze({ id: 'guloseimas', nome: 'Guloseimas', emoji: '🍭' }),
+  K: Object.freeze({ id: 'caixas', nome: 'Caixas', emoji: '🛒' }),
+});
+
 const DIRECOES = Object.freeze([
   Object.freeze({ dx: 0, dy: -1 }),
   Object.freeze({ dx: 1, dy: 0 }),
@@ -49,7 +55,8 @@ const produtosPorSecao = Object.fromEntries(
 const grade = Array.from({ length: ALTURA }, () => new Array(LARGURA));
 const casasProdutos = new Map();
 const casasDesejos = new Map();
-const prateleiras = [];
+/** Todas as casas que identificam uma área: produtos, guloseimas e caixas. */
+const marcosDeArea = [];
 let pontoEntrada = { x: 3, y: 14 };
 
 const contadoresSecao = Object.fromEntries(Object.keys(SECOES).map(letra => [letra, 0]));
@@ -73,7 +80,7 @@ for (let y = 0; y < ALTURA; y++) {
       }
       grade[y][x] = Object.freeze({ tipo: 'produto', id: produto.id, secao: secao.id });
       casasProdutos.set(produto.id, Object.freeze({ x, y }));
-      prateleiras.push({ x, y, letra: simbolo, secao });
+      marcosDeArea.push({ x, y, secao });
     } else if (simbolo === 'G') {
       const desejo = desejos[indiceDesejo++];
       if (!desejo) {
@@ -81,9 +88,11 @@ for (let y = 0; y < ALTURA; y++) {
       }
       grade[y][x] = Object.freeze({ tipo: 'desejo', id: desejo.id });
       casasDesejos.set(desejo.id, Object.freeze({ x, y }));
+      marcosDeArea.push({ x, y, secao: AREAS_EXTRAS.G });
     } else if (simbolo === 'K') {
       indiceCaixa += 1;
       grade[y][x] = Object.freeze({ tipo: 'caixa', id: `caixa-${indiceCaixa}` });
+      marcosDeArea.push({ x, y, secao: AREAS_EXTRAS.K });
     } else {
       throw new Error(`Símbolo desconhecido no mapa: "${simbolo}" em (${x}, ${y}).`);
     }
@@ -191,9 +200,9 @@ export function prateleirasVizinhas(posicao) {
 
 export function secaoMaisProxima(posicao) {
   if (!posicao) return SECOES.H;
-  let melhor = prateleiras[0].secao;
+  let melhor = marcosDeArea[0].secao;
   let menorDistancia = Infinity;
-  for (const p of prateleiras) {
+  for (const p of marcosDeArea) {
     const d = Math.abs(p.x - posicao.x) + Math.abs(p.y - posicao.y);
     if (d < menorDistancia) {
       menorDistancia = d;

@@ -2,7 +2,7 @@ import { montarCabecalho } from '../../shared/cabecalho.js';
 import { animar, lancarConfete } from '../../shared/confete.js';
 import { nomeDaCrianca, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 import { tocar } from '../../shared/sons.js';
-import { carregarArte, criarIcone } from './arte.js';
+import { criarIcone } from './arte.js';
 import { desejos, produtos, temas } from './dados.js';
 import {
   SECOES,
@@ -23,6 +23,7 @@ import {
   colocarNoCarrinho,
   conferirDados,
   contaArmada,
+  somaArmada,
   coracoesDoCarrinho,
   criarCompra,
   criarGerador,
@@ -110,8 +111,9 @@ let partidaRegistrada = false;
 let estadoCaixa = resetarEstadoCaixa();
 
 let modoListaPreferido = lerPreferenciaModoLista();
-let arteFalhou = false;
-let renderizador = criarRenderizador($('mapa-canvas'));
+// A arte do mapa é toda vetorial (canvas). Sem contexto 2D o renderizador vem null e o jogo
+// cai na lista rápida. A camada estática do mapa só é desenhada na primeira entrada na loja.
+const renderizador = criarRenderizador($('mapa-canvas'));
 
 const nav = {
   posicao: entrada(),
@@ -131,15 +133,6 @@ const nav = {
   timerReduzido: null,
   ultimoAnuncioFrente: '',
 };
-
-carregarArte().catch(() => {
-  arteFalhou = true;
-  renderizador = null;
-  atualizarBotoesModoInicio();
-  if (faseAtual === 'loja' && compra) {
-    renderizarLoja();
-  }
-});
 
 function lerPreferenciaModoLista() {
   try {
@@ -173,11 +166,11 @@ function salvarPreferenciaModoLista(valor) {
 }
 
 function usarListaRapida() {
-  return modoListaPreferido || arteFalhou || !renderizador;
+  return modoListaPreferido || !renderizador;
 }
 
 function atualizarBotoesModoInicio() {
-  const mapaDisponivel = !arteFalhou && Boolean(renderizador);
+  const mapaDisponivel = Boolean(renderizador);
   const listaAtiva = usarListaRapida();
   const btnAndar = $('btn-modo-andar');
   const btnLista = $('btn-modo-lista');
@@ -788,7 +781,7 @@ function renderizarLoja() {
   const btnIrCaixa = $('btn-ir-caixa');
 
   if (btnAlternarModo) {
-    btnAlternarModo.hidden = arteFalhou || !renderizador;
+    btnAlternarModo.hidden = !renderizador;
     btnAlternarModo.textContent = listaAtiva ? '🚶 Ver no mapa' : '📝 Lista rápida';
   }
   btnIrCaixa.hidden = !listaAtiva;
@@ -799,10 +792,8 @@ function renderizarLoja() {
     gradeSecoes.hidden = true;
     listaProdutos.hidden = true;
     atualizarIndicacaoMapa({ anunciarSeMudou: false });
-    if (faseAtual === 'loja' && renderizador) {
-      renderizador.ajustarTamanho();
-      desenharMapa();
-    }
+    // O tamanho do canvas só muda em mostrarFase, no resize e ao alternar o modo.
+    if (faseAtual === 'loja') desenharMapa();
     return;
   }
 
@@ -937,9 +928,15 @@ function elementosFocaveis(container) {
   )].filter(el => !el.hidden && el.offsetParent !== null);
 }
 
-function abrirPainel(elPainel, gatilho) {
+/**
+ * Abre um painel modal. O contexto da prateleira é definido (e o conteúdo renderizado)
+ * só depois de fechar o painel anterior, que zera contextoPrateleira.
+ */
+function abrirPainel(elPainel, gatilho, contexto = null, renderizar = null) {
   pararMovimento(false);
   fecharPainel(false);
+  contextoPrateleira = contexto;
+  renderizar?.();
   painelAtivo = elPainel;
   gatilhoDoPainel = gatilho || document.activeElement;
   elPainel.hidden = false;
@@ -965,10 +962,9 @@ function fecharPainel(devolverFoco = true) {
 }
 
 function abrirPrateleiraProduto(produtoId, gatilho) {
-  contextoPrateleira = { tipo: 'produto', id: produtoId };
-  quantidadePrateleira = 1;
-  renderizarPrateleiraProduto();
-  abrirPainel(PAINEIS.prateleira, gatilho);
+  const noCarrinho = compra.carrinho[produtoId]?.quantidade;
+  quantidadePrateleira = Math.max(1, Math.min(6, noCarrinho || 1));
+  abrirPainel(PAINEIS.prateleira, gatilho, { tipo: 'produto', id: produtoId }, renderizarPrateleiraProduto);
 }
 
 function renderizarPrateleiraProduto() {
@@ -1126,9 +1122,7 @@ function alterarQuantidadePrateleira(delta) {
 }
 
 function abrirPrateleiraGuloseima(desejoId, gatilho) {
-  contextoPrateleira = { tipo: 'guloseima', id: desejoId };
-  renderizarPrateleiraGuloseima();
-  abrirPainel(PAINEIS.prateleira, gatilho);
+  abrirPainel(PAINEIS.prateleira, gatilho, { tipo: 'guloseima', id: desejoId }, renderizarPrateleiraGuloseima);
 }
 
 function renderizarPrateleiraGuloseima() {
@@ -1427,32 +1421,6 @@ function acionarEspiada() {
 }
 
 /* ---------------- Caixa ---------------- */
-
-function formatarNumeroVirgula(centavos) {
-  const valor = Math.max(0, Math.trunc(Number(centavos) || 0));
-  return `${Math.floor(valor / 100)},${String(valor % 100).padStart(2, '0')}`;
-}
-
-function formatarSomaArmada(valores) {
-  if (valores.length === 2) {
-    return contaArmada(valores[0], valores[1], '+').join('\n');
-  }
-  const soma = valores.reduce((a, b) => a + b, 0);
-  const textos = valores.map(formatarNumeroVirgula);
-  const textoSoma = formatarNumeroVirgula(soma);
-  const largura = Math.max(
-    ...textos.map(t => t.length + 2),
-    textoSoma.length + 2,
-  );
-  const linhas = textos.map((texto, idx) => (
-    idx === textos.length - 1
-      ? `+ ${texto.padStart(largura - 2, ' ')}`
-      : texto.padStart(largura, ' ')
-  ));
-  linhas.push('─'.repeat(largura));
-  linhas.push(textoSoma.padStart(largura, ' '));
-  return linhas.join('\n');
-}
 
 function construirTecladoNumerico() {
   const grid = $('teclado-numerico');
@@ -1771,7 +1739,7 @@ function submeterRespostaCaixa(tipo, valor, botaoClicado = null) {
   const armada = $('caixa-conta-armada');
   armada.hidden = false;
   armada.textContent = tipo === 'total'
-    ? formatarSomaArmada(estadoCaixa.valoresCupom)
+    ? somaArmada(estadoCaixa.valoresCupom).join('\n')
     : contaArmada(compra.missao.orcamento, estadoCaixa.totalCompra, '-').join('\n');
 
   $('teclado-numerico').querySelectorAll('button').forEach(b => { b.disabled = true; });
@@ -1885,7 +1853,7 @@ document.querySelectorAll('.nivel[data-nivel]').forEach(botao => {
 });
 
 $('btn-modo-andar').addEventListener('click', () => {
-  if (!renderizador || arteFalhou) return;
+  if (!renderizador) return;
   tocar('clique');
   modoListaPreferido = false;
   salvarPreferenciaModoLista(false);
@@ -1916,7 +1884,7 @@ $('btn-ir-compras').addEventListener('click', () => {
 });
 
 $('btn-alternar-modo-loja').addEventListener('click', () => {
-  if (!renderizador || arteFalhou) return;
+  if (!renderizador) return;
   tocar('clique');
   pararMovimento(false);
   modoListaPreferido = !modoListaPreferido;

@@ -26,6 +26,7 @@ import {
   precoNoNivel,
   responderConta,
   resultadoDaCompra,
+  somaArmada,
   totalDoCarrinho,
 } from '../Games/mercadinho/jogo.js';
 
@@ -515,6 +516,32 @@ describe('Mercadinho — compra e caixa', () => {
       '− 52,10',
       '───────',
       '   2,90',
+    ]);
+    expect(contaArmada(1250, 300, '+')).toEqual([
+      '  12,50',
+      '+  3,00',
+      '───────',
+      '  15,50',
+    ]);
+    expect(somaArmada([450, 1200, 75])).toEqual([
+      '   4,50',
+      '  12,00',
+      '+  0,75',
+      '───────',
+      '  17,25',
+    ]);
+  });
+
+  it('conta só a primeira resposta de cada tipo de conta, mesmo se a criança voltar do caixa', () => {
+    const missao = gerarMissao({ nivel: 3, semente: 7 });
+    let compra = criarCompra(missao);
+    for (let i = 0; i < 3; i++) {
+      compra = responderConta(compra, 'total', totalDoCarrinho(compra), 1).compra;
+    }
+    compra = responderConta(compra, 'troco', missao.orcamento - totalDoCarrinho(compra), 1).compra;
+    expect(compra.contas).toEqual([
+      { tipo: 'total', certaDePrimeira: true },
+      { tipo: 'troco', certaDePrimeira: true },
     ]);
   });
 });

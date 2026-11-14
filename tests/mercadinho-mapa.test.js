@@ -9,6 +9,7 @@ import {
 import { desejos, produtos } from '../Games/mercadinho/dados.js';
 import {
   ALTURA,
+  AREAS_EXTRAS,
   LARGURA,
   MAPA,
   SECOES,
@@ -132,6 +133,8 @@ describe('Mercadinho — mapa da loja', () => {
     expect(secaoMaisProxima({ x: 2, y: 2 })).toEqual(SECOES.L);
     expect(secaoMaisProxima({ x: 2, y: 8 })).toEqual(SECOES.H);
     expect(secaoMaisProxima({ x: 20, y: 2 })).toEqual(SECOES.B);
+    expect(secaoMaisProxima({ x: 10, y: 12 })).toEqual(AREAS_EXTRAS.G);
+    expect(secaoMaisProxima({ x: 12, y: 14 })).toEqual(AREAS_EXTRAS.K);
   });
 });
 
