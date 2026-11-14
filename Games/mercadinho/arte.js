@@ -2,19 +2,481 @@ import { desejos, produtos } from './dados.js';
 
 export const TAMANHO_CASA = 16;
 
-/** Coordenadas dos recortes de spritesheet caso sejam usados em etapas futuras. */
+/** Coordenadas dos recortes nas folhas CC0 da Kenney (tiles 16×16, passo 17 px). */
 export const RECORTES = {
-  piso: { folha: 'cidade', coluna: 0, linha: 0 },
-  parede: { folha: 'cidade', coluna: 0, linha: 0 },
-  gondola: { folha: 'interiores', coluna: 0, linha: 0 },
-  geladeira: { folha: 'interiores', coluna: 0, linha: 0 },
-  balcao: { folha: 'interiores', coluna: 0, linha: 0 },
-  banca: { folha: 'interiores', coluna: 0, linha: 0 },
-  guloseimas: { folha: 'interiores', coluna: 0, linha: 0 },
-  caixa: { folha: 'interiores', coluna: 0, linha: 0 },
-  porta: { folha: 'cidade', coluna: 0, linha: 0 },
-  personagem: { folha: 'urbano', coluna: 0, linha: 0 },
+  piso: { folha: 'cidade', coluna: 6, linha: 0 },
+  parede: { folha: 'cidade', coluna: 0, linha: 13 },
+  gondola: { folha: 'cidade', coluna: 19, linha: 11 },
+  geladeira: { folha: 'cidade', coluna: 21, linha: 11 },
+  balcao: { folha: 'interiores', coluna: 11, linha: 11 },
+  banca: { folha: 'cidade', coluna: 16, linha: 13 },
+  guloseimas: { folha: 'cidade', coluna: 20, linha: 11 },
+  caixa: { folha: 'interiores', coluna: 13, linha: 11 },
+  porta: { folha: 'cidade', coluna: 8, linha: 15 },
+  personagem: { folha: 'urbano', coluna: 24, linha: 0 },
 };
+
+export const FOLHAS_ARQUIVOS = Object.freeze({
+  cidade: 'kenney-cidade.png',
+  interiores: 'kenney-interiores.png',
+  urbano: 'kenney-urbano.png',
+});
+
+/**
+ * 10 moldes 16×16 de embalagem genérica recoloridos por marca:
+ * . transparente · o contorno (#2b2b3a) · a cor principal
+ * b principal 25% mais escura · c cor do rótulo · w brilho (#ffffff)
+ */
+export const MOLDES = Object.freeze({
+  'caixa-longa-vida': [
+    '......oooo......',
+    '.....owwwwo.....',
+    '...oaaaaaaaao...',
+    '..oaaaaaaaaaao..',
+    '..obbbbbbbbbbo..',
+    '..oaaaaaaaaaao..',
+    '..oawwaaaaabbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oaaaaaaaabbo..',
+    '..oaaaaaaaabbo..',
+    '..obbbbbbbbbbo..',
+    '...oooooooooo...',
+    '................',
+  ],
+  pacote: [
+    '................',
+    '..oooooooooooo..',
+    '..oabbbbbbbbao..',
+    '...oaaaaaaaao...',
+    '..oaawwaaaabbo..',
+    '..oaaaaaaaabbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oaaaaaaaabbo..',
+    '..obbbbbbbbbbo..',
+    '...oaaaaaaaao...',
+    '..oabbbbbbbbao..',
+    '..oooooooooooo..',
+    '................',
+  ],
+  lata: [
+    '................',
+    '...oooooooooo...',
+    '..owwwwwwwwwwo..',
+    '..obbbbbbbbbbo..',
+    '..oawwaaaaabbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oaaaaaaaabbo..',
+    '..obbbbbbbbbbo..',
+    '..owwwwwwwwwwo..',
+    '...oooooooooo...',
+    '................',
+    '................',
+  ],
+  garrafa: [
+    '......oooo......',
+    '.....occcco.....',
+    '.....occcco.....',
+    '......oooo......',
+    '.....oaaaao.....',
+    '....oaaaaabo....',
+    '...oawwaaabbo...',
+    '...oaaaaaaabo...',
+    '...oacccccbbo...',
+    '...oacccccbbo...',
+    '...oacccccbbo...',
+    '...oaaaaaaabo...',
+    '...oaaaaaaabo...',
+    '...obbbbbbbbo...',
+    '....oooooooo....',
+    '................',
+  ],
+  pote: [
+    '................',
+    '..oooooooooooo..',
+    '.ooccccccccccbo.',
+    '.oowwwwwwwwwwbo.',
+    '..oooooooooooo..',
+    '..oaawwaaaabbo..',
+    '..oaaaaaaaabbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oacccccccbbo..',
+    '..oaaaaaaaabbo..',
+    '...oaaaaaabbo...',
+    '...obbbbbbbbo...',
+    '....oooooooo....',
+    '................',
+    '................',
+  ],
+  'caixa-papelao': [
+    '................',
+    '....oooooooooo..',
+    '...oaaaaaaaabo..',
+    '..owwwwwwwwabbo.',
+    '.ooooooooooabbo.',
+    '.oaaaaaaaaoabbo.',
+    '.oawwaaaaoaabbo.',
+    '.oaccccccoaabbo.',
+    '.oaccccccoaabbo.',
+    '.oaccccccoabbbo.',
+    '.oaaaaaaaoabbbo.',
+    '.obbbbbbboabbo..',
+    '.obbbbbbboabo...',
+    '.ooooooooooo....',
+    '................',
+    '................',
+  ],
+  bandeja: [
+    '................',
+    '................',
+    '................',
+    '...oooooooooo...',
+    '..oowwwwwwwwoo..',
+    '.oaaaaccccaaabo.',
+    '.oawwaccccaabbo.',
+    '.oaaaaccccaabbo.',
+    '.oaaaaaaaaaabbo.',
+    '.obbbbbbbbbbbbo.',
+    '..oaaaaaaaaabo..',
+    '..obbbbbbbbbbo..',
+    '...oooooooooo...',
+    '................',
+    '................',
+    '................',
+  ],
+  frasco: [
+    '.......oo.......',
+    '......owwo......',
+    '.....occcco.....',
+    '......oooo......',
+    '....ooaaaaoo....',
+    '...oawwaaabbo...',
+    '..oaaaaaaabbo...',
+    '..oaaaaaaabbbo..',
+    '..oacccccbbbo...',
+    '..oacccccbbbo...',
+    '..oacccccbbbo...',
+    '...oaaaaabbbo...',
+    '...oaaaaabbbo...',
+    '...obbbbbbbbo...',
+    '....oooooooo....',
+    '................',
+  ],
+  barra: [
+    '................',
+    '................',
+    '................',
+    '..oo........oo..',
+    '.oaooooooooooao.',
+    '.oaowwaaaaaobbo.',
+    '.oboaccccccobbo.',
+    '.oboaccccccobbo.',
+    '.oboaccccccobbo.',
+    '.obobbbbbbbobbo.',
+    '.oaooooooooooao.',
+    '..oo........oo..',
+    '................',
+    '................',
+    '................',
+    '................',
+  ],
+  saquinho: [
+    '................',
+    '...oooooooooo...',
+    '..occccccccccbo.',
+    '..oaaaaaaaaaabo.',
+    '..oawwaaaaaabbo.',
+    '.oaaaaaaaaaaabbo',
+    '.oaaacccccaaabbo',
+    '.oaaacccccaaabbo',
+    '.oaaacccccaaabbo',
+    '.oaaaaaaaaaaabbo',
+    '..oaaaaaaaabbbo.',
+    '..oaaaaaaaabbbo.',
+    '..obbbbbbbbbbo..',
+    '...oooooooooo...',
+    '................',
+    '................',
+  ],
+});
+
+/** Relaciona todos os 49 produtos e as 12 guloseimas a um dos 10 moldes genéricos. */
+export const MOLDE_DO_PRODUTO = Object.freeze({
+  // Caixa longa vida
+  leite: 'caixa-longa-vida',
+  'leite-condensado': 'caixa-longa-vida',
+  suco: 'caixa-longa-vida',
+  'suco-caixinha': 'caixa-longa-vida',
+  toddynho: 'caixa-longa-vida',
+
+  // Pacote
+  'pao-de-forma': 'pacote',
+  bisnaguinha: 'pacote',
+  'pao-de-hot-dog': 'pacote',
+  cafe: 'pacote',
+  arroz: 'pacote',
+  feijao: 'pacote',
+  macarrao: 'pacote',
+  acucar: 'pacote',
+  farinha: 'pacote',
+  'queijo-ralado': 'pacote',
+
+  // Lata
+  'molho-de-tomate': 'lata',
+  fermento: 'lata',
+  milho: 'lata',
+
+  // Garrafa
+  oleo: 'garrafa',
+  refrigerante: 'garrafa',
+  agua: 'garrafa',
+
+  // Pote ou copo
+  achocolatado: 'pote',
+  iogurte: 'pote',
+  manteiga: 'pote',
+  margarina: 'pote',
+  requeijao: 'pote',
+
+  // Caixa de papelão
+  'biscoito-recheado': 'caixa-papelao',
+  'cream-cracker': 'caixa-papelao',
+  'sabao-em-po': 'caixa-papelao',
+  'creme-dental': 'caixa-papelao',
+  bis: 'caixa-papelao',
+  gibi: 'caixa-papelao',
+
+  // Bandeja
+  banana: 'bandeja',
+  maca: 'bandeja',
+  laranja: 'bandeja',
+  tomate: 'bandeja',
+  alface: 'bandeja',
+  cenoura: 'bandeja',
+  batata: 'bandeja',
+  cebola: 'bandeja',
+  mamao: 'bandeja',
+  uva: 'bandeja',
+  morango: 'bandeja',
+  queijo: 'bandeja',
+  presunto: 'bandeja',
+  ovos: 'bandeja',
+  frango: 'bandeja',
+  'carne-moida': 'bandeja',
+  salsicha: 'bandeja',
+
+  // Frasco
+  detergente: 'frasco',
+
+  // Barra
+  sabonete: 'barra',
+  batom: 'barra',
+  trident: 'barra',
+  kitkat: 'barra',
+  lacta: 'barra',
+
+  // Saquinho
+  'papel-higienico': 'saquinho',
+  mms: 'saquinho',
+  picole: 'saquinho',
+  fini: 'saquinho',
+  ruffles: 'saquinho',
+  'kinder-ovo': 'saquinho',
+});
+
+/** Duas cores genéricas [principal, rótulo] por marca ou tipo para diferenciar opções na prateleira. */
+export const CORES_DA_MARCA = Object.freeze({
+  // Hortifrúti
+  Nanica: ['#fdd835', '#fffde7'],
+  Prata: ['#fbc02d', '#5d4037'],
+  Orgânica: ['#558b2f', '#f1f8e9'],
+  Gala: ['#e53935', '#fff8e1'],
+  Fuji: ['#c62828', '#ffebee'],
+  Pera: ['#fb8c00', '#fff3e0'],
+  Lima: ['#9ccc65', '#fffde7'],
+  Baía: ['#ef6c00', '#ffe082'],
+  Salada: ['#ef5350', '#ffffff'],
+  Italiano: ['#b71c1c', '#e8f5e9'],
+  Orgânico: ['#43a047', '#fff9c4'],
+  Crespa: ['#66bb6a', '#ffffff'],
+  Americana: ['#2e7d32', '#dcedc8'],
+  Hidropônica: ['#00897b', '#e0f2f1'],
+  Comum: ['#f57c00', '#fff3e0'],
+  Lavada: ['#d7b878', '#fff8e1'],
+  Asterix: ['#c25e68', '#fce4ec'],
+  Branca: ['#e6d3a7', '#6d4c41'],
+  Roxa: ['#7b1fa2', '#f3e5f5'],
+  Papaia: ['#ff8f00', '#e8f5e9'],
+  Formosa: ['#e65100', '#fff8e1'],
+  Niágara: ['#8e24aa', '#f3e5f5'],
+  'Sem semente': ['#7cb342', '#e8f5e9'],
+
+  // Padaria e matinais
+  Panco: ['#e53935', '#fff59d'],
+  Pullman: ['#1565c0', '#ffca28'],
+  Wickbold: ['#2e7d32', '#fff8e1'],
+  'Seven Boys': ['#ef6c00', '#ffffff'],
+  Passatempo: ['#1e88e5', '#ffeb3b'],
+  Trakinas: ['#e53935', '#ffca28'],
+  Oreo: ['#0d47a1', '#ffffff'],
+  Marilan: ['#d32f2f', '#ffffff'],
+  Bauducco: ['#f9a825', '#4e342e'],
+  Piraquê: ['#ad1457', '#fffde7'],
+  Toddy: ['#d84315', '#ffeb3b'],
+  Nescau: ['#e53935', '#6d4c41'],
+  Ovomaltine: ['#ef6c00', '#1e88e5'],
+  Caboclo: ['#6d4c41', '#ffe0b2'],
+  Pilão: ['#c62828', '#fffde7'],
+  Melitta: ['#2e7d32', '#ffca28'],
+
+  // Laticínios e frios
+  Italac: ['#d62828', '#ffffff'],
+  Piracanjuba: ['#ef6c00', '#fff9c4'],
+  Ninho: ['#f9a825', '#c62828'],
+  Batavo: ['#1565c0', '#ffebee'],
+  Nestlé: ['#c62828', '#ffe082'],
+  Danone: ['#ec407a', '#ffffff'],
+  Itambé: ['#1976d2', '#fff8e1'],
+  Aviação: ['#d84315', '#fff3e0'],
+  Primor: ['#ef5350', '#fffde7'],
+  Delícia: ['#00897b', '#fff59d'],
+  Qualy: ['#fdd835', '#1565c0'],
+  Seara: ['#b71c1c', '#ffccbc'],
+  Sadia: ['#d84315', '#ffca28'],
+  Tirolez: ['#1565c0', '#ffd54f'],
+  Perdigão: ['#1976d2', '#ffeb3b'],
+  Vigor: ['#0277bd', '#ffffff'],
+  Catupiry: ['#c62828', '#fff8e1'],
+  Brancos: ['#f5efe6', '#8d6e63'],
+  Vermelhos: ['#d79c6d', '#fff8e1'],
+  Caipiras: ['#7cb342', '#fff8e1'],
+
+  // Mercearia
+  Camil: ['#d32f2f', '#fff3e0'],
+  'Prato Fino': ['#6a1b9a', '#fff8e1'],
+  'Tio João': ['#fbc02d', '#b71c1c'],
+  Kicaldo: ['#2e7d32', '#fff9c4'],
+  'Broto Legal': ['#8d6e63', '#e8f5e9'],
+  Galo: ['#1e88e5', '#ffd54f'],
+  Adria: ['#e53935', '#fff8e1'],
+  Barilla: ['#0d47a1', '#e53935'],
+  Quero: ['#e53935', '#ffe082'],
+  Pomarola: ['#c62828', '#66bb6a'],
+  Heinz: ['#b71c1c', '#ffffff'],
+  Coamo: ['#2e7d32', '#fffde7'],
+  Soya: ['#fbc02d', '#2e7d32'],
+  Liza: ['#f57c00', '#fff8e1'],
+  Caravelas: ['#0288d1', '#ffffff'],
+  Guarani: ['#43a047', '#fffde7'],
+  União: ['#1565c0', '#e53935'],
+  Sol: ['#f9a825', '#ffffff'],
+  Renata: ['#1976d2', '#ffeb3b'],
+  'Dona Benta': ['#c62828', '#fff3e0'],
+  Royal: ['#d32f2f', '#ffca28'],
+  Moça: ['#fff8e1', '#1565c0'],
+  'Faixa Azul': ['#1a237e', '#ffca28'],
+  Predilecta: ['#388e3c', '#ffca28'],
+  Bonduelle: ['#00796b', '#fff59d'],
+
+  // Açougue
+  Acém: ['#c62828', '#ffe0e0'],
+  Patinho: ['#8e2424', '#fff8e1'],
+
+  // Bebidas
+  Maguary: ['#6a1b9a', '#fff59d'],
+  'Del Valle': ['#43a047', '#ffffff'],
+  'Natural One': ['#fb8c00', '#2e7d32'],
+  Kapo: ['#00897b', '#fff59d'],
+  Tial: ['#e65100', '#fff8e1'],
+  Dolly: ['#2e7d32', '#ffffff'],
+  'Guaraná Antarctica': ['#1b5e20', '#ffca28'],
+  'Coca-Cola': ['#c62828', '#ffffff'],
+  Crystal: ['#29b6f6', '#ffffff'],
+  Bonafont: ['#ec407a', '#e1f5fe'],
+  Minalba: ['#1565c0', '#e3f2fd'],
+
+  // Limpeza e higiene
+  Limpol: ['#fdd835', '#0288d1'],
+  Minuano: ['#00acc1', '#ffffff'],
+  Ypê: ['#2e7d32', '#fff176'],
+  'Tixan Ypê': ['#1e88e5', '#ffeb3b'],
+  Brilhante: ['#00838f', '#fff8e1'],
+  Omo: ['#1565c0', '#ef5350'],
+  Mili: ['#29b6f6', '#fffde7'],
+  Personal: ['#ab47bc', '#ffffff'],
+  Neve: ['#0277bd', '#e1f5fe'],
+  Sorriso: ['#e53935', '#ffffff'],
+  Colgate: ['#c62828', '#ffe0e0'],
+  'Oral-B': ['#1565c0', '#80deea'],
+  Lux: ['#ec407a', '#fce4ec'],
+  Protex: ['#0288d1', '#ffffff'],
+  Dove: ['#1976d2', '#fff8e1'],
+
+  // Guloseimas
+  Garoto: ['#6d4c41', '#ffca28'],
+  Trident: ['#00acc1', '#ffffff'],
+  "M&M's": ['#fbc02d', '#5d4037'],
+  Kibon: ['#e53935', '#ffffff'],
+  Fini: ['#e91e63', '#ffeb3b'],
+  Lacta: ['#1565c0', '#ffffff'],
+  'Elma Chips': ['#0277bd', '#ffd54f'],
+  Panini: ['#e53935', '#ffeb3b'],
+  Kinder: ['#d84315', '#ffffff'],
+});
+
+const PALETA_RESERVA = [
+  ['#e53935', '#fff8e1'],
+  ['#1e88e5', '#ffffff'],
+  ['#43a047', '#fffde7'],
+  ['#fb8c00', '#fff8e1'],
+  ['#8e24aa', '#f3e5f5'],
+  ['#00897b', '#e0f2f1'],
+  ['#d81b60', '#fce4ec'],
+  ['#f9a825', '#3e2723'],
+];
+
+/** Devolve duas cores estáveis [principal, rótulo] para qualquer nome de marca. */
+export function coresDaMarca(marca = '', indiceOpcao = 0) {
+  const chave = String(marca || '').trim();
+  if (CORES_DA_MARCA[chave]) {
+    return CORES_DA_MARCA[chave];
+  }
+  let hash = 2166136261 + indiceOpcao * 131;
+  for (let i = 0; i < chave.length; i++) {
+    hash ^= chave.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return PALETA_RESERVA[(hash >>> 0) % PALETA_RESERVA.length];
+}
+
+function escurecerCor(hex, fator = 0.25) {
+  const limpo = String(hex || '').replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(limpo)) return '#607d8b';
+  const r = Math.max(0, Math.round(parseInt(limpo.slice(0, 2), 16) * (1 - fator)));
+  const g = Math.max(0, Math.round(parseInt(limpo.slice(2, 4), 16) * (1 - fator)));
+  const b = Math.max(0, Math.round(parseInt(limpo.slice(4, 6), 16) * (1 - fator)));
+  return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function resolverMarcaDoItem(item, opcaoId) {
+  if (!item) return '';
+  if (item.opcoes) {
+    const escolhida = opcaoId ? item.opcoes.find(o => o.id === opcaoId) : null;
+    const padrao = item.opcoes[Math.min(1, item.opcoes.length - 1)] || item.opcoes[0];
+    return (escolhida || padrao)?.rotulo || item.nome;
+  }
+  return item.marca || item.nome;
+}
 
 const PALETAS_GONDOLA = {
   mercearia: {
@@ -590,9 +1052,126 @@ function desenharCaixa(ctx, x, y, vizinhos) {
   ctx.fillText(`CX ${numeroCaixa}`, x + 11.3, y + 12.45);
 }
 
-/** Carrega os recursos gráficos da loja. */
-export function carregarArte() {
-  return Promise.resolve({ altaResolucao: true });
+const folhasCarregadas = {};
+
+function urlBaseFiguras() {
+  if (typeof window !== 'undefined' && window.location?.href) {
+    return new URL('../../figuras/mercadinho/', window.location.href).href;
+  }
+  return '/figuras/mercadinho/';
+}
+
+function carregarImagemFolha(chave, arquivo, baseUrl) {
+  if (typeof Image === 'undefined') {
+    return Promise.resolve({ chave, imagem: null });
+  }
+  return new Promise(resolve => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.addEventListener('load', () => {
+      folhasCarregadas[chave] = img;
+      resolve({ chave, imagem: img });
+    });
+    img.addEventListener('error', () => {
+      delete folhasCarregadas[chave];
+      resolve({ chave, imagem: null });
+    });
+    img.src = new URL(arquivo, baseUrl).href;
+  });
+}
+
+/** Devolve as folhas CC0 da Kenney já carregadas em memória. */
+export function obterFolhasCarregadas() {
+  return { ...folhasCarregadas };
+}
+
+/**
+ * Carrega as folhas de tiles CC0 de public/figuras/mercadinho/.
+ * Se algum PNG não carregar ou não houver suporte a Image, mantém a arte em canvas sem erro.
+ */
+export async function carregarArte(baseUrl = urlBaseFiguras()) {
+  if (typeof Image === 'undefined') {
+    return { altaResolucao: true, folhasCarregadas: false, folhas: {} };
+  }
+  const resultados = await Promise.all(
+    Object.entries(FOLHAS_ARQUIVOS).map(([chave, arquivo]) =>
+      carregarImagemFolha(chave, arquivo, baseUrl),
+    ),
+  );
+  const todasCarregadas = resultados.every(r => Boolean(r.imagem));
+  return {
+    altaResolucao: true,
+    folhasCarregadas: todasCarregadas,
+    folhas: obterFolhasCarregadas(),
+  };
+}
+
+/**
+ * Desenha um molde de embalagem 16×16 recolorido pelas cores da marca.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {string} moldeId
+ * @param {[string, string]} cores
+ * @param {number} x
+ * @param {number} y
+ * @param {number} tamanho
+ * @param {string|null} [emoji]
+ */
+export function desenharMoldeEmbalagem(ctx, moldeId, cores, x, y, tamanho, emoji = null) {
+  const matriz = MOLDES[moldeId] || MOLDES.pacote;
+  const [corPrincipal, corRotulo] = Array.isArray(cores) && cores.length >= 2
+    ? cores
+    : PALETA_RESERVA[0];
+  const mapaCores = {
+    o: '#2b2b3a',
+    a: corPrincipal,
+    b: escurecerCor(corPrincipal, 0.25),
+    c: corRotulo,
+    w: '#ffffff',
+  };
+  const cel = tamanho / 16;
+
+  ctx.save();
+  for (let lin = 0; lin < 16; lin++) {
+    const textoLinha = matriz[lin] || '';
+    let col = 0;
+    while (col < 16) {
+      const ch = textoLinha[col] || '.';
+      if (ch === '.') {
+        col++;
+        continue;
+      }
+      let fim = col + 1;
+      while (fim < 16 && textoLinha[fim] === ch) {
+        fim++;
+      }
+      ctx.fillStyle = mapaCores[ch] || corPrincipal;
+      const rx = x + col * cel;
+      const ry = y + lin * cel;
+      const rw = (fim - col) * cel + (fim < 16 ? 0.02 * cel : 0);
+      const rh = cel + (lin < 15 ? 0.02 * cel : 0);
+      ctx.fillRect(rx, ry, rw, rh);
+      col = fim;
+    }
+  }
+
+  if (emoji) {
+    const raio = tamanho * 0.23;
+    const cx = x + tamanho * 0.74;
+    const cy = y + tamanho * 0.74;
+    ctx.fillStyle = 'rgba(255, 253, 248, 0.94)';
+    ctx.strokeStyle = 'rgba(43, 43, 58, 0.32)';
+    ctx.lineWidth = Math.max(0.8, tamanho * 0.028);
+    ctx.beginPath();
+    ctx.arc(cx, cy, raio, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = `${Math.round(tamanho * 0.34)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, cx, cy + tamanho * 0.015);
+  }
+  ctx.restore();
 }
 
 /** Desenha uma casa do mapa em coordenadas lógicas (16×16). */
@@ -639,33 +1218,39 @@ export function desenharCasa(ctx, celula, x, y, vizinhos = null) {
   desenharPiso(ctx, x, y, vizinhos);
 }
 
-/** Desenha o produto em destaque sobre a prateleira com plaquinha nítida em alta resolução. */
 /**
- * Desenha o medalhão compacto do produto exibido sobre a prateleira/vitrine.
+ * Desenha a mini-embalagem colorida e o medalhão do produto sobre a prateleira/vitrine.
  */
-export function desenharProduto(ctx, produtoId, _opcaoId, x, y) {
+export function desenharProduto(ctx, produtoId, opcaoId, x, y) {
   const item = itemPorId.get(produtoId);
   if (!item) return;
 
+  const moldeId = MOLDE_DO_PRODUTO[produtoId] || 'pacote';
+  const marca = resolverMarcaDoItem(item, opcaoId);
+  const cores = coresDaMarca(marca);
+
   ctx.save();
+  // Mini-embalagem genérica com a cor principal do produto ao lado do medalhão
+  desenharMoldeEmbalagem(ctx, moldeId, cores, x + 1.4, y + 6.9, 5.6);
+
   // Medalhão translúcido compacto sobre a prateleira para leitura imediata sem tampar o móvel
   ctx.fillStyle = 'rgba(55, 40, 30, 0.22)';
   ctx.beginPath();
-  ctx.arc(x + 8, y + 9.1, 4.3, 0, Math.PI * 2);
+  ctx.arc(x + 10.2, y + 9.2, 4.0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = 'rgba(255, 253, 248, 0.94)';
-  ctx.strokeStyle = 'rgba(90, 68, 52, 0.38)';
-  ctx.lineWidth = 0.5;
+  ctx.fillStyle = 'rgba(255, 253, 248, 0.95)';
+  ctx.strokeStyle = cores[0];
+  ctx.lineWidth = 0.55;
   ctx.beginPath();
-  ctx.arc(x + 8, y + 8.6, 4.1, 0, Math.PI * 2);
+  ctx.arc(x + 10.2, y + 8.7, 3.85, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
-  ctx.font = '7.2px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+  ctx.font = '6.4px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(item.emoji, x + 8, y + 8.8);
+  ctx.fillText(item.emoji, x + 10.2, y + 8.9);
   ctx.restore();
 }
 
@@ -1150,15 +1735,50 @@ export function desenharPersonagem(
   ctx.restore();
 }
 
-/** Cria ícone DOM nítido para os cartões de prateleira/guloseima. */
-export function criarIcone(produtoId, _opcaoId = null, escala = 2) {
+/** Cria ícone DOM com molde de embalagem e cores da marca para os painéis. */
+export function criarIcone(produtoId, opcaoId = null, escala = 2) {
   const item = itemPorId.get(produtoId);
-  const span = document.createElement('span');
-  span.className = 'icone-produto';
-  span.setAttribute('aria-hidden', 'true');
-  span.textContent = item ? item.emoji : '🛒';
-  if (escala > 2) {
-    span.dataset.escala = String(escala);
+  const moldeId = MOLDE_DO_PRODUTO[produtoId] || 'pacote';
+  const marca = resolverMarcaDoItem(item, opcaoId);
+  const cores = coresDaMarca(marca);
+  const emoji = item ? item.emoji : '🛒';
+
+  const aplicarAtributos = el => {
+    el.className = 'icone-produto';
+    el.setAttribute('aria-hidden', 'true');
+    el.dataset.molde = moldeId;
+    el.dataset.marca = marca;
+    el.dataset.corPrincipal = cores[0];
+    el.dataset.corRotulo = cores[1];
+    if (escala > 2) {
+      el.dataset.escala = String(escala);
+    }
+    return el;
+  };
+
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    const ctx = typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
+    if (ctx) {
+      const tamanhoCss = Math.max(36, Math.round(TAMANHO_CASA * escala));
+      const dpr = Math.max(1, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+      aplicarAtributos(canvas);
+      canvas.width = Math.round(tamanhoCss * dpr);
+      canvas.height = Math.round(tamanhoCss * dpr);
+      canvas.style.width = `${tamanhoCss}px`;
+      canvas.style.height = `${tamanhoCss}px`;
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.imageSmoothingEnabled = false;
+      desenharMoldeEmbalagem(ctx, moldeId, cores, 0, 0, tamanhoCss, emoji);
+      ctx.restore();
+      return canvas;
+    }
   }
+
+  const span = document.createElement('span');
+  aplicarAtributos(span);
+  span.textContent = emoji;
   return span;
 }

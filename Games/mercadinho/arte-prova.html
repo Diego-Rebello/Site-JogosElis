@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Prova de Arte — Mercadinho (Desenvolvimento)</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../../shared/base.css">
+  <link rel="stylesheet" href="./mercadinho.css">
+  <style>
+    .prova-container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 24px;
+      text-align: left;
+    }
+
+    .prova-bloco {
+      background: #fffdf8;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 4px 16px rgba(45, 25, 65, 0.08);
+      display: grid;
+      gap: 14px;
+    }
+
+    .prova-navegacao {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .prova-mapa-wrap {
+      overflow-x: auto;
+      background: #f5ede0;
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid rgba(90, 68, 52, 0.18);
+    }
+
+    .prova-mapa-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .prova-grade-personagem {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .prova-card-peq {
+      background: #faf5ec;
+      border: 1px solid rgba(90, 68, 52, 0.16);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .prova-moldes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .prova-molde-linha {
+      background: #faf5ec;
+      border: 1px solid rgba(90, 68, 52, 0.16);
+      border-radius: 12px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .prova-molde-amostras {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    .prova-catalogo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+      gap: 10px;
+    }
+
+    .prova-produto-card {
+      background: #faf5ec;
+      border: 1px solid rgba(90, 68, 52, 0.15);
+      border-radius: 12px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .prova-produto-opcoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .prova-opcao-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.78rem;
+      min-width: 68px;
+      text-align: center;
+    }
+
+    .prova-folhas-scroll {
+      overflow-x: auto;
+      background: #23202a;
+      padding: 10px;
+      border-radius: 12px;
+    }
+
+    .prova-folha-canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .prova-recortes-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .prova-swatch {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.25);
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body class="pagina">
+  <main class="prova-container">
+    <header class="prova-bloco">
+      <h1>Prova de Arte — Mercadinho (Etapa 4 · Portão de Arte)</h1>
+      <p>Página somente de desenvolvimento (fora de <code>vite.config.ts</code>) para revisão visual das folhas CC0 da Kenney, do mapa completo 24×16, da personagem Elis em 4 direções, dos 10 moldes de embalagem em 3 cores e de todos os 49 produtos + 12 guloseimas.</p>
+      <nav class="prova-navegacao" aria-label="Seções da prova">
+        <a class="botao botao--neutro" href="#prova-da-loja">Parte (b) · Prova da loja e embalagens</a>
+        <a class="botao botao--neutro" href="#folha-de-contato">Parte (a) · Folha de contato 3× (Kenney CC0)</a>
+        <span id="status-folhas" class="status-info" style="align-self:center;font-weight:700;">Carregando folhas CC0...</span>
+      </nav>
+    </header>
+
+    <section id="prova-da-loja" class="prova-bloco" aria-labelledby="titulo-prova-loja">
+      <h2 id="titulo-prova-loja">Parte (b) — Prova da loja, personagem, moldes e catálogo</h2>
+
+      <h3>1. Mapa completo da loja (24 × 16) em alta resolução com embalagens e seções</h3>
+      <div class="prova-mapa-wrap">
+        <canvas id="canvas-loja-completa" class="prova-mapa-canvas"></canvas>
+      </div>
+
+      <h3>2. Personagem Elis com carrinho nas 4 direções (parada e em passo)</h3>
+      <div id="grade-personagem" class="prova-grade-personagem"></div>
+
+      <h3>3. Os 10 moldes genéricos de embalagem (16 × 16) em 3 cores cada</h3>
+      <div id="grade-moldes" class="prova-moldes-grid"></div>
+
+      <h3>4. Catálogo completo: 49 produtos (136 opções) + 12 guloseimas</h3>
+      <div id="grade-catalogo" class="prova-catalogo-grid"></div>
+    </section>
+
+    <section id="folha-de-contato" class="prova-bloco" aria-labelledby="titulo-folha-contato">
+      <h2 id="titulo-folha-contato">Parte (a) — Folha de contato das imagens Kenney CC0 (3× · tiles 16×16, passo 17 px)</h2>
+      <h3>Recortes configurados em <code>RECORTES</code> (ampliados 4×)</h3>
+      <div id="recortes-destaque" class="prova-recortes-strip"></div>
+      <div id="lista-folhas"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import {
+      CORES_DA_MARCA,
+      FOLHAS_ARQUIVOS,
+      MOLDES,
+      MOLDE_DO_PRODUTO,
+      RECORTES,
+      TAMANHO_CASA,
+      carregarArte,
+      coresDaMarca,
+      criarIcone,
+      desenharCasa,
+      desenharMoldeEmbalagem,
+      desenharPersonagem,
+      desenharProduto,
+      obterFolhasCarregadas,
+    } from './arte.js';
+    import { desejos, produtos } from './dados.js';
+    import { ALTURA, LARGURA, celulaEm, entrada } from './mapa.js';
+
+    const PLACAS = [
+      { rotulo: 'Laticínios', cor: '#256fa8', x: 5.0, y: 0.45 },
+      { rotulo: 'Açougue', cor: '#d9383a', x: 12.5, y: 0.45 },
+      { rotulo: 'Bebidas', cor: '#0e7c90', x: 19.0, y: 0.45 },
+      { rotulo: 'Padaria', cor: '#c67d3b', x: 5.5, y: 3.4 },
+      { rotulo: 'Mercearia', cor: '#e07a24', x: 12.0, y: 3.4 },
+      { rotulo: 'Limpeza', cor: '#7856c2', x: 18.0, y: 3.4 },
+      { rotulo: 'Hortifrúti', cor: '#2e9556', x: 3.4, y: 8.5 },
+      { rotulo: 'Guloseimas', cor: '#e44b86', x: 14.0, y: 10.4 },
+      { rotulo: 'Caixas', cor: '#455a64', x: 12.0, y: 12.35 },
+    ];
+
+    function mesmoMovel(celulaA, x, y) {
+      if (x < 0 || y < 0 || x >= LARGURA || y >= ALTURA) return false;
+      const celulaB = celulaEm(x, y);
+      if (celulaA.tipo === 'produto') {
+        return celulaB.tipo === 'produto' && celulaB.secao === celulaA.secao;
+      }
+      if (celulaA.tipo === 'desejo') {
+        return celulaB.tipo === 'desejo';
+      }
+      return celulaB.tipo === celulaA.tipo;
+    }
+
+    function desenharLojaCompleta() {
+      const canvas = document.getElementById('canvas-loja-completa');
+      const escala = 3;
+      canvas.width = LARGURA * TAMANHO_CASA * escala;
+      canvas.height = ALTURA * TAMANHO_CASA * escala;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.save();
+      ctx.scale(escala, escala);
+
+      const ent = entrada();
+      for (let y = 0; y < ALTURA; y++) {
+        for (let x = 0; x < LARGURA; x++) {
+          const celula = celulaEm(x, y);
+          const acima = y > 0 ? celulaEm(x, y - 1) : null;
+          const acimaSolido = Boolean(
+            acima && (acima.tipo === 'parede' || acima.tipo === 'produto' || acima.tipo === 'desejo'),
+          );
+          const vizinhos = {
+            casaX: x,
+            casaY: y,
+            ultimaLinha: ALTURA - 1,
+            ehPortaEntrada: celula.tipo === 'parede' && y === ALTURA - 1 && Math.abs(x - ent.x) <= 1,
+            acimaSolido,
+            cima: mesmoMovel(celula, x, y - 1),
+            baixo: mesmoMovel(celula, x, y + 1),
+            esquerda: mesmoMovel(celula, x - 1, y),
+            direita: mesmoMovel(celula, x + 1, y),
+          };
+          const px = x * TAMANHO_CASA;
+          const py = y * TAMANHO_CASA;
+          desenharCasa(ctx, celula, px, py, vizinhos);
+          if (celula.tipo === 'produto' || celula.tipo === 'desejo') {
+            desenharProduto(ctx, celula.id, null, px, py);
+          }
+        }
+      }
+
+      // Tapete na entrada e Elis andando no corredor central
+      ctx.fillStyle = '#e86898';
+      ctx.beginPath();
+      ctx.roundRect(ent.x * TAMANHO_CASA + 1.5, ent.y * TAMANHO_CASA + 3.5, 13, 9.5, 1.4);
+      ctx.fill();
+      desenharPersonagem(ctx, 'direita', 1, 10 * TAMANHO_CASA, 9 * TAMANHO_CASA, {
+        itensNoCarrinho: 3,
+        fasePasso: Math.PI * 0.45,
+      });
+
+      // Placas de seção
+      ctx.font = 'bold 5.5px sans-serif';
+      ctx.textBaseline = 'middle';
+      for (const p of PLACAS) {
+        const px = p.x * TAMANHO_CASA;
+        const py = p.y * TAMANHO_CASA;
+        const tw = ctx.measureText(p.rotulo).width;
+        const w = tw + 8;
+        ctx.fillStyle = 'rgba(255, 253, 248, 0.94)';
+        ctx.strokeStyle = p.cor;
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.roundRect(px - w / 2, py - 4, w, 8, 2.5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#3b2d54';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.rotulo, px, py + 0.3);
+      }
+      ctx.restore();
+    }
+
+    function desenharDirecoesPersonagem() {
+      const container = document.getElementById('grade-personagem');
+      const direcoes = [
+        { id: 'baixo', nome: 'Baixo (parada)', q: 0, fase: 0 },
+        { id: 'baixo', nome: 'Baixo (passo)', q: 1, fase: Math.PI * 0.5 },
+        { id: 'esquerda', nome: 'Esquerda (parada)', q: 0, fase: 0 },
+        { id: 'esquerda', nome: 'Esquerda (passo)', q: 1, fase: Math.PI * 0.5 },
+        { id: 'direita', nome: 'Direita (parada)', q: 0, fase: 0 },
+        { id: 'direita', nome: 'Direita (passo)', q: 1, fase: Math.PI * 0.5 },
+        { id: 'cima', nome: 'Cima (parada)', q: 0, fase: 0 },
+        { id: 'cima', nome: 'Cima (passo)', q: 1, fase: Math.PI * 0.5 },
+      ];
+
+      for (const d of direcoes) {
+        const card = document.createElement('div');
+        card.className = 'prova-card-peq';
+        const c = document.createElement('canvas');
+        c.width = 96;
+        c.height = 96;
+        c.style.width = '72px';
+        c.style.height = '72px';
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fcf9f3';
+        ctx.fillRect(0, 0, 96, 96);
+        ctx.scale(4, 4);
+        desenharPersonagem(ctx, d.id, d.q, 4, 4, {
+          itensNoCarrinho: 3,
+          fasePasso: d.fase,
+        });
+        const label = document.createElement('strong');
+        label.textContent = d.nome;
+        card.append(c, label);
+        container.append(card);
+      }
+    }
+
+    function desenharDezMoldes() {
+      const container = document.getElementById('grade-moldes');
+      const triosCores = [
+        ['#d62828', '#ffffff'],
+        ['#1565c0', '#ffca28'],
+        ['#2e7d32', '#fff8e1'],
+      ];
+
+      for (const moldeId of Object.keys(MOLDES)) {
+        const card = document.createElement('div');
+        card.className = 'prova-molde-linha';
+
+        const titulo = document.createElement('strong');
+        titulo.textContent = moldeId;
+
+        const amostras = document.createElement('div');
+        amostras.className = 'prova-molde-amostras';
+        for (const cores of triosCores) {
+          const box = document.createElement('div');
+          box.style.display = 'grid';
+          box.style.justifyItems = 'center';
+          box.style.gap = '4px';
+
+          const c = document.createElement('canvas');
+          c.width = 48;
+          c.height = 48;
+          c.style.width = '48px';
+          c.style.height = '48px';
+          c.style.imageRendering = 'pixelated';
+          const ctx = c.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          desenharMoldeEmbalagem(ctx, moldeId, cores, 0, 0, 48);
+
+          const legenda = document.createElement('code');
+          legenda.style.fontSize = '0.7rem';
+          legenda.textContent = cores[0];
+
+          box.append(c, legenda);
+          amostras.append(box);
+        }
+
+        card.append(titulo, amostras);
+        container.append(card);
+      }
+    }
+
+    function desenharCatalogo() {
+      const container = document.getElementById('grade-catalogo');
+      for (const prod of produtos) {
+        const card = document.createElement('div');
+        card.className = 'prova-produto-card';
+
+        const cab = document.createElement('div');
+        cab.innerHTML = `<strong>${prod.emoji} ${prod.nome}</strong> <small>(${MOLDE_DO_PRODUTO[prod.id]})</small>`;
+
+        const opcoesWrap = document.createElement('div');
+        opcoesWrap.className = 'prova-produto-opcoes';
+        for (const op of prod.opcoes) {
+          const box = document.createElement('div');
+          box.className = 'prova-opcao-item';
+          const icone = criarIcone(prod.id, op.id, 3);
+          const [c1, c2] = coresDaMarca(op.rotulo);
+          const nomeOp = document.createElement('span');
+          nomeOp.textContent = op.rotulo;
+          const coresSpan = document.createElement('span');
+          coresSpan.innerHTML = `<span class="prova-swatch" style="background:${c1}"></span> <span class="prova-swatch" style="background:${c2}"></span>`;
+          box.append(icone, nomeOp, coresSpan);
+          opcoesWrap.append(box);
+        }
+
+        card.append(cab, opcoesWrap);
+        container.append(card);
+      }
+
+      for (const des of desejos) {
+        const card = document.createElement('div');
+        card.className = 'prova-produto-card';
+        const cab = document.createElement('div');
+        cab.innerHTML = `<strong>${des.emoji} ${des.nome}</strong> <small>(guloseima · ${MOLDE_DO_PRODUTO[des.id]})</small>`;
+        const opcoesWrap = document.createElement('div');
+        opcoesWrap.className = 'prova-produto-opcoes';
+        const box = document.createElement('div');
+        box.className = 'prova-opcao-item';
+        const icone = criarIcone(des.id, null, 3);
+        const [c1, c2] = coresDaMarca(des.marca);
+        const nomeOp = document.createElement('span');
+        nomeOp.textContent = des.marca;
+        const coresSpan = document.createElement('span');
+        coresSpan.innerHTML = `<span class="prova-swatch" style="background:${c1}"></span> <span class="prova-swatch" style="background:${c2}"></span>`;
+        box.append(icone, nomeOp, coresSpan);
+        opcoesWrap.append(box);
+        card.append(cab, opcoesWrap);
+        container.append(card);
+      }
+    }
+
+    function desenharFolhasContato(info) {
+      const status = document.getElementById('status-folhas');
+      const folhas = obterFolhasCarregadas();
+      const loadedKeys = Object.keys(folhas);
+      status.textContent = info.folhasCarregadas
+        ? `3 folhas CC0 carregadas (${loadedKeys.join(', ')})`
+        : `Fallback ativo sem PNGs (${loadedKeys.length}/3 carregadas)`;
+
+      const recortesWrap = document.getElementById('recortes-destaque');
+      for (const [chave, rec] of Object.entries(RECORTES)) {
+        const img = folhas[rec.folha];
+        const card = document.createElement('div');
+        card.className = 'prova-card-peq';
+        const c = document.createElement('canvas');
+        c.width = 64;
+        c.height = 64;
+        c.style.width = '64px';
+        c.style.height = '64px';
+        c.style.imageRendering = 'pixelated';
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.fillStyle = '#eee5d8';
+        ctx.fillRect(0, 0, 64, 64);
+        if (img) {
+          ctx.drawImage(img, rec.coluna * 17, rec.linha * 17, 16, 16, 0, 0, 64, 64);
+        }
+        const tit = document.createElement('strong');
+        tit.textContent = chave;
+        const coord = document.createElement('span');
+        coord.textContent = `${rec.folha} (${rec.coluna}, ${rec.linha})`;
+        card.append(c, tit, coord);
+        recortesWrap.append(card);
+      }
+
+      const listaFolhas = document.getElementById('lista-folhas');
+      for (const [chave, arquivo] of Object.entries(FOLHAS_ARQUIVOS)) {
+        const bloco = document.createElement('div');
+        bloco.style.display = 'grid';
+        bloco.style.gap = '8px';
+        const h4 = document.createElement('h3');
+        h4.textContent = `${chave} — ${arquivo}`;
+        bloco.append(h4);
+
+        const img = folhas[chave];
+        if (!img) {
+          const p = document.createElement('p');
+          p.textContent = `Não foi possível carregar ${arquivo}.`;
+          bloco.append(p);
+          listaFolhas.append(bloco);
+          continue;
+        }
+
+        const escala = 3;
+        const cols = Math.floor((img.width + 1) / 17);
+        const rows = Math.floor((img.height + 1) / 17);
+        const scroll = document.createElement('div');
+        scroll.className = 'prova-folhas-scroll';
+        const c = document.createElement('canvas');
+        c.className = 'prova-folha-canvas';
+        c.width = img.width * escala;
+        c.height = img.height * escala;
+        c.style.width = `${c.width}px`;
+        c.style.height = `${c.height}px`;
+
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+
+        const recortesDaFolha = Object.entries(RECORTES).filter(([, r]) => r.folha === chave);
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+
+        for (let l = 0; l < rows; l++) {
+          for (let col = 0; col < cols; col++) {
+            const rx = col * 17 * escala;
+            const ry = l * 17 * escala;
+            const rw = 16 * escala;
+            const marcado = recortesDaFolha.find(([, r]) => r.coluna === col && r.linha === l);
+            ctx.strokeStyle = marcado ? '#ffeb3b' : 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = marcado ? 3 : 1;
+            ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rw - 1);
+
+            ctx.fillStyle = marcado ? '#ffeb3b' : 'rgba(0, 0, 0, 0.55)';
+            ctx.fillRect(rx + 1, ry + 1, marcado ? 42 : 24, 11);
+            ctx.fillStyle = marcado ? '#1b1b1b' : '#ffffff';
+            ctx.fillText(marcado ? marcado[0] : `${col},${l}`, rx + 2, ry + 2);
+          }
+        }
+
+        scroll.append(c);
+        bloco.append(scroll);
+        listaFolhas.append(bloco);
+      }
+    }
+
+    desenharLojaCompleta();
+    desenharDirecoesPersonagem();
+    desenharDezMoldes();
+    desenharCatalogo();
+
+    carregarArte().then(info => {
+      desenharFolhasContato(info);
+    });
+  </script>
+</body>
+</html>

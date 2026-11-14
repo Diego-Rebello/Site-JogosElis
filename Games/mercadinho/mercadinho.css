@@ -499,6 +499,24 @@
   min-width: 0;
 }
 
+.icone-produto {
+  flex: 0 0 auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+canvas.icone-produto {
+  border-radius: 8px;
+}
+
+span.icone-produto {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .opcao-cartao__emoji {
   font-size: 2rem;
   line-height: 1;

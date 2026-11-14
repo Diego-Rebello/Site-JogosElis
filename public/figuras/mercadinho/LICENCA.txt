@@ -1,0 +1,33 @@
+Figuras do Mercadinho (Jogos da Elis)
+=====================================
+
+Todos os arquivos .png desta pasta são folhas de tiles (spritesheets) da série
+Roguelike e RPG Urban da Kenney, em domínio público (Creative Commons CC0 1.0):
+
+  Autor: Kenney (Kenney Vleugels — https://kenney.nl)
+  Licença: Creative Commons Zero v1.0 Universal (CC0 1.0 Public Domain Dedication)
+           https://creativecommons.org/publicdomain/zero/1.0/
+
+Arquivos incluídos (copiados sem edição, apenas renomeados):
+
+1. kenney-cidade.png
+   - Pacote: Roguelike Modern City
+   - URL oficial: https://kenney.nl/assets/roguelike-modern-city
+   - Arquivo original no pacote: Tilemap/tilemap.png
+   - Data do download: 2026-11-14
+
+2. kenney-interiores.png
+   - Pacote: Roguelike Indoors
+   - URL oficial: https://kenney.nl/assets/roguelike-indoors
+   - Arquivo original no pacote: Tilesheets/roguelikeIndoor_transparent.png
+   - Data do download: 2026-11-14
+
+3. kenney-urbano.png
+   - Pacote: RPG Urban Pack
+   - URL oficial: https://kenney.nl/assets/rpg-urban-pack
+   - Arquivo original no pacote: Tilemap/tilemap.png
+   - Data do download: 2026-11-14
+
+Grade dos arquivos: tiles de 16 x 16 px com espaçamento de 1 px (passo de 17 px).
+Os desenhos das embalagens por marca e o cenário em alta resolução do jogo são
+gerados por código em Games/mercadinho/arte.js, sem uso de logotipos reais.
