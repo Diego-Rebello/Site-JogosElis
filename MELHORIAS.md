@@ -39,6 +39,7 @@
 | J03 | Ditado Mágico | Alta | M | Sonnet | `shared/fala.js` (pronto, da P00) |
 | J12 | Quebra-Cabeça Deslizante | Baixa | P | Sonnet | T09 (pronta) |
 | J14 | Brincando de Rimar | Média | M | Opus | T09 (pronta); motor parcial já existe (P04) |
+| J15 | Mercadinho (compras com orçamento, loja em pixel art) | Alta | G | Sonnet, em 8 etapas | Plano em `docs/planos/PLANO-MERCADINHO.md` |
 | P01 | Quem Faz Esse Som? | Alta | M | Sonnet | P00 (pronta) |
 | P08 | O Que Vem Depois? | Média | P | Sonnet | P00 (pronta) |
 | P09 | Meu Nome | Alta | M | Sonnet | P00 (pronta) |
@@ -270,6 +271,27 @@ escuta e pelas figuras; o texto entra como apoio nos modos para quem já lê.
 - [ ] Uma criança que não lê consegue jogar o modo inicial após a demonstração, com áudio disponível.
 - [ ] Áudios não se sobrepõem; sair ou reiniciar interrompe a narração anterior.
 - [ ] Não duplica o motor e o banco que P04 já criou — promove-os, não recria.
+
+---
+
+### J15 — Mercadinho
+
+**Status:** especificado em 2026-11-14, nada implementado · **Prioridade:** Alta · **Esforço:** G
+(8 etapas) · **Modelo:** Sonnet (Etapa 4 com um modelo que enxergue imagens) · **Objetivo
+pedagógico:** dinheiro, contas com centavos, estimativa e escolha com orçamento limitado
+
+Jogo de supermercado em `Games/mercadinho/` (id `mercadinho`): lista de compras sorteada por
+tema, orçamento próximo do valor da lista, loja navegável em pixel art (pacotes CC0 da Kenney),
+marcas brasileiras de verdade com preços de 2026, meta de corações que obriga a escolher onde
+gastar, guloseimas perto do caixa, troco calculado por ela e cofrinho. O Dinheirinho continua
+igual.
+
+**O plano completo, com números, tabelas de produtos, código de referência do gerador, etapas e
+critérios de aceite, está em `docs/planos/PLANO-MERCADINHO.md`.** Ele substitui o "Prompt base
+para qualquer jogo novo" da seção 4.0: use o prompt da seção 5.6 do plano, uma etapa por sessão.
+
+**Antes da Etapa 1, o Diego precisa:** revisar a tabela de marcas, preços e corações (seção 3 do
+plano). **No fim da Etapa 4:** aprovar a arte.
 
 ---
 
