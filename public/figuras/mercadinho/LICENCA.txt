@@ -7,7 +7,8 @@ variante "Color", sem nenhuma alteração no desenho (só o nome do arquivo mudo
   Fluent Emoji — Copyright (c) Microsoft Corporation
   https://github.com/microsoft/fluentui-emoji
   Licença: MIT — https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE
-  Data do download: 2026-11-14 (ramo main)
+  Data do download: 2026-11-14 (ramo main); caderno, giz-de-cera, bola-de-volei,
+  ursinho, patins e porquinho em 2026-11-15 (ramo main)
 
 A licença MIT permite usar, copiar, modificar e redistribuir, desde que o aviso de
 copyright e o texto da licença acompanhem as cópias.
@@ -112,3 +113,9 @@ Endereço de cada original:
   bolo.svg                  Birthday cake
   arvore.svg                Deciduous tree
   bule.svg                  Teapot
+  caderno.svg               Notebook with decorative cover
+  giz-de-cera.svg           Crayon
+  bola-de-volei.svg         Volleyball
+  ursinho.svg               Teddy bear
+  patins.svg                Roller skate
+  porquinho.svg             Pig face

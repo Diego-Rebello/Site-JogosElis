@@ -3,10 +3,11 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { desejos, produtos, temas } from '../Games/mercadinho/dados.js';
+import { desejos, produtos, sonhos, temas } from '../Games/mercadinho/dados.js';
 import {
   FIGURA_DO_PRODUTO,
   ICONES_DA_INTERFACE,
+  ICONE_DO_SONHO,
   ICONE_DO_TEMA,
   MOLDES,
   SECOES_VISUAIS,
@@ -73,11 +74,16 @@ describe('Mercadinho — figuras, ícones e marcas (v2)', () => {
     expect(Object.keys(ICONE_DO_TEMA).sort()).toEqual(idsTemas);
   });
 
+  it('ICONE_DO_SONHO cobre os 6 sonhos do cofrinho', () => {
+    expect(Object.keys(ICONE_DO_SONHO).sort()).toEqual(sonhos.map(s => s.id).sort());
+  });
+
   it('todos os ícones referenciados existem e não há .svg sobrando em public/figuras/mercadinho/icones', () => {
     const usados = new Set([
       ...Object.values(FIGURA_DO_PRODUTO).map(([, icone]) => icone),
       ...Object.values(SECOES_VISUAIS).map(s => s.icone),
       ...Object.values(ICONE_DO_TEMA),
+      ...Object.values(ICONE_DO_SONHO),
       ...ICONES_DA_INTERFACE,
     ]);
 

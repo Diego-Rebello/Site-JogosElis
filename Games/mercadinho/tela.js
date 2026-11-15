@@ -2,8 +2,25 @@ import { montarCabecalho } from '../../shared/cabecalho.js';
 import { animar, lancarConfete } from '../../shared/confete.js';
 import { nomeDaCrianca, obterConfiguracoes, registrarPartida } from '../../shared/progresso.js';
 import { tocar } from '../../shared/sons.js';
-import { FIGURA_DO_PRODUTO, ICONE_DO_TEMA, SECOES_VISUAIS, criarFigura, criarIconeUi } from './figuras.js';
-import { desejos, produtos, temas } from './dados.js';
+import {
+  FIGURA_DO_PRODUTO,
+  ICONE_DO_SONHO,
+  ICONE_DO_TEMA,
+  SECOES_VISUAIS,
+  criarFigura,
+  criarIconeUi,
+} from './figuras.js';
+import { desejos, produtos, sonhos, temas } from './dados.js';
+import {
+  comPreferencia,
+  depositar,
+  escolherSonho,
+  gravarCofrinho,
+  lerCofrinho,
+  podeRealizar,
+  realizarSonho,
+  sonhosDisponiveis,
+} from './cofrinho.js';
 import {
   SECOES,
   caminho,
@@ -85,7 +102,6 @@ const PAINEIS = {
   carrinho: $('painel-carrinho'),
 };
 
-const CHAVE_ESTADO_MERCADINHO = 'jogos-elis:mercadinho';
 const PASSO_MS = 1000 / 6;
 const ATRASO_REDUZIDO_MS = 150;
 const DELTAS_DIRECAO = {
@@ -113,8 +129,10 @@ let partidaRegistrada = false;
 
 let estadoCaixa = resetarEstadoCaixa();
 
-let modoListaPreferido = lerPreferenciaModoLista();
-let tutorialVisto = lerEstadoSalvo().tutorialVisto === true;
+let estadoCofrinho = lerCofrinho();
+let escolhendoSonho = false;
+let modoListaPreferido = estadoCofrinho.modoLista;
+let tutorialVisto = estadoCofrinho.tutorialVisto;
 let indiceTutorial = 0;
 let destinoAposTutorial = 'missao';
 // Sem a janela do mapa (ex.: ambiente sem DOM), o renderizador vem null e o jogo cai na lista rápida.
@@ -143,44 +161,13 @@ const nav = {
   ultimoAnuncioFrente: '',
 };
 
-function estadoSalvoPadrao() {
-  return {
-    versao: 1,
-    cofrinho: 0,
-    sonhoAtual: null,
-    sonhosRealizados: [],
-    compras: 0,
-    tutorialVisto: false,
-    modoLista: false,
-  };
-}
-
-function lerEstadoSalvo() {
-  try {
-    const bruto = localStorage.getItem(CHAVE_ESTADO_MERCADINHO);
-    const dados = bruto ? JSON.parse(bruto) : null;
-    if (dados && typeof dados === 'object' && dados.versao === 1) {
-      return { ...estadoSalvoPadrao(), ...dados };
-    }
-  } catch {
-    /* JSON inválido ou armazenamento bloqueado: começa do zero */
-  }
-  return estadoSalvoPadrao();
+function salvarEstadoCofrinho(novo) {
+  estadoCofrinho = novo;
+  gravarCofrinho(estadoCofrinho); // armazenamento bloqueado: vale só nesta sessão
 }
 
 function salvarPreferencia(campo, valor) {
-  try {
-    localStorage.setItem(
-      CHAVE_ESTADO_MERCADINHO,
-      JSON.stringify({ ...lerEstadoSalvo(), [campo]: valor }),
-    );
-  } catch {
-    /* armazenamento indisponível: a preferência fica só nesta sessão */
-  }
-}
-
-function lerPreferenciaModoLista() {
-  return lerEstadoSalvo().modoLista === true;
+  salvarEstadoCofrinho(comPreferencia(estadoCofrinho, campo, valor));
 }
 
 function salvarPreferenciaModoLista(valor) {
@@ -712,6 +699,10 @@ function mostrarFase(nome) {
   faseAtual = nome;
   for (const [chave, secao] of Object.entries(FASES)) {
     secao.hidden = chave !== nome;
+  }
+  if (nome === 'inicio') {
+    escolhendoSonho = false;
+    renderizarCofrinho();
   }
   atualizarModoViewportLoja();
 
@@ -2202,6 +2193,7 @@ function finalizarCompraPaga() {
       erros: res.erros,
       estrelas: res.estrelas,
     });
+    salvarEstadoCofrinho(depositar(estadoCofrinho, res.troco));
   }
 
   renderizarResultado(res);
@@ -2283,10 +2275,160 @@ function renderizarResultado(res) {
   resumo.append(pCoracoes);
 
   const pTroco = document.createElement('p');
-  pTroco.textContent = `Sobrou ${formatarDinheiro(res.troco)}.`;
+  pTroco.className = 'resultado-cofrinho';
+  pTroco.id = 'resultado-cofrinho';
+  pTroco.append(
+    criarIconeInline('porquinho'),
+    document.createTextNode(res.troco > 0
+      ? `Sobrou ${formatarDinheiro(res.troco)}. Foi para o cofrinho! ${textoDoCofrinhoNoResultado()}`
+      : `Não sobrou troco desta vez. ${textoDoCofrinhoNoResultado()}`),
+  );
   resumo.append(pTroco);
 
   anunciar(`${frase} ${res.estrelas} de 3 estrelas.`);
+}
+
+/* ---------------- Cofrinho e sonhos ---------------- */
+
+const sonhoPorId = Object.fromEntries(sonhos.map(s => [s.id, s]));
+
+function criarBarraDoSonho(sonho) {
+  const guardado = Math.min(estadoCofrinho.cofrinho, sonho.preco);
+  const pct = Math.round((guardado / sonho.preco) * 100);
+  const barra = document.createElement('div');
+  barra.className = 'cofrinho__barra';
+  barra.setAttribute('role', 'progressbar');
+  barra.setAttribute('aria-valuemin', '0');
+  barra.setAttribute('aria-valuemax', '100');
+  barra.setAttribute('aria-valuenow', String(pct));
+  barra.setAttribute('aria-label', `Juntou ${formatarDinheiro(estadoCofrinho.cofrinho)} de ${formatarDinheiro(sonho.preco)}`);
+  const preenchimento = document.createElement('div');
+  preenchimento.className = 'cofrinho__barra-preenchimento';
+  preenchimento.style.width = `${pct}%`;
+  barra.append(preenchimento);
+  return barra;
+}
+
+function renderizarCofrinho() {
+  $('cofrinho-valor').textContent = formatarDinheiro(estadoCofrinho.cofrinho);
+  const conteudo = $('cofrinho-conteudo');
+  conteudo.replaceChildren();
+  const sonho = sonhoPorId[estadoCofrinho.sonhoAtual];
+
+  if (!sonho || escolhendoSonho) {
+    const pergunta = document.createElement('p');
+    pergunta.className = 'cofrinho__texto';
+    pergunta.textContent = sonho
+      ? 'Trocar de sonho? O dinheiro do cofrinho continua guardado.'
+      : 'Escolha um sonho para juntar com o troco das compras:';
+    const grade = document.createElement('div');
+    grade.className = 'cofrinho__sonhos';
+    grade.setAttribute('role', 'group');
+    grade.setAttribute('aria-label', 'Sonhos para juntar');
+    for (const opcao of sonhosDisponiveis(estadoCofrinho)) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'botao botao--neutro cofrinho__sonho';
+      btn.dataset.sonho = opcao.id;
+      btn.setAttribute('aria-pressed', String(opcao.id === estadoCofrinho.sonhoAtual));
+      const nome = document.createElement('span');
+      nome.className = 'cofrinho__sonho-nome';
+      nome.textContent = opcao.nome;
+      const preco = document.createElement('span');
+      preco.className = 'cofrinho__sonho-preco';
+      preco.textContent = formatarDinheiro(opcao.preco);
+      btn.append(criarIconeUi(ICONE_DO_SONHO[opcao.id], 40), nome, preco);
+      btn.addEventListener('click', () => {
+        tocar('clique');
+        escolhendoSonho = false;
+        salvarEstadoCofrinho(escolherSonho(estadoCofrinho, opcao.id));
+        renderizarCofrinho();
+        anunciar(`Sonho escolhido: ${opcao.nome}.`);
+        $('cofrinho-titulo').focus();
+      });
+      grade.append(btn);
+    }
+    conteudo.append(pergunta, grade);
+    if (sonho) {
+      const cancelar = document.createElement('button');
+      cancelar.type = 'button';
+      cancelar.className = 'botao botao--neutro cofrinho__acao';
+      cancelar.textContent = `Continuar com ${sonho.nome}`;
+      cancelar.addEventListener('click', () => {
+        tocar('clique');
+        escolhendoSonho = false;
+        renderizarCofrinho();
+        $('cofrinho-titulo').focus();
+      });
+      conteudo.append(cancelar);
+    }
+  } else {
+    const linha = document.createElement('div');
+    linha.className = 'cofrinho__sonho-atual';
+    const textos = document.createElement('div');
+    textos.className = 'cofrinho__sonho-textos';
+    const nome = document.createElement('strong');
+    nome.textContent = sonho.nome;
+    const quanto = document.createElement('span');
+    quanto.className = 'cofrinho__quanto';
+    quanto.textContent = `${formatarDinheiro(Math.min(estadoCofrinho.cofrinho, sonho.preco))} de ${formatarDinheiro(sonho.preco)}`;
+    textos.append(nome, criarBarraDoSonho(sonho), quanto);
+    linha.append(criarIconeUi(ICONE_DO_SONHO[sonho.id], 56), textos);
+    conteudo.append(linha);
+
+    const acao = document.createElement('button');
+    acao.type = 'button';
+    if (podeRealizar(estadoCofrinho)) {
+      const aviso = document.createElement('p');
+      aviso.className = 'cofrinho__texto cofrinho__texto--pronto';
+      aviso.textContent = 'Você juntou o suficiente!';
+      conteudo.append(aviso);
+      acao.id = 'btn-realizar-sonho';
+      acao.className = 'botao botao--sucesso cofrinho__acao';
+      acao.textContent = 'Realizar o sonho';
+      acao.addEventListener('click', () => {
+        const realizado = sonho;
+        salvarEstadoCofrinho(realizarSonho(estadoCofrinho));
+        tocar('vitoria');
+        lancarConfete();
+        renderizarCofrinho();
+        anunciar(`Sonho realizado: ${realizado.nome} foi para a estante! Escolha o próximo sonho.`);
+        $('cofrinho-titulo').focus();
+      });
+    } else {
+      acao.className = 'botao botao--neutro cofrinho__acao';
+      acao.textContent = 'Trocar sonho';
+      acao.addEventListener('click', () => {
+        tocar('clique');
+        escolhendoSonho = true;
+        renderizarCofrinho();
+        $('cofrinho-conteudo').querySelector('button')?.focus();
+      });
+    }
+    conteudo.append(acao);
+  }
+
+  const estante = $('cofrinho-estante');
+  const lista = $('cofrinho-estante-lista');
+  lista.replaceChildren();
+  estante.hidden = estadoCofrinho.sonhosRealizados.length === 0;
+  for (const id of estadoCofrinho.sonhosRealizados) {
+    const li = document.createElement('li');
+    li.className = 'cofrinho__estante-item';
+    const icone = criarIconeUi(ICONE_DO_SONHO[id], 44);
+    icone.alt = sonhoPorId[id].nome;
+    icone.title = sonhoPorId[id].nome;
+    li.append(icone);
+    lista.append(li);
+  }
+}
+
+function textoDoCofrinhoNoResultado() {
+  const sonho = sonhoPorId[estadoCofrinho.sonhoAtual];
+  const guardado = `No cofrinho: ${formatarDinheiro(estadoCofrinho.cofrinho)}.`;
+  if (!sonho) return `${guardado} Escolha um sonho na tela inicial.`;
+  if (podeRealizar(estadoCofrinho)) return `${guardado} Já dá para realizar o sonho! Veja na tela inicial.`;
+  return `${guardado} Faltam ${formatarDinheiro(sonho.preco - estadoCofrinho.cofrinho)} para: ${sonho.nome}.`;
 }
 
 /* ---------------- Eventos ---------------- */
@@ -2294,6 +2436,7 @@ function renderizarResultado(res) {
 selecionarNivel(nivelSelecionado);
 atualizarBotoesModoInicio();
 hidratarIconesEstaticos();
+renderizarCofrinho();
 
 document.querySelectorAll('.nivel[data-nivel]').forEach(botao => {
   botao.addEventListener('click', () => {

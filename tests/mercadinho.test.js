@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { desejos, produtos, sonhos, temas } from '../Games/mercadinho/dados.js';
 import {
+  CHAVE_COFRINHO,
+  comPreferencia,
+  depositar,
+  escolherSonho,
+  estadoInicial,
+  gravarCofrinho,
+  lerCofrinho,
+  podeRealizar,
+  realizarSonho,
+  sonhosDisponiveis,
+} from '../Games/mercadinho/cofrinho.js';
+import {
   MISSAO_RESERVA,
   NIVEIS,
   aMais,
@@ -601,5 +613,114 @@ describe('Mercadinho — simulações (300 sementes por nível)', () => {
         expect(resEsp.estrelas).toBe(3);
       }
     }
+  });
+});
+
+function criarArmazenamento(inicial = {}) {
+  const dados = new Map(Object.entries(inicial));
+  return {
+    getItem: chave => dados.get(chave) ?? null,
+    setItem: (chave, valor) => dados.set(chave, String(valor)),
+    removeItem: chave => dados.delete(chave),
+  };
+}
+
+const armazenamentoBloqueado = {
+  getItem: () => { throw new Error('bloqueado'); },
+  setItem: () => { throw new Error('bloqueado'); },
+  removeItem: () => { throw new Error('bloqueado'); },
+};
+
+describe('Cofrinho e sonhos', () => {
+  it('começa vazio quando não há nada salvo', () => {
+    expect(lerCofrinho(criarArmazenamento())).toEqual(estadoInicial());
+  });
+
+  it('deposita o troco e conta a compra', () => {
+    let estado = depositar(estadoInicial(), 290);
+    estado = depositar(estado, 1050);
+    expect(estado.cofrinho).toBe(1340);
+    expect(estado.compras).toBe(2);
+  });
+
+  it('troco zero ou inválido não muda o dinheiro, mas conta a compra', () => {
+    expect(depositar(estadoInicial(), 0)).toMatchObject({ cofrinho: 0, compras: 1 });
+    expect(depositar(estadoInicial(), -50)).toMatchObject({ cofrinho: 0, compras: 1 });
+    expect(depositar(estadoInicial(), 1.5)).toMatchObject({ cofrinho: 0, compras: 1 });
+  });
+
+  it('escolhe e troca o sonho sem mexer no dinheiro', () => {
+    let estado = { ...estadoInicial(), cofrinho: 700 };
+    estado = escolherSonho(estado, 'canetinhas');
+    expect(estado.sonhoAtual).toBe('canetinhas');
+    estado = escolherSonho(estado, 'bola');
+    expect(estado).toMatchObject({ sonhoAtual: 'bola', cofrinho: 700 });
+    expect(escolherSonho(estado, 'nave-espacial')).toBe(estado);
+  });
+
+  it('realiza o sonho descontando o preço exato e guarda na estante', () => {
+    let estado = escolherSonho({ ...estadoInicial(), cofrinho: 1499 }, 'caderno');
+    expect(podeRealizar(estado)).toBe(false);
+    expect(realizarSonho(estado)).toBe(estado);
+
+    estado = depositar(estado, 251);
+    expect(podeRealizar(estado)).toBe(true);
+    estado = realizarSonho(estado);
+    expect(estado).toMatchObject({ cofrinho: 250, sonhoAtual: null, sonhosRealizados: ['caderno'] });
+  });
+
+  it('sonho realizado sai da escolha até todos estarem na estante', () => {
+    const umRealizado = { ...estadoInicial(), sonhosRealizados: ['caderno'] };
+    expect(sonhosDisponiveis(umRealizado).map(s => s.id)).not.toContain('caderno');
+    expect(escolherSonho(umRealizado, 'caderno').sonhoAtual).toBe(null);
+
+    const todos = { ...estadoInicial(), sonhosRealizados: sonhos.map(s => s.id) };
+    expect(sonhosDisponiveis(todos)).toHaveLength(sonhos.length);
+    expect(escolherSonho(todos, 'caderno').sonhoAtual).toBe('caderno');
+  });
+
+  it('grava e lê de volta o mesmo estado', () => {
+    const armazenamento = criarArmazenamento();
+    let estado = escolherSonho(depositar(estadoInicial(), 1240), 'canetinhas');
+    estado = comPreferencia(comPreferencia(estado, 'tutorialVisto', true), 'modoLista', true);
+    expect(gravarCofrinho(estado, armazenamento)).toBe(true);
+    expect(lerCofrinho(armazenamento)).toEqual(estado);
+  });
+
+  it('JSON inválido devolve o estado inicial', () => {
+    const armazenamento = criarArmazenamento({ [CHAVE_COFRINHO]: '{cofrinho: 10' });
+    expect(lerCofrinho(armazenamento)).toEqual(estadoInicial());
+  });
+
+  it('versão desconhecida devolve o estado inicial', () => {
+    const armazenamento = criarArmazenamento({
+      [CHAVE_COFRINHO]: JSON.stringify({ versao: 2, cofrinho: 5000 }),
+    });
+    expect(lerCofrinho(armazenamento)).toEqual(estadoInicial());
+  });
+
+  it('campos estragados voltam ao valor inicial um por um', () => {
+    const armazenamento = criarArmazenamento({
+      [CHAVE_COFRINHO]: JSON.stringify({
+        versao: 1, cofrinho: -3, sonhoAtual: 'nave', sonhosRealizados: ['bola', 'nave'], compras: '7', tutorialVisto: true,
+      }),
+    });
+    expect(lerCofrinho(armazenamento)).toEqual({
+      ...estadoInicial(), sonhosRealizados: ['bola'], tutorialVisto: true,
+    });
+  });
+
+  it('armazenamento bloqueado ou ausente devolve estado utilizável e não lança erro', () => {
+    expect(lerCofrinho(armazenamentoBloqueado)).toEqual(estadoInicial());
+    expect(gravarCofrinho(estadoInicial(), armazenamentoBloqueado)).toBe(false);
+    expect(lerCofrinho(null)).toEqual(estadoInicial());
+    expect(gravarCofrinho(estadoInicial(), null)).toBe(false);
+    const estado = realizarSonho(escolherSonho(depositar(lerCofrinho(armazenamentoBloqueado), 1500), 'caderno'));
+    expect(estado.sonhosRealizados).toEqual(['caderno']);
+  });
+
+  it('só aceita tutorialVisto e modoLista como preferência', () => {
+    const estado = estadoInicial();
+    expect(comPreferencia(estado, 'cofrinho', 9999)).toBe(estado);
   });
 });

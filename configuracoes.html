@@ -151,7 +151,7 @@
 
     document.getElementById('zerar').addEventListener('click', () => {
       tocar('clique');
-      if (!window.confirm('Quer mesmo apagar todas as conquistas e partidas da Elis? O álbum dos Jogos do Rael não é afetado.')) return;
+      if (!window.confirm('Quer mesmo apagar todas as conquistas e partidas da Elis, e o cofrinho do Mercadinho? O álbum dos Jogos do Rael não é afetado.')) return;
       const apagou = zerarProgresso();
       try {
         localStorage.removeItem('jogos-elis:mercadinho');

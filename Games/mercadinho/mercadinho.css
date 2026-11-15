@@ -1629,6 +1629,129 @@
   overflow-x: auto;
 }
 
+/* Cofrinho e sonhos */
+.cofrinho {
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff7ec;
+  border: 2px solid #f1d9b5;
+  text-align: left;
+}
+
+.cofrinho__titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 1.3rem;
+}
+
+.cofrinho__texto {
+  margin: 0 0 10px;
+  font-size: 1.125rem;
+  line-height: 1.45;
+}
+
+.cofrinho__texto--pronto {
+  margin-top: 10px;
+  font-weight: 700;
+  color: var(--cor-certo);
+}
+
+.cofrinho__sonhos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 8px;
+}
+
+.cofrinho__sonho {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.cofrinho__sonho-nome {
+  font-size: 1.125rem;
+  line-height: 1.2;
+}
+
+.cofrinho__sonho-preco {
+  font-weight: 700;
+}
+
+.cofrinho__sonho-atual {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cofrinho__sonho-textos {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.cofrinho__barra {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.cofrinho__barra-preenchimento {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cor-certo);
+}
+
+.cofrinho__acao {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.cofrinho__estante {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 2px dashed #f1d9b5;
+}
+
+.cofrinho__estante-rotulo {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: var(--cor-suave);
+}
+
+.cofrinho__estante-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cofrinho__estante-item {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: #fff;
+  border: 2px solid #f1d9b5;
+}
+
+.resultado-cofrinho .icone-texto {
+  margin-right: 6px;
+}
+
 /* Tutorial */
 .tutorial__passo {
   margin: 0 0 10px;

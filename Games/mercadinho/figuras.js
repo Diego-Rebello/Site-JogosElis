@@ -1,4 +1,4 @@
-import { desejos, produtos, temas } from './dados.js';
+import { desejos, produtos, sonhos, temas } from './dados.js';
 
 /**
  * Catálogo visual do Mercadinho (v2).
@@ -103,6 +103,16 @@ export const ICONE_DO_TEMA = Object.freeze({
   'cafe-da-tarde': 'bule',
 });
 
+/** Ícone de cada sonho do cofrinho (dados.js, `sonhos`). */
+export const ICONE_DO_SONHO = Object.freeze({
+  caderno: 'caderno',
+  canetinhas: 'giz-de-cera',
+  bola: 'bola-de-volei',
+  pelucia: 'ursinho',
+  livros: 'livro',
+  patins: 'patins',
+});
+
 export const ICONES_DA_INTERFACE = Object.freeze([
   'saco-de-dinheiro',
   'coracao',
@@ -119,6 +129,7 @@ export const ICONES_DA_INTERFACE = Object.freeze([
   'confirmado',
   'sacolas',
   'mercado',
+  'porquinho',
 ]);
 
 /** Duas cores genéricas [principal, rótulo] por marca ou tipo para diferenciar opções na prateleira. */
@@ -379,6 +390,7 @@ const EMOJI_RESERVA_UI = {
   confirmado: '✅',
   sacolas: '🛍️',
   mercado: '🏪',
+  porquinho: '🐷',
   maca: '🍎',
   'pao-de-forma': '🍞',
   'copo-de-leite': '🥛',
@@ -406,6 +418,10 @@ for (const item of [...produtos, ...desejos]) {
 for (const tema of temas) {
   const icone = ICONE_DO_TEMA[tema.id];
   if (icone && !(icone in EMOJI_POR_ICONE)) EMOJI_POR_ICONE[icone] = tema.emoji;
+}
+for (const sonho of sonhos) {
+  const icone = ICONE_DO_SONHO[sonho.id];
+  if (icone && !(icone in EMOJI_POR_ICONE)) EMOJI_POR_ICONE[icone] = sonho.emoji;
 }
 
 export function urlDoIcone(nome) {
