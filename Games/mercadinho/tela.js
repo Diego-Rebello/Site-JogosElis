@@ -15,7 +15,7 @@ import {
   vizinhaLivre,
   casasDe,
 } from './mapa.js';
-import { criarRenderizador } from './renderizador.js';
+import { CONSULTA_LAYOUT_LARGO, criarRenderizador } from './renderizador.js';
 import {
   NIVEIS,
   alternativasDeTroco,
@@ -115,6 +115,10 @@ let estadoCaixa = resetarEstadoCaixa();
 let modoListaPreferido = lerPreferenciaModoLista();
 // Sem a janela do mapa (ex.: ambiente sem DOM), o renderizador vem null e o jogo cai na lista rápida.
 const renderizador = criarRenderizador($('mapa-janela'));
+const consultaLayoutLargo = typeof window.matchMedia === 'function'
+  ? window.matchMedia(CONSULTA_LAYOUT_LARGO)
+  : null;
+let ultimoLayoutLargo = Boolean(consultaLayoutLargo?.matches);
 
 const nav = {
   posicao: entrada(),
@@ -261,7 +265,7 @@ function atualizarIndicacaoMapa({ anunciarSeMudou = false } = {}) {
   if (!alvo) {
     btn.disabled = true;
     btn.className = 'botao botao--neutro botao-interagir-mapa';
-    btn.textContent = 'Toque numa prateleira';
+    btn.textContent = 'Toque no mapa';
     nav.ultimoAnuncioFrente = '';
     return;
   }
@@ -905,6 +909,8 @@ function renderizarLoja() {
   atualizarModoViewportLoja();
 
   const listaAtiva = usarListaRapida();
+  const cabecalhoLoja = $('loja-cabecalho');
+  const cabIcone = $('loja-cabecalho-icone');
   const cabSecao = $('loja-secao-atual');
   const btnVoltarSecoes = $('btn-voltar-secoes');
   const btnAlternarModo = $('btn-alternar-modo-loja');
@@ -914,29 +920,50 @@ function renderizarLoja() {
   const btnInteragirMapa = $('btn-interagir-mapa');
   const btnIrCaixa = $('btn-ir-caixa');
   const btnSairLoja = $('btn-sair-loja');
+  const acoesLoja = $('acoes-loja');
+  const layoutLargo = Boolean(consultaLayoutLargo?.matches);
+  ultimoLayoutLargo = layoutLargo;
 
   if (btnAlternarModo) {
     btnAlternarModo.hidden = !renderizador;
   }
 
   btnIrCaixa.hidden = false;
-  btnIrCaixa.replaceChildren(criarIconeUi('cupom', 24), 'Ir para o caixa');
+  btnIrCaixa.replaceChildren(criarIconeUi('cupom', 20), 'Ir para o caixa');
 
   if (!listaAtiva) {
-    if (btnAlternarModo) {
-      btnAlternarModo.className = 'botao selo-modo';
-      btnAlternarModo.replaceChildren(criarIconeUi('lista', 20), 'Lista rápida');
-      btnAlternarModo.setAttribute('aria-label', 'Mudar para lista rápida');
-      mapaBloco.append(btnAlternarModo);
+    cabecalhoLoja.className = 'loja-cabecalho';
+    cabecalhoLoja.style.removeProperty('--sec');
+    cabIcone.hidden = true;
+    cabIcone.replaceChildren();
+    btnVoltarSecoes.hidden = true;
+
+    if (layoutLargo) {
+      $('painel-fixo').append(btnSairLoja);
+      acoesLoja.append(btnInteragirMapa, btnIrCaixa);
+      if (btnAlternarModo) {
+        btnAlternarModo.className = 'botao botao--neutro botao-alternar-modo';
+        btnAlternarModo.replaceChildren(criarIconeUi('lista', 20), 'Lista rápida');
+        btnAlternarModo.setAttribute('aria-label', 'Mudar para lista rápida');
+        acoesLoja.append(btnAlternarModo);
+      }
+    } else {
+      $('hud-linha1').append(btnSairLoja);
+      acoesLoja.append(btnInteragirMapa, btnIrCaixa);
+      if (btnAlternarModo) {
+        btnAlternarModo.className = 'botao selo-modo';
+        btnAlternarModo.replaceChildren(criarIconeUi('lista', 20), 'Lista rápida');
+        btnAlternarModo.setAttribute('aria-label', 'Mudar para lista rápida');
+        mapaBloco.append(btnAlternarModo);
+      }
     }
+
     mapaBloco.append($('espiada-aviso'));
-    $('hud-linha1').append(btnSairLoja);
     btnSairLoja.className = 'botao botao--neutro ficha ficha--sair';
     btnSairLoja.textContent = 'Sair';
     btnIrCaixa.className = 'botao botao--neutro';
 
     mapaBloco.hidden = false;
-    btnVoltarSecoes.hidden = true;
     gradeSecoes.hidden = true;
     listaProdutos.hidden = true;
     atualizarIndicacaoMapa({ anunciarSeMudou: false });
@@ -944,14 +971,8 @@ function renderizarLoja() {
     return;
   }
 
-  if (btnAlternarModo) {
-    btnAlternarModo.className = 'botao botao--neutro botao-alternar-modo';
-    btnAlternarModo.replaceChildren(criarIconeUi('mercado', 20), 'Ver no mapa');
-    btnAlternarModo.setAttribute('aria-label', 'Voltar a andar pelo mercado');
-    $('loja-cabecalho-botoes').append(btnAlternarModo);
-  }
   $('painel-fixo').append($('espiada-aviso'));
-  $('acoes-loja').append(btnSairLoja);
+  acoesLoja.append(btnInteragirMapa, btnIrCaixa, btnSairLoja);
   btnSairLoja.className = 'botao botao--neutro';
   btnSairLoja.textContent = 'Trocar nível';
   btnInteragirMapa.hidden = true;
@@ -960,8 +981,20 @@ function renderizarLoja() {
   mapaBloco.hidden = true;
 
   if (!secaoAberta) {
-    cabSecao.replaceChildren(criarIconeInline('alfinete'), document.createTextNode('Escolha uma seção'));
+    cabecalhoLoja.className = 'loja-cabecalho';
+    cabecalhoLoja.style.removeProperty('--sec');
+    cabIcone.hidden = true;
+    cabIcone.replaceChildren();
+    cabSecao.replaceChildren(document.createTextNode('Escolha uma seção'));
     btnVoltarSecoes.hidden = true;
+
+    if (btnAlternarModo) {
+      btnAlternarModo.className = 'botao botao--neutro botao-alternar-modo';
+      btnAlternarModo.replaceChildren(criarIconeUi('mercado', 20), 'Ver no mapa');
+      btnAlternarModo.setAttribute('aria-label', 'Ver no mapa');
+      cabecalhoLoja.append(btnAlternarModo);
+    }
+
     gradeSecoes.hidden = false;
     listaProdutos.hidden = true;
 
@@ -972,6 +1005,7 @@ function renderizarLoja() {
       btn.type = 'button';
       btn.className = 'botao botao--neutro botao-secao';
       btn.dataset.secao = sec.id;
+      btn.style.setProperty('--sec', secVisual.cor);
 
       const icone = document.createElement('span');
       icone.className = 'botao-secao__icone';
@@ -997,8 +1031,32 @@ function renderizarLoja() {
   }
 
   const infoSecao = SECOES_LISTA_RAPIDA.find(s => s.id === secaoAberta);
-  cabSecao.replaceChildren(criarIconeInline('alfinete'), document.createTextNode(infoSecao.nome));
+  const secVisual = secaoVisualPorId[secaoAberta] || SECOES_VISUAIS.M;
+  cabecalhoLoja.className = 'loja-cabecalho loja-cabecalho--secao';
+  cabecalhoLoja.style.setProperty('--sec', secVisual.cor);
+
   btnVoltarSecoes.hidden = false;
+  btnVoltarSecoes.textContent = '←';
+  btnVoltarSecoes.setAttribute('aria-label', 'Todas as seções');
+
+  cabIcone.hidden = false;
+  cabIcone.replaceChildren(criarIconeUi(secVisual.icone, 28));
+
+  const subtituloCab = document.createElement('small');
+  subtituloCab.className = 'loja-secao-atual__subtitulo';
+  subtituloCab.textContent = 'Toque num produto para ver as marcas';
+  cabSecao.replaceChildren(document.createTextNode(infoSecao.nome), subtituloCab);
+
+  if (btnAlternarModo) {
+    btnAlternarModo.className = 'botao botao--neutro botao-alternar-modo';
+    const textoModo = document.createElement('span');
+    textoModo.className = 'botao-alternar-modo__texto';
+    textoModo.textContent = 'Ver no mapa';
+    btnAlternarModo.replaceChildren(criarIconeUi('mercado', 20), textoModo);
+    btnAlternarModo.setAttribute('aria-label', 'Ver no mapa');
+    cabecalhoLoja.append(btnAlternarModo);
+  }
+
   gradeSecoes.hidden = true;
   listaProdutos.hidden = false;
   montarGondola(secaoAberta, listaProdutos);
@@ -1148,9 +1206,9 @@ function fecharPainel(devolverFoco = true) {
   }
 }
 
-function configurarCabecalhoFolha(prefixo, secVisual, tituloTexto, subtituloTexto) {
+function configurarCabecalhoFolha(prefixo, secVisual, tituloTexto, subtituloTexto, iconeNome = secVisual.icone) {
   $(`${prefixo}-topo`).style.setProperty('--sec', secVisual.cor);
-  $(`${prefixo}-icone`).replaceChildren(criarIconeUi(secVisual.icone, 22));
+  $(`${prefixo}-icone`).replaceChildren(criarIconeUi(iconeNome, 22));
   $(`${prefixo}-titulo`).textContent = tituloTexto;
   $(`${prefixo}-subtitulo`).textContent = subtituloTexto;
 }
@@ -1211,7 +1269,8 @@ function renderizarPrateleiraProduto() {
         ? `${secVisual.nome} · Na lista: ${itemMissao.quantidade} · No carrinho: ${entrada.quantidade}`
         : `${secVisual.nome} · Na lista: ${itemMissao.quantidade}`)
     : `${secVisual.nome} · Comparação de preços`;
-  configurarCabecalhoFolha('prateleira', secVisual, `${produto.nome} · ${produto.medida}`, subtitulo);
+  const iconeProduto = FIGURA_DO_PRODUTO[produto.id]?.[1] || secVisual.icone;
+  configurarCabecalhoFolha('prateleira', secVisual, `${produto.nome} · ${produto.medida}`, subtitulo, iconeProduto);
 
   const aviso = $('prateleira-aviso');
   const qtdBloco = $('prateleira-qtd-bloco');
@@ -1246,13 +1305,14 @@ function renderizarPrateleiraProduto() {
   gradePes.style.setProperty('--cols', String(opcoes.length));
 
   const larguraFig = window.innerWidth >= 600 ? 120 : 100;
+  const ehSolto = FIGURA_DO_PRODUTO[produto.id]?.[0] === 'solto';
 
   for (const opcao of opcoes) {
     const selecionada = entrada?.opcaoId === opcao.id;
 
     const slotFig = document.createElement('div');
     slotFig.className = 'opcao';
-    const figEl = criarFigura(produto.id, opcao.id, larguraFig, { marca: true });
+    const figEl = criarFigura(produto.id, opcao.id, larguraFig, { marca: !ehSolto });
     slotFig.append(figEl);
     gradeFigs.append(slotFig);
 
@@ -1393,8 +1453,9 @@ function renderizarPrateleiraGuloseima() {
   const limiteAtingido = compra.desejos.length >= limite;
   const preco = precoNoNivel(desejo.preco, nivel);
   const secVisual = SECOES_VISUAIS.G;
+  const iconeGuloseima = FIGURA_DO_PRODUTO[desejo.id]?.[1] || secVisual.icone;
 
-  configurarCabecalhoFolha('prateleira', secVisual, desejo.nome, `${secVisual.nome} · ${desejo.marca}`);
+  configurarCabecalhoFolha('prateleira', secVisual, desejo.nome, `${secVisual.nome} · ${desejo.marca}`, iconeGuloseima);
   $('prateleira-qtd-bloco').hidden = true;
 
   const aviso = $('prateleira-aviso');
@@ -2206,8 +2267,28 @@ $('mapa-janela').addEventListener('click', evento => {
   interagirComCasa(casa.x, casa.y);
 });
 
+function tratarMudancaLayoutLargo(evento) {
+  const largoAgora = typeof evento?.matches === 'boolean'
+    ? evento.matches
+    : Boolean(consultaLayoutLargo?.matches);
+  if (largoAgora === ultimoLayoutLargo) return;
+  ultimoLayoutLargo = largoAgora;
+  if (faseAtual === 'loja' && compra && !usarListaRapida() && renderizador) {
+    renderizarLoja();
+    renderizador.ajustarTamanho();
+    desenharMapa();
+  }
+}
+
+consultaLayoutLargo?.addEventListener?.('change', tratarMudancaLayoutLargo);
+
 window.addEventListener('resize', () => {
   if (faseAtual === 'loja' && !usarListaRapida() && renderizador) {
+    const largoAgora = Boolean(consultaLayoutLargo?.matches);
+    if (largoAgora !== ultimoLayoutLargo) {
+      ultimoLayoutLargo = largoAgora;
+      renderizarLoja();
+    }
     renderizador.ajustarTamanho();
     desenharMapa();
   }

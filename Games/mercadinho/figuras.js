@@ -77,15 +77,15 @@ export const FIGURA_DO_PRODUTO = Object.freeze({
   sabonete: Object.freeze(['solto', 'sabonete']),
   // Guloseimas
   batom: Object.freeze(['barra', 'barra-de-chocolate']),
-  toddynho: Object.freeze(['caixa', 'barra-de-chocolate']),
+  toddynho: Object.freeze(['caixa', 'copo-de-leite']),
   trident: Object.freeze(['barra', 'bala']),
-  kitkat: Object.freeze(['barra', 'barra-de-chocolate']),
+  kitkat: Object.freeze(['barra', 'waffle']),
   mms: Object.freeze(['saquinho', 'bala']),
   picole: Object.freeze(['solto', 'sorvete']),
   fini: Object.freeze(['saquinho', 'pirulito']),
   lacta: Object.freeze(['barra', 'barra-de-chocolate']),
   bis: Object.freeze(['caixa-papelao', 'barra-de-chocolate']),
-  ruffles: Object.freeze(['saquinho', 'batata']),
+  ruffles: Object.freeze(['saquinho', 'batata-frita']),
   gibi: Object.freeze(['solto', 'livro']),
   'kinder-ovo': Object.freeze(['saquinho', 'ovo']),
 });

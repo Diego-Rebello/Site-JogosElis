@@ -89,6 +89,7 @@ Endereço de cada original:
   bala.svg                  Candy
   pirulito.svg              Lollipop
   sorvete.svg               Ice cream
+  batata-frita.svg          French fries
   livro.svg                 Open book
   camiseta.svg              T-shirt
   girassol.svg              Sunflower

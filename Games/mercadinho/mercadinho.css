@@ -171,6 +171,7 @@
 .jogo-mercadinho--mapa .pagina__conteudo {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   min-height: 0;
   padding: 0;
 }
@@ -198,11 +199,11 @@
 
 /* Painel da compra (HUD) */
 .painel-fixo {
-  background: #fff7fb;
-  border: 2px solid rgba(255, 105, 180, 0.28);
-  border-radius: 16px;
-  padding: 10px;
-  margin-bottom: 14px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 8px;
   text-align: left;
   display: grid;
   gap: 6px;
@@ -214,7 +215,7 @@
 }
 
 .hud__linha1 > .ficha {
-  flex: 1 1 auto;
+  flex: 1 1 0;
 }
 
 .hud__linha1 > .ficha--sair {
@@ -227,7 +228,7 @@
 }
 
 .hud__linha2 > .ficha {
-  flex: 1 1 auto;
+  flex: 1 1 0;
 }
 
 .jogo-mercadinho .ficha {
@@ -362,10 +363,10 @@
 /* Loja navegável e lista rápida */
 .loja-cabecalho {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 12px;
   text-align: left;
 }
@@ -390,15 +391,97 @@
   border: 0;
 }
 
-.loja-cabecalho__botoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.loja-secao-atual {
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1.2;
+  min-width: 0;
+  color: var(--m-tinta);
 }
 
-.loja-secao-atual {
-  font-weight: 700;
-  font-size: 1.2rem;
+.loja-cabecalho:not(.loja-cabecalho--secao) .botao-alternar-modo {
+  flex: none;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.loja-cabecalho--secao {
+  background: var(--sec, var(--cor-principal-profunda));
+  color: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 6px 8px;
+  margin-bottom: 0;
+  gap: 6px;
+  min-height: 58px;
+  max-height: 64px;
+}
+
+.loja-cabecalho--secao .loja-secao-atual {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.loja-secao-atual__subtitulo {
+  display: block;
+  margin-top: 1px;
+  font: 700 13px/1.15 var(--fonte-leitura);
+  color: #fff;
+  opacity: 0.96;
+}
+
+.loja-cabecalho__icone {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.jogo-mercadinho .loja-cabecalho--secao .botao-voltar-secoes {
+  flex: none;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--m-tinta);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.jogo-mercadinho .loja-cabecalho--secao .botao-alternar-modo {
+  flex: none;
+  margin-left: auto;
+  height: 44px;
+  min-height: 44px;
+  min-width: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--m-tinta);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  font-size: 15px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.loja-cabecalho--secao ~ .lista-produtos.gondola {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 0;
 }
 
 .loja-mapa-bloco {
@@ -771,18 +854,29 @@
 }
 
 .jogo-mercadinho--mapa .barra-baixo .botao {
-  min-height: 48px;
+  height: 52px;
+  min-height: 52px;
   border-radius: 16px;
-  font-size: 17px;
-  padding: 0 10px;
+  font-size: 15px;
+  line-height: 1.1;
+  padding: 0 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
 
+.jogo-mercadinho--mapa .barra-baixo .botao img {
+  width: 20px;
+  height: 20px;
+}
+
 .jogo-mercadinho--mapa .barra-baixo .botao:disabled {
-  opacity: 0.78;
+  background: transparent;
+  border: 2px dashed #e3c8d4;
+  color: var(--cor-suave);
+  box-shadow: none;
+  opacity: 1;
   cursor: default;
 }
 
@@ -926,8 +1020,10 @@
 .botao-secao__icone {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sec, #b4530f) 16%, white);
 }
 
 .botao-secao__nome {
@@ -958,13 +1054,14 @@
   grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
   column-gap: 0;
   row-gap: 14px;
-  align-items: end;
+  align-items: stretch;
 }
 
 .jogo-mercadinho .vaga {
   display: grid;
+  grid-template-rows: 100px 12px 1fr;
   justify-items: center;
-  align-content: end;
+  align-content: stretch;
   padding: 6px 0 0;
   position: relative;
   background: transparent;
@@ -982,6 +1079,7 @@
 }
 
 .vaga .fig {
+  align-self: end;
   margin-bottom: -2px;
   filter: drop-shadow(0 4px 2px rgba(60, 40, 20, 0.22));
   z-index: 1;
@@ -1001,6 +1099,7 @@
 .etq {
   margin-top: 5px;
   width: calc(100% - 6px);
+  height: calc(100% - 5px);
   min-height: 52px;
   background: #fff;
   border: 2px solid #e6d9c6;
@@ -1549,11 +1648,11 @@
 }
 
 @media (max-width: 420px) {
-  .jogo-mercadinho .pagina__conteudo {
+  .jogo-mercadinho:not(.jogo-mercadinho--mapa) .pagina__conteudo {
     padding: 8px;
   }
 
-  .jogo-mercadinho .cartao {
+  .jogo-mercadinho:not(.jogo-mercadinho--mapa) .cartao {
     padding: 14px 10px;
   }
 
@@ -1561,9 +1660,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .loja-cabecalho--secao {
+    margin-inline: -6px;
+  }
+
   .lista-produtos.gondola {
     margin-inline: -6px;
-    padding: 12px 2px 16px;
+    padding: 10px 2px 16px;
     border-width: 1px;
   }
 
@@ -1573,8 +1676,24 @@
 }
 
 @media (max-width: 480px) {
+  .loja-cabecalho--secao {
+    padding: 6px 6px;
+    gap: 4px;
+  }
+
+  .loja-cabecalho--secao .loja-cabecalho__icone {
+    width: 34px;
+    height: 34px;
+  }
+
+  .loja-secao-atual__subtitulo {
+    font-size: clamp(9.5px, 2.7vw, 11px);
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
   .jogo-mercadinho:not(.jogo-mercadinho--mapa) .painel-fixo {
-    padding: 6px 5px;
+    gap: 4px;
   }
 
   .hud__linha1,
@@ -1614,12 +1733,36 @@
   }
 }
 
+@media (max-width: 599px) {
+  .jogo-mercadinho .loja-cabecalho--secao .botao-alternar-modo {
+    width: 44px;
+    padding: 0;
+  }
+
+  .loja-cabecalho--secao .botao-alternar-modo__texto {
+    display: none;
+  }
+}
+
 @media (min-width: 480px) {
   .opcoes__figuras--duas,
   .opcoes__pes--duas {
     grid-template-columns: repeat(2, minmax(104px, 168px));
     justify-content: center;
     column-gap: 12px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 1023px) {
+  .jogo-mercadinho .hud__linha1,
+  .jogo-mercadinho .hud__linha2 {
+    justify-content: center;
+  }
+
+  .jogo-mercadinho .hud__linha1 > .ficha:not(.ficha--sair),
+  .jogo-mercadinho .hud__linha2 > .ficha {
+    flex: 0 1 280px;
+    max-width: 280px;
   }
 }
 
@@ -1648,6 +1791,99 @@
   .opcoes__figuras,
   .opcoes__pes {
     column-gap: 10px;
+  }
+}
+
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) { /* = CONSULTA_LAYOUT_LARGO */
+  .jogo-mercadinho--mapa .tela--loja {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "hud mapa"
+      "acoes mapa"
+      ". mapa";
+    column-gap: 12px;
+    row-gap: 12px;
+    padding: 8px 12px;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .jogo-mercadinho--mapa .painel-fixo {
+    grid-area: hud;
+    width: 100%;
+    max-width: 240px;
+    padding: 0;
+    margin: 0;
+    gap: 6px;
+  }
+
+  .jogo-mercadinho--mapa .hud__linha1,
+  .jogo-mercadinho--mapa .hud__linha2 {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .jogo-mercadinho--mapa .hud__linha1 > .ficha,
+  .jogo-mercadinho--mapa .hud__linha1 > .ficha:not(.ficha--sair),
+  .jogo-mercadinho--mapa .hud__linha2 > .ficha,
+  .jogo-mercadinho--mapa .painel-fixo > .ficha {
+    flex: none;
+    width: 100%;
+    max-width: 240px;
+    justify-content: flex-start;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 12px;
+    font-size: 16px;
+  }
+
+  .jogo-mercadinho--mapa .painel-fixo > .ficha--sair {
+    justify-content: center;
+    border-color: #ffb6c1;
+    box-shadow: 0 3px 0 #ffb6c1;
+  }
+
+  .jogo-mercadinho--mapa .barra-nivel1 {
+    padding: 2px 8px;
+    gap: 6px;
+  }
+
+  .jogo-mercadinho--mapa .barra-nivel1__trilho {
+    min-width: 36px;
+  }
+
+  .jogo-mercadinho--mapa .loja-mapa-bloco {
+    grid-area: mapa;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .jogo-mercadinho--mapa .janela-mapa {
+    flex: none;
+    min-height: 0;
+    margin: auto;
+  }
+
+  .jogo-mercadinho--mapa .barra-baixo {
+    grid-area: acoes;
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 240px;
+    padding: 0;
+    margin: 0;
+  }
+
+  .jogo-mercadinho--mapa .loja-cabecalho {
+    position: absolute;
   }
 }
 

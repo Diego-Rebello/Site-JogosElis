@@ -7,6 +7,12 @@ import {
 } from './figuras.js';
 import { ALTURA, LARGURA, MAPA, celulaEm, entrada } from './mapa.js';
 
+export const CONSULTA_LAYOUT_LARGO = '(min-width: 1024px) and (min-aspect-ratio: 5/4)';
+
+function emLayoutLargo() {
+  return Boolean(typeof window !== 'undefined' && window.matchMedia?.(CONSULTA_LAYOUT_LARGO).matches);
+}
+
 function arredondarPixelAparelho(valor) {
   const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
   return Math.round(valor * dpr) / dpr;
@@ -89,13 +95,52 @@ export function criarRenderizador(janela) {
   let ultimoDestaqueChave = '';
   let baloesAtivos = new Set();
 
+  function medidasEspacoPai() {
+    const pai = janela.parentElement;
+    if (!pai) return null;
+    const csPai = getComputedStyle(pai);
+    const padX = (parseFloat(csPai.paddingLeft) || 0) + (parseFloat(csPai.paddingRight) || 0);
+    const padY = (parseFloat(csPai.paddingTop) || 0) + (parseFloat(csPai.paddingBottom) || 0);
+    const csJanela = getComputedStyle(janela);
+    const bordaX = (parseFloat(csJanela.borderLeftWidth) || 0) + (parseFloat(csJanela.borderRightWidth) || 0);
+    const bordaY = (parseFloat(csJanela.borderTopWidth) || 0) + (parseFloat(csJanela.borderBottomWidth) || 0);
+    const dispW = pai.clientWidth - padX;
+    const dispH = pai.clientHeight - padY;
+    return {
+      dispW,
+      dispH,
+      bordaX,
+      bordaY,
+      L: Math.max(0, dispW - bordaX),
+      A: Math.max(0, dispH - bordaY),
+    };
+  }
+
   function calcularCasa() {
+    if (emLayoutLargo()) {
+      const esp = medidasEspacoPai();
+      if (!esp || esp.L <= 0 || esp.A <= 0) return casa;
+      const calculada = Math.floor(Math.min(esp.L / LARGURA, esp.A / ALTURA));
+      return Math.max(40, Math.min(64, calculada));
+    }
     const largura = janela.clientWidth || 0;
     if (!largura) return casa;
     if (largura >= 1152) {
       return Math.min(64, Math.floor(largura / LARGURA));
     }
     return Math.max(48, Math.min(64, Math.floor(largura / 7)));
+  }
+
+  function aplicarTamanhoJanela() {
+    if (!emLayoutLargo()) {
+      if (janela.style.width) janela.style.width = '';
+      if (janela.style.height) janela.style.height = '';
+      return;
+    }
+    const esp = medidasEspacoPai();
+    if (!esp || esp.dispW <= 0 || esp.dispH <= 0) return;
+    janela.style.width = `${Math.min(esp.dispW, LARGURA * casa + esp.bordaX)}px`;
+    janela.style.height = `${Math.min(esp.dispH, ALTURA * casa + esp.bordaY)}px`;
   }
 
   function montarMapa(novaCasa) {
@@ -256,16 +301,22 @@ export function criarRenderizador(janela) {
   }
 
   function ajustarTamanho() {
+    if (!emLayoutLargo()) {
+      if (janela.style.width) janela.style.width = '';
+      if (janela.style.height) janela.style.height = '';
+    }
     const novaCasa = calcularCasa();
     if (!elMapa || novaCasa !== casa) {
       montarMapa(novaCasa);
     }
+    aplicarTamanhoJanela();
     janela.dataset.casaPx = String(casa);
   }
 
   function desenhar(estado) {
     if (!estado) return;
-    if (!elMapa || (janela.clientWidth > 0 && calcularCasa() !== casa)) {
+    const tamanhoInlineForaLargo = !emLayoutLargo() && (janela.style.width || janela.style.height);
+    if (!elMapa || tamanhoInlineForaLargo || (janela.clientWidth > 0 && calcularCasa() !== casa)) {
       ajustarTamanho();
     }
     if (!elMapa) return;
