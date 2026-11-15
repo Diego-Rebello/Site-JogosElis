@@ -128,6 +128,7 @@
 
     import { obterConfiguracoes, salvarConfiguracoes, zerarProgresso } from './shared/progresso.js';
     import { definirMudo, estaMudo, tocar } from './shared/sons.js';
+    import { zerarCofrinho } from './Games/mercadinho/cofrinho.js';
 
     const ids = ['forca', 'matematica', 'm-ou-n', 'ortografia', 'tabuada', 'caca-palavras', 'forme-palavra', 'horas', 'genius', 'sudoku', 'dinheirinho', 'mercadinho', 'quiz', 'labirinto', 'memoria', 'velha'];
     const formulario = document.getElementById('formulario');
@@ -152,12 +153,9 @@
     document.getElementById('zerar').addEventListener('click', () => {
       tocar('clique');
       if (!window.confirm('Quer mesmo apagar todas as conquistas e partidas da Elis, e o cofrinho do Mercadinho? O álbum dos Jogos do Rael não é afetado.')) return;
-      const apagou = zerarProgresso();
-      try {
-        localStorage.removeItem('jogos-elis:mercadinho');
-      } catch {
-        /* armazenamento bloqueado: zerarProgresso já informa a falha */
-      }
+      const apagouProgresso = zerarProgresso();
+      const apagouCofrinho = zerarCofrinho();
+      const apagou = apagouProgresso && apagouCofrinho;
       mensagem.textContent = apagou
         ? 'Progresso zerado. As configurações foram mantidas.'
         : 'Não foi possível apagar o progresso neste navegador.';

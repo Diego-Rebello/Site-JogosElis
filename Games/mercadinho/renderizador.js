@@ -9,8 +9,14 @@ import { ALTURA, LARGURA, MAPA, celulaEm, entrada } from './mapa.js';
 
 export const CONSULTA_LAYOUT_LARGO = '(min-width: 1024px) and (min-aspect-ratio: 5/4)';
 
+// MediaQueryList guardadas uma vez: ler .matches é barato, criar a consulta a cada quadro não.
+const consultaLargo = typeof window !== 'undefined' ? window.matchMedia?.(CONSULTA_LAYOUT_LARGO) ?? null : null;
+const consultaMenosMovimento = typeof window !== 'undefined'
+  ? window.matchMedia?.('(prefers-reduced-motion: reduce)') ?? null
+  : null;
+
 function emLayoutLargo() {
-  return Boolean(typeof window !== 'undefined' && window.matchMedia?.(CONSULTA_LAYOUT_LARGO).matches);
+  return Boolean(consultaLargo?.matches);
 }
 
 function arredondarPixelAparelho(valor) {
@@ -94,6 +100,28 @@ export function criarRenderizador(janela) {
   let ultimoDestinoChave = '';
   let ultimoDestaqueChave = '';
   let baloesAtivos = new Set();
+
+  // Tamanho da casa e da janela só mudam com resize/layout: medir no desenho de cada quadro
+  // forçava layout síncrono durante a caminhada. Os observadores marcam quando remedir.
+  let tamanhoSujo = true;
+  let larguraJanela = 0;
+  let alturaJanela = 0;
+  const marcarSujo = () => { tamanhoSujo = true; };
+  if (typeof ResizeObserver === 'function') {
+    const observador = new ResizeObserver(marcarSujo);
+    observador.observe(janela);
+    if (janela.parentElement) observador.observe(janela.parentElement);
+  }
+  consultaLargo?.addEventListener?.('change', marcarSujo);
+  if (typeof window !== 'undefined') window.addEventListener('resize', marcarSujo);
+
+  const ultimosDados = {};
+  function gravarDado(chave, valor) {
+    const texto = String(valor);
+    if (ultimosDados[chave] === texto) return;
+    ultimosDados[chave] = texto;
+    janela.dataset[chave] = texto;
+  }
 
   function medidasEspacoPai() {
     const pai = janela.parentElement;
@@ -300,46 +328,56 @@ export function criarRenderizador(janela) {
     janela.replaceChildren(mapa);
   }
 
+  /**
+   * Mede e (re)monta o mapa. Enquanto a janela está escondida não monta nada: medir ali dá
+   * tamanho errado e o mapa teria de ser refeito ao aparecer.
+   */
   function ajustarTamanho() {
     if (!emLayoutLargo()) {
       if (janela.style.width) janela.style.width = '';
       if (janela.style.height) janela.style.height = '';
+    }
+    if (janela.getClientRects().length === 0) {
+      tamanhoSujo = true;
+      return;
     }
     const novaCasa = calcularCasa();
     if (!elMapa || novaCasa !== casa) {
       montarMapa(novaCasa);
     }
     aplicarTamanhoJanela();
-    janela.dataset.casaPx = String(casa);
+    larguraJanela = janela.clientWidth;
+    alturaJanela = janela.clientHeight;
+    tamanhoSujo = false;
+    gravarDado('casaPx', casa);
   }
 
   function desenhar(estado) {
     if (!estado) return;
-    const tamanhoInlineForaLargo = !emLayoutLargo() && (janela.style.width || janela.style.height);
-    if (!elMapa || tamanhoInlineForaLargo || (janela.clientWidth > 0 && calcularCasa() !== casa)) {
+    if (!elMapa || tamanhoSujo) {
       ajustarTamanho();
     }
     if (!elMapa) return;
 
     quadrosDesenhados += 1;
 
-    const larguraJanela = janela.clientWidth || casa * 7;
-    const alturaJanela = janela.clientHeight || casa * 9;
+    const largJanela = larguraJanela || casa * 7;
+    const altJanela = alturaJanela || casa * 9;
     const larguraMapa = LARGURA * casa;
     const alturaMapa = ALTURA * casa;
 
-    let brutoCamX = larguraMapa <= larguraJanela
-      ? -(larguraJanela - larguraMapa) / 2
-      : (estado.posX + 0.5) * casa - larguraJanela / 2;
-    let brutoCamY = alturaMapa <= alturaJanela
-      ? -(alturaJanela - alturaMapa) / 2
-      : (estado.posY + 0.5) * casa - alturaJanela / 2;
+    let brutoCamX = larguraMapa <= largJanela
+      ? -(largJanela - larguraMapa) / 2
+      : (estado.posX + 0.5) * casa - largJanela / 2;
+    let brutoCamY = alturaMapa <= altJanela
+      ? -(altJanela - alturaMapa) / 2
+      : (estado.posY + 0.5) * casa - altJanela / 2;
 
-    if (larguraMapa > larguraJanela) {
-      brutoCamX = Math.max(0, Math.min(larguraMapa - larguraJanela, brutoCamX));
+    if (larguraMapa > largJanela) {
+      brutoCamX = Math.max(0, Math.min(larguraMapa - largJanela, brutoCamX));
     }
-    if (alturaMapa > alturaJanela) {
-      brutoCamY = Math.max(0, Math.min(alturaMapa - alturaJanela, brutoCamY));
+    if (alturaMapa > altJanela) {
+      brutoCamY = Math.max(0, Math.min(alturaMapa - altJanela, brutoCamY));
     }
 
     camX = arredondarPixelAparelho(brutoCamX);
@@ -351,7 +389,7 @@ export function criarRenderizador(janela) {
       ultimoMapaTransform = mapaTransform;
     }
 
-    const reduzido = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+    const reduzido = Boolean(consultaMenosMovimento?.matches);
     const pulo = reduzido ? 0 : Math.abs(Math.sin(estado.fasePasso || 0)) * 4;
     const peaoX = arredondarPixelAparelho(estado.posX * casa);
     const peaoY = arredondarPixelAparelho(estado.posY * casa - 6 - pulo);
@@ -423,12 +461,11 @@ export function criarRenderizador(janela) {
     }
     baloesAtivos = novosBaloes;
 
-    janela.dataset.casaPx = String(casa);
-    janela.dataset.camX = String(camX);
-    janela.dataset.camY = String(camY);
-    janela.dataset.posX = String(estado.posX);
-    janela.dataset.posY = String(estado.posY);
-    janela.dataset.direcao = String(estado.direcao);
+    // Lidos pelo script de captura (docs/planos/mercadinho-arte/capturar.mjs).
+    gravarDado('casaPx', casa);
+    gravarDado('camX', camX);
+    gravarDado('camY', camY);
+    gravarDado('direcao', estado.direcao);
   }
 
   function eventoParaCasa(evento) {
@@ -456,7 +493,8 @@ export function criarRenderizador(janela) {
     };
   }
 
-  ajustarTamanho();
+  // Não monta aqui: a loja começa escondida. O primeiro ajustarTamanho com a janela
+  // visível (ao entrar na loja no modo mapa) monta o mapa uma vez, já no tamanho certo.
 
   return {
     ajustarTamanho,

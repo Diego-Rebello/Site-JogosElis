@@ -11,6 +11,7 @@ import {
   podeRealizar,
   realizarSonho,
   sonhosDisponiveis,
+  zerarCofrinho,
 } from '../Games/mercadinho/cofrinho.js';
 import {
   MISSAO_RESERVA,
@@ -722,5 +723,31 @@ describe('Cofrinho e sonhos', () => {
   it('só aceita tutorialVisto e modoLista como preferência', () => {
     const estado = estadoInicial();
     expect(comPreferencia(estado, 'cofrinho', 9999)).toBe(estado);
+  });
+
+  it('repetir um sonho depois de todos realizados não duplica a estante', () => {
+    const todos = sonhos.map(s => s.id);
+    let estado = { ...estadoInicial(), cofrinho: 100000, sonhosRealizados: [...todos] };
+    estado = realizarSonho(escolherSonho(estado, todos[0]));
+    expect(estado.sonhosRealizados).toEqual(todos);
+  });
+
+  it('lerCofrinho remove sonhos repetidos já gravados', () => {
+    const armazenamento = criarArmazenamento({
+      [CHAVE_COFRINHO]: JSON.stringify({ versao: 1, sonhosRealizados: ['bola', 'bola', 'caderno'] }),
+    });
+    expect(lerCofrinho(armazenamento).sonhosRealizados).toEqual(['bola', 'caderno']);
+  });
+
+  it('zerarCofrinho apaga dinheiro e sonhos mas mantém as preferências', () => {
+    const armazenamento = criarArmazenamento({
+      [CHAVE_COFRINHO]: JSON.stringify({
+        versao: 1, cofrinho: 900, sonhoAtual: 'bola', sonhosRealizados: ['caderno'], compras: 4,
+        tutorialVisto: true, modoLista: true,
+      }),
+    });
+    expect(zerarCofrinho(armazenamento)).toBe(true);
+    expect(lerCofrinho(armazenamento)).toEqual({ ...estadoInicial(), tutorialVisto: true, modoLista: true });
+    expect(zerarCofrinho(armazenamentoBloqueado)).toBe(false);
   });
 });

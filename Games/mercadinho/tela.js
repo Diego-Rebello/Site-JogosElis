@@ -12,6 +12,7 @@ import {
 } from './figuras.js';
 import { desejos, produtos, sonhos, temas } from './dados.js';
 import {
+  CHAVE_COFRINHO,
   comPreferencia,
   depositar,
   escolherSonho,
@@ -162,13 +163,21 @@ const nav = {
   ultimoAnuncioFrente: '',
 };
 
-function salvarEstadoCofrinho(novo) {
-  estadoCofrinho = novo;
-  gravarCofrinho(estadoCofrinho); // armazenamento bloqueado: vale só nesta sessão
+let armazenamentoCofrinhoOk = true;
+
+/**
+ * Aplica uma mudança ao cofrinho partindo do que está gravado agora, não da cópia lida ao
+ * abrir a página: outra aba ou o "Zerar progresso" das configurações podem ter mudado o
+ * estado. Se o armazenamento falhar, segue só em memória durante esta sessão.
+ */
+function atualizarCofrinho(transformar) {
+  const base = armazenamentoCofrinhoOk ? lerCofrinho() : estadoCofrinho;
+  estadoCofrinho = transformar(base);
+  armazenamentoCofrinhoOk = gravarCofrinho(estadoCofrinho);
 }
 
 function salvarPreferencia(campo, valor) {
-  salvarEstadoCofrinho(comPreferencia(estadoCofrinho, campo, valor));
+  atualizarCofrinho(estado => comPreferencia(estado, campo, valor));
 }
 
 function salvarPreferenciaModoLista(valor) {
@@ -372,7 +381,7 @@ function avancarProximoPasso(agora) {
 function animarPasso(agora) {
   nav.rafId = null;
   if (faseAtual !== 'loja' || painelAtivo || usarListaRapida() || document.hidden) {
-    pararMovimento();
+    pararMovimento(true); // sem redesenhar, o peão ficaria parado entre duas casas
     return;
   }
 
@@ -618,6 +627,16 @@ function criarIconeInline(nome) {
   return img;
 }
 
+/** Marca de feito/pendente: o ícone é decorativo, o estado vai em texto para leitor de tela. */
+function criarMarcaEstado(feito, textoFeito = 'feito', textoPendente = 'pendente') {
+  const marca = document.createElement('span');
+  const oculto = document.createElement('span');
+  oculto.className = 'so-leitor';
+  oculto.textContent = `${feito ? textoFeito : textoPendente}: `;
+  marca.append(feito ? criarIconeInline('confirmado') : criarCaixaCheckVazio(), oculto);
+  return marca;
+}
+
 function criarCaixaCheckVazio() {
   const caixa = document.createElement('span');
   caixa.className = 'caixa-check-vazio';
@@ -707,8 +726,8 @@ function mostrarFase(nome) {
   }
   atualizarModoViewportLoja();
 
+  if (nome === 'loja') renderizarLoja();
   if (nome === 'loja' && !usarListaRapida() && renderizador) {
-    renderizarLoja();
     renderizador.ajustarTamanho();
     atualizarIndicacaoMapa({ anunciarSeMudou: false });
     desenharMapa();
@@ -997,7 +1016,25 @@ function renderizarPainelFixo() {
   }
 }
 
+/**
+ * Redesenha a loja preservando o foco: os botões de modo e de saída mudam de lugar conforme
+ * o modo e o layout, e mover o elemento focado com append tira o foco dele.
+ */
 function renderizarLoja() {
+  const focado = document.activeElement;
+  renderizarLojaSemFoco();
+  if (
+    focado instanceof HTMLElement &&
+    focado !== document.body &&
+    document.activeElement !== focado &&
+    document.contains(focado) &&
+    !focado.closest('[hidden]')
+  ) {
+    focado.focus();
+  }
+}
+
+function renderizarLojaSemFoco() {
   renderizarPainelFixo();
   atualizarModoViewportLoja();
 
@@ -1293,6 +1330,13 @@ function fecharPainel(devolverFoco = true) {
   painelAtivo = null;
   gatilhoDoPainel = null;
   contextoPrateleira = null;
+
+  // Abrir o painel pode ter interrompido uma caminhada no meio de um passo: o peão volta
+  // para a casa em que está de fato, e o botão "Ver: …" acompanha.
+  if (faseAtual === 'loja' && !usarListaRapida()) {
+    desenharMapa();
+    atualizarIndicacaoMapa();
+  }
 
   if (devolverFoco && gatilho && document.contains(gatilho) && !gatilho.closest('[hidden]')) {
     gatilho.focus();
@@ -1653,7 +1697,7 @@ function abrirPainelLista(gatilho) {
     const li = document.createElement('li');
     li.className = 'lista-painel__item';
 
-    const checkEl = completo ? criarIconeInline('confirmado') : criarCaixaCheckVazio();
+    const checkEl = criarMarcaEstado(completo, 'completo', 'falta');
     const iconeItem = FIGURA_DO_PRODUTO[produto.id]?.[1] || 'cesto';
     let texto = `${produto.nome} · ${secao.nome} — pedir ${item.quantidade} (${produto.medida})`;
     if (entrada) {
@@ -2200,7 +2244,7 @@ function finalizarCompraPaga() {
       erros: res.erros,
       estrelas: res.estrelas,
     });
-    salvarEstadoCofrinho(depositar(estadoCofrinho, res.troco));
+    atualizarCofrinho(estado => depositar(estado, res.troco));
   }
 
   renderizarResultado(res);
@@ -2241,7 +2285,7 @@ function renderizarResultado(res) {
     const li = document.createElement('li');
     li.className = 'resultado-objetivos__item';
     li.append(
-      item.ok ? criarIconeInline('confirmado') : criarCaixaCheckVazio(),
+      criarMarcaEstado(item.ok, 'conseguiu', 'não conseguiu'),
       document.createTextNode(item.texto),
     );
     objetivos.append(li);
@@ -2290,10 +2334,12 @@ function renderizarResultado(res) {
   if (res.troco > 0 && !querMenosMovimento()) {
     const moeda = criarIconeUi('moeda', 22);
     moeda.classList.add('moedinha-cai');
-    moeda.addEventListener('animationend', () => {
-      moeda.remove();
+    // Escuta no pai: se o SVG falhar, a moeda vira um <span> de reserva sem os ouvintes do <img>.
+    porco.addEventListener('animationend', evento => {
+      if (!evento.target.classList?.contains('moedinha-cai')) return;
+      evento.target.remove();
       animar(porco, 'pular');
-    }, { once: true });
+    });
     porco.append(moeda);
   }
   pTroco.append(
@@ -2360,7 +2406,7 @@ function renderizarCofrinho() {
       btn.addEventListener('click', () => {
         tocar('clique');
         escolhendoSonho = false;
-        salvarEstadoCofrinho(escolherSonho(estadoCofrinho, opcao.id));
+        atualizarCofrinho(estado => escolherSonho(estado, opcao.id));
         renderizarCofrinho();
         anunciar(`Sonho escolhido: ${opcao.nome}.`);
         $('cofrinho-titulo').focus();
@@ -2407,7 +2453,7 @@ function renderizarCofrinho() {
       acao.textContent = 'Realizar o sonho';
       acao.addEventListener('click', () => {
         const realizado = sonho;
-        salvarEstadoCofrinho(realizarSonho(estadoCofrinho));
+        atualizarCofrinho(realizarSonho);
         tocar('vitoria');
         lancarConfete();
         renderizarCofrinho();
@@ -2437,6 +2483,7 @@ function renderizarCofrinho() {
     const icone = criarIconeUi(ICONE_DO_SONHO[id], 44);
     icone.alt = sonhoPorId[id].nome;
     icone.title = sonhoPorId[id].nome;
+    icone.removeAttribute('aria-hidden'); // aqui o ícone é o conteúdo, não enfeite
     li.append(icone);
     lista.append(li);
   }
@@ -2456,6 +2503,14 @@ selecionarNivel(nivelSelecionado);
 atualizarBotoesModoInicio();
 hidratarIconesEstaticos();
 renderizarCofrinho();
+
+// Outra aba (ou as configurações) mudou o cofrinho: mostra o valor novo sem esperar uma compra.
+window.addEventListener('storage', evento => {
+  if (evento.key !== null && evento.key !== CHAVE_COFRINHO) return;
+  if (!armazenamentoCofrinhoOk) return;
+  estadoCofrinho = lerCofrinho();
+  if (faseAtual === 'inicio') renderizarCofrinho();
+});
 
 document.querySelectorAll('.nivel[data-nivel]').forEach(botao => {
   botao.addEventListener('click', () => {
@@ -2510,7 +2565,6 @@ $('btn-tutorial-pular').addEventListener('click', () => {
 
 $('btn-ir-compras').addEventListener('click', () => {
   tocar('clique');
-  renderizarLoja();
   mostrarFase('loja');
   anunciar(
     usarListaRapida()
@@ -2622,20 +2676,17 @@ $('btn-sair-loja').addEventListener('click', () => {
 
 $('btn-voltar-faltando').addEventListener('click', () => {
   tocar('clique');
-  renderizarLoja();
   mostrarFase('loja');
 });
 
 $('btn-voltar-estouro').addEventListener('click', () => {
   tocar('clique');
-  renderizarLoja();
   mostrarFase('loja');
 });
 
 $('btn-voltar-loja-caixa').addEventListener('click', () => {
   if (estadoCaixa.etapa !== 'cupom') return;
   tocar('clique');
-  renderizarLoja();
   mostrarFase('loja');
 });
 

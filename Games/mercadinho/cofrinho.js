@@ -55,7 +55,7 @@ export function lerCofrinho(armazenamento = armazenamentoPadrao()) {
     cofrinho: centavosValidos(dados.cofrinho),
     sonhoAtual: sonhoPorId[dados.sonhoAtual] ? dados.sonhoAtual : null,
     sonhosRealizados: Array.isArray(dados.sonhosRealizados)
-      ? dados.sonhosRealizados.filter(id => sonhoPorId[id])
+      ? [...new Set(dados.sonhosRealizados.filter(id => sonhoPorId[id]))]
       : [],
     compras: centavosValidos(dados.compras),
     tutorialVisto: dados.tutorialVisto === true,
@@ -108,8 +108,23 @@ export function realizarSonho(estado) {
     ...estado,
     cofrinho: estado.cofrinho - sonho.preco,
     sonhoAtual: null,
-    sonhosRealizados: [...estado.sonhosRealizados, sonho.id],
+    // Depois de todos realizados os sonhos voltam a ser escolhíveis; a estante não repete.
+    sonhosRealizados: estado.sonhosRealizados.includes(sonho.id)
+      ? estado.sonhosRealizados
+      : [...estado.sonhosRealizados, sonho.id],
   };
+}
+
+/**
+ * Zera cofrinho, sonhos e compras, mantendo as preferências (tutorialVisto, modoLista).
+ * Devolve false se não deu para gravar.
+ */
+export function zerarCofrinho(armazenamento = armazenamentoPadrao()) {
+  const atual = lerCofrinho(armazenamento);
+  return gravarCofrinho(
+    { ...estadoInicial(), tutorialVisto: atual.tutorialVisto, modoLista: atual.modoLista },
+    armazenamento,
+  );
 }
 
 /** Muda uma preferência simples (tutorialVisto, modoLista). */

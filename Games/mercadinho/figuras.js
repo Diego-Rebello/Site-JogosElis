@@ -435,6 +435,8 @@ export function urlDoIcone(nome) {
   return `/figuras/mercadinho/icones/${nome}.svg`;
 }
 
+const ATRIBUTOS_SO_DE_IMG = new Set(['src', 'srcset', 'alt', 'decoding', 'loading', 'width', 'height']);
+
 function criarImagemIcone(nome, emojiReserva, tamanhoReservaPx) {
   const img = document.createElement('img');
   img.src = urlDoIcone(nome);
@@ -444,23 +446,28 @@ function criarImagemIcone(nome, emojiReserva, tamanhoReservaPx) {
   img.addEventListener(
     'error',
     () => {
+      // A reserva herda tudo o que quem chamou pôs no <img> depois de criá-lo (classes,
+      // title, data-*, aria-*), para não perder estados como `estrela-apagada`. Ouvintes
+      // não dá para copiar: quem precisa de eventos escuta no elemento pai.
       const reserva = document.createElement('span');
-      reserva.className = img.classList.contains('icone-texto')
-        ? 'fig__reserva icone-texto'
-        : 'fig__reserva';
-      reserva.setAttribute('aria-hidden', 'true');
+      for (const { name, value } of [...img.attributes]) {
+        if (ATRIBUTOS_SO_DE_IMG.has(name)) continue;
+        reserva.setAttribute(name, value);
+      }
+      reserva.classList.add('fig__reserva');
+      if (img.alt) {
+        reserva.setAttribute('role', 'img');
+        reserva.setAttribute('aria-label', img.alt);
+        reserva.removeAttribute('aria-hidden');
+      }
       reserva.textContent = emojiReserva || EMOJI_POR_ICONE[nome] || '🛒';
       if (tamanhoReservaPx) {
         reserva.style.fontSize = `${Math.max(12, Math.round(tamanhoReservaPx))}px`;
       }
       if (img.getAttribute('style')) {
-        reserva.setAttribute('style', img.getAttribute('style'));
         reserva.style.display = 'grid';
         reserva.style.placeItems = 'center';
         reserva.style.lineHeight = '1';
-        if (tamanhoReservaPx) {
-          reserva.style.fontSize = `${Math.max(12, Math.round(tamanhoReservaPx))}px`;
-        }
       }
       img.replaceWith(reserva);
     },
