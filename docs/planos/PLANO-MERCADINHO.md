@@ -191,7 +191,7 @@ corações. Produto que não está na lista do dia não pode ser comprado (seç�
 | Itens na lista | 3 | 5 | 7 |
 | Opções por produto | 2 (a mais barata e a de mais corações) | todas (2 ou 3) | todas (2 ou 3) |
 | Linhas com quantidade maior que 1 | nenhuma | até 2 sorteadas | até 3 sorteadas |
-| Preços | arredondados para R$ 0,50 | arredondados para R$ 0,10 | de etiqueta (R$ 5,29; R$ 7,49) |
+| Preços | reais inteiros, sem centavos | reais inteiros, sem centavos | de etiqueta (R$ 5,29; R$ 7,49) |
 | Guloseimas por compra | 1 | 2 | 2 |
 | Total do carrinho | sempre visível, com barra | escondido; **2 espiadas** | escondido; sem espiar |
 | Subtotal de linha com quantidade | mostrado | escondido ("3 × R$ 3,30") | escondido |
@@ -699,8 +699,8 @@ tests/
 
 ```js
 export const NIVEIS = {
-  1: { itens: 3, linhasComQuantidade: 0, maximoDeDesejos: 1, tolerancia: 2, passos: [1000, 500, 200, 100], arredondar: 50, espiadas: 0 },
-  2: { itens: 5, linhasComQuantidade: 2, maximoDeDesejos: 2, tolerancia: 1, passos: [1000, 500, 200, 100], arredondar: 10, espiadas: 2 },
+  1: { itens: 3, linhasComQuantidade: 0, maximoDeDesejos: 1, tolerancia: 2, passos: [1000, 500, 200, 100], arredondar: 100, espiadas: 0 },
+  2: { itens: 5, linhasComQuantidade: 2, maximoDeDesejos: 2, tolerancia: 1, passos: [1000, 500, 200, 100], arredondar: 100, espiadas: 2 },
   3: { itens: 7, linhasComQuantidade: 3, maximoDeDesejos: 2, tolerancia: 1, passos: [500, 200, 100], arredondar: 1, espiadas: 0 },
 };
 ```
@@ -710,19 +710,23 @@ export const NIVEIS = {
 
 | Preço de etiqueta | Nível 1 | Nível 2 | Nível 3 |
 |---|---|---|---|
-| R$ 5,29 | R$ 5,50 | R$ 5,30 | R$ 5,29 |
-| R$ 7,49 | R$ 7,50 | R$ 7,50 | R$ 7,49 |
-| R$ 2,29 | R$ 2,50 | R$ 2,30 | R$ 2,29 |
-| R$ 10,90 | R$ 11,00 | R$ 10,90 | R$ 10,90 |
-| R$ 12,49 | R$ 12,50 | R$ 12,50 | R$ 12,49 |
+| R$ 5,29 | R$ 5,00 | R$ 5,00 | R$ 5,29 |
+| R$ 7,49 | R$ 7,00 | R$ 7,00 | R$ 7,49 |
+| R$ 2,29 | R$ 2,00 | R$ 2,00 | R$ 2,29 |
+| R$ 10,90 | R$ 11,00 | R$ 11,00 | R$ 10,90 |
+| R$ 12,49 | R$ 12,00 | R$ 12,00 | R$ 12,49 |
 
-`opcoesNoNivel(produto, nivel)` devolve as opções com o preço do nível. No nível 1 devolve só
+Centavos só aparecem no nível 3 (decisão de 15/11/2026: a Elis ainda não aprendeu centavos).
+
+`opcoesNoNivel(produto, nivel)` devolve as opções com o preço do nível. Se o arredondamento
+deixar uma opção com preço igual ou menor que a anterior (ex.: R$ 4,99 e R$ 5,49 → R$ 5,00),
+ela passa a custar a anterior + R$ 1,00, para os preços continuarem crescentes. No nível 1 devolve só
 duas: a mais barata e a de mais corações (a mais barata entre as empatadas).
 
 `elegivel(produto, nivel)`: o produto só entra numa lista se a escolha for de verdade. Exige 2
 ou mais opções com preços crescentes no nível; no nível 1, exige também R$ 1,00 ou mais de
 diferença e corações diferentes. Com o catálogo desta versão ficam fora do nível 1: biscoito
-recheado, óleo, açúcar, fermento, água e detergente. Nos níveis 2 e 3 todos entram.
+óleo, açúcar, água e detergente. Nos níveis 2 e 3 todos entram.
 
 ### 4.4 O gerador de missões
 
@@ -1077,7 +1081,7 @@ alguma delas atrasar, a 5 e a 6 podem ser feitas antes, porque não dependem do 
   produtos elegíveis); corações de 1 a 3 e não decrescentes.
 - `precoNoNivel`: os cinco casos da tabela da seção 4.3.
 - Toda vaga de todo tema aponta para produto existente; todo tema gera lista nos três níveis.
-- Inelegíveis do nível 1 são exatamente os seis da seção 4.3.
+- Inelegíveis do nível 1 são exatamente os quatro da seção 4.3.
 
 *Gerador* (para sementes de 1 a 1.000, em cada nível)
 - Nunca devolve a missão reserva.

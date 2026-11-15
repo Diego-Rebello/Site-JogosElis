@@ -183,11 +183,11 @@ describe('Mercadinho — dados e preços', () => {
 
   it('arredonda os cinco casos da tabela 4.3 de precoNoNivel', () => {
     const casos = [
-      [529, 550, 530, 529],
-      [749, 750, 750, 749],
-      [229, 250, 230, 229],
-      [1090, 1100, 1090, 1090],
-      [1249, 1250, 1250, 1249],
+      [529, 500, 500, 529],
+      [749, 700, 700, 749],
+      [229, 200, 200, 229],
+      [1090, 1100, 1100, 1090],
+      [1249, 1200, 1200, 1249],
     ];
     for (const [etiqueta, n1, n2, n3] of casos) {
       expect(precoNoNivel(etiqueta, 1)).toBe(n1);
@@ -211,16 +211,9 @@ describe('Mercadinho — dados e preços', () => {
     }
   });
 
-  it('deixa fora do nível 1 exatamente os seis produtos esperados', () => {
+  it('deixa fora do nível 1 exatamente os quatro produtos esperados', () => {
     const inelegiveis = produtos.filter(p => !elegivel(p, 1)).map(p => p.id);
-    expect(inelegiveis).toEqual([
-      'biscoito-recheado',
-      'oleo',
-      'acucar',
-      'fermento',
-      'agua',
-      'detergente',
-    ]);
+    expect(inelegiveis).toEqual(['oleo', 'acucar', 'agua', 'detergente']);
   });
 
   it('reproduz os seis valores de conferência da seção 4.4', () => {
@@ -228,22 +221,22 @@ describe('Mercadinho — dados e preços', () => {
       {
         nivel: 1, semente: 7, temaId: 'cafe-da-manha',
         itens: [['pao-de-forma', 1], ['leite', 1], ['mamao', 1]],
-        orcamento: 2400, metaCoracoes: 6, maximoCoracoes: 8, custoMinimo: 1800, custoDoMelhor: 2600, custoDaMeta: 2000,
+        orcamento: 2200, metaCoracoes: 6, maximoCoracoes: 8, custoMinimo: 1700, custoDoMelhor: 2500, custoDaMeta: 1900,
       },
       {
-        nivel: 1, semente: 8, temaId: 'lanche-da-escola',
-        itens: [['pao-de-forma', 1], ['suco-caixinha', 1], ['queijo', 1]],
-        orcamento: 2200, metaCoracoes: 5, maximoCoracoes: 7, custoMinimo: 1750, custoDoMelhor: 2500, custoDaMeta: 1900,
+        nivel: 1, semente: 8, temaId: 'cafe-da-manha',
+        itens: [['pao-de-forma', 1], ['leite', 1], ['achocolatado', 1]],
+        orcamento: 2200, metaCoracoes: 5, maximoCoracoes: 7, custoMinimo: 1800, custoDoMelhor: 2400, custoDaMeta: 1900,
       },
       {
         nivel: 2, semente: 7, temaId: 'cafe-da-manha',
         itens: [['pao-de-forma', 1], ['leite', 2], ['mamao', 1], ['ovos', 1], ['cafe', 1]],
-        orcamento: 5500, metaCoracoes: 12, maximoCoracoes: 13, custoMinimo: 4540, custoDoMelhor: 6440, custoDaMeta: 5210,
+        orcamento: 5500, metaCoracoes: 12, maximoCoracoes: 13, custoMinimo: 4400, custoDoMelhor: 6300, custoDaMeta: 5200,
       },
       {
         nivel: 2, semente: 8, temaId: 'lanche-da-escola',
         itens: [['pao-de-forma', 1], ['suco-caixinha', 2], ['queijo', 1], ['agua', 1], ['biscoito-recheado', 2]],
-        orcamento: 3500, metaCoracoes: 11, maximoCoracoes: 12, custoMinimo: 2920, custoDoMelhor: 3960, custoDaMeta: 3300,
+        orcamento: 3500, metaCoracoes: 12, maximoCoracoes: 13, custoMinimo: 2700, custoDoMelhor: 3900, custoDaMeta: 3300,
       },
       {
         nivel: 3, semente: 7, temaId: 'cafe-da-manha',
@@ -403,12 +396,12 @@ describe('Mercadinho — compra e caixa', () => {
     const missao = gerarMissao({ nivel: 2, semente: 7 });
     // itens: pao-de-forma x1, leite x2, mamao x1, ovos x1, cafe x1
     let compra = criarCompra(missao);
-    // leite-2 = 590, ovos-1 = 1080
+    // leite-2 = 600, ovos-1 = 1100 (reais inteiros no nível 2)
     compra = colocarNoCarrinho(compra, 'leite', 'leite-2', 3).compra;
     compra = colocarNoCarrinho(compra, 'ovos', 'ovos-1', 1).compra;
     compra = levarDesejo(compra, 'batom').compra; // 200 no nível 2, 1 coração
 
-    expect(totalDoCarrinho(compra)).toBe(590 * 3 + 1080 + 200);
+    expect(totalDoCarrinho(compra)).toBe(600 * 3 + 1100 + 200);
     // corações: leite-2 (2) + ovos-1 (2) + batom (1) = 5 (leite x3 conta 1 vez)
     expect(coracoesDoCarrinho(compra)).toBe(5);
 
@@ -428,7 +421,7 @@ describe('Mercadinho — compra e caixa', () => {
     let c2 = criarCompra(gerarMissao({ nivel: 2, semente: 7 }));
     c2 = colocarNoCarrinho(c2, 'leite', 'leite-1', 2).compra;
     const e1 = espiar(c2);
-    expect(e1.total).toBe(1060);
+    expect(e1.total).toBe(1000);
     expect(e1.compra.espiadasRestantes).toBe(1);
     const e2 = espiar(e1.compra);
     expect(e2.compra.espiadasRestantes).toBe(0);

@@ -12,7 +12,7 @@ export const NIVEIS = Object.freeze({
     maximoDeDesejos: 1,
     tolerancia: 2,
     passos: [1000, 500, 200, 100],
-    arredondar: 50,
+    arredondar: 100,
     espiadas: 0,
   }),
   2: Object.freeze({
@@ -21,7 +21,7 @@ export const NIVEIS = Object.freeze({
     maximoDeDesejos: 2,
     tolerancia: 1,
     passos: [1000, 500, 200, 100],
-    arredondar: 10,
+    arredondar: 100,
     espiadas: 2,
   }),
   3: Object.freeze({
@@ -49,12 +49,12 @@ export const MISSAO_RESERVA = Object.freeze({
       { produtoId: 'leite', quantidade: 1 },
       { produtoId: 'mamao', quantidade: 1 },
     ],
-    orcamento: 2400,
+    orcamento: 2200,
     metaCoracoes: 6,
     maximoCoracoes: 8,
-    custoMinimo: 1800,
-    custoDoMelhor: 2600,
-    custoDaMeta: 2000,
+    custoMinimo: 1700,
+    custoDoMelhor: 2500,
+    custoDaMeta: 1900,
     coracoesDaCestaBarata: 4,
   }),
   2: Object.freeze({
@@ -72,9 +72,9 @@ export const MISSAO_RESERVA = Object.freeze({
     orcamento: 5500,
     metaCoracoes: 12,
     maximoCoracoes: 13,
-    custoMinimo: 4540,
-    custoDoMelhor: 6440,
-    custoDaMeta: 5210,
+    custoMinimo: 4400,
+    custoDoMelhor: 6300,
+    custoDaMeta: 5200,
     coracoesDaCestaBarata: 7,
   }),
   3: Object.freeze({
@@ -130,7 +130,14 @@ export function precoNoNivel(preco, nivel) {
 
 /** Opções que aparecem na prateleira em cada nível, já com o preço do nível, da mais barata para a mais cara. */
 export function opcoesNoNivel(produto, nivel) {
-  let opcoes = produto.opcoes.map(o => ({ ...o, preco: precoNoNivel(o.preco, nivel) }));
+  // Nos níveis 1 e 2 os preços são em reais inteiros. Se o arredondamento juntar duas opções
+  // no mesmo preço (ex.: R$ 4,99 e R$ 5,49 → R$ 5,00), a mais cara sobe um real.
+  const passo = NIVEIS[nivel].arredondar;
+  let opcoes = [];
+  for (const o of produto.opcoes) {
+    const anterior = opcoes.length ? opcoes[opcoes.length - 1].preco : 0;
+    opcoes.push({ ...o, preco: Math.max(precoNoNivel(o.preco, nivel), anterior + passo) });
+  }
   if (nivel === 1) {
     const barata = opcoes[0];
     const maximo = Math.max(...opcoes.map(o => o.coracoes));
@@ -595,9 +602,6 @@ export function conferirDados() {
       if (i > 0) {
         const ant = p.opcoes[i - 1];
         if (o.preco <= ant.preco) problemas.push(`Preços não crescentes em ${p.id}`);
-        if (precoNoNivel(o.preco, 2) <= precoNoNivel(ant.preco, 2)) {
-          problemas.push(`Preços não crescentes no nível 2 em ${p.id}`);
-        }
         if (o.coracoes < ant.coracoes) problemas.push(`Corações decrescentes em ${p.id}`);
       }
     }

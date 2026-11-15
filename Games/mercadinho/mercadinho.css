@@ -91,14 +91,14 @@
   margin: 16px 0;
 }
 
-.nivel {
+.jogo-mercadinho .nivel {
   width: 100%;
   text-align: left;
   padding: 12px 16px;
 }
 
-.nivel[aria-pressed='true'],
-.modo-compra[aria-pressed='true'] {
+.jogo-mercadinho .nivel[aria-pressed='true'],
+.jogo-mercadinho .modo-compra[aria-pressed='true'] {
   background: var(--cor-principal-profunda);
   border-color: var(--cor-principal-profunda);
   color: #fff;
@@ -111,7 +111,7 @@
   margin: 0 0 16px;
 }
 
-.modo-compra {
+.jogo-mercadinho .modo-compra {
   width: 100%;
   padding: 12px 14px;
 }
@@ -880,7 +880,7 @@
   cursor: default;
 }
 
-.botao-interagir-mapa {
+.jogo-mercadinho .botao-interagir-mapa {
   min-height: 48px;
   font-size: 1.125rem;
 }
@@ -1005,7 +1005,7 @@
   gap: 10px;
 }
 
-.botao-secao {
+.jogo-mercadinho .botao-secao {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1271,7 +1271,7 @@
   color: var(--cor-suave);
 }
 
-.botao-fechar {
+.jogo-mercadinho .botao-fechar {
   flex: 0 0 auto;
   min-width: 44px;
   min-height: 44px;
@@ -1607,7 +1607,7 @@
   gap: 8px;
 }
 
-.teclado-numerico__tecla {
+.jogo-mercadinho .teclado-numerico__tecla {
   min-height: 52px;
   font-size: 1.25rem;
   font-weight: 700;
@@ -1665,7 +1665,7 @@
   gap: 8px;
 }
 
-.cofrinho__sonho {
+.jogo-mercadinho .cofrinho__sonho {
   display: grid;
   justify-items: center;
   align-content: start;
@@ -1711,7 +1711,7 @@
   background: var(--cor-certo);
 }
 
-.cofrinho__acao {
+.jogo-mercadinho .cofrinho__acao {
   margin-top: 12px;
   width: 100%;
 }
