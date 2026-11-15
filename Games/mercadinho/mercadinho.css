@@ -1748,8 +1748,40 @@
   border: 2px solid #f1d9b5;
 }
 
-.resultado-cofrinho .icone-texto {
+.resultado-resumo p {
+  margin: 0;
+}
+
+.resultado-cofrinho__porco {
+  position: relative;
+  display: inline-block;
   margin-right: 6px;
+}
+
+/* Moedinha caindo no cofrinho (Etapa 7); some com prefers-reduced-motion. */
+.moedinha-cai {
+  position: absolute;
+  left: 50%;
+  top: -26px;
+  margin-left: -11px;
+  pointer-events: none;
+  animation: merc-moedinha-cai 650ms ease-in 350ms both;
+}
+
+@keyframes merc-moedinha-cai {
+  0% { transform: translateY(-18px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(22px) scale(0.45); opacity: 0; }
+}
+
+/* Linhas do cupom entrando uma a uma */
+.cupom-linhas li {
+  animation: merc-cupom-entra 200ms ease-out;
+}
+
+@keyframes merc-cupom-entra {
+  from { transform: translateY(-6px); opacity: 0; }
+  to { transform: none; opacity: 1; }
 }
 
 /* Tutorial */
@@ -2057,5 +2089,10 @@
 @media (prefers-reduced-motion: reduce) {
   .barra-nivel1__preenchimento {
     transition: none;
+  }
+
+  .cupom-linhas li,
+  .moedinha-cai {
+    animation: none;
   }
 }

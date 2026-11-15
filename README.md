@@ -30,6 +30,7 @@ São **dois sites irmãos no mesmo endereço**, com abas para trocar de um para 
 | Genius das Cores | `Games/genius/index.html` | HTML/CSS/JS puro |
 | Sudoku de Emojis | `Games/sudoku/index.html` | HTML/CSS/JS puro |
 | Dinheirinho | `Games/dinheirinho/index.html` | HTML/CSS/JS puro |
+| Mercadinho — compras com orçamento, troco e cofrinho | `Games/mercadinho/index.html` | HTML/CSS/JS puro |
 | Quiz Sabe-Tudo | `Games/quiz/index.html` | HTML/CSS/JS puro |
 | Labirinto de Aventuras | `Games/labirinto/index.html` | HTML/CSS/JS puro |
 | Jogo da Velha | `Games/velha/` | React 19 + Vite 7 |
@@ -90,7 +91,7 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
 │   ├── rael.webmanifest             O mesmo para os Jogos do Rael, com start_url /rael/
 │   ├── figuras/                     SVGs do OpenMoji usados nas Primeiras Descobertas
 │   │   ├── corrida/                 Carro de corrida, bandeira e bomba das duas corridas (fora do catálogo)
-│   │   └── mercadinho/              68 ícones Fluent Emoji (SVG) e `LICENCA.txt` do Mercadinho
+│   │   └── mercadinho/              74 ícones Fluent Emoji (SVG) e `LICENCA.txt` do Mercadinho
 │   ├── audio/                       Palavras e sons iniciais locais do Rael
 │   └── icones/                      icone-*.png e rael-*.png (192 e 512) mais os .svg
 ├── shared/                          Biblioteca compartilhada (sem dependências externas)
@@ -141,7 +142,7 @@ Desde a T23 o repositório é **um único projeto Vite**, com uma entrada por p�
     ├── dinheirinho/                 index.html + jogo.js + tela.js + dados.js
     ├── quiz/                         index.html + jogo.js + tela.js + dados.js
     ├── labirinto/                    index.html + jogo.js + tela.js + CSS; motor compartilhado com P07
-    ├── mercadinho/                   dados.js + jogo.js + mapa.js + figuras.js + renderizador.js + tela.js + CSS
+    ├── mercadinho/                   dados.js + jogo.js + mapa.js + cofrinho.js + figuras.js + renderizador.js + tela.js + CSS
     ├── memoria/                      index.html + main.tsx + App.tsx + components/ + lib/
     └── velha/                        index.html + main.tsx + App.tsx + components/ + lib/
 ```
@@ -341,7 +342,7 @@ compila todas as páginas (uma entrada por página no `vite.config.ts`) em `dist
 gerado e escreve o `dist/sw.js` com a lista de precache e a versão.
 
 Os testes cobrem texto e embaralhamento, M ou N, Ortografia, Matemática, Tabuada, Caça-Palavras,
-Forme a Palavra, Horas, Genius, Sudoku, Dinheirinho, Quiz, Forca, Memória, progresso, as duas
+Forme a Palavra, Horas, Genius, Sudoku, Dinheirinho, Mercadinho (motor, mapa, figuras e cofrinho), Quiz, Forca, Memória, progresso, as duas
 inteligências do Jogo da Velha e, das Primeiras Descobertas, a fala em camadas, o motor de
 rodada, o álbum, a correspondência entre o catálogo e os arquivos de figura, as cenas de encaixe
 e a divisão silábica das cinquenta palavras, além de rimas, sons iniciais e exploração de letras.
@@ -487,7 +488,7 @@ A perspectiva adapta conceitos de projeção e desenho de segmentos de [javascri
 
 **Figuras do OpenMoji** em `public/figuras/corrida/` (`carro-de-corrida.svg` = 1F3CE, `bandeira-quadriculada.svg` = 1F3C1, `bomba-de-gasolina.svg` = 26FD), sob CC BY-SA 4.0, sem edição. A atribuição e o commit do OpenMoji usado estão em `public/figuras/corrida/LICENCA.txt`. Ficam numa subpasta para não entrarem no catálogo dos jogos de palavras.
 
-**Ícones do Mercadinho (Fluent Emoji)** em `public/figuras/mercadinho/icones/`: 67 arquivos SVG da variante "Color" do [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (Microsoft Corporation, licença MIT) sem alterações no desenho, mais `mamao.svg` autoral em estilo compatível. A cópia integral da licença MIT e o mapeamento de cada arquivo estão em `public/figuras/mercadinho/LICENCA.txt`. As embalagens dos produtos são geradas localmente em SVG em `Games/mercadinho/figuras.js`.
+**Ícones do Mercadinho (Fluent Emoji)** em `public/figuras/mercadinho/icones/`: 73 arquivos SVG da variante "Color" do [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (Microsoft Corporation, licença MIT) sem alterações no desenho, mais `mamao.svg` autoral em estilo compatível. A cópia integral da licença MIT e o mapeamento de cada arquivo estão em `public/figuras/mercadinho/LICENCA.txt`. As embalagens dos produtos são geradas localmente em SVG em `Games/mercadinho/figuras.js`.
 
 ---
 

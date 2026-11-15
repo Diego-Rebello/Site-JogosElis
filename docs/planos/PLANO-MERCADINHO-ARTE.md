@@ -73,6 +73,13 @@ sem a cor da seção, botões de baixo quebrando linha e três ícones errados. 
 **Etapa A6**, que é a próxima a executar. Ela traz uma decisão nova, a **D6**, com padrão já
 adotado.
 
+**Atualização de 2026-11-15.** A A6 foi feita (commit `e4180df`) e, na mesma branch, as Etapas
+5 a 7 do `PLANO-MERCADINHO.md` (tutorial, cartão na página inicial, cofrinho e sonhos,
+acabamento). O relatório e a matriz estão no fim daquele plano. Pelo `capturar.mjs` de
+2026-11-15, as medidas cumprem todos os critérios numéricos da A6. Falta a **sua aprovação**
+olhando `cel-390-3-loja`, `cel-360-7-gondola`, `pc-1280-3-loja` e `pc-1366-3-loja`, e o teste no
+aparelho da Elis (V10).
+
 ---
 
 ## 1. Diagnóstico
@@ -514,7 +521,8 @@ Em linhas de texto corrido (missão, lista, cupom, resultado), o ícone entra co
 
 ### 4.11 Peso e desempenho
 
-- `public/figuras/mercadinho/` com no máximo **1.100.000 bytes** (os 67 ícones somam 1.018 kB
+- `public/figuras/mercadinho/` com no máximo **1.150.000 bytes** (era 1.100.000 até a Etapa 6 do
+  `PLANO-MERCADINHO.md`, que trouxe os 6 ícones do cofrinho; os 67 ícones somam 1.018 kB
   sem compressão e cerca de 155 kB comprimidos, que é o que trafega; as três folhas da Kenney
   saem). Todo o `dist/` entra no precache do service worker: hoje ele tem 2,6 MB.
 - Nenhuma dependência nova, nenhuma requisição externa, nenhum otimizador de SVG.
@@ -587,7 +595,7 @@ A partir da etapa em que cada item é entregue, também:
 ```bash
 grep -rn "getContext\|fillText\|<canvas" Games/mercadinho/ --include=*.js --include=*.html   # vazio (A3 em diante)
 grep -c "\.emoji" Games/mercadinho/tela.js                                                  # 0, fora a reserva de figuras.js (A5)
-find public/figuras/mercadinho -type f -exec cat {} + | wc -c                               # até 1100000 (A3 em diante)
+find public/figuras/mercadinho -type f -exec cat {} + | wc -c                               # até 1150000 (era 1100000 até o cofrinho)
 ```
 
 Console do navegador sem erro e aba Network sem 404 em 360 × 640 e 1280 × 800.

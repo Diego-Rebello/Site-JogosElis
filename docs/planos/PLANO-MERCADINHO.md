@@ -1314,6 +1314,67 @@ antes da Etapa 5 ou de qualquer merge.
 
 ---
 
+## Relatório das Etapas 5, 6 e 7 (2026-11-15)
+
+Executadas na branch `j15-mercadinho-arte` (que já tinha as etapas A1 a A6 da arte), um commit
+por etapa. Sem merge e sem push em `main`.
+
+**Etapa 5.** Os níveis 1 e 3 já estavam no código e cumprem a tabela 2.4 (barra verde, amarela
+e vermelha em 80% e 100%, balões "!", subtotais, troco por alternativas, conta do total no
+nível 3). Entraram o tutorial (fase `tutorial`, 4 cartões, Voltar, Próximo e Pular, aparece no
+primeiro COMEÇAR e no botão "Como jogar"), o cartão 🛒 na página inicial (estrelas, "Jogou N
+vezes", mural), `mercadinho: '2'` em `shared/progresso.js`, o seletor em `configuracoes.html`
+e o teste do nível padrão em `tests/progresso.test.js`. O `capturar.mjs` passa pelo tutorial e
+fotografa `1b-tutorial`.
+
+**Etapa 6.** `cofrinho.js` com as funções da seção 6 mais `estadoInicial`, `sonhosDisponiveis`
+e `comPreferencia`; `depositar` também soma 1 em `compras`. Leitura defensiva campo a campo.
+Tela inicial com cofrinho, escolha e troca do sonho (trocar não mexe no dinheiro), barra,
+"Realizar o sonho" e estante; resultado com "Foi para o cofrinho!". Sonho realizado sai da
+escolha até todos estarem na estante.
+
+**Etapa 7.** Animações das linhas do cupom e da moedinha no cofrinho (o item voando para o
+carrinho já existia), todas desligadas com movimento reduzido. README e MELHORIAS atualizados.
+A matriz achou um problema real no V12 (o mesmo tema podia vir duas vezes seguidas, e no
+nível 1 até a mesma lista): `iniciarNovaMissao` agora sorteia de novo, até 10 vezes, se o tema
+repetir o da missão anterior.
+
+**Decisões tomadas sem consultar (reversíveis):**
+- O cofrinho fica **abaixo** do COMEÇAR na tela inicial, e não entre os níveis e os modos como
+  na seção 2.2, para o botão principal não descer da primeira tela do celular.
+- Ícones dos sonhos: Fluent Emoji "Color" (MIT), como o resto do jogo, e não emoji do sistema
+  (a A5 proíbe emoji do sistema no cartão do jogo). "Coleção de livros" reaproveita `livro.svg`.
+- O teto de `public/figuras/mercadinho/` subiu de 1.100.000 para **1.150.000 bytes** (hoje
+  1.142.728): os 6 ícones novos somam ~107 kB sem compressão e ~16 kB comprimidos. Se preferir
+  manter o teto antigo, a saída é trocar o porquinho pela moeda e o ursinho por outro ícone já
+  existente.
+
+**Matriz** (build de produção, `npm run preview`; compras feitas clicando ou teclando de verdade):
+
+| # | Resultado |
+|---|---|
+| V01 | 360 × 640, nível 2: 3 estrelas pela lista rápida (toque) e pelo mapa (só setas e Enter); sem rolagem horizontal |
+| V02 | 768 × 1024, nível 1: barra "No carrinho" visível, pinos "!" nas prateleiras, casa de 64 px |
+| V03 | 1280 × 800, teclado, nível 3: 7 itens pelo mapa, conta do total e do troco, 3 estrelas; foco com contorno de 3 px |
+| V04 | Dois estouros ("Ih, passou! … Passou R$ 67,40 …") e depois pagar: 2 estrelas, sem "Contas certas", sem derrota |
+| V05 | Caixa sem um item: "Ainda falta: 2× macarrão espaguete."; depois de completar, 3 estrelas (não contou erro) |
+| V06 | Lista rápida do início ao fim nos três níveis: mesmas regras e estrelas |
+| V07 | Movimento reduzido: peão sem transição, cupom inteiro na hora (sem "Pular"), sem confete e sem moedinha |
+| V08 | Som desligado: nenhum `AudioContext` criado durante uma compra inteira |
+| V09 | Offline depois de uma visita: página abre, 30 de 30 ícones e 76 de 76 imagens do mapa carregadas |
+| V10 | `localStorage` bloqueado: compra inteira sem erro; cofrinho vale só na sessão |
+| V11 | Figuras bloqueadas: 76 emojis de reserva no mapa, nenhuma imagem quebrada, sem erro |
+| V12 | 20 missões seguidas por nível: 0 temas e 0 listas repetidos em sequência, 8 a 10 temas diferentes, nenhum item fora do tema |
+
+Console sem erro e Network sem 404 em todos. Guardas da 5.4 verdes: 573 testes, typecheck e
+build. Portão da A6 (`capturar.mjs`): casa 48/52 px no celular e 41/42 px em 1280/1366, mapa
+344 × 409 e 374 × 613 no celular, `rolaPagina: false` nos quatro tamanhos, tábuas tortas 0.
+
+**Falta (Diego):** aprovar as capturas da A6, testar no aparelho da Elis (V10 da arte: "Color"
+ou "Flat"), fazer a validação da seção 7 e decidir o merge.
+
+---
+
 ## 7. Validação com a Elis
 
 Observar duas ou três compras no nível 2, sem ajudar na primeira:

@@ -26,6 +26,9 @@
 - **P00, P02 a P07** (área, Encaixe as Figuras, Palmas nas Palavras, Rimas com Figuras, Começa com o Mesmo Som, Letras para Explorar, Meu Primeiro Labirinto): a área **Jogos do Rael** está no ar com sete brincadeiras. Falta validar todas com a criança (marcado em cada uma).
 
 **Implementado em branch, aguardando validação com a criança:**
+- **J15** (Mercadinho: compras com orçamento, troco, corações, cofrinho e sonhos), branch
+  `j15-mercadinho-arte`, etapas 1 a 7 do jogo e A1 a A6 da arte feitas em 2026-11-15. Falta a
+  aprovação das capturas da A6 pelo Diego, o teste no aparelho da Elis e o merge.
 - **P16** (Chute a Gol: pênaltis com mira, goleiro em movimento e contagem de gols), branch
   `p16-chute-a-gol`. Detalhes na seção 5.
 - **P15** (conquistas no álbum do Rael), branch `p15-album-conquistas`. Detalhes no item 10 da tarefa.
@@ -39,7 +42,6 @@
 | J03 | Ditado Mágico | Alta | M | Sonnet | `shared/fala.js` (pronto, da P00) |
 | J12 | Quebra-Cabeça Deslizante | Baixa | P | Sonnet | T09 (pronta) |
 | J14 | Brincando de Rimar | Média | M | Opus | T09 (pronta); motor parcial já existe (P04) |
-| J15 | Mercadinho (compras com orçamento e arte em SVG Fluent Emoji) | Alta | G | Em execução | Planos em `docs/planos/PLANO-MERCADINHO.md` e `docs/planos/PLANO-MERCADINHO-ARTE.md` |
 | P01 | Quem Faz Esse Som? | Alta | M | Sonnet | P00 (pronta) |
 | P08 | O Que Vem Depois? | Média | P | Sonnet | P00 (pronta) |
 | P09 | Meu Nome | Alta | M | Sonnet | P00 (pronta) |
@@ -276,9 +278,12 @@ escuta e pelas figuras; o texto entra como apoio nos modos para quem já lê.
 
 ### J15 — Mercadinho
 
-**Status:** especificado em 2026-11-14, nada implementado · **Prioridade:** Alta · **Esforço:** G
-(8 etapas) · **Modelo:** Sonnet (Etapa 4 com um modelo que enxergue imagens) · **Objetivo
-pedagógico:** dinheiro, contas com centavos, estimativa e escolha com orçamento limitado
+**Status:** implementado em 2026-11-15 na branch `j15-mercadinho-arte` (etapas 1 a 7 do
+`PLANO-MERCADINHO.md` e A1 a A6 do `PLANO-MERCADINHO-ARTE.md`), sem merge na `main`. A versão
+antiga, sem cartão na página inicial, está no ar desde o commit `0a14dbf`. Falta: aprovação das
+capturas da A6, teste no aparelho da Elis (decidir ícones "Color" ou "Flat") e a validação da
+seção 7 do plano · **Prioridade:** Alta · **Esforço:** G · **Objetivo pedagógico:** dinheiro,
+contas com centavos, estimativa e escolha com orçamento limitado
 
 Jogo de supermercado em `Games/mercadinho/` (id `mercadinho`): lista de compras sorteada por
 tema, orçamento próximo do valor da lista, loja navegável em HTML/CSS com ícones Fluent Emoji
@@ -289,8 +294,16 @@ igual.
 
 **Os planos completos, com números, tabelas de produtos, regras visuais, etapas e critérios de
 aceite, estão em `docs/planos/PLANO-MERCADINHO.md` e `docs/planos/PLANO-MERCADINHO-ARTE.md`.**
-O código do jogo fica em `Games/mercadinho/` (`dados.js`, `jogo.js`, `mapa.js`, `figuras.js`,
-`renderizador.js`, `tela.js`, `mercadinho.css`, `index.html`).
+O código do jogo fica em `Games/mercadinho/` (`dados.js`, `jogo.js`, `mapa.js`, `cofrinho.js`,
+`figuras.js`, `renderizador.js`, `tela.js`, `mercadinho.css`, `index.html`).
+
+**Resultado (2026-11-15).** Três níveis conforme a tabela 2.4 do plano; tutorial de 4 cartões na
+primeira vez e no botão "Como jogar"; cartão 🛒 na página inicial, nível padrão `'2'` e seletor
+em Configurações ("Zerar progresso" apaga também o cofrinho); cofrinho com 6 sonhos e estante
+(`jogos-elis:mercadinho`, versão 1); missão seguida nunca repete o tema; animações do item indo
+ao carrinho, das linhas do cupom e da moedinha no cofrinho, desligadas com movimento reduzido.
+Testes em `tests/mercadinho.test.js` (inclui o cofrinho), `tests/mercadinho-mapa.test.js` e
+`tests/mercadinho-figuras.test.js`. Matriz V01 a V12 verificada no build de produção.
 
 ---
 

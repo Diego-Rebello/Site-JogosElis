@@ -135,6 +135,7 @@ let modoListaPreferido = estadoCofrinho.modoLista;
 let tutorialVisto = estadoCofrinho.tutorialVisto;
 let indiceTutorial = 0;
 let destinoAposTutorial = 'missao';
+let ultimoTemaId = null;
 // Sem a janela do mapa (ex.: ambiente sem DOM), o renderizador vem null e o jogo cai na lista rápida.
 const renderizador = criarRenderizador($('mapa-janela'));
 const consultaLayoutLargo = typeof window.matchMedia === 'function'
@@ -822,8 +823,14 @@ function concluirTutorial() {
 }
 
 function iniciarNovaMissao() {
-  const semente = (Math.floor(Math.random() * 0x7fffffff) + 1) >>> 0;
-  const missao = gerarMissao({ nivel: nivelSelecionado, semente });
+  // Missão seguida nunca repete o tema da anterior (e, com isso, nunca repete a lista).
+  let missao = null;
+  for (let tentativa = 0; tentativa < 10; tentativa++) {
+    const semente = (Math.floor(Math.random() * 0x7fffffff) + 1) >>> 0;
+    missao = gerarMissao({ nivel: nivelSelecionado, semente });
+    if (missao.temaId !== ultimoTemaId) break;
+  }
+  ultimoTemaId = missao.temaId;
   compra = criarCompra(missao);
   secaoAberta = null;
   partidaRegistrada = false;
@@ -2277,8 +2284,20 @@ function renderizarResultado(res) {
   const pTroco = document.createElement('p');
   pTroco.className = 'resultado-cofrinho';
   pTroco.id = 'resultado-cofrinho';
+  const porco = document.createElement('span');
+  porco.className = 'resultado-cofrinho__porco';
+  porco.append(criarIconeInline('porquinho'));
+  if (res.troco > 0 && !querMenosMovimento()) {
+    const moeda = criarIconeUi('moeda', 22);
+    moeda.classList.add('moedinha-cai');
+    moeda.addEventListener('animationend', () => {
+      moeda.remove();
+      animar(porco, 'pular');
+    }, { once: true });
+    porco.append(moeda);
+  }
   pTroco.append(
-    criarIconeInline('porquinho'),
+    porco,
     document.createTextNode(res.troco > 0
       ? `Sobrou ${formatarDinheiro(res.troco)}. Foi para o cofrinho! ${textoDoCofrinhoNoResultado()}`
       : `Não sobrou troco desta vez. ${textoDoCofrinhoNoResultado()}`),
