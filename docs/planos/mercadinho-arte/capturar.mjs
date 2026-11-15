@@ -9,7 +9,7 @@
 //   pasta-de-saida  padrão: ./capturas-mercadinho (crie fora do repositório ou não faça commit)
 //
 // Sai um PNG por tela e por tamanho:
-//   1-inicio, 2-missao, 3-loja, 4-mapa, 5-produto (prateleira do hortifrúti, pelo mapa),
+//   1-inicio, 1b-tutorial, 2-missao, 3-loja, 4-mapa, 5-produto (prateleira do hortifrúti, pelo mapa),
 //   6-secoes, 7-gondola (Laticínios), 8-produto-embalagem (Leite), 9-guloseimas.
 // Nos tamanhos de celular os toques são toques de verdade (eventos de toque), como no aparelho;
 // no computador são cliques de mouse. Assim o contorno de foco aparece só quando apareceria
@@ -157,6 +157,12 @@ async function capturar(tamanho) {
     await foto('1-inicio');
     await tocar('#btn-comecar');
     await esperar(600);
+    // Perfil novo: o tutorial aparece no primeiro COMEÇAR.
+    if (await js(`!document.getElementById('fase-tutorial')?.hidden`)) {
+      await foto('1b-tutorial');
+      await tocar('#btn-tutorial-pular');
+      await esperar(600);
+    }
     await foto('2-missao');
     await tocar('#btn-ir-compras');
     await esperar(1800);

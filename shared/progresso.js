@@ -31,6 +31,7 @@ const CONFIGURACOES_PADRAO = Object.freeze({
     genius: 'calmo',
     sudoku: '6',
     dinheirinho: '2',
+    mercadinho: '2',
     quiz: 'misturado',
     labirinto: 'aventureiro',
     memoria: '16',

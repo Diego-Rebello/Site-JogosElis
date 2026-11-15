@@ -90,6 +90,10 @@
             <select id="dinheirinho" class="campo"><option value="1">Revisão — valores inteiros</option><option value="2">Intermediário — valores com centavos</option><option value="3">Desafio — calcular troco</option></select>
           </div>
           <div class="grupo">
+            <label for="mercadinho">Mercadinho</label>
+            <select id="mercadinho" class="campo"><option value="1">Revisão — 3 itens e total à mostra</option><option value="2">Intermediário — 5 itens e 2 espiadas</option><option value="3">Desafio — 7 itens e preços de etiqueta</option></select>
+          </div>
+          <div class="grupo">
             <label for="quiz">Quiz Sabe-Tudo</label>
             <select id="quiz" class="campo"><option value="misturado">Misturado</option><option value="ciencias">Ciências</option><option value="animais">Animais</option><option value="brasil">Brasil</option><option value="corpo">Corpo humano</option><option value="planetas">Planetas e espaço</option></select>
           </div>
@@ -125,7 +129,7 @@
     import { obterConfiguracoes, salvarConfiguracoes, zerarProgresso } from './shared/progresso.js';
     import { definirMudo, estaMudo, tocar } from './shared/sons.js';
 
-    const ids = ['forca', 'matematica', 'm-ou-n', 'ortografia', 'tabuada', 'caca-palavras', 'forme-palavra', 'horas', 'genius', 'sudoku', 'dinheirinho', 'quiz', 'labirinto', 'memoria', 'velha'];
+    const ids = ['forca', 'matematica', 'm-ou-n', 'ortografia', 'tabuada', 'caca-palavras', 'forme-palavra', 'horas', 'genius', 'sudoku', 'dinheirinho', 'mercadinho', 'quiz', 'labirinto', 'memoria', 'velha'];
     const formulario = document.getElementById('formulario');
     const mensagem = document.getElementById('mensagem');
     const configuracoes = obterConfiguracoes();
@@ -149,6 +153,11 @@
       tocar('clique');
       if (!window.confirm('Quer mesmo apagar todas as conquistas e partidas da Elis? O álbum dos Jogos do Rael não é afetado.')) return;
       const apagou = zerarProgresso();
+      try {
+        localStorage.removeItem('jogos-elis:mercadinho');
+      } catch {
+        /* armazenamento bloqueado: zerarProgresso já informa a falha */
+      }
       mensagem.textContent = apagou
         ? 'Progresso zerado. As configurações foram mantidas.'
         : 'Não foi possível apagar o progresso neste navegador.';

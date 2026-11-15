@@ -48,9 +48,26 @@
 
       <div class="acoes">
         <button id="btn-comecar" type="button" class="botao botao--sucesso">COMEÇAR</button>
+        <button id="btn-como-jogar" type="button" class="botao botao--neutro">Como jogar</button>
       </div>
 
       <p class="rodape-aviso">As marcas aparecem só para brincar de fazer compras. Os preços são inventados com base em 2026.</p>
+    </section>
+
+    <!-- TUTORIAL: 4 cartões na primeira vez (e pelo botão "Como jogar") -->
+    <section id="fase-tutorial" class="cartao tela tela--tutorial" aria-labelledby="tutorial-titulo" hidden>
+      <p id="tutorial-passo" class="tutorial__passo"></p>
+      <div id="tutorial-icones" class="tutorial__icones" aria-hidden="true"></div>
+      <h2 id="tutorial-titulo" class="titulo-missao" tabindex="-1"></h2>
+      <p id="tutorial-texto" class="tutorial__texto"></p>
+      <div id="tutorial-pontos" class="tutorial__pontos" aria-hidden="true"></div>
+      <div class="acoes">
+        <button id="btn-tutorial-voltar" type="button" class="botao botao--neutro">← Voltar</button>
+        <button id="btn-tutorial-proximo" type="button" class="botao botao--sucesso">Próximo →</button>
+      </div>
+      <div class="acoes acoes--tutorial-pular">
+        <button id="btn-tutorial-pular" type="button" class="botao botao--neutro">Pular</button>
+      </div>
     </section>
 
     <!-- FASE 2: MISSÃO -->

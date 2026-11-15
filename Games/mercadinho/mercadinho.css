@@ -1629,6 +1629,50 @@
   overflow-x: auto;
 }
 
+/* Tutorial */
+.tutorial__passo {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cor-suave);
+}
+
+.tutorial__icones {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 4px 0 12px;
+}
+
+.tutorial__texto {
+  max-width: 34em;
+  margin: 0 auto;
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+
+.tutorial__pontos {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.tutorial__ponto {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.tutorial__ponto--atual {
+  background: var(--cor-principal-profunda);
+}
+
+.acoes--tutorial-pular {
+  margin-top: 8px;
+}
+
 /* Resultado */
 .resultado-estrelas {
   font-size: 2.2rem;

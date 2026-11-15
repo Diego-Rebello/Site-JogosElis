@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { calcularEstrelas, obterProgresso, registrarPartida, zerarProgresso } from '../shared/progresso.js';
+import {
+  calcularEstrelas,
+  obterConfiguracoes,
+  obterProgresso,
+  registrarPartida,
+  zerarProgresso,
+} from '../shared/progresso.js';
 
 function criarArmazenamento() {
   const dados = new Map();
@@ -32,5 +38,9 @@ describe('Progresso', () => {
     registrarPartida('memoria', { acertos: 1 }, armazenamento);
     expect(zerarProgresso(armazenamento)).toBe(true);
     expect(obterProgresso(armazenamento)).toEqual({});
+  });
+
+  it('o Mercadinho abre no nível intermediário por padrão', () => {
+    expect(obterConfiguracoes().niveis.mercadinho).toBe('2');
   });
 });

@@ -71,6 +71,7 @@ const ROTULOS_POSICAO = {
 
 const FASES = {
   inicio: $('fase-inicio'),
+  tutorial: $('fase-tutorial'),
   missao: $('fase-missao'),
   loja: $('fase-loja'),
   caixa: $('fase-caixa'),
@@ -113,6 +114,9 @@ let partidaRegistrada = false;
 let estadoCaixa = resetarEstadoCaixa();
 
 let modoListaPreferido = lerPreferenciaModoLista();
+let tutorialVisto = lerEstadoSalvo().tutorialVisto === true;
+let indiceTutorial = 0;
+let destinoAposTutorial = 'missao';
 // Sem a janela do mapa (ex.: ambiente sem DOM), o renderizador vem null e o jogo cai na lista rápida.
 const renderizador = criarRenderizador($('mapa-janela'));
 const consultaLayoutLargo = typeof window.matchMedia === 'function'
@@ -139,35 +143,48 @@ const nav = {
   ultimoAnuncioFrente: '',
 };
 
-function lerPreferenciaModoLista() {
+function estadoSalvoPadrao() {
+  return {
+    versao: 1,
+    cofrinho: 0,
+    sonhoAtual: null,
+    sonhosRealizados: [],
+    compras: 0,
+    tutorialVisto: false,
+    modoLista: false,
+  };
+}
+
+function lerEstadoSalvo() {
   try {
     const bruto = localStorage.getItem(CHAVE_ESTADO_MERCADINHO);
-    if (!bruto) return false;
-    const dados = JSON.parse(bruto);
-    return dados?.versao === 1 && dados.modoLista === true;
+    const dados = bruto ? JSON.parse(bruto) : null;
+    if (dados && typeof dados === 'object' && dados.versao === 1) {
+      return { ...estadoSalvoPadrao(), ...dados };
+    }
   } catch {
-    return false;
+    /* JSON inválido ou armazenamento bloqueado: começa do zero */
+  }
+  return estadoSalvoPadrao();
+}
+
+function salvarPreferencia(campo, valor) {
+  try {
+    localStorage.setItem(
+      CHAVE_ESTADO_MERCADINHO,
+      JSON.stringify({ ...lerEstadoSalvo(), [campo]: valor }),
+    );
+  } catch {
+    /* armazenamento indisponível: a preferência fica só nesta sessão */
   }
 }
 
+function lerPreferenciaModoLista() {
+  return lerEstadoSalvo().modoLista === true;
+}
+
 function salvarPreferenciaModoLista(valor) {
-  try {
-    const bruto = localStorage.getItem(CHAVE_ESTADO_MERCADINHO);
-    const parsed = bruto ? JSON.parse(bruto) : null;
-    const base = parsed && typeof parsed === 'object' && parsed.versao === 1
-      ? parsed
-      : {
-          versao: 1,
-          cofrinho: 0,
-          sonhoAtual: null,
-          sonhosRealizados: [],
-          compras: 0,
-          tutorialVisto: false,
-        };
-    localStorage.setItem(CHAVE_ESTADO_MERCADINHO, JSON.stringify({ ...base, modoLista: Boolean(valor) }));
-  } catch {
-    /* armazenamento indisponível: preferência fica só nesta sessão */
-  }
+  salvarPreferencia('modoLista', Boolean(valor));
 }
 
 function usarListaRapida() {
@@ -733,6 +750,84 @@ function selecionarNivel(nivel) {
     const ativo = Number(botao.dataset.nivel) === nivelSelecionado;
     botao.setAttribute('aria-pressed', String(ativo));
   });
+}
+
+const CARTOES_TUTORIAL = [
+  {
+    icones: ['lista', 'saco-de-dinheiro'],
+    titulo: 'A lista e o dinheiro',
+    texto: () => 'Cada compra tem uma lista e um dinheiro certinho. Compre tudo o que está na lista sem passar do dinheiro que você tem.',
+  },
+  {
+    icones: ['menina', 'mercado'],
+    titulo: 'Andar e abrir prateleiras',
+    texto: () => (usarListaRapida()
+      ? 'Toque numa seção do mercado e depois num produto para ver as marcas e os preços.'
+      : 'Toque no chão para andar e numa prateleira para ver as marcas e os preços. No computador, as setas também andam.'),
+  },
+  {
+    icones: ['coracao', 'pirulito'],
+    titulo: 'Corações e guloseimas',
+    texto: () => 'Cada marca vale corações. Junte os corações da meta e a família fica feliz. Perto do caixa tem guloseimas, mas dá para levar só um pouquinho.',
+  },
+  {
+    icones: ['cupom', 'moeda'],
+    titulo: 'O caixa',
+    texto: () => 'Pegou tudo? Vá até um caixa. Lá aparece o cupom da compra e você calcula o troco.',
+  },
+];
+
+function abrirTutorial(destino) {
+  destinoAposTutorial = destino;
+  indiceTutorial = 0;
+  renderizarTutorial();
+  mostrarFase('tutorial');
+  $('tutorial-titulo').focus();
+}
+
+function renderizarTutorial() {
+  const cartao = CARTOES_TUTORIAL[indiceTutorial];
+  const total = CARTOES_TUTORIAL.length;
+  $('tutorial-passo').textContent = `Como jogar · ${indiceTutorial + 1} de ${total}`;
+  $('tutorial-icones').replaceChildren(...cartao.icones.map(nome => criarIconeUi(nome, 64)));
+  $('tutorial-titulo').textContent = cartao.titulo;
+  $('tutorial-texto').textContent = cartao.texto();
+  $('tutorial-pontos').replaceChildren(...CARTOES_TUTORIAL.map((_, i) => {
+    const ponto = document.createElement('span');
+    ponto.className = `tutorial__ponto${i === indiceTutorial ? ' tutorial__ponto--atual' : ''}`;
+    return ponto;
+  }));
+  $('btn-tutorial-voltar').hidden = indiceTutorial === 0;
+  const ultimo = indiceTutorial === total - 1;
+  $('btn-tutorial-proximo').textContent = ultimo
+    ? (destinoAposTutorial === 'missao' ? 'Ver a lista de hoje' : 'Entendi!')
+    : 'Próximo →';
+  $('btn-tutorial-pular').hidden = ultimo;
+}
+
+function avancarTutorial(delta) {
+  const novo = indiceTutorial + delta;
+  if (novo >= CARTOES_TUTORIAL.length) {
+    concluirTutorial();
+    return;
+  }
+  indiceTutorial = Math.max(0, novo);
+  renderizarTutorial();
+  $('tutorial-titulo').focus();
+  anunciar(`${CARTOES_TUTORIAL[indiceTutorial].titulo}. ${$('tutorial-texto').textContent}`);
+}
+
+function concluirTutorial() {
+  if (!tutorialVisto) {
+    tutorialVisto = true;
+    salvarPreferencia('tutorialVisto', true);
+  }
+  if (destinoAposTutorial === 'missao') {
+    iniciarNovaMissao();
+  } else {
+    mostrarFase('inicio');
+    $('btn-como-jogar').focus();
+  }
 }
 
 function iniciarNovaMissao() {
@@ -2224,7 +2319,31 @@ $('btn-modo-lista').addEventListener('click', () => {
 
 $('btn-comecar').addEventListener('click', () => {
   tocar('clique');
-  iniciarNovaMissao();
+  if (tutorialVisto) {
+    iniciarNovaMissao();
+  } else {
+    abrirTutorial('missao');
+  }
+});
+
+$('btn-como-jogar').addEventListener('click', () => {
+  tocar('clique');
+  abrirTutorial('inicio');
+});
+
+$('btn-tutorial-proximo').addEventListener('click', () => {
+  tocar('clique');
+  avancarTutorial(1);
+});
+
+$('btn-tutorial-voltar').addEventListener('click', () => {
+  tocar('clique');
+  avancarTutorial(-1);
+});
+
+$('btn-tutorial-pular').addEventListener('click', () => {
+  tocar('clique');
+  concluirTutorial();
 });
 
 $('btn-ir-compras').addEventListener('click', () => {
