@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
+import { baseCssPrimeiro } from './scripts/base-css-primeiro.mjs';
 
 /**
  * Projeto Vite único, com uma entrada por página (T23). Antes eram dois
@@ -54,7 +55,9 @@ export default defineConfig({
   // Caminhos relativos: cada página referencia os assets subindo o quanto
   // for preciso, então o site funciona em qualquer subpasta.
   base: './',
-  plugins: [tailwindcss()],
+  // baseCssPrimeiro: no build o base.css compartilhado vinha depois do CSS da
+  // página e ganhava os empates de especificidade (ver o arquivo do plugin).
+  plugins: [tailwindcss(), baseCssPrimeiro()],
   // O caminho local deste projeto contém dois-pontos ("Programas : Jogos").
   // O Vite 7 confunde esse caractere com um caminho externo ao aplicar a
   // allow list padrão. O servidor continua acessível só no host informado

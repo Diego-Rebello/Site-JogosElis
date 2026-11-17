@@ -128,32 +128,62 @@ export function precoNoNivel(preco, nivel) {
   return Math.max(passo, Math.round(preco / passo) * passo);
 }
 
-/** Opções que aparecem na prateleira em cada nível, já com o preço do nível, da mais barata para a mais cara. */
-export function opcoesNoNivel(produto, nivel) {
-  // Nos níveis 1 e 2 os preços são em reais inteiros. Se o arredondamento juntar duas opções
-  // no mesmo preço (ex.: R$ 4,99 e R$ 5,49 → R$ 5,00), a mais cara sobe um real.
-  const passo = NIVEIS[nivel].arredondar;
-  let opcoes = [];
-  for (const o of produto.opcoes) {
-    const anterior = opcoes.length ? opcoes[opcoes.length - 1].preco : 0;
-    opcoes.push({ ...o, preco: Math.max(precoNoNivel(o.preco, nivel), anterior + passo) });
-  }
-  if (nivel === 1) {
-    const barata = opcoes[0];
-    const maximo = Math.max(...opcoes.map(o => o.coracoes));
-    const querida = opcoes.find(o => o.coracoes === maximo);
-    opcoes = barata === querida ? [barata] : [barata, querida];
-  }
-  return opcoes;
+/** Quanto o preço de um nível pode se afastar da etiqueta (conferido em `conferirDados`). */
+export const DESVIO_MAXIMO_DA_ETIQUETA = 100;
+
+/**
+ * Preços estritamente crescentes, múltiplos de `passo`, para etiquetas já em ordem crescente.
+ * Cada preço sai do arredondamento da sua etiqueta em até dois passos para cima ou para baixo;
+ * vence a combinação com o menor afastamento máximo e, no empate, a menor soma de afastamentos.
+ * Sem empate no arredondamento, a resposta é o próprio arredondamento.
+ * Ex.: R$ 3,49 · 4,99 · 5,49 → R$ 3 · 5 · 6 (e não R$ 3 · 4 · 5, que afasta R$ 0,99).
+ */
+function precosCrescentes(etiquetas, passo) {
+  let melhor = null;
+  const escolhidos = [];
+  const procurar = (i, anterior, maior, soma) => {
+    if (melhor && (maior > melhor.maior || (maior === melhor.maior && soma >= melhor.soma))) return;
+    if (i === etiquetas.length) {
+      melhor = { precos: [...escolhidos], maior, soma };
+      return;
+    }
+    const arredondado = Math.round(etiquetas[i] / passo) * passo;
+    for (const ajuste of [0, -1, 1, -2, 2]) {
+      const preco = arredondado + ajuste * passo;
+      if (preco < passo || preco <= anterior) continue;
+      const desvio = Math.abs(preco - etiquetas[i]);
+      escolhidos.push(preco);
+      procurar(i + 1, preco, Math.max(maior, desvio), soma + desvio);
+      escolhidos.pop();
+    }
+  };
+  procurar(0, 0, 0, 0);
+  return melhor ? melhor.precos : etiquetas.map(e => Math.max(passo, Math.round(e / passo) * passo));
 }
 
-/** Um produto só entra na lista se a escolha for de verdade: preços diferentes e crescentes; no nível 1, também corações diferentes e R$ 1,00 de distância. */
+/** Opções que aparecem na prateleira em cada nível, já com o preço do nível, da mais barata para a mais cara. */
+export function opcoesNoNivel(produto, nivel) {
+  let visiveis = produto.opcoes;
+  if (nivel === 1) {
+    // só a mais barata e a mais querida; o preço é decidido depois, entre as duas que aparecem
+    const barata = visiveis[0];
+    const maximo = Math.max(...visiveis.map(o => o.coracoes));
+    const querida = visiveis.find(o => o.coracoes === maximo);
+    visiveis = barata === querida ? [barata] : [barata, querida];
+  }
+  // Nos níveis 1 e 2 os preços são reais inteiros, e duas opções não podem empatar no arredondamento.
+  const passo = NIVEIS[nivel].arredondar;
+  const precos = passo === 1 ? visiveis.map(o => o.preco) : precosCrescentes(visiveis.map(o => o.preco), passo);
+  return visiveis.map((o, i) => ({ ...o, preco: precos[i] }));
+}
+
+/**
+ * Um produto só entra na lista se a escolha for de verdade: pelo menos duas opções na prateleira.
+ * No nível 1 isso quer dizer que a mais querida não é a mais barata (corações diferentes).
+ * Preços crescentes e distintos já vêm garantidos por `opcoesNoNivel`.
+ */
 export function elegivel(produto, nivel) {
-  const o = opcoesNoNivel(produto, nivel);
-  if (o.length < 2) return false;
-  for (let i = 1; i < o.length; i++) if (o[i].preco <= o[i - 1].preco) return false;
-  if (nivel === 1) return o[1].preco - o[0].preco >= 100 && o[1].coracoes > o[0].coracoes;
-  return true;
+  return opcoesNoNivel(produto, nivel).length >= 2;
 }
 
 /**
@@ -532,17 +562,28 @@ export function resultadoDaCompra(compra) {
   };
 }
 
-export function digitar(valor, tecla) {
-  const atual = Math.max(0, Math.trunc(Number(valor) || 0));
-  if (tecla === 'apagar') return Math.floor(atual / 10);
-  const digito = Number(tecla);
-  if (!Number.isInteger(digito) || digito < 0 || digito > 9) return atual;
-  return Math.min(99999, atual * 10 + digito);
+/** Nos níveis 1 e 2 tudo é em reais inteiros; no nível 3 aparecem os centavos. */
+export function emReaisInteiros(nivel) {
+  return NIVEIS[nivel]?.arredondar === 100;
 }
 
+/**
+ * Teclado do caixa. O valor guardado é sempre em centavos; `unidade` diz quanto vale cada
+ * dígito digitado: 1 (centavos, nível 3) ou 100 (reais inteiros, níveis 1 e 2, em que
+ * digitar "3" quer dizer R$ 3).
+ */
+export function digitar(valor, tecla, unidade = 1) {
+  const atual = Math.floor(Math.max(0, Math.trunc(Number(valor) || 0)) / unidade);
+  if (tecla === 'apagar') return Math.floor(atual / 10) * unidade;
+  const digito = Number(tecla);
+  if (!Number.isInteger(digito) || digito < 0 || digito > 9) return atual * unidade;
+  return Math.min(Math.floor(99999 / unidade), atual * 10 + digito) * unidade;
+}
+
+/** Três alternativas de troco, todas em reais inteiros quando o troco certo também é. */
 export function alternativasDeTroco(troco, rnd = criarGerador(1)) {
   const certo = Math.max(0, Math.trunc(Number(troco) || 0));
-  const terceira = certo >= 100 ? certo - 100 : certo + 50;
+  const terceira = certo >= 100 ? certo - 100 : certo + 200;
   return embaralhar([certo, certo + 100, terceira], rnd);
 }
 
@@ -551,10 +592,22 @@ export function formatarNumeroVirgula(centavos) {
   return `${Math.floor(valor / 100)},${String(valor % 100).padStart(2, '0')}`;
 }
 
+/** Número de uma conta: "5" nos níveis de reais inteiros, "5,00" no nível 3 (ou se houver centavos). */
+export function formatarNumeroDoNivel(centavos, nivel) {
+  const valor = Math.max(0, Math.trunc(Number(centavos) || 0));
+  return emReaisInteiros(nivel) && valor % 100 === 0 ? String(valor / 100) : formatarNumeroVirgula(valor);
+}
+
+/** Dinheiro como a criança vê no nível: "R$ 5" nos níveis 1 e 2, "R$ 5,00" no nível 3. */
+export function formatarDinheiroDoNivel(centavos, nivel) {
+  return `R$ ${formatarNumeroDoNivel(centavos, nivel)}`;
+}
+
 /** Monta as linhas de uma conta armada com N parcelas (o sinal vai na última). */
-function armarConta(parcelas, resultado, sinal) {
-  const textos = parcelas.map(formatarNumeroVirgula);
-  const strR = formatarNumeroVirgula(resultado);
+function armarConta(parcelas, resultado, sinal, nivel) {
+  const formatar = valor => formatarNumeroDoNivel(valor, nivel);
+  const textos = parcelas.map(formatar);
+  const strR = formatar(resultado);
   const largura = Math.max(...textos.map(t => t.length + 2), strR.length);
   const ultima = textos.length - 1;
   return [
@@ -566,20 +619,21 @@ function armarConta(parcelas, resultado, sinal) {
   ];
 }
 
-export function contaArmada(a, b, operacao = '-') {
-  return operacao === '+' ? somaArmada([a, b]) : armarConta([a, b], a - b, '−');
+export function contaArmada(a, b, operacao = '-', nivel = 3) {
+  return operacao === '+' ? somaArmada([a, b], nivel) : armarConta([a, b], a - b, '−', nivel);
 }
 
 /** Conta armada de adição com qualquer número de parcelas. */
-export function somaArmada(valores) {
-  return armarConta(valores, somarCentavos(valores), '+');
+export function somaArmada(valores, nivel = 3) {
+  return armarConta(valores, somarCentavos(valores), '+', nivel);
 }
 
-export function conferirDados() {
+/** `listaDeProdutos` só muda nos testes, para conferir o que acontece com dados problemáticos. */
+export function conferirDados(listaDeProdutos = produtos) {
   const problemas = [];
   const idsProdutos = new Set();
 
-  for (const p of produtos) {
+  for (const p of listaDeProdutos) {
     if (!KEBAB_RE.test(p.id)) problemas.push(`Produto com id inválido: ${p.id}`);
     if (idsProdutos.has(p.id)) problemas.push(`Produto duplicado: ${p.id}`);
     idsProdutos.add(p.id);
@@ -603,6 +657,16 @@ export function conferirDados() {
         const ant = p.opcoes[i - 1];
         if (o.preco <= ant.preco) problemas.push(`Preços não crescentes em ${p.id}`);
         if (o.coracoes < ant.coracoes) problemas.push(`Corações decrescentes em ${p.id}`);
+      }
+    }
+    // Nos níveis de reais inteiros, opções de preço muito parecido precisam se afastar da etiqueta
+    // para não empatar. Mais de R$ 1,00 de distância é sinal de que a etiqueta em dados.js precisa mudar.
+    for (const nivel of [1, 2]) {
+      const etiqueta = Object.fromEntries(p.opcoes.map(o => [o.id, o.preco]));
+      for (const o of opcoesNoNivel(p, nivel)) {
+        if (Math.abs(o.preco - etiqueta[o.id]) > DESVIO_MAXIMO_DA_ETIQUETA) {
+          problemas.push(`Preço do nível ${nivel} longe da etiqueta em ${o.id}: ${o.preco} para ${etiqueta[o.id]}`);
+        }
       }
     }
   }

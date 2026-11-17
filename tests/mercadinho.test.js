@@ -14,6 +14,7 @@ import {
   zerarCofrinho,
 } from '../Games/mercadinho/cofrinho.js';
 import {
+  DESVIO_MAXIMO_DA_ETIQUETA,
   MISSAO_RESERVA,
   NIVEIS,
   aMais,
@@ -31,6 +32,7 @@ import {
   espiar,
   faltando,
   formatarDinheiro,
+  formatarDinheiroDoNivel,
   gerarMissao,
   levarDesejo,
   mudarQuantidade,
@@ -181,6 +183,49 @@ describe('Mercadinho — dados e preços', () => {
     }
   });
 
+  it('usa reais inteiros nos níveis 1 e 2, a até R$ 1,00 da etiqueta', () => {
+    for (const nivel of [1, 2]) {
+      for (const p of produtos) {
+        for (const o of opcoesNoNivel(p, nivel)) {
+          expect(o.preco % 100).toBe(0);
+          const etiqueta = p.opcoes.find(x => x.id === o.id).preco;
+          expect(Math.abs(o.preco - etiqueta)).toBeLessThanOrEqual(DESVIO_MAXIMO_DA_ETIQUETA);
+        }
+      }
+      for (const d of desejos) expect(precoNoNivel(d.preco, nivel) % 100).toBe(0);
+    }
+  });
+
+  it('desempata no arredondamento afastando as opções o mínimo possível da etiqueta', () => {
+    const precos = (id, nivel) => opcoesNoNivel(porId[id], nivel).map(o => o.preco);
+    // 3,49 · 4,99 · 5,49: só a última sobe (e não a do meio desce para R$ 4)
+    expect(precos('alface', 2)).toEqual([300, 500, 600]);
+    // 2,79 · 3,29 · 3,99: a primeira desce, porque subir as duas de cima afastaria R$ 1,01
+    expect(precos('iogurte', 2)).toEqual([200, 300, 400]);
+    expect(precos('detergente', 2)).toEqual([200, 300, 400]);
+    // no nível 1 o preço é decidido entre as duas opções que aparecem: a do meio, escondida,
+    // não empurra a mais querida para cima
+    expect(precos('alface', 1)).toEqual([300, 500]);
+    expect(precos('bisnaguinha', 1)).toEqual([700, 800]);
+    expect(precos('iogurte', 1)).toEqual([300, 400]);
+    // sem empate, é só o arredondamento
+    expect(precos('banana', 2)).toEqual([600, 800, 1100]);
+  });
+
+  it('avisa em conferirDados quando o preço do nível fica longe demais da etiqueta', () => {
+    const colados = {
+      id: 'detergente', nome: 'Detergente', secao: 'limpeza', quantidades: [1],
+      opcoes: [
+        { id: 'detergente-1', rotulo: 'A', preco: 229, coracoes: 2 },
+        { id: 'detergente-2', rotulo: 'B', preco: 239, coracoes: 2 },
+        { id: 'detergente-3', rotulo: 'C', preco: 249, coracoes: 2 },
+      ],
+    };
+    expect(conferirDados([colados])).toContain(
+      'Preço do nível 2 longe da etiqueta em detergente-1: 100 para 229',
+    );
+  });
+
   it('arredonda os cinco casos da tabela 4.3 de precoNoNivel', () => {
     const casos = [
       [529, 500, 500, 529],
@@ -225,8 +270,8 @@ describe('Mercadinho — dados e preços', () => {
       },
       {
         nivel: 1, semente: 8, temaId: 'cafe-da-manha',
-        itens: [['pao-de-forma', 1], ['leite', 1], ['achocolatado', 1]],
-        orcamento: 2200, metaCoracoes: 5, maximoCoracoes: 7, custoMinimo: 1800, custoDoMelhor: 2400, custoDaMeta: 1900,
+        itens: [['bisnaguinha', 1], ['leite', 1], ['cafe', 1]],
+        orcamento: 2600, metaCoracoes: 5, maximoCoracoes: 7, custoMinimo: 2300, custoDoMelhor: 2900, custoDaMeta: 2400,
       },
       {
         nivel: 2, semente: 7, temaId: 'cafe-da-manha',
@@ -236,7 +281,7 @@ describe('Mercadinho — dados e preços', () => {
       {
         nivel: 2, semente: 8, temaId: 'lanche-da-escola',
         itens: [['pao-de-forma', 1], ['suco-caixinha', 2], ['queijo', 1], ['agua', 1], ['biscoito-recheado', 2]],
-        orcamento: 3500, metaCoracoes: 12, maximoCoracoes: 13, custoMinimo: 2700, custoDoMelhor: 3900, custoDaMeta: 3300,
+        orcamento: 3500, metaCoracoes: 12, maximoCoracoes: 13, custoMinimo: 2600, custoDoMelhor: 3800, custoDaMeta: 3200,
       },
       {
         nivel: 3, semente: 7, temaId: 'cafe-da-manha',
@@ -509,12 +554,31 @@ describe('Mercadinho — compra e caixa', () => {
     expect(digitar(99999, 9)).toBe(99999);
     expect(formatarDinheiro(valor)).toBe('R$ 52,10');
 
+    // níveis 1 e 2: cada dígito é um real
+    let reais = digitar(0, 3, 100);
+    expect(reais).toBe(300);
+    reais = digitar(reais, 2, 100);
+    expect(reais).toBe(3200);
+    expect(digitar(reais, 'apagar', 100)).toBe(300);
+    expect(digitar(digitar(300, 'apagar', 100), 'apagar', 100)).toBe(0);
+    expect(digitar(99900, 9, 100)).toBe(99900);
+
+    expect(formatarDinheiroDoNivel(500, 1)).toBe('R$ 5');
+    expect(formatarDinheiroDoNivel(2200, 2)).toBe('R$ 22');
+    expect(formatarDinheiroDoNivel(500, 3)).toBe('R$ 5,00');
+    expect(formatarDinheiroDoNivel(550, 2)).toBe('R$ 5,50');
+
     for (const troco of [0, 50, 290, 1000]) {
       const alts = alternativasDeTroco(troco, criarGerador(troco + 1));
       expect(alts).toHaveLength(3);
       expect(new Set(alts).size).toBe(3);
       expect(alts).toContain(troco);
       expect(alts.every(v => v >= 0)).toBe(true);
+    }
+    // troco em reais inteiros (níveis 1 e 2) nunca ganha alternativa com centavos, nem com troco zero
+    for (const troco of [0, 100, 300, 1000]) {
+      const alts = alternativasDeTroco(troco, criarGerador(troco + 1));
+      expect(alts.every(v => v % 100 === 0)).toBe(true);
     }
 
     expect(contaArmada(5500, 5210, '-')).toEqual([
@@ -528,6 +592,12 @@ describe('Mercadinho — compra e caixa', () => {
       '+  3,00',
       '───────',
       '  15,50',
+    ]);
+    expect(contaArmada(2200, 1900, '-', 2)).toEqual([
+      '  22',
+      '− 19',
+      '────',
+      '   3',
     ]);
     expect(somaArmada([450, 1200, 75])).toEqual([
       '   4,50',

@@ -248,8 +248,8 @@ export const produtos = [
   // Limpeza e higiene (5)
   item('detergente', 'Detergente', '🧴', 'limpeza', '500 ml', [1], [
     ['Limpol', 229, 2],
-    ['Minuano', 239, 2],
-    ['Ypê', 249, 2],
+    ['Minuano', 299, 2],
+    ['Ypê', 349, 2],
   ]),
   item('sabao-em-po', 'Sabão em pó', '🧺', 'limpeza', '800 g', [1], [
     ['Tixan Ypê', 990, 1],

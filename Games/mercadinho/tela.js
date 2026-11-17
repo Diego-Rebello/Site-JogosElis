@@ -49,7 +49,9 @@ import {
   digitar,
   espiar,
   faltando,
+  emReaisInteiros,
   formatarDinheiro,
+  formatarDinheiroDoNivel,
   gerarMissao,
   levarDesejo,
   mudarQuantidade,
@@ -69,6 +71,9 @@ if (problemasDados.length) {
 }
 
 const $ = id => document.getElementById(id);
+
+/** Dinheiro da partida no formato do nível ("R$ 5" nos níveis 1 e 2). O cofrinho usa formatarDinheiro. */
+const dinheiro = centavos => formatarDinheiroDoNivel(centavos, compra?.missao.nivel ?? nivelSelecionado);
 
 const produtoPorId = Object.fromEntries(produtos.map(p => [p.id, p]));
 const desejoPorId = Object.fromEntries(desejos.map(d => [d.id, d]));
@@ -857,7 +862,7 @@ function iniciarNovaMissao() {
   resetarNavegacao();
   renderizarMissao();
   mostrarFase('missao');
-  anunciar(`Nova missão: ${missao.titulo}. Orçamento ${formatarDinheiro(missao.orcamento)}.`);
+  anunciar(`Nova missão: ${missao.titulo}. Orçamento ${dinheiro(missao.orcamento)}.`);
 }
 
 function renderizarMissao() {
@@ -872,7 +877,7 @@ function renderizarMissao() {
   convite.replaceChildren();
   convite.append(document.createTextNode(`${tema.convite} Você tem `));
   const strongDinheiro = document.createElement('strong');
-  strongDinheiro.textContent = formatarDinheiro(missao.orcamento);
+  strongDinheiro.textContent = dinheiro(missao.orcamento);
   convite.append(strongDinheiro, document.createTextNode('. A família fica feliz com '));
   const strongCoracoes = document.createElement('strong');
   strongCoracoes.append(document.createTextNode(`${missao.metaCoracoes} `), criarIconeInline('coracao'));
@@ -938,7 +943,7 @@ function preencherFichaHud(el, iconeNome, principal, detalhe, ariaTexto, { detal
 function renderizarPainelFixo() {
   const { missao } = compra;
   const nivel = missao.nivel;
-  const valorOrcamento = formatarDinheiro(missao.orcamento);
+  const valorOrcamento = dinheiro(missao.orcamento);
 
   preencherFichaHud(
     $('loja-dinheiro'),
@@ -1000,7 +1005,7 @@ function renderizarPainelFixo() {
     const total = totalDoCarrinho(compra);
     const pct = Math.min(100, Math.round((total / missao.orcamento) * 100));
     barraBox.hidden = false;
-    $('barra-nivel1-texto').textContent = `No carrinho: ${formatarDinheiro(total)}`;
+    $('barra-nivel1-texto').textContent = `No carrinho: ${dinheiro(total)}`;
     const preenchimento = $('barra-nivel1-preenchimento');
     preenchimento.style.width = `${pct}%`;
     preenchimento.className = 'barra-nivel1__preenchimento';
@@ -1215,7 +1220,7 @@ function montarGondola(secaoId, recipiente) {
       vaga.dataset.guloseimaId = desejo.id;
       vaga.setAttribute(
         'aria-label',
-        `${desejo.nome} (${desejo.marca}), ${formatarDinheiro(preco)}${jaNoCarrinho ? ', no carrinho' : limiteAtingido ? ', limite de guloseimas atingido' : ''}`,
+        `${desejo.nome} (${desejo.marca}), ${dinheiro(preco)}${jaNoCarrinho ? ', no carrinho' : limiteAtingido ? ', limite de guloseimas atingido' : ''}`,
       );
 
       if (jaNoCarrinho || limiteAtingido) {
@@ -1236,7 +1241,7 @@ function montarGondola(secaoId, recipiente) {
       const nome = document.createElement('span');
       nome.textContent = desejo.nome;
       const detalhe = document.createElement('small');
-      detalhe.textContent = `${formatarDinheiro(preco)} · ${desejo.marca}`;
+      detalhe.textContent = `${dinheiro(preco)} · ${desejo.marca}`;
       etq.append(nome, detalhe);
 
       vaga.append(fig, tabua, etq);
@@ -1355,7 +1360,7 @@ function criarEtiquetaPreco(centavos) {
   el.className = 'preco';
   const simbolo = document.createElement('small');
   simbolo.textContent = 'R$';
-  const valor = document.createTextNode(formatarDinheiro(centavos).replace(/^R\$\s*/, ''));
+  const valor = document.createTextNode(dinheiro(centavos).replace(/^R\$\s*/, ''));
   el.append(simbolo, valor);
   return el;
 }
@@ -1524,9 +1529,9 @@ function renderizarPrateleiraProduto() {
 
 function formatarEtiquetaQuantidade(qtd, precoUnitario, nivel) {
   if (nivel === 1) {
-    return `${qtd} × ${formatarDinheiro(precoUnitario)} = ${formatarDinheiro(qtd * precoUnitario)}`;
+    return `${qtd} × ${dinheiro(precoUnitario)} = ${dinheiro(qtd * precoUnitario)}`;
   }
-  return `${qtd} × ${formatarDinheiro(precoUnitario)}`;
+  return `${qtd} × ${dinheiro(precoUnitario)}`;
 }
 
 function atualizarControlesQuantidade() {
@@ -1683,7 +1688,7 @@ function abrirPainelLista(gatilho) {
   const { missao } = compra;
   $('lista-painel-meta').replaceChildren(
     criarIconeInline(ICONE_DO_TEMA[missao.temaId] || 'cesto'),
-    document.createTextNode(`${missao.titulo} · Você tem ${formatarDinheiro(missao.orcamento)} · Meta: ${missao.metaCoracoes} `),
+    document.createTextNode(`${missao.titulo} · Você tem ${dinheiro(missao.orcamento)} · Meta: ${missao.metaCoracoes} `),
     criarIconeInline('coracao'),
   );
 
@@ -1818,7 +1823,7 @@ function renderizarPainelCarrinho(focoDesejado = null) {
     const fig = criarFigura(desejoId, null, 44, { marca: true });
     const info = document.createElement('div');
     info.className = 'carrinho-linha__info';
-    info.textContent = `${desejo.nome} (${desejo.marca}) — ${formatarDinheiro(preco)}`;
+    info.textContent = `${desejo.nome} (${desejo.marca}) — ${dinheiro(preco)}`;
     topo.append(fig, info);
 
     const controles = document.createElement('div');
@@ -1844,11 +1849,16 @@ function renderizarPainelCarrinho(focoDesejado = null) {
   const totalBox = $('carrinho-painel-total');
   if (nivel === 1 && temItens) {
     totalBox.hidden = false;
-    totalBox.textContent = `Total: ${formatarDinheiro(totalDoCarrinho(compra))}`;
+    totalBox.textContent = `Total: ${dinheiro(totalDoCarrinho(compra))}`;
   } else {
     totalBox.hidden = true;
     totalBox.textContent = '';
   }
+
+  // arredondar só faz sentido no nível 3, o único com centavos
+  $('carrinho-dica').textContent = emReaisInteiros(nivel)
+    ? 'Dica: junte os preços que fazem 10! R$ 7 + R$ 3 = R$ 10.'
+    : 'Dica: arredonde! R$ 4,90 é quase R$ 5,00.';
 
   if (focoDesejado) {
     const alvo = container.querySelector(
@@ -1886,7 +1896,7 @@ function acionarEspiada() {
 
   if (timerEspiada) clearTimeout(timerEspiada);
   aviso.hidden = false;
-  aviso.textContent = `Total até agora: ${formatarDinheiro(res.total)}`;
+  aviso.textContent = `Total até agora: ${dinheiro(res.total)}`;
   anunciar(aviso.textContent);
 
   timerEspiada = setTimeout(() => {
@@ -1927,7 +1937,7 @@ function construirTecladoNumerico() {
 }
 
 function atualizarVisorCaixa() {
-  $('caixa-visor').textContent = formatarDinheiro(estadoCaixa.valorDigitado);
+  $('caixa-visor').textContent = dinheiro(estadoCaixa.valorDigitado);
 }
 
 function digitarTecla(tecla) {
@@ -1938,7 +1948,9 @@ function digitarTecla(tecla) {
   ) {
     return;
   }
-  estadoCaixa.valorDigitado = digitar(estadoCaixa.valorDigitado, tecla);
+  // nos níveis de reais inteiros cada dígito é um real: "3" vira R$ 3, não R$ 0,03
+  const unidade = emReaisInteiros(compra.missao.nivel) ? 100 : 1;
+  estadoCaixa.valorDigitado = digitar(estadoCaixa.valorDigitado, tecla, unidade);
   tocar('clique');
   atualizarVisorCaixa();
 }
@@ -2106,12 +2118,12 @@ function revelarTotalEConferirEstouro(mensagemAnterior = '') {
   estadoCaixa.totalCompra = res.total;
 
   $('cupom-total-revelado').hidden = false;
-  $('cupom-total-revelado').textContent = `Total da compra: ${formatarDinheiro(res.total)}`;
+  $('cupom-total-revelado').textContent = `Total da compra: ${dinheiro(res.total)}`;
 
   if (res.situacao === 'estourou') {
     estadoCaixa.etapa = 'estourou';
     renderizarBlocosCaixa();
-    const msg = `Ih, passou! A compra deu ${formatarDinheiro(res.total)} e você tem ${formatarDinheiro(compra.missao.orcamento)}. Passou ${formatarDinheiro(res.diferenca)}. Vamos devolver ou trocar alguma coisa?`;
+    const msg = `Ih, passou! A compra deu ${dinheiro(res.total)} e você tem ${dinheiro(compra.missao.orcamento)}. Passou ${dinheiro(res.diferenca)}. Vamos devolver ou trocar alguma coisa?`;
     $('caixa-estouro-texto').textContent = msg;
     tocar('erro');
     anunciar(msg);
@@ -2130,7 +2142,7 @@ function abrirContaDoTroco(total, troco, mensagemAnterior = '') {
   estadoCaixa.valorDigitado = 0;
 
   renderizarBlocosCaixa();
-  const pergunta = `Você entrega ${formatarDinheiro(compra.missao.orcamento)}. A compra deu ${formatarDinheiro(total)}. Quanto volta de troco?`;
+  const pergunta = `Você entrega ${dinheiro(compra.missao.orcamento)}. A compra deu ${dinheiro(total)}. Quanto volta de troco?`;
   $('caixa-pergunta').textContent = pergunta;
   $('caixa-conta-armada').hidden = true;
   $('btn-continuar-caixa').hidden = true;
@@ -2155,7 +2167,7 @@ function abrirContaDoTroco(total, troco, mensagemAnterior = '') {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'botao botao--neutro';
-      btn.textContent = formatarDinheiro(valorAlt);
+      btn.textContent = dinheiro(valorAlt);
       btn.addEventListener('click', () => submeterRespostaCaixa('troco', valorAlt, btn));
       altBox.append(btn);
     }
@@ -2220,8 +2232,8 @@ function submeterRespostaCaixa(tipo, valor, botaoClicado = null) {
   const armada = $('caixa-conta-armada');
   armada.hidden = false;
   armada.textContent = tipo === 'total'
-    ? somaArmada(estadoCaixa.valoresCupom).join('\n')
-    : contaArmada(compra.missao.orcamento, estadoCaixa.totalCompra, '-').join('\n');
+    ? somaArmada(estadoCaixa.valoresCupom, compra.missao.nivel).join('\n')
+    : contaArmada(compra.missao.orcamento, estadoCaixa.totalCompra, '-', compra.missao.nivel).join('\n');
 
   $('teclado-numerico').querySelectorAll('button').forEach(b => { b.disabled = true; });
   $('caixa-alternativas').querySelectorAll('button').forEach(b => { b.disabled = true; });
@@ -2230,7 +2242,7 @@ function submeterRespostaCaixa(tipo, valor, botaoClicado = null) {
   btnContinuar.hidden = false;
   btnContinuar.textContent = tipo === 'total' ? 'Continuar' : 'Ver resultado';
   btnContinuar.focus();
-  anunciar(`Vamos ver juntas: a resposta certa é ${formatarDinheiro(res.respostaCerta)}.`);
+  anunciar(`Vamos ver juntas: a resposta certa é ${dinheiro(res.respostaCerta)}.`);
 }
 
 function finalizarCompraPaga() {
@@ -2345,6 +2357,7 @@ function renderizarResultado(res) {
   pTroco.append(
     porco,
     document.createTextNode(res.troco > 0
+      // mesmo formato do resto da frase: o cofrinho junta troco de todos os níveis (e centavos do 3)
       ? `Sobrou ${formatarDinheiro(res.troco)}. Foi para o cofrinho! ${textoDoCofrinhoNoResultado()}`
       : `Não sobrou troco desta vez. ${textoDoCofrinhoNoResultado()}`),
   );

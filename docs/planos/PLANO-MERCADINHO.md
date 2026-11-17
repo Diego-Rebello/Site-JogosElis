@@ -191,12 +191,12 @@ corações. Produto que não está na lista do dia não pode ser comprado (seç�
 | Itens na lista | 3 | 5 | 7 |
 | Opções por produto | 2 (a mais barata e a de mais corações) | todas (2 ou 3) | todas (2 ou 3) |
 | Linhas com quantidade maior que 1 | nenhuma | até 2 sorteadas | até 3 sorteadas |
-| Preços | reais inteiros, sem centavos | reais inteiros, sem centavos | de etiqueta (R$ 5,29; R$ 7,49) |
+| Preços | reais inteiros, escritos sem centavos ("R$ 5") | reais inteiros, escritos sem centavos ("R$ 5") | de etiqueta (R$ 5,29; R$ 7,49) |
 | Guloseimas por compra | 1 | 2 | 2 |
 | Total do carrinho | sempre visível, com barra | escondido; **2 espiadas** | escondido; sem espiar |
-| Subtotal de linha com quantidade | mostrado | escondido ("3 × R$ 3,30") | escondido |
+| Subtotal de linha com quantidade | mostrado | escondido ("3 × R$ 3") | escondido |
 | Prateleiras da lista marcadas no mapa | sim (balão "!") | não | não |
-| Contas no caixa | troco, 3 alternativas | troco, digitado | total da compra e troco, digitados |
+| Contas no caixa | troco, 3 alternativas | troco, digitado em reais (tocar 3 = R$ 3) | total da compra e troco, digitados em centavos |
 | Folga da meta (`tolerancia`) | máximo − 2 | máximo − 1 | máximo − 1 |
 | Orçamentos típicos | R$ 15 a R$ 35 | R$ 30 a R$ 70 | R$ 45 a R$ 95 |
 
@@ -323,7 +323,9 @@ verde até 80%, amarela até 100%, vermelha acima.
 **Carrinho (painel):** uma linha por produto com marca, quantidade, preço unitário e botões
 `−`, `+` e 🗑️. Trocar de marca exige voltar à prateleira. Nos níveis 2 e 3 o carrinho **não**
 mostra subtotais nem total: é a "notinha" para ela somar de cabeça ou no papel. Uma dica fixa no
-rodapé do carrinho: "Dica: arredonde! R$ 4,90 é quase R$ 5,00."
+rodapé do carrinho, que depende do nível: no 3, "Dica: arredonde! R$ 4,90 é quase R$ 5,00."; nos
+níveis 1 e 2, em que não há centavos para arredondar, "Dica: junte os preços que fazem 10! R$ 7 +
+R$ 3 = R$ 10."
 
 **Linha completa:** a linha da lista ganha ✓ quando a quantidade no carrinho é maior ou igual à
 pedida. Levar a mais é permitido (custa dinheiro) e aparece no resultado ("Você levou 1 iogurte
@@ -345,15 +347,17 @@ Ao chegar a um caixa (`K`):
    **1 estouro**. Ela volta para a loja com o carrinho como estava e o total volta a ficar
    escondido.
 6. **Conta do troco.** "Você entrega R$ 55,00. A compra deu R$ 52,10. Quanto volta de troco?"
-   - Nível 1: três alternativas (a certa, a certa + R$ 1,00 e a certa − R$ 1,00; se a última
-     ficar negativa, usa a certa + R$ 0,50), embaralhadas.
+   - Nível 1: três alternativas (a certa, a certa + R$ 1 e a certa − R$ 1; se a última ficar
+     negativa, usa a certa + R$ 2, para nunca aparecer centavo), embaralhadas.
    - Níveis 2 e 3: teclado numérico.
    - Duas tentativas. Na segunda falha, mostra a subtração armada e a resposta.
 7. **Pagou:** som de vitória, confete, tela de resultado.
 
 **Teclado numérico (caixa registradora).** Dez botões de dígito, ⌫ e OK. Os dígitos entram
-pela direita, em centavos: tocar 5, 2, 1, 0 mostra R$ 0,05 → R$ 0,52 → R$ 5,21 → R$ 52,10.
-Limite de R$ 999,99. Assim não existe vírgula para errar.
+pela direita. No nível 3 entram em centavos: tocar 5, 2, 1, 0 mostra R$ 0,05 → R$ 0,52 →
+R$ 5,21 → R$ 52,10 (limite de R$ 999,99). No nível 2 cada dígito é um real, porque ali não há
+centavos: tocar 3 mostra R$ 3, e 3, 2 mostra R$ 32 (limite de R$ 999). Assim não existe vírgula
+para errar.
 
 **Conta armada** (em `<pre>`, fonte monoespaçada, alinhada pela vírgula):
 
@@ -363,6 +367,8 @@ Limite de R$ 999,99. Assim não existe vírgula para errar.
 ───────
    2,90
 ```
+
+Nos níveis 1 e 2 os números vão sem centavos (`22`, `− 19`, `3`).
 
 ### 2.9 Resultado e estrelas
 
@@ -552,7 +558,7 @@ pedir (padrão `[1]`).
 
 | `id` | Nome | Emoji | Medida | Quantidades | Opção 1 | Opção 2 | Opção 3 |
 |---|---|---|---|---|---|---|---|
-| `detergente` | Detergente | 🧴 | 500 ml | 1 | Limpol · R$ 2,29 · 2 ❤️ | Minuano · R$ 2,39 · 2 ❤️ | Ypê · R$ 2,49 · 2 ❤️ |
+| `detergente` | Detergente | 🧴 | 500 ml | 1 | Limpol · R$ 2,29 · 2 ❤️ | Minuano · R$ 2,99 · 2 ❤️ | Ypê · R$ 3,49 · 2 ❤️ |
 | `sabao-em-po` | Sabão em pó | 🧺 | 800 g | 1 | Tixan Ypê · R$ 9,90 · 1 ❤️ | Brilhante · R$ 12,90 · 2 ❤️ | Omo · R$ 16,90 · 3 ❤️ |
 | `papel-higienico` | Papel higiênico | 🧻 | 4 rolos | 1 | Mili · R$ 5,49 · 1 ❤️ | Personal · R$ 6,99 · 2 ❤️ | Neve · R$ 9,49 · 3 ❤️ |
 | `creme-dental` | Creme dental | 😁 | 90 g | 1 | Sorriso · R$ 3,99 · 1 ❤️ | Colgate · R$ 5,49 · 2 ❤️ | Oral-B · R$ 6,99 · 3 ❤️ |
@@ -563,8 +569,11 @@ No código o preço é o inteiro em centavos: "R$ 5,29" vira `preco: 529`.
 **Regras dos dados** (conferidas por `conferirDados()` e por teste):
 
 - `id` único, em kebab-case; `secao` existe; 2 ou 3 opções por produto.
-- Preço inteiro e positivo; preços **estritamente crescentes** dentro do produto, inclusive
-  depois do arredondamento do nível 2.
+- Preço inteiro e positivo; preços **estritamente crescentes** dentro do produto.
+- Nos níveis 1 e 2 (reais inteiros) nenhum preço da prateleira fica a mais de R$ 1,00 da
+  etiqueta (`DESVIO_MAXIMO_DA_ETIQUETA`). Opções de preço muito colado, como três detergentes a
+  R$ 2,29 · 2,39 · 2,49, não cabem em três reais inteiros diferentes sem se afastar mais que isso:
+  `conferirDados` avisa e a etiqueta precisa mudar em `dados.js`.
 - Corações de 1 a 3 e **nunca decrescentes**: a opção mais cara nunca vale menos corações.
 - Em hortifrúti, açougue (carne moída) e ovos, o rótulo é o **tipo** (Prata, Orgânica,
   Caipiras), não uma marca.
@@ -684,7 +693,8 @@ tests/
 - `jogo.js`, `mapa.js` e `dados.js` não tocam em `document`, `window`, `localStorage`, relógio
   nem `Math.random` direto: o sorteio é sempre injetado (`criarGerador(semente)`).
 - Dinheiro sempre em centavos inteiros. Proibido `parseFloat`, `toFixed` ou soma de reais com
-  vírgula em qualquer conta. Formatação só por `formatarDinheiro`.
+  vírgula em qualquer conta. Formatação só por `formatarDinheiro` (cofrinho) e
+  `formatarDinheiroDoNivel` (partida: "R$ 5" nos níveis 1 e 2, "R$ 5,00" no 3).
 - Reutilizar, sem copiar: `formatarDinheiro` de `Games/dinheirinho/jogo.js`, `criarGerador` de
   `Games/labirinto/jogo.js`, `embaralhar` de `shared/texto.js`, e `sons`, `confete`,
   `progresso` e `cabecalho` de `shared/`.
@@ -718,15 +728,29 @@ export const NIVEIS = {
 
 Centavos só aparecem no nível 3 (decisão de 15/11/2026: a Elis ainda não aprendeu centavos).
 
-`opcoesNoNivel(produto, nivel)` devolve as opções com o preço do nível. Se o arredondamento
-deixar uma opção com preço igual ou menor que a anterior (ex.: R$ 4,99 e R$ 5,49 → R$ 5,00),
-ela passa a custar a anterior + R$ 1,00, para os preços continuarem crescentes. No nível 1 devolve só
-duas: a mais barata e a de mais corações (a mais barata entre as empatadas).
+`opcoesNoNivel(produto, nivel)` devolve as opções da prateleira com o preço do nível. No nível 1
+primeiro escolhe as duas que aparecem (a mais barata e a de mais corações, a mais barata entre
+as empatadas) e só depois calcula o preço delas, para uma opção escondida não influenciar.
 
-`elegivel(produto, nivel)`: o produto só entra numa lista se a escolha for de verdade. Exige 2
-ou mais opções com preços crescentes no nível; no nível 1, exige também R$ 1,00 ou mais de
-diferença e corações diferentes. Com o catálogo desta versão ficam fora do nível 1: biscoito
-óleo, açúcar, água e detergente. Nos níveis 2 e 3 todos entram.
+Nos níveis 1 e 2, quando o arredondamento empata duas opções (ex.: R$ 4,99 e R$ 5,49 →
+R$ 5,00), o desempate procura a combinação de reais inteiros estritamente crescentes que menos
+se afasta das etiquetas: cada preço pode ir até dois reais acima ou abaixo do arredondado; vence
+o menor afastamento máximo e, no empate, a menor soma de afastamentos. Exemplos:
+
+| Etiquetas na prateleira | Arredondado | Preço no nível |
+|---|---|---|
+| R$ 3,49 · 4,99 · 5,49 (alface, nível 2) | R$ 3 · 5 · 5 | R$ 3 · 5 · 6 |
+| R$ 2,79 · 3,29 · 3,99 (iogurte, nível 2) | R$ 3 · 3 · 4 | R$ 2 · 3 · 4 |
+| R$ 6,99 · 8,49 (bisnaguinha, nível 1: a de R$ 7,49 fica escondida) | R$ 7 · 8 | R$ 7 · 8 |
+
+Sem empate, o preço é só o arredondamento. O limite de R$ 1,00 de afastamento é conferido por
+`conferirDados` (seção 3.1).
+
+`elegivel(produto, nivel)`: o produto só entra numa lista se a escolha for de verdade, ou seja,
+se `opcoesNoNivel` devolver 2 ou mais opções. No nível 1 isso exige que a mais querida não seja
+a mais barata (corações diferentes); a distância de pelo menos R$ 1,00 já vem dos reais
+inteiros. Com o catálogo desta versão ficam fora do nível 1: óleo, açúcar, água e detergente.
+Nos níveis 2 e 3 todos entram.
 
 ### 4.4 O gerador de missões
 
@@ -769,16 +793,17 @@ Retorno:
   custoMinimo, custoDoMelhor, custoDaMeta, coracoesDaCestaBarata }
 ```
 
-**Valores de conferência do porte** (com o catálogo exatamente como na seção 3; servem para a
-Etapa 1 provar que o porte é fiel, não viram teste permanente porque mudam quando o Diego editar
-preços):
+**Valores de conferência do porte** (com o catálogo exatamente como na seção 3; serviram para a
+Etapa 1 provar que o porte é fiel e estão no teste "reproduz os seis valores de conferência da
+seção 4.4" de `tests/mercadinho.test.js`. Mudam quando os preços mudam: atualizar esta tabela e o
+teste juntos):
 
 | Nível | Semente | Tema | Itens | Orçamento | Meta | Máximo | `custoMinimo` | `custoDoMelhor` | `custoDaMeta` |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | 7 | `cafe-da-manha` | pao-de-forma ×1, leite ×1, mamao ×1 | 2400 | 6 | 8 | 1800 | 2600 | 2000 |
-| 1 | 8 | `lanche-da-escola` | pao-de-forma ×1, suco-caixinha ×1, queijo ×1 | 2200 | 5 | 7 | 1750 | 2500 | 1900 |
-| 2 | 7 | `cafe-da-manha` | pao-de-forma ×1, leite ×2, mamao ×1, ovos ×1, cafe ×1 | 5500 | 12 | 13 | 4540 | 6440 | 5210 |
-| 2 | 8 | `lanche-da-escola` | pao-de-forma ×1, suco-caixinha ×2, queijo ×1, agua ×1, biscoito-recheado ×2 | 3500 | 11 | 12 | 2920 | 3960 | 3300 |
+| 1 | 7 | `cafe-da-manha` | pao-de-forma ×1, leite ×1, mamao ×1 | 2200 | 6 | 8 | 1700 | 2500 | 1900 |
+| 1 | 8 | `cafe-da-manha` | bisnaguinha ×1, leite ×1, cafe ×1 | 2600 | 5 | 7 | 2300 | 2900 | 2400 |
+| 2 | 7 | `cafe-da-manha` | pao-de-forma ×1, leite ×2, mamao ×1, ovos ×1, cafe ×1 | 5500 | 12 | 13 | 4400 | 6300 | 5200 |
+| 2 | 8 | `lanche-da-escola` | pao-de-forma ×1, suco-caixinha ×2, queijo ×1, agua ×1, biscoito-recheado ×2 | 3500 | 12 | 13 | 2600 | 3800 | 3200 |
 | 3 | 7 | `cafe-da-manha` | pao-de-forma ×1, leite ×2, mamao ×1, ovos ×1, cafe ×1, queijo ×1, iogurte ×3 | 7500 | 16 | 17 | 6220 | 8781 | 7170 |
 | 3 | 8 | `lanche-da-escola` | pao-de-forma ×1, suco-caixinha ×2, queijo ×1, agua ×2, biscoito-recheado ×1, banana ×1, iogurte ×4 | 5500 | 15 | 16 | 4598 | 6568 | 5248 |
 
@@ -853,10 +878,11 @@ O estado da compra é um objeto simples; as funções devolvem um **novo** estad
 | `responderConta(compra, tipo, valor, tentativa)` | `{ compra, certa, respostaCerta }`; só a tentativa 1 conta para `certaDePrimeira` |
 | `pagar(compra)` | Marca `paga` |
 | `resultadoDaCompra(compra)` | `{ estrelas, objetivos: { missaoCumprida, familiaFeliz, contasCertas }, coracoes, troco, escolhas, aMais, acertos, erros }` |
-| `digitar(valor, tecla)` | Dígito: `min(99999, valor * 10 + d)` · `'apagar'`: `floor(valor / 10)` |
-| `alternativasDeTroco(troco, rnd)` | 3 valores diferentes, não negativos, com o certo; embaralhados |
-| `contaArmada(a, b, operacao)` | Linhas de texto alinhadas pela vírgula para o `<pre>` |
-| `conferirDados()` | Lista de problemas do catálogo (vazia = tudo certo) |
+| `digitar(valor, tecla, unidade = 1)` | Valor em centavos; cada dígito vale `unidade` (1 no nível 3, 100 nos níveis 1 e 2). Com `u = floor(valor / unidade)`: dígito → `min(floor(99999 / unidade), u * 10 + d) * unidade` · `'apagar'` → `floor(u / 10) * unidade` |
+| `alternativasDeTroco(troco, rnd)` | 3 valores diferentes, não negativos, com o certo; embaralhados; sem centavos quando o troco certo é em reais inteiros |
+| `contaArmada(a, b, operacao, nivel = 3)` · `somaArmada(valores, nivel = 3)` | Linhas de texto alinhadas à direita para o `<pre>`; sem centavos nos níveis 1 e 2 |
+| `formatarDinheiroDoNivel(centavos, nivel)` | "R$ 5" nos níveis 1 e 2, "R$ 5,00" no nível 3 |
+| `conferirDados(listaDeProdutos = produtos)` | Lista de problemas do catálogo (vazia = tudo certo) |
 
 `escolhas` do resultado: para cada item, `{ produtoId, rotulo, posicao: 'em-conta' | 'meio' |
 'queridinha' }`. Com 2 opções só existem `'em-conta'` e `'queridinha'`.
@@ -1105,9 +1131,10 @@ alguma delas atrasar, a 5 e a 6 podem ser feitas antes, porque não dependem do 
 - `chegarAoCaixa`: os três casos; cada estouro soma 1.
 - `resultadoDaCompra`: um cenário para cada combinação de estrelas (1, 2 por corações, 2 por
   contas, 3).
-- `digitar`: 5, 2, 1, 0 → 5210; apagar → 521; não passa de 99999.
+- `digitar`: 5, 2, 1, 0 → 5210; apagar → 521; não passa de 99999. Com unidade 100: 3 → 300;
+  3, 2 → 3200; apagar → 300.
 - `alternativasDeTroco`: 3 valores distintos, não negativos, contendo o certo, inclusive para
-  troco 0 e troco 50.
+  troco 0 e troco 50; com troco em reais inteiros (inclusive 0), nenhuma alternativa tem centavos.
 - `contaArmada(5500, 5210, '-')` devolve as quatro linhas da seção 2.8.
 
 *Simulações* (300 sementes por nível)
@@ -1444,12 +1471,15 @@ Rodou em 2026-11-14 com o catálogo da seção 3: 3.000 sementes por nível, nen
 - acrescentar `espiadas` a `NIVEIS` e a `MISSAO_RESERVA` no lugar do retorno `{ falhou: true }`;
 - o campo `tentativas` é só diagnóstico e pode sair.
 
+Atualizado em 17/11/2026: `NIVEIS`, `opcoesNoNivel` e `elegivel` abaixo já estão com os reais
+inteiros dos níveis 1 e 2 (seção 4.3), iguais ao `jogo.js`.
+
 ```js
 import { produtos, desejos, temas } from './dados.js';
 
 export const NIVEIS = {
-  1: { itens: 3, linhasComQuantidade: 0, maximoDeDesejos: 1, tolerancia: 2, passos: [1000, 500, 200, 100], arredondar: 50 },
-  2: { itens: 5, linhasComQuantidade: 2, maximoDeDesejos: 2, tolerancia: 1, passos: [1000, 500, 200, 100], arredondar: 10 },
+  1: { itens: 3, linhasComQuantidade: 0, maximoDeDesejos: 1, tolerancia: 2, passos: [1000, 500, 200, 100], arredondar: 100 },
+  2: { itens: 5, linhasComQuantidade: 2, maximoDeDesejos: 2, tolerancia: 1, passos: [1000, 500, 200, 100], arredondar: 100 },
   3: { itens: 7, linhasComQuantidade: 3, maximoDeDesejos: 2, tolerancia: 1, passos: [500, 200, 100], arredondar: 1 },
 };
 export const JANELA = { inicio: 0.40, fim: 0.75 };
@@ -1474,25 +1504,62 @@ export function precoNoNivel(preco, nivel) {
   return Math.max(passo, Math.round(preco / passo) * passo);
 }
 
-/** Opções que aparecem na prateleira em cada nível, já com o preço do nível, da mais barata para a mais cara. */
-export function opcoesNoNivel(produto, nivel) {
-  let opcoes = produto.opcoes.map(o => ({ ...o, preco: precoNoNivel(o.preco, nivel) }));
-  if (nivel === 1) {
-    const barata = opcoes[0];
-    const maximo = Math.max(...opcoes.map(o => o.coracoes));
-    const querida = opcoes.find(o => o.coracoes === maximo);
-    opcoes = barata === querida ? [barata] : [barata, querida];
-  }
-  return opcoes;
+/** Quanto o preço de um nível pode se afastar da etiqueta (conferido em `conferirDados`). */
+export const DESVIO_MAXIMO_DA_ETIQUETA = 100;
+
+/**
+ * Preços estritamente crescentes, múltiplos de `passo`, para etiquetas já em ordem crescente.
+ * Cada preço sai do arredondamento da sua etiqueta em até dois passos para cima ou para baixo;
+ * vence a combinação com o menor afastamento máximo e, no empate, a menor soma de afastamentos.
+ * Sem empate no arredondamento, a resposta é o próprio arredondamento.
+ * Ex.: R$ 3,49 · 4,99 · 5,49 → R$ 3 · 5 · 6 (e não R$ 3 · 4 · 5, que afasta R$ 0,99).
+ */
+function precosCrescentes(etiquetas, passo) {
+  let melhor = null;
+  const escolhidos = [];
+  const procurar = (i, anterior, maior, soma) => {
+    if (melhor && (maior > melhor.maior || (maior === melhor.maior && soma >= melhor.soma))) return;
+    if (i === etiquetas.length) {
+      melhor = { precos: [...escolhidos], maior, soma };
+      return;
+    }
+    const arredondado = Math.round(etiquetas[i] / passo) * passo;
+    for (const ajuste of [0, -1, 1, -2, 2]) {
+      const preco = arredondado + ajuste * passo;
+      if (preco < passo || preco <= anterior) continue;
+      const desvio = Math.abs(preco - etiquetas[i]);
+      escolhidos.push(preco);
+      procurar(i + 1, preco, Math.max(maior, desvio), soma + desvio);
+      escolhidos.pop();
+    }
+  };
+  procurar(0, 0, 0, 0);
+  return melhor ? melhor.precos : etiquetas.map(e => Math.max(passo, Math.round(e / passo) * passo));
 }
 
-/** Um produto só entra na lista se a escolha for de verdade: preços diferentes e crescentes; no nível 1, também corações diferentes e R$ 1,00 de distância. */
+/** Opções que aparecem na prateleira em cada nível, já com o preço do nível, da mais barata para a mais cara. */
+export function opcoesNoNivel(produto, nivel) {
+  let visiveis = produto.opcoes;
+  if (nivel === 1) {
+    // só a mais barata e a mais querida; o preço é decidido depois, entre as duas que aparecem
+    const barata = visiveis[0];
+    const maximo = Math.max(...visiveis.map(o => o.coracoes));
+    const querida = visiveis.find(o => o.coracoes === maximo);
+    visiveis = barata === querida ? [barata] : [barata, querida];
+  }
+  // Nos níveis 1 e 2 os preços são reais inteiros, e duas opções não podem empatar no arredondamento.
+  const passo = NIVEIS[nivel].arredondar;
+  const precos = passo === 1 ? visiveis.map(o => o.preco) : precosCrescentes(visiveis.map(o => o.preco), passo);
+  return visiveis.map((o, i) => ({ ...o, preco: precos[i] }));
+}
+
+/**
+ * Um produto só entra na lista se a escolha for de verdade: pelo menos duas opções na prateleira.
+ * No nível 1 isso quer dizer que a mais querida não é a mais barata (corações diferentes).
+ * Preços crescentes e distintos já vêm garantidos por `opcoesNoNivel`.
+ */
 export function elegivel(produto, nivel) {
-  const o = opcoesNoNivel(produto, nivel);
-  if (o.length < 2) return false;
-  for (let i = 1; i < o.length; i++) if (o[i].preco <= o[i - 1].preco) return false;
-  if (nivel === 1) return o[1].preco - o[0].preco >= 100 && o[1].coracoes > o[0].coracoes;
-  return true;
+  return opcoesNoNivel(produto, nivel).length >= 2;
 }
 
 /**

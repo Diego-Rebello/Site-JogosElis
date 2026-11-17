@@ -98,7 +98,8 @@
 }
 
 .jogo-mercadinho .nivel[aria-pressed='true'],
-.jogo-mercadinho .modo-compra[aria-pressed='true'] {
+.jogo-mercadinho .modo-compra[aria-pressed='true'],
+.jogo-mercadinho .cofrinho__sonho[aria-pressed='true'] {
   background: var(--cor-principal-profunda);
   border-color: var(--cor-principal-profunda);
   color: #fff;
